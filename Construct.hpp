@@ -1,25 +1,27 @@
 #pragma once
 #include "Verb.hpp"
 
-namespace PCFW::Flow
+namespace Langulus::Flow
 {
 
-	/// Bits for seek functions																
-	enum class SeekStyle : pcu8 {
+	///																								
+	///	Bits for seek functions																
+	///																								
+	enum class SeekStyle : uint8_t {
 		// Seek entities that are children of the context						
-		Forward = 1,
+		Below = 1,
 		// Seek entities that are parents of the context						
-		Backward = 2,
-		// Seek objects in both - parents and children							
-		Bidirectional = Forward | Backward,
+		Above = 2,
+		// Seek objects in both directions - in parents and children		
+		Duplex = Below | Above,
 		// Include the current entity in the seek operation					
 		Here = 4,
 		// Seek everywhere																
-		Everywhere = Bidirectional | Here,
+		Everywhere = Duplex | Here,
 		// Seek parents and this context included									
-		UpToHere = Backward | Here,
+		UpToHere = Above | Here,
 		// Seek children and this context included								
-		DownFromHere = Forward | Here
+		DownFromHere = Below | Here
 	};
 
 	constexpr bool operator & (const SeekStyle& lhs, const SeekStyle& rhs) {
@@ -39,60 +41,62 @@ namespace PCFW::Flow
 	/// various characteristics, to finally the additional raw data in case		
 	/// of specific custom content.															
 	///																								
-	class LANGULUS_MODULE(FLOW) Construct : public Hashed {
-		REFLECT(Construct);
+	class Construct {
+	private:
+		DMeta mType {};
+		Charge mCharge {};
+		Any mArguments;
+		Hash mHash;
+
 	public:
 		Construct() = default;
 		Construct(const Construct&) = default;
 		Construct(Construct&&) noexcept = default;
 
-		Construct(DataID);
 		Construct(DMeta);
 		Construct(const Text&);
 
-		Construct(DataID, Any&&);
 		Construct(DMeta, Any&&);
 		Construct(const Text&, Any&&);
 
-		Construct(DataID, const Any&);
 		Construct(DMeta, const Any&);
 		Construct(const Text&, const Any&);
 
 		Construct& operator = (const Construct&) = default;
 		Construct& operator = (Construct&&) noexcept = default;
 
-		NOD() explicit operator GASM() const;
-		NOD() explicit operator Debug() const;
+		NOD() explicit operator Code() const;
+		//NOD() explicit operator Debug() const;
 
 	public:
-		NOD() Hash GetHash() const override;
+		NOD() Hash GetHash() const;
+		void ResetHash();
 
-		template<RTTI::ReflectedData DATA>
+		template<CT::Data DATA>
 		NOD() static Construct From(DMeta, DATA&&);
-		template<RTTI::ReflectedData DATA>
+		template<CT::Data DATA>
 		NOD() static Construct From(DMeta, const DATA&);
 
-		template<RTTI::ReflectedData T, RTTI::ReflectedData DATA>
+		template<CT::Data T, CT::Data DATA>
 		NOD() static Construct From(DATA&&);
-		template<RTTI::ReflectedData T, RTTI::ReflectedData DATA>
+		template<CT::Data T, CT::Data DATA>
 		NOD() static Construct From(const DATA&);
 
-		template<RTTI::ReflectedData T>
+		template<CT::Data T>
 		NOD() static Construct From();
 
 		NOD() bool operator == (const Construct&) const noexcept;
-		NOD() bool operator != (const Construct&) const noexcept;
 
 		void StaticCreation(Any&) const;
 
 		NOD() bool InterpretsAs(DMeta type) const;
 
-		template<RTTI::ReflectedData T>
+		template<CT::Data T>
 		NOD() bool InterpretsAs() const;
 
-		NOD() bool Is(DataID type) const;
+		NOD() bool Is(DMeta) const;
 
-		template<RTTI::ReflectedData T>
+		template<CT::Data T>
 		NOD() bool Is() const;
 
 		NOD() const Any& GetAll() const noexcept;
@@ -101,34 +105,28 @@ namespace PCFW::Flow
 		NOD() const Charge& GetCharge() const noexcept;
 		NOD() Charge& GetCharge() noexcept;
 
-		NOD() DMeta GetMeta() const noexcept;
+		NOD() DMeta GetType() const noexcept;
 		NOD() bool IsEmpty() const noexcept;
 
 		void Clear();
 		NOD() Construct Clone(DMeta = nullptr) const;
 
-		template<RTTI::ReflectedData T>
+		template<CT::Data T>
 		NOD() Construct CloneAs() const;
 
-		template<RTTI::ReflectedData T>
+		template<CT::Data T>
 		Construct& operator << (const T&);
 
-		template<RTTI::ReflectedData T>
+		template<CT::Data T>
 		Construct& operator <<= (const T&);
 
-		Construct& Set(const Trait&, const pcptr& = 0);
-		const Trait* Get(TMeta, const pcptr& = 0) const;
+		Construct& Set(const Trait&, const Offset& = 0);
+		const Trait* Get(TMeta, const Offset& = 0) const;
 
-		template<RTTI::ReflectedTrait T>
-		const Trait* Get(const pcptr& = 0) const;
-
-		Charge mCharge{};
-
-	private:
-		DMeta mHeader{};
-		Any mArguments;
+		template<CT::Trait T>
+		const Trait* Get(const Offset& = 0) const;
 	};
 
-} // namespace PCFW::Flow
+} // namespace Langulus::Flow
 
 #include "Construct.inl"

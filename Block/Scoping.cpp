@@ -1,9 +1,9 @@
-#include "../GASM.hpp"
+#include "../Code.hpp"
 #include "IncludeLogger.hpp"
 
 #define PC_SCOPE_VERBOSE(a) pcLogFuncVerbose << a
 
-namespace PCFW::Flow
+namespace Langulus::Flow
 {
 
 	/// Helper that is analogous to Block::Gather, but also gives the option	
@@ -112,4 +112,4 @@ namespace PCFW::Flow
 		});
 	}
 
-} // namespace PCFW::PCGASM
+} // namespace Langulus::Flow

@@ -1,9 +1,9 @@
-#include "../GASM.hpp"
+#include "../Code.hpp"
 #include "IncludeLogger.hpp"
 
 #define PC_SELECT_VERBOSE(a) //pcLogFuncVerbose << a
 
-namespace PCFW::Flow
+namespace Langulus::Flow
 {
 
 	/// Default conjunction, catenating arguments to the context					
@@ -17,4 +17,4 @@ namespace PCFW::Flow
 		}
 	}
 
-} // namespace PCFW::PCGASM
+} // namespace Langulus::Flow

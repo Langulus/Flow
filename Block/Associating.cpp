@@ -1,9 +1,9 @@
-#include "../GASM.hpp"
+#include "../Code.hpp"
 #include "IncludeLogger.hpp"
 
 #define VERBOSE_ASSOCIATE(a) //pcLogVerbose << a
 
-namespace PCFW::Flow
+namespace Langulus::Flow
 {
 
 	/// Default association																		
@@ -111,5 +111,5 @@ namespace PCFW::Flow
 			verb << Any {context};
 	}
 
-} // namespace PCFW::Flow
+} // namespace Langulus::Flow
 

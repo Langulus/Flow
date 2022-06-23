@@ -5,7 +5,7 @@ LANGULUS_DECLARE_EXCEPTION(MissingConversion)
 
 #define PC_VERBOSE_CONVERSION(a) //pcLogVerbose << a
 
-namespace PCFW::Flow
+namespace Langulus::Flow
 {
 	namespace InnerInterpretation
 	{
@@ -107,14 +107,14 @@ namespace PCFW::Flow
 		return pcInterpretMultiple<FROM, T...>;
 	}
 
-} // namespace PCFW::Flow
+} // namespace Langulus::Flow
 
 #define REFLECT_CONVERSIONS(...) \
-	MEMBER_VERB_EXT(Interpret, (::PCFW::Flow::pcInterpretMultiple<ME, __VA_ARGS__>))
+	MEMBER_VERB_EXT(Interpret, (::Langulus::Flow::pcInterpretMultiple<ME, __VA_ARGS__>))
 #define REFLECT_CONVERSIONS_EXT(owner, ...) \
-	MEMBER_VERB_EXT(Interpret, (::PCFW::Flow::pcInterpretMultiple<owner, __VA_ARGS__>))
+	MEMBER_VERB_EXT(Interpret, (::Langulus::Flow::pcInterpretMultiple<owner, __VA_ARGS__>))
 
 #define REFLECT_CONVERSION_LIST(LIST) \
-	MEMBER_VERB_EXT(Interpret, (::PCFW::Flow::pcInterpretList<ME>(LIST{})))
+	MEMBER_VERB_EXT(Interpret, (::Langulus::Flow::pcInterpretList<ME>(LIST{})))
 #define REFLECT_CONVERSION_LIST_EXT(owner, LIST) \
-	MEMBER_VERB_EXT(Interpret, (::PCFW::Flow::pcInterpretList<owner>(LIST{})))
+	MEMBER_VERB_EXT(Interpret, (::Langulus::Flow::pcInterpretList<owner>(LIST{})))

@@ -1,6 +1,6 @@
 #include "Converting.hpp"
 
-namespace PCFW::Flow
+namespace Langulus::Flow
 {
 
 	template<Number FROM, Number TO>
@@ -103,4 +103,4 @@ namespace PCFW::Flow
 		});
 	}
 
-} // namespace PCFW::Flow
+} // namespace Langulus::Flow

@@ -1,20 +1,23 @@
-namespace PCFW::Flow
+#pragma once
+#include "Construct.hpp"
+
+namespace Langulus::Flow
 {
 
 	/// Create content descriptor from a type and include a constructor			
 	///	@param type - the type we're constructing										
 	///	@param arguments - the constructor arguments									
 	///	@return the request																	
-	template<RTTI::ReflectedData DATA>
+	template<CT::Data DATA>
 	Construct Construct::From(DMeta type, DATA&& arguments) {
-		return Construct(type) << pcForward<DATA>(arguments);
+		return Construct(type) << Forward<DATA>(arguments);
 	}
 
 	/// Create content descriptor from a type and include a constructor			
 	///	@param type - the type we're constructing										
 	///	@param arguments - the constructor arguments									
 	///	@return the request																	
-	template<RTTI::ReflectedData DATA>
+	template<CT::Data DATA>
 	Construct Construct::From(DMeta type, const DATA& arguments) {
 		return Construct(type) << arguments;
 	}
@@ -22,42 +25,38 @@ namespace PCFW::Flow
 	/// Create content descriptor from a type and include a constructor			
 	///	@param arguments - the constructor arguments									
 	///	@return the request																	
-	template<RTTI::ReflectedData T, RTTI::ReflectedData DATA>
+	template<CT::Data T, CT::Data DATA>
 	Construct Construct::From(DATA&& arguments) {
-		return Construct::From<DATA>(DataID::Reflect<T>(), pcForward<DATA>(arguments));
+		return Construct::From<DATA>(MetaData::Of<T>(), Forward<DATA>(arguments));
 	}
 
 	/// Create content descriptor from a type and include a constructor			
 	///	@param arguments - the constructor arguments									
 	///	@return the request																	
-	template<RTTI::ReflectedData T, RTTI::ReflectedData DATA>
+	template<CT::Data T, CT::Data DATA>
 	Construct Construct::From(const DATA& arguments) {
-		return Construct::From<DATA>(DataID::Reflect<T>(), arguments);
+		return Construct::From<DATA>(MetaData::Of<T>(), arguments);
 	}
 
 	/// Create content descriptor from a type and include a constructor			
 	///	@param arguments - the constructor arguments									
 	///	@return the request																	
-	template<RTTI::ReflectedData T>
+	template<CT::Data T>
 	Construct Construct::From() {
-		return Construct(DataID::Reflect<T>());
-	}
-
-	inline bool Construct::operator != (const Construct& other) const noexcept {
-		return !(*this == other);
+		return Construct(MetaData::Of<T>());
 	}
 
 	/// Check if contained data can be interpreted as a given type					
 	/// Interpreting means reading compatiblity											
-	template<RTTI::ReflectedData T>
+	template<CT::Data T>
 	bool Construct::InterpretsAs() const {
-		return InterpretsAs(DataID::Reflect<T>());
+		return InterpretsAs(MetaData::Of<T>());
 	}
 
 	/// Check if contained data fully matches a given type							
-	template<RTTI::ReflectedData T>
+	template<CT::Data T>
 	bool Construct::Is() const {
-		return Is(DataID::Of<pcDecay<T>>);
+		return Is(MetaData::Of<T>());
 	}
 
 	inline const Any& Construct::GetAll() const noexcept {
@@ -76,22 +75,22 @@ namespace PCFW::Flow
 		return mCharge;
 	}
 
-	inline DMeta Construct::GetMeta() const noexcept {
-		return mHeader;
+	inline DMeta Construct::GetType() const noexcept {
+		return mType;
 	}
 
 	inline bool Construct::IsEmpty() const noexcept {
 		return mArguments.IsEmpty();
 	}
 
-	template<RTTI::ReflectedData T>
+	template<CT::Data T>
 	Construct Construct::CloneAs() const {
-		return Clone(DataID::Reflect<T>());
+		return Clone(MetaData::Of<T>());
 	}
 
 	/// Copy items to the construct															
 	///	@param whatever - the thing you wish to push									
-	template<RTTI::ReflectedData T>
+	template<CT::Data T>
 	Construct& Construct::operator << (const T& whatever) {
 		if (mArguments.SmartPush<Any>(whatever))
 			ResetHash();
@@ -100,12 +99,12 @@ namespace PCFW::Flow
 
 	/// Merge items to the construct's arguments											
 	///	@param whatever - the thing you wish to push									
-	template<RTTI::ReflectedData T>
+	template<CT::Data T>
 	Construct& Construct::operator <<= (const T& whatever) {
-		if constexpr (Same<T, Trait>)
-			return Set(pcVal(whatever));
+		if constexpr (CT::Same<T, Trait>)
+			return Set(DenseCast(whatever));
 		else {
-			if (mArguments.FindDeep(whatever) == uiNone)
+			if (!mArguments.FindDeep(whatever))
 				*this << whatever;
 			return *this;
 		}
@@ -113,9 +112,9 @@ namespace PCFW::Flow
 
 	/// Get traits from constructor															
 	///	@return pointer to found traits or nullptr if none found					
-	template<RTTI::ReflectedTrait TRAIT>
-	const Trait* Construct::Get(const pcptr& index) const {
-		return Get(TRAIT::Reflect(), index);
+	template<CT::Trait T>
+	const Trait* Construct::Get(const Offset& index) const {
+		return Get(MetaTrait::Of<T>(), index);
 	}
 
-} // namespace PCFW::PCGASM
+} // namespace Langulus::Flow

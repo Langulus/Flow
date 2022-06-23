@@ -1,4 +1,4 @@
-#include "../GASM.hpp"
+#include "../Code.hpp"
 #include "IncludeLogger.hpp"
 
 #define VERBOSE_DISPATCH(a) //pcLogVerbose << a
@@ -6,7 +6,7 @@
 #define VERBOSE_FLOW_TAB(a) //ScopedTab tab; pcLogVerbose << a << tab
 #define FLOW_ERRORS(a) //pcLogError << a
 
-namespace PCFW::Flow
+namespace Langulus::Flow
 {
 
 	/// Call the default built-in memory abilities										
@@ -665,5 +665,5 @@ namespace PCFW::Flow
 		return true;
 	}
 
-} // namespace PCFW::PCGASM
+} // namespace Langulus::Flow
 

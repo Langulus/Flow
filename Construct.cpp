@@ -3,7 +3,7 @@
 
 #define VERBOSE_CONSTRUCT(a) //pcLogFuncVerbose << a
 
-namespace PCFW::Flow
+namespace Langulus::Flow
 {
 
 	/// Construct from a header																
@@ -26,21 +26,21 @@ namespace PCFW::Flow
 	///	@param arguments - the argument container to move							
 	Construct::Construct(DataID header, Any&& arguments)
 		: mHeader {header.GetMeta()}
-		, mArguments {pcForward<Any>(arguments)} { }
+		, mArguments {Forward<Any>(arguments)} { }
 
 	/// Construct from a header and movable arguments									
 	///	@param header - the type of the content										
 	///	@param arguments - the argument container to move							
 	Construct::Construct(DMeta header, Any&& arguments)
 		: mHeader {header}
-		, mArguments {pcForward<Any>(arguments)} { }
+		, mArguments {Forward<Any>(arguments)} { }
 
 	/// Construct from a header and movable arguments									
 	///	@param header - the type token of the content								
 	///	@param arguments - the argument container to move							
 	Construct::Construct(const Text& header, Any&& arguments)
 		: mHeader {PCMEMORY.GetMetaData(header)}
-		, mArguments {pcForward<Any>(arguments)} { }
+		, mArguments {Forward<Any>(arguments)} { }
 
 	/// Construct from a header and shallow-copied arguments							
 	///	@param header - the type of the content										
@@ -216,30 +216,30 @@ namespace PCFW::Flow
 		return found;
 	}
 
-	/// Serialize a construct to GASM														
-	Construct::operator GASM() const {
-		GASM result;
+	/// Serialize a construct to Code														
+	Construct::operator Code() const {
+		Code result;
 		result += mHeader->GetToken();
 		if (!mCharge.IsDefault() || !mArguments.IsEmpty()) {
 			result += mCharge;
-			result += GASM::OpenScope;
-			result += pcSerialize<GASM>(mArguments);
-			result += GASM::CloseScope;
+			result += Code::OpenScope;
+			result += pcSerialize<Code>(mArguments);
+			result += Code::CloseScope;
 		}
 		return result;
 	}
 
 	/// Stringify a construct																	
 	Construct::operator Debug() const {
-		GASM result;
+		Code result;
 		result += GetMeta()->GetToken();
 		if (!mCharge.IsDefault() || !mArguments.IsEmpty()) {
 			result += mCharge;
-			result += GASM::OpenScope;
+			result += Code::OpenScope;
 			result += pcSerialize<Debug>(mArguments);
-			result += GASM::CloseScope;
+			result += Code::CloseScope;
 		}
 		return result;
 	}
 
-} // namespace PCFW::Flow
+} // namespace Langulus::Flow

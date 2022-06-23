@@ -1,65 +1,38 @@
-namespace PCFW::Flow
+#pragma once
+#include "Verb.hpp"
+
+namespace Langulus::Flow
 {
 
 	/// Default construction																	
-	constexpr Charge::Charge(real mass, real freq, real time, real prio) noexcept
+	constexpr Charge::Charge(Real mass, Real freq, Real time, Real prio, bool shortCircuited) noexcept
 		: mMass {mass}
 		, mFrequency {freq}
 		, mTime {time}
-		, mPriority {prio} {}
+		, mPriority {prio}
+		, mShortCircuited {shortCircuited} {}
 
 	/// Compare charges																			
 	constexpr bool Charge::operator == (const Charge& ext) const noexcept {
-		return pcNear(mMass, ext.mMass)
-			&& pcNear(mFrequency, ext.mFrequency)
-			&& pcNear(mTime, ext.mTime)
-			&& pcNear(mPriority, ext.mPriority);
-	}
-
-	constexpr bool Charge::operator != (const Charge& ext) const noexcept {
-		return !(*this == ext);
+		return mMass == ext.mMass 
+			&& mFrequency == ext.mFrequency 
+			&& mTime == ext.mTime
+			&& mPriority == ext.mPriority
+			&& mShortCircuited == ext.mShortCircuited;
 	}
 
 	/// Check if charge is default															
 	constexpr bool Charge::IsDefault() const noexcept {
-		return mMass == DefaultMass && 
-			mFrequency == DefaultFrequency && 
-			mTime == DefaultTime && 
-			mPriority == DefaultPriority;
+		return *this == Charge {};
 	}
 
 	/// Get the hash of the charge															
 	inline Hash Charge::GetHash() const noexcept {
-		return pcHash(mMass) | pcHash(mFrequency) | pcHash(mTime) | pcHash(mPriority);
-	}
-
-	/// Default construction																	
-	///	@param id - the verb																	
-	///	@param charge - the verb charge													
-	///	@param shortCircuited - whether or not to short-circuit the verb		
-	constexpr ChargedVerbID::ChargedVerbID(VMeta id, Charge charge, bool shortCircuited) noexcept
-		: mID {id}
-		, mCharge {charge}
-		, mShortCircuited {shortCircuited} {}
-
-	/// Compare charged verbs for equality													
-	///	@param ext - the charged verb to compare against							
-	///	@return true if charged verbs match												
-	constexpr bool ChargedVerbID::operator == (const ChargedVerbID& ext) const noexcept {
-		return mID == ext.mID && mCharge == ext.mCharge && mShortCircuited == ext.mShortCircuited;
-	}
-
-	/// Compare charged verbs for inequality												
-	///	@param ext - the charged verb to compare against							
-	///	@return true if charged verbs do not match									
-	constexpr bool ChargedVerbID::operator != (const ChargedVerbID& ext) const noexcept {
-		return mID != ext.mID || mCharge != ext.mCharge || mShortCircuited != ext.mShortCircuited;
-	}
-
-	/// Get the hash of the charged verb													
-	///	@return the hash value																
-	inline Hash ChargedVerbID::GetHash() const noexcept {
-		return mID->GetID().GetHash() | mCharge.GetHash() | pcHash(mShortCircuited);
+		return HashData(mMass) 
+			| HashData(mFrequency) 
+			| HashData(mTime) 
+			| HashData(mPriority) 
+			| HashData(mShortCircuited); //TODO check hashing | add HashDataArray?
 	}
 
 	/// Create a verb using a static verb type											
@@ -68,15 +41,15 @@ namespace PCFW::Flow
 	///	@param a - the argument																
 	///	@param o - the output																
 	///	@return the verb																		
-	template<RTTI::ReflectedVerb T>
-	Verb Verb::From(const Any& s, const Any& a, const Any& o) {
-		return {T::ID, s, a, o};
+	template<CT::Verb T>
+	Verb Verb::From(const Charge& c, const Any& s, const Any& a, const Any& o) {
+		return {MetaVerb::Of<T>(), c, s, a, o};
 	}
 
 	/// Check if verb is a specific type													
 	///	@tparam T - the verb to compare against										
 	///	@return true if verbs match														
-	template<RTTI::ReflectedVerb T>
+	template<CT::Verb T>
 	bool Verb::Is() const noexcept {
 		return Is(T::ID);
 	}
@@ -101,47 +74,47 @@ namespace PCFW::Flow
 	/// Invert the verb (use the antonym)													
 	///	@return a reference to self														
 	inline Verb& Verb::Invert() noexcept {
-		mVerb.mCharge.mMass *= real(-1);
+		mCharge.mMass *= Real {-1};
 		return *this;
 	}
 
 	/// Set the verb ID																			
 	///	@param call - the verb ID to assign												
 	///	@return a reference to self														
-	inline Verb& Verb::SetVerb(const VerbID& call) noexcept {
-		mVerb.mID = call.GetMeta();
+	inline Verb& Verb::SetVerb(VMeta verb) noexcept {
+		mVerb = verb;
 		return *this;
 	}
 
 	/// Set the verb mass																		
 	///	@param energy - the mass to set													
 	///	@return a reference to self														
-	inline Verb& Verb::SetMass(const real energy) noexcept {
-		mVerb.mCharge.mMass = energy;
+	inline Verb& Verb::SetMass(const Real energy) noexcept {
+		mCharge.mMass = energy;
 		return *this;
 	}
 
 	/// Set the verb frequency																	
 	///	@param energy - the frequency to set											
 	///	@return a reference to self														
-	inline Verb& Verb::SetFrequency(const real energy) noexcept {
-		mVerb.mCharge.mFrequency = energy;
+	inline Verb& Verb::SetFrequency(const Real energy) noexcept {
+		mCharge.mFrequency = energy;
 		return *this;
 	}
 
 	/// Set the verb time																		
 	///	@param energy - the time to set													
 	///	@return a reference to self														
-	inline Verb& Verb::SetTime(const real energy) noexcept {
-		mVerb.mCharge.mTime = energy;
+	inline Verb& Verb::SetTime(const Real energy) noexcept {
+		mCharge.mTime = energy;
 		return *this;
 	}
 
 	/// Set the verb priority																	
 	///	@param energy - the priority to set												
 	///	@return a reference to self														
-	inline Verb& Verb::SetPriority(const real energy) noexcept {
-		mVerb.mCharge.mPriority = energy;
+	inline Verb& Verb::SetPriority(const Real energy) noexcept {
+		mCharge.mPriority = energy;
 		return *this;
 	}
 
@@ -149,7 +122,7 @@ namespace PCFW::Flow
 	///	@param charge - the charge to set												
 	///	@return a reference to self														
 	inline Verb& Verb::SetCharge(const Charge& charge) noexcept {
-		mVerb.mCharge = charge;
+		mCharge = charge;
 		return *this;
 	}
 
@@ -165,7 +138,7 @@ namespace PCFW::Flow
 	///	@param source - the source to set												
 	///	@return a reference to self														
 	inline Verb& Verb::SetSource(Any&& source) noexcept {
-		mSource = pcForward<Any>(source);
+		mSource = Forward<Any>(source);
 		return *this;
 	}
 
@@ -181,7 +154,7 @@ namespace PCFW::Flow
 	///	@param argument - the argument to set											
 	///	@return a reference to self														
 	inline Verb& Verb::SetArgument(Any&& argument) noexcept {
-		mArgument = pcForward<Any>(argument);
+		mArgument = Forward<Any>(argument);
 		return *this;
 	}
 
@@ -197,7 +170,7 @@ namespace PCFW::Flow
 	///	@param output - the output to set												
 	///	@return a reference to self														
 	inline Verb& Verb::SetOutput(Any&& output) noexcept {
-		mOutput = pcForward<Any>(output);
+		mOutput = Forward<Any>(output);
 		return *this;
 	}
 
@@ -220,87 +193,68 @@ namespace PCFW::Flow
 		return IsDone() == rhs; 
 	}
 
-	/// Check if verb is not satisfied 														
-	///	@param rhs - flag to compare against											
-	///	@return true if verb satisfaction doesn't match rhs						
-	inline bool Verb::operator != (const bool rhs) const noexcept {
-		return IsDone() != rhs; 
-	}
-
 	/// Compare verb priorities																
 	///	@param rhs - the verb to compare against										
 	///	@return true if rhs has larger or equal priority							
 	inline bool Verb::operator < (const Verb& ext) const noexcept {
-		return mVerb.mCharge.mPriority < ext.mVerb.mCharge.mPriority;
+		return mCharge.mPriority < ext.mCharge.mPriority;
 	}
 
 	/// Compare verb priorities																
 	///	@param rhs - the verb to compare against										
 	///	@return true if rhs has smaller or equal priority							
 	inline bool Verb::operator > (const Verb& ext) const noexcept {
-		return mVerb.mCharge.mPriority > ext.mVerb.mCharge.mPriority;
+		return mCharge.mPriority > ext.mCharge.mPriority;
 	}
 
 	/// Compare verb priorities																
 	///	@param rhs - the verb to compare against										
 	///	@return true if rhs has smaller priority										
 	inline bool Verb::operator >= (const Verb& ext) const noexcept {
-		return mVerb.mCharge.mPriority >= ext.mVerb.mCharge.mPriority;
+		return mCharge.mPriority >= ext.mCharge.mPriority;
 	}
 
 	/// Compare verb priorities																
 	///	@param rhs - the verb to compare against										
 	///	@return true if rhs has larger priority										
 	inline bool Verb::operator <= (const Verb& rhs) const noexcept {
-		return mVerb.mCharge.mPriority <= rhs.mVerb.mCharge.mPriority;
+		return mCharge.mPriority <= rhs.mCharge.mPriority;
 	}
 
 	/// Get the verb id																			
 	///	@return verb ID																		
-	inline VerbID Verb::GetID() const noexcept {
-		return mVerb.mID ? mVerb.mID->GetID() : uvInvalid;
+	inline VMeta Verb::GetVerb() const noexcept {
+		return mVerb;
 	}
 
 	/// Get the verb id and charge															
 	///	@return verb charge																	
-	inline const ChargedVerbID& Verb::GetChargedID() const noexcept {
-		return mVerb;
-	}
-
-	/// Get a switchable value of the verb ID												
-	///	@return the switch equivalent of a verb ID									
-	inline auto Verb::GetSwitch() const noexcept {
-		return GetID().GetHash().GetValue();
-	}
-
-	/// Get the verb meta																		
-	///	@return the verb meta																
-	inline VMeta Verb::GetMeta() const noexcept {
-		return mVerb.mID;
+	inline const Charge& Verb::GetCharge() const noexcept {
+		return mCharge;
 	}
 
 	/// Get the verb mass (a.k.a. magnitude)												
 	///	@return the current mass															
-	inline real Verb::GetMass() const noexcept {
-		return mVerb.mCharge.mMass;
+	inline Real Verb::GetMass() const noexcept {
+		return mCharge.mMass;
 	}
 
 	/// Get the verb frequency																	
 	///	@return the current frequency														
-	inline real Verb::GetFrequency() const noexcept {
-		return mVerb.mCharge.mFrequency; 
+	inline Real Verb::GetFrequency() const noexcept {
+		return mCharge.mFrequency; 
 	}
 
 	/// Get the verb time 																		
 	///	@return the current time															
-	inline real Verb::GetTime() const noexcept {
-		return mVerb.mCharge.mTime;
+	inline Real Verb::GetTime() const noexcept {
+		return mCharge.mTime;
 	}
 
 	/// Get the verb priority 																	
 	///	@return the current priority														
-	inline real Verb::GetPriority() const noexcept {
-		return mVerb.mCharge.mPriority;
+	inline Real Verb::GetPriority() const noexcept {
+		return mCharge.mPriority;
 	}
 
 	/// Get verb source																			
@@ -342,33 +296,33 @@ namespace PCFW::Flow
 	/// Check if verb outputs to a register trait										
 	///	@tparam T - the trait to check for												
 	///	@return true if verb outputs to the selected trait							
-	template<RTTI::ReflectedTrait T>
-	bool Verb::OutputsTo() const noexcept {
+	template<CT::Trait T>
+	bool Verb::OutputsTo() const noexcept {//TODO remove this?
 		return mOutput.GetCount() == 1 
-			&& mOutput.Is<TraitID>() 
-			&& mOutput.Get<TraitID>() == T::ID;
+			&& mOutput.Is<TMeta>() 
+			&& mOutput.Get<TMeta>()->Is<T>();
 	}
 
 	/// Push anything to output via shallow copy, satisfying the verb once		
 	///	@tparam T - the type of the data to push (deducible)						
 	///	@param data - the data to push													
 	///	@return a reference to this verb for chaining								
-	template<RTTI::ReflectedData T>
+	template<CT::Data T>
 	Verb& Verb::operator << (const T& data) {
-		if constexpr (pcIsDeep<T>) {
+		if constexpr (CT::Deep<T>) {
 			// Avoid pushing empty blocks												
-			if (pcVal(data).IsEmpty())
+			if (DenseCast(data).IsEmpty())
 				return *this;
 
-			mOutput.SmartPush<pcDecay<T>>(pcVal(data), DState::Default, true, true, uiBack);
+			mOutput.SmartPush<true, true, T>(data, DataState::Default, Index::Back);
 			Done();
 			return *this;
 		}
 
-		if constexpr (Sparse<T>) {
-			if (!PCMEMORY.CheckJurisdiction(MetaData::Of<T>(), data))
-				throw Except::BadReference(pcLogFuncError
-					<< "Pushing unowned pointer to verb is a baaaaad idea");
+		if constexpr (CT::Sparse<T>) {
+			if (!Inner::Allocator::CheckAuthority(MetaData::Of<T>(), data))
+				Throw<Except::Reference>(
+					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
 
 		mOutput << data;
@@ -380,25 +334,25 @@ namespace PCFW::Flow
 	///	@tparam T - the type of the data to move (deducible)						
 	///	@param data - the data to push													
 	///	@return a reference to this verb for chaining								
-	template<RTTI::ReflectedData T>
+	template<CT::Data T>
 	Verb& Verb::operator << (T&& data) {
-		if constexpr (pcIsDeep<T>) {
+		if constexpr (CT::Deep<T>) {
 			// Avoid pushing empty blocks												
-			if (pcVal(data).IsEmpty())
+			if (DenseCast(data).IsEmpty())
 				return *this;
 
-			mOutput.SmartPush<pcDecay<T>>(pcVal(data), DState::Default, true, true, uiBack);
+			mOutput.SmartPush<true, true, T>(Forward<T>(data), DataState::Default, Index::Back);
 			Done();
 			return *this;
 		}
 
-		if constexpr (Sparse<T>) {
-			if (!PCMEMORY.CheckJurisdiction(MetaData::Of<T>(), data))
-				throw Except::BadReference(pcLogFuncError
-					<< "Pushing unowned pointer to verb is a baaaaad idea");
+		if constexpr (CT::Sparse<T>) {
+			if (!Inner::Allocator::CheckAuthority(MetaData::Of<T>(), data))
+				Throw<Except::Reference>(
+					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
 
-		mOutput << pcForward<T>(data);
+		mOutput << Forward<T>(data);
 		Done();
 		return *this;
 	}
@@ -407,22 +361,22 @@ namespace PCFW::Flow
 	///	@tparam T - the type of the data to push (deducible)						
 	///	@param data - the data to push													
 	///	@return a reference to this verb for chaining								
-	template<RTTI::ReflectedData T>
+	template<CT::Data T>
 	Verb& Verb::operator >> (const T& data) {
-		if constexpr (pcIsDeep<T>) {
+		if constexpr (CT::Deep<T>) {
 			// Avoid pushing empty blocks												
-			if (pcVal(data).IsEmpty())
+			if (DenseCast(data).IsEmpty())
 				return *this;
 
-			mOutput.SmartPush<pcDecay<T>>(pcVal(data), DState::Default, true, true, uiFront);
+			mOutput.SmartPush<true, true, T>(data, DataState::Default, Index::Front);
 			Done();
 			return *this;
 		}
 
-		if constexpr (Sparse<T>) {
-			if (!PCMEMORY.CheckJurisdiction(MetaData::Of<T>(), data))
-				throw Except::BadReference(pcLogFuncError
-					<< "Pushing unowned pointer to verb is a baaaaad idea");
+		if constexpr (CT::Sparse<T>) {
+			if (!Inner::Allocator::CheckAuthority(MetaData::Of<T>(), data))
+				Throw<Except::Reference>(
+					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
 
 		mOutput >> data;
@@ -434,25 +388,25 @@ namespace PCFW::Flow
 	///	@tparam T - the type of the data to move (deducible)						
 	///	@param data - the data to push													
 	///	@return a reference to this verb for chaining								
-	template<RTTI::ReflectedData T>
+	template<CT::Data T>
 	Verb& Verb::operator >> (T&& data) {
-		if constexpr (pcIsDeep<T>) {
+		if constexpr (CT::Deep<T>) {
 			// Avoid pushing empty blocks												
-			if (pcVal(data).IsEmpty())
+			if (DenseCast(data).IsEmpty())
 				return *this;
 
-			mOutput.SmartPush<pcDecay<T>>(pcVal(data), DState::Default, true, true, uiFront);
+			mOutput.SmartPush<true, true, T>(Forward<T>(data), DataState::Default, Index::Front);
 			Done();
 			return *this;
 		}
 
-		if constexpr (Sparse<T>) {
-			if (!PCMEMORY.CheckJurisdiction(MetaData::Of<T>(), data))
-				throw Except::BadReference(pcLogFuncError
-					<< "Pushing unowned pointer to verb is a baaaaad idea");
+		if constexpr (CT::Sparse<T>) {
+			if (!Inner::Allocator::CheckAuthority(MetaData::Of<T>(), data))
+				Throw<Except::Reference>(
+					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
 
-		mOutput >> pcForward<T>(data);
+		mOutput >> Forward<T>(data);
 		Done();
 		return *this;
 	}
@@ -461,18 +415,18 @@ namespace PCFW::Flow
 	///	@tparam T - the type of the data to merge										
 	///	@param data - the data to merge													
 	///	@return a reference to this verb for chaining								
-	template<RTTI::ReflectedData T>
+	template<CT::Data T>
 	Verb& Verb::operator <<= (const T& data) {
-		if constexpr (pcIsDeep<T>) {
+		if constexpr (CT::Deep<T>) {
 			// Avoid pushing empty blocks												
-			if (pcVal(data).IsEmpty())
+			if (DenseCast(data).IsEmpty())
 				return *this;
 		}
 
-		if constexpr (Sparse<T>) {
-			if (!PCMEMORY.CheckJurisdiction(MetaData::Of<T>(), data))
-				throw Except::BadReference(pcLogFuncError
-					<< "Pushing unowned pointer to verb is a baaaaad idea");
+		if constexpr (CT::Sparse<T>) {
+			if (!Inner::Allocator::CheckAuthority(MetaData::Of<T>(), data))
+				Throw<Except::Reference>(
+					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
 
 		mOutput <<= data;
@@ -484,18 +438,18 @@ namespace PCFW::Flow
 	///	@tparam T - the type of the data to merge										
 	///	@param data - the data to merge													
 	///	@return a reference to this verb for chaining								
-	template<RTTI::ReflectedData T>
+	template<CT::Data T>
 	Verb& Verb::operator >>= (const T& data) {
-		if constexpr (pcIsDeep<T>) {
+		if constexpr (CT::Deep<T>) {
 			// Avoid pushing empty blocks												
-			if (pcVal(data).IsEmpty())
+			if (DenseCast(data).IsEmpty())
 				return *this;
 		}
 
-		if constexpr (Sparse<T>) {
-			if (!PCMEMORY.CheckJurisdiction(MetaData::Of<T>(), data))
-				throw Except::BadReference(pcLogFuncError
-					<< "Pushing unowned pointer to verb is a baaaaad idea");
+		if constexpr (CT::Sparse<T>) {
+			if (!Inner::Allocator::CheckAuthority(MetaData::Of<T>(), data))
+				Throw<Except::Reference>(
+					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
 
 		mOutput >>= data;
@@ -503,4 +457,4 @@ namespace PCFW::Flow
 		return *this;
 	}
 
-} // namespace PCFW::Flow
+} // namespace Langulus::Flow

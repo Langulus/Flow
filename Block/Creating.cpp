@@ -1,9 +1,9 @@
-#include "../GASM.hpp"
+#include "../Code.hpp"
 #include "IncludeLogger.hpp"
 
 #define VERBOSE_CREATION(a) //pcLogVerbose << a
 
-namespace PCFW::Flow
+namespace Langulus::Flow
 {
 
 	/// A helper delegation function, that calls Create verb in all elements	
@@ -202,4 +202,4 @@ namespace PCFW::Flow
 		});
 	}
 
-} // namespace PCFW::PCGASM
+} // namespace Langulus::Flow

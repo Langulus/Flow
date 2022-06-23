@@ -1,7 +1,7 @@
 #pragma once
-#include "GASM.hpp"
+#include "Code.hpp"
 
-namespace PCFW::Flow
+namespace Langulus::Flow
 {
 
 	template<class TO, bool HEADER = true, class FROM>
@@ -14,19 +14,19 @@ namespace PCFW::Flow
 	{
 
 		///																							
-		///	General GASM/Debug serializer tools											
+		///	General Code/Debug serializer tools											
 		///																							
 		NOD() bool NeedsScope(const Block& block) noexcept;
-		NOD() GASM Separator(bool isOr);
+		NOD() Code Separator(bool isOr);
 
 		template<class TO>
-		NOD() pcptr SerializeBlockToText(const Block&, TO&);
+		NOD() Count SerializeBlockToText(const Block&, TO&);
 
 		template<class TO>
 		void SerializeStateToText(const Block&, TO&);
 
 		template<class META, class TO>
-		void SerializeMetaToText(const Block&, TO&, const LinkedMember*);
+		void SerializeMetaToText(const Block&, TO&, const Member*);
 
 		template<class TO>
 		void SerializeMembersToText(const Block&, TO&);
@@ -35,7 +35,7 @@ namespace PCFW::Flow
 		///	General binary serializer tools												
 		///																							
 		#pragma pack(push, 1)
-		struct EMPTY_BASE() Header : POD {
+		struct Header {
 			Header() noexcept;
 
 			enum {
@@ -50,9 +50,9 @@ namespace PCFW::Flow
 			bool operator == (const Header&) const noexcept;
 			bool operator != (const Header&) const noexcept;
 
-			pcu8 mAtomSize;
-			pcu8 mFlags;
-			pcu16 mUnused;
+			uint8_t mAtomSize;
+			uint8_t mFlags;
+			uint16_t mUnused;
 		};
 		#pragma pack(pop)
 
@@ -73,6 +73,6 @@ namespace PCFW::Flow
 		NOD() pcptr DeserializeInternalFromBinary(const Bytes&, INTERNAL&, pcptr, const Header&, const Loader&);
 
 	} // namespace Detail
-} // namespace PCFW::PCGASM
+} // namespace Langulus::Flow
 
 #include "Serial.inl"

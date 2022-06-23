@@ -1,26 +1,29 @@
 #define LGLS_VERBOSE_SERIALIZATION(a)
 
-namespace PCFW::Flow
+namespace Langulus::Flow
 {
 
-	/// Check if a memory block needs a GASM scope decorated							
+	/// Check if a memory block needs a Code scope decorated							
 	///	@param block - the memory block to check										
 	///	@return true if a scope is required around the block						
 	inline bool Detail::NeedsScope(const Block& block) noexcept {
-		return block.GetCount() > 1 || block.IsMissing() || block.IsPolar() || block.IsEmpty();
+		return block.GetCount() > 1 
+			|| block.IsMissing() 
+			|| block.IsPhased() 
+			|| block.IsEmpty();
 	}
 
 	/// Add a separator																			
 	///	@param isOr - OR separator or not												
 	///	@return the text equivalent of the separator									
-	inline GASM Detail::Separator(bool isOr) {
+	inline Code Detail::Separator(bool isOr) {
 		return isOr
-			? GASM {GASM::OrSeparator}
-			: GASM {GASM::AndSeparator};
+			? Code {Code::OrSeparator}
+			: Code {Code::AndSeparator};
 	}
 	
-	/// Invoke reflected converters to Text or GASM for FROM							
-	///	@tparam TO - the type we're serializing to (either Debug or GASM)		
+	/// Invoke reflected converters to Text or Code for FROM							
+	///	@tparam TO - the type we're serializing to (either Debug or Code)		
 	///	@tparam HEADER - ignored when serializing to text formats				
 	///						- when serializing to binary formats: true if you		
 	///						  want to write a portability header for the data		
@@ -58,11 +61,11 @@ namespace PCFW::Flow
 				catch (const Except::BadSerialization&) {}
 
 				try {
-					// Debug serializer also employs the GASM serializer as	
+					// Debug serializer also employs the Code serializer as	
 					// an alternative stringifier - it might include a lot	
 					// of redundant and irrelevant data, but better				
 					// something than nothing...										
-					GASM result;
+					Code result;
 					(void)Detail::SerializeBlockToText(block, result);
 					return result;
 				}
@@ -74,13 +77,13 @@ namespace PCFW::Flow
 					<< " couldn't be serialized to " << DataID::Of<TO>
 				);
 			}
-			else if constexpr (Same<TO, GASM>) {
-				/// GASM SERIALIZER														
-				// GASM serializer is strict to allow for deserialization	
+			else if constexpr (Same<TO, Code>) {
+				/// Code SERIALIZER														
+				// Code serializer is strict to allow for deserialization	
 				const auto block = Block::From(item);
 
 				try {
-					GASM result;
+					Code result;
 					(void)Detail::SerializeBlockToText(block, result);
 					return result;
 				}
@@ -120,7 +123,7 @@ namespace PCFW::Flow
 		}
 	}
 
-	/// Deserialize from GASM/Bytes															
+	/// Deserialize from Code/Bytes															
 	///	@tparam FROM - the type we're deserializing from (deducible)			
 	///	@param item - the item to deserialize											
 	///	@return the deserialized contents inside a container						
@@ -130,7 +133,7 @@ namespace PCFW::Flow
 			LANGULUS_ASSERT("You can't deserialize debug containers "
 				" - debug serialization is a one-way process");
 		}
-		else if constexpr (Same<FROM, GASM>)
+		else if constexpr (Same<FROM, Code>)
 			return item.Parse();
 		else if constexpr (Same<FROM, Bytes>) {
 			Detail::Header header;
@@ -148,12 +151,12 @@ namespace PCFW::Flow
 	void Detail::SerializeStateToText(const Block& from, TO& to) {
 		static_assert(IsText<TO>, "TO has to be a Text derivative");
 		if (from.IsLeft())
-			to += GASM {GASM::PolarizeLeft};
+			to += Code {Code::PolarizeLeft};
 		else if (from.IsRight())
-			to += GASM {GASM::PolarizeRight};
+			to += Code {Code::PolarizeRight};
 
 		if (from.IsMissing())
-			to += GASM {GASM::Missing};
+			to += Code {Code::Missing};
 	}
 
 	/// Serialize any block to any string format											
@@ -162,14 +165,14 @@ namespace PCFW::Flow
 	///	@param noscope360 - avoid serializing scope and state						
 	///	@return the number of written characters										
 	template<class TO>
-	pcptr Detail::SerializeBlockToText(const Block& from, TO& to) {
+	Count Detail::SerializeBlockToText(const Block& from, TO& to) {
 		static_assert(IsText<TO>, "TO has to be a Text derivative");
 		const auto initial = to.GetCount();
 		SerializeStateToText(from, to);
 
 		const bool scoped = NeedsScope(from);
 		if (scoped)
-			to += GASM {GASM::OpenScope};
+			to += Code {Code::OpenScope};
 
 		// Serialize text																	
 		if (from.IsUntyped() || from.IsEmpty()) {
@@ -191,13 +194,13 @@ namespace PCFW::Flow
 					to += Separator(from.IsOr());
 			}
 		}
-		else if (from.InterpretsAs<GASM>()) {
+		else if (from.InterpretsAs<Code>()) {
 			// Contained type is code, wrap it in code scope					
 			for (pcptr i = 0; i < from.GetCount(); ++i) {
-				auto& text = from.As<GASM>(i);
-				to += GASM {GASM::OpenCode};
+				auto& text = from.As<Code>(i);
+				to += Code {Code::OpenCode};
 				to += text;
-				to += GASM {GASM::CloseCode};
+				to += Code {Code::CloseCode};
 				if (i < from.GetCount() - 1)
 					to += Separator(from.IsOr());
 			}
@@ -206,9 +209,9 @@ namespace PCFW::Flow
 			// Contained type is text, wrap it in string scope					
 			for (pcptr i = 0; i < from.GetCount(); ++i) {
 				auto& text = from.As<Text>(i);
-				to += GASM {GASM::OpenString};
+				to += Code {Code::OpenString};
 				to += text;
-				to += GASM {GASM::CloseString};
+				to += Code {Code::CloseString};
 				if (i < from.GetCount() - 1)
 					to += Separator(from.IsOr());
 			}
@@ -217,9 +220,9 @@ namespace PCFW::Flow
 			// Contained type is characters, wrap it in char scope			
 			for (pcptr i = 0; i < from.GetCount(); ++i) {
 				auto& text = from.As<char8>(i);
-				to += GASM {GASM::OpenCharacter};
+				to += Code {Code::OpenCharacter};
 				to += LiteralText {&text.mValue, 1};
-				to += GASM {GASM::CloseCharacter};
+				to += Code {Code::CloseCharacter};
 				if (i < from.GetCount() - 1)
 					to += Separator(from.IsOr());
 			}
@@ -228,12 +231,12 @@ namespace PCFW::Flow
 			// Contained type is characters, wrap it in char scope			
 			for (pcptr i = 0; i < from.GetCount(); ++i) {
 				auto& text = from.As<charw>(i);
-				to += GASM {GASM::OpenCharacter};
+				to += Code {Code::OpenCharacter};
 				to += LiteralText {
 					reinterpret_cast<const char*>(&text.mValue),
 					sizeof(text.mValue)
 				};
-				to += GASM {GASM::CloseCharacter};
+				to += Code {Code::CloseCharacter};
 				if (i < from.GetCount() - 1)
 					to += Separator(from.IsOr());
 			}
@@ -242,15 +245,15 @@ namespace PCFW::Flow
 			// Contained type is raw bytes, wrap it in byte scope				
 			auto raw_bytes = from.GetBytes();
 			if (!from.IsOr()) {
-				to += GASM {GASM::OpenByte};
+				to += Code {Code::OpenByte};
 				for (pcptr i = 0; i < from.GetCount(); ++i)
 					to += pcToHex(raw_bytes[i]);
-				to += GASM {GASM::CloseByte};
+				to += Code {Code::CloseByte};
 			}
 			else for (pcptr i = 0; i < from.GetCount(); ++i) {
-				to += GASM {GASM::OpenByte};
+				to += Code {Code::OpenByte};
 				to += pcToHex(raw_bytes[i]);
-				to += GASM {GASM::CloseByte};
+				to += Code {Code::CloseByte};
 				if (i < from.GetCount() - 1)
 					to += Separator(from.IsOr());
 			}
@@ -284,7 +287,7 @@ namespace PCFW::Flow
 
 		// Close scope																		
 		if (scoped)
-			to += GASM {GASM::CloseScope};
+			to += Code {Code::CloseScope};
 		return to.GetCount() - initial;
 	}
 
@@ -293,7 +296,7 @@ namespace PCFW::Flow
 	///	@param to - [out] the serialized data											
 	///	@param member - reflection data about the member							
 	template<class META, class TO>
-	void Detail::SerializeMetaToText(const Block& from, TO& to, const LinkedMember* member) {
+	void Detail::SerializeMetaToText(const Block& from, TO& to, const Member* member) {
 		static_assert(pcHasBase<META, AMeta>, "META has to be an AMeta derivative");
 		static_assert(IsText<TO>, "TO has to be a Text derivative");
 		auto meta = member->As<META>(from.GetRaw());
@@ -317,7 +320,7 @@ namespace PCFW::Flow
 		for (auto& base : from.GetMeta()->GetBaseList()) {
 			if (base.mBase->GetStride() > 0) {
 				if (separate) {
-					to += GASM {GASM::AndSeparator};
+					to += Code {Code::AndSeparator};
 					separate = false;
 				}
 
@@ -331,7 +334,7 @@ namespace PCFW::Flow
 		// Iterate members for each object											
 		for (auto& member : from.GetMeta()->GetMemberList()) {
 			if (separate)
-				to += GASM {GASM::AndSeparator};
+				to += Code {Code::AndSeparator};
 
 			switch (member.mStaticMember.mType.GetHash().GetValue()) {
 			case DataID::Switch<DMeta>():
@@ -356,7 +359,7 @@ namespace PCFW::Flow
 
 	/// Default header constructor															
 	inline Detail::Header::Header() noexcept {
-		mAtomSize = sizeof(pcptr);
+		mAtomSize = sizeof(Size);
 
 		// First bit of the flag means the file was written by a big		
 		// endian machine																	
@@ -824,5 +827,5 @@ namespace PCFW::Flow
 		}
 	}
 
-} // namespace PCFW::PCGASM
+} // namespace Langulus::Flow
 

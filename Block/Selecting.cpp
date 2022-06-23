@@ -1,9 +1,9 @@
-#include "../GASM.hpp"
+#include "../Code.hpp"
 #include "IncludeLogger.hpp"
 
 #define PC_SELECT_VERBOSE(a) //pcLogFuncVerbose << a
 
-namespace PCFW::Flow
+namespace Langulus::Flow
 {
 
 	/// @brief 
@@ -138,4 +138,4 @@ namespace PCFW::Flow
 		verb << selectedVerbs.Decay();
 	}
 
-} // namespace PCFW::PCGASM
+} // namespace Langulus::Flow

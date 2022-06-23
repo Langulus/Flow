@@ -1,4 +1,4 @@
-#include "TestMain.hpp"
+#include "Main.hpp"
 #include <catch2/catch.hpp>
 
 SCENARIO("Serialization", "[serialization]") {

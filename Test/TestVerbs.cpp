@@ -1,25 +1,25 @@
-#include "TestMain.hpp"
+#include "Main.hpp"
 #include <catch2/catch.hpp>
 
 SCENARIO("Text capsulation in verbs", "[text]") {
 	GIVEN("A templated utf8 text container") {
 		Text text = "tests";
 
-		REQUIRE(text.GetState() % DState::Static);
-		REQUIRE(text.GetBlockReferences() == 1);
+		REQUIRE(!text.IsStatic());
+		REQUIRE(text.GetUses() == 1);
 
 		WHEN("Wrapped inside a verb's output") {
 			Verb wrapper = Verb::From<Verbs::Do>({}, {}, &text);
 			Verb wrapper2 = wrapper;
 			THEN("The block's reference count must increase") {
-				REQUIRE(text.GetBlockReferences() == 1);
+				REQUIRE(text.GetUses() == 1);
 				REQUIRE(text == "tests");
 			}
 
 			wrapper.Reset();
 			wrapper2.Reset();
 			THEN("The block's reference count must decrease") {
-				REQUIRE(text.GetBlockReferences() == 1);
+				REQUIRE(text.GetUses() == 1);
 				REQUIRE(text == "tests");
 			}
 		}
@@ -27,13 +27,13 @@ SCENARIO("Text capsulation in verbs", "[text]") {
 		WHEN("Wrapped inside a verb's argument") {
 			Verb wrapper = Verb::From<Verbs::Do>({}, &text, {});
 			THEN("The block's reference count must increase") {
-				REQUIRE(text.GetBlockReferences() == 1);
+				REQUIRE(text.GetUses() == 1);
 				REQUIRE(text == "tests");
 			}
 
 			wrapper.Reset();
 			THEN("The block's reference count must decrease") {
-				REQUIRE(text.GetBlockReferences() == 1);
+				REQUIRE(text.GetUses() == 1);
 				REQUIRE(text == "tests");
 			}
 		}
@@ -41,13 +41,13 @@ SCENARIO("Text capsulation in verbs", "[text]") {
 		WHEN("Wrapped inside a verb's source") {
 			Verb wrapper = Verb::From<Verbs::Do>(&text, {}, {});
 			THEN("The block's reference count must increase") {
-				REQUIRE(text.GetBlockReferences() == 1);
+				REQUIRE(text.GetUses() == 1);
 				REQUIRE(text == "tests");
 			}
 
 			wrapper.Reset();
 			THEN("The block's reference count must decrease") {
-				REQUIRE(text.GetBlockReferences() == 1);
+				REQUIRE(text.GetUses() == 1);
 				REQUIRE(text == "tests");
 			}
 		}
@@ -55,13 +55,13 @@ SCENARIO("Text capsulation in verbs", "[text]") {
 		WHEN("Wrapped everywhere inside a verb") {
 			Verb wrapper = Verb::From<Verbs::Do>(&text, &text, &text);
 			THEN("The block's reference count must increase") {
-				REQUIRE(text.GetBlockReferences() == 1);
+				REQUIRE(text.GetUses() == 1);
 				REQUIRE(text == "tests");
 			}
 
 			wrapper.Reset();
 			THEN("The block's reference count must decrease") {
-				REQUIRE(text.GetBlockReferences() == 1);
+				REQUIRE(text.GetUses() == 1);
 				REQUIRE(text == "tests");
 			}
 		}
@@ -87,8 +87,8 @@ SCENARIO("Serializing verbs", "[verbs]") {
 			}
 		}
 
-		/*WHEN("Serialize and then deserialize container in GASM") {
-			auto serialized = pcSerialize<GASM>(stuff);
+		/*WHEN("Serialize and then deserialize container in Code") {
+			auto serialized = pcSerialize<Code>(stuff);
 			auto deserialized = pcDeserialize(serialized);
 
 			THEN("Deserialized data must match original stuff completely") {

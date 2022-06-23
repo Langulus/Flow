@@ -1,11 +1,11 @@
 #include "Verb.hpp"
-#include "GASM.hpp"
+#include "Code.hpp"
 #include "IncludeLogger.hpp"
 
 #define DELEGATION_VERBOSE(a) pcLogSelfVerbose << a
 #define HASHING_VERBOSE(a) //pcLogSelfVerbose << a
 
-namespace PCFW::Flow
+namespace Langulus::Flow
 {
 
 	/// Manual constructor with verb meta 													
@@ -196,44 +196,44 @@ namespace PCFW::Flow
 		return result;
 	}
 
-	/// Serialize verb to GASM																	
-	Verb::operator GASM() const {
-		GASM result;
+	/// Serialize verb to Code																	
+	Verb::operator Code() const {
+		Code result;
 		result += GetChargedID();
-		result += GASM::OpenScope;
+		result += Code::OpenScope;
 		if (mSource.IsValid()) {
-			result += pcSerialize<GASM>(mSource);
-			result += GASM::Context;
+			result += pcSerialize<Code>(mSource);
+			result += Code::Context;
 		}
 		if (mArgument.IsValid())
-			result += pcSerialize<GASM>(mArgument);
+			result += pcSerialize<Code>(mArgument);
 		if (mOutput.IsValid()) {
-			result += GASM::As;
-			result += pcSerialize<GASM>(mOutput);
+			result += Code::As;
+			result += pcSerialize<Code>(mOutput);
 		}
-		result += GASM::CloseScope;
+		result += Code::CloseScope;
 		return result;
 	}
 
 	/// Stringify verb																			
 	Verb::operator Debug() const {
-		GASM result;
+		Code result;
 		result += GetChargedID();
-		result += GASM::OpenScope;
+		result += Code::OpenScope;
 		if (mSource.IsValid()) {
 			result += pcSerialize<Debug>(mSource);
-			result += GASM::Context;
+			result += Code::Context;
 		}
 		if (mArgument.IsValid())
 			result += pcSerialize<Debug>(mArgument);
 		if (mOutput.IsValid()) {
-			result += GASM::As;
+			result += Code::As;
 			result += pcSerialize<Debug>(mOutput);
 		}
-		result += GASM::CloseScope;
+		result += Code::CloseScope;
 		return result;
 	}
 
 
-} // namespace PCFW::PCGASM
+} // namespace Langulus::Flow
 

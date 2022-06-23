@@ -1,0 +1,180 @@
+#pragma once
+#include "Code.hpp"
+
+namespace Langulus::Flow
+{
+
+	/// Construct by referencing a Text container										
+	///	@param other - the text container to use										
+	inline Code::Code(const Text& other)
+		: Text {other} {}
+
+	/// Construct by moving a Text container												
+	///	@param other - the text container to use										
+	inline Code::Code(Text&& other) noexcept
+		: Text {Forward<Text>(other)} {}
+
+	/// Remove elements from the left side of Code code								
+	///	@param offset - the number of elements to discard from the front		
+	///	@return a shallow-copied container with the correct offset				
+	inline Code Code::CropLeft(Offset o) const {
+		return Text::Crop(o, mCount - o);
+	}
+
+	/// Remove elements from the right side of Code code								
+	///	@param offset - the number of elements to remain in container			
+	///	@return a shallow-copied container with the correct offset				
+	inline Code Code::CropRight(Offset o) const {
+		return Text::Crop(0, o);
+	}
+
+	/// Check if the Code code container begins with skippable elements			
+	///	@return true if the first symbol is a spacer									
+	inline bool Code::IsSkippable() const noexcept {
+		return GetCount() > 0 && pcIsSpecialChar((*this)[0]);
+	}
+
+	/// Check if the Code code container begins with skippable elements			
+	///	@return true if the first symbol is a spacer									
+	inline bool Code::IsSkippableRev() const noexcept {
+		return GetCount() > 0 && last() > 0 && last() <= 32;
+	}
+
+	/// Check if the Code code container begins with a letter or underscore		
+	///	@return true if the first symbol is a letter/underscore					
+	inline bool Code::IsLetter() const noexcept {
+		return GetCount() > 0 && (pcIsLetter((*this)[0]) || (*this)[0] == '_');
+	}
+
+	/// Check if the Code code container ends with a letter or underscore		
+	///	@return true if the last symbol is a letter/underscore					
+	inline bool Code::IsLetterRev() const noexcept {
+		return GetCount() > 0 && (pcIsLetter(last()) || last() == '_');
+	}
+
+	/// Check if the Code code container begins with a number						
+	///	@return true if the first symbol is a number									
+	inline bool Code::IsNumber() const noexcept {
+		return GetCount() > 0 && pcIsNumber((*this)[0]);
+	}
+
+	/// Check if the Code code container ends with a number							
+	///	@return true if the last symbol is a number									
+	inline bool Code::IsNumberRev() const noexcept {
+		return GetCount() > 0 && pcIsNumber(last());
+	}
+
+	/// Check if the Code code container begins with an operator					
+	///	@param i - the operator to check for											
+	///	@return true if the operator matches											
+	inline bool Code::IsOperator(Offset i) const noexcept {
+		const Size tokenSize = Code::Token[i].mToken.size();
+		if (mCount < tokenSize)
+			return false;
+
+		const auto token = Code(Code::Token[i].mToken);
+		const auto remainder = CropLeft(tokenSize);
+		const auto endsWithALetter = token.IsLetterRev();
+		return tokenSize > 0 && MatchesLoose(token) == tokenSize
+			&& (GetCount() == tokenSize 
+				|| (endsWithALetter && (!remainder.IsLetter() && !remainder.IsNumber()))
+				|| !endsWithALetter
+			);
+	}
+
+	/// A type naming convention for standard number types							
+	///	@return the suffix depending on the template argument						
+	template<class T>
+	Code& Code::TypeSuffix() {
+		if constexpr (UnsignedInteger<T>) {
+			*this += "u";
+			if constexpr (sizeof(T) * 8 != 32)
+				*this += sizeof(T) * 8;
+		}
+		else if constexpr (SignedInteger<T>) {
+			*this += "i";
+			if constexpr (sizeof(T) * 8 != 32)
+				*this += sizeof(T) * 8;
+		}
+		else if constexpr (Same<T, float>)
+			*this += "f";
+		else if constexpr (Same<T, double>)
+			*this += "d";
+		else if constexpr (Boolean<T>)
+			*this += "b";
+		else
+			*this += MetaData::Of<T>();
+		return *this;
+	}
+
+	/// Generate a standard token from the current container							
+	///	@return the token																		
+	inline Code Code::StandardToken() const {
+		Code result = *this;
+		result += ",";
+		result += *this;
+		result += "Ptr,";
+		result += *this;
+		result += "ConstPtr";
+		return result;
+	}
+
+	/// Concatenate Code with Code															
+	inline Code operator + (const Code& lhs, const Code& rhs) {
+		// It's essentially the same, as concatenating Text with Text		
+		// with the only difference being, that it retains Code type		
+		return static_cast<const Text&>(lhs) + static_cast<const Text&>(rhs);
+	}
+
+	/// Concatenate Text with Code, Code always dominates								
+	inline Code operator + (const Text& lhs, const Code& rhs) {
+		// It's essentially the same, as concatenating Text with Text		
+		// with the only difference being, that it retains Code type		
+		return lhs + static_cast<const Text&>(rhs);
+	}
+
+	/// Concatenate Code with Text, Code always dominates								
+	inline Code operator + (const Code& lhs, const Text& rhs) {
+		// It's essentially the same, as concatenating Text with Text		
+		// with the only difference being, that it retains Code type		
+		return static_cast<const Text&>(lhs) + rhs;
+	}
+
+	/// Destructive concatenation of Code with anything								
+	template<class ANYTHING>
+	Code& Code::operator += (const ANYTHING& rhs) {
+		if constexpr (IsText<ANYTHING>) {
+			Text::template operator += <Text>(static_cast<const Text&>(rhs));
+		}
+		else {
+			Code converted;
+			TConverter<ANYTHING, Code>::Convert(rhs, converted);
+			operator += (converted);
+		}
+		return *this;
+	}
+
+	/// Concatenate anything with Code														
+	template<CT::NotText T>
+	NOD() Code operator + (const T& lhs, const Code& rhs) {
+		Code converted;
+		converted += lhs;
+		converted += rhs;
+		return converted;
+	}
+
+	/// Concatenate Code with anything														
+	template<CT::NotText T>
+	NOD() Code operator + (const Code& lhs, const T& rhs) {
+		Code converted;
+		converted += lhs;
+		converted += rhs;
+		return converted;
+	}
+
+	/// Make a code literal																		
+	inline Code operator "" _gasm(const char* text, std::size_t size) {
+		return Code {text, size};
+	}
+
+} // namespace Langulus::Flow

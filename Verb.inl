@@ -4,21 +4,19 @@
 namespace Langulus::Flow
 {
 
-	/// Default construction																	
-	constexpr Charge::Charge(Real mass, Real freq, Real time, Real prio, bool shortCircuited) noexcept
+	/// Charge construction																		
+	constexpr Charge::Charge(Real mass, Real freq, Real time, Real prio) noexcept
 		: mMass {mass}
 		, mFrequency {freq}
 		, mTime {time}
-		, mPriority {prio}
-		, mShortCircuited {shortCircuited} {}
+		, mPriority {prio} {}
 
 	/// Compare charges																			
 	constexpr bool Charge::operator == (const Charge& ext) const noexcept {
 		return mMass == ext.mMass 
 			&& mFrequency == ext.mFrequency 
 			&& mTime == ext.mTime
-			&& mPriority == ext.mPriority
-			&& mShortCircuited == ext.mShortCircuited;
+			&& mPriority == ext.mPriority;
 	}
 
 	/// Check if charge is default															
@@ -31,8 +29,7 @@ namespace Langulus::Flow
 		return HashData(mMass) 
 			| HashData(mFrequency) 
 			| HashData(mTime) 
-			| HashData(mPriority) 
-			| HashData(mShortCircuited); //TODO check hashing | add HashDataArray?
+			| HashData(mPriority); //TODO check hashing | add HashDataArray?
 	}
 
 	/// Create a verb using a static verb type											

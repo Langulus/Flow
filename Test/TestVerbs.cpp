@@ -9,7 +9,7 @@ SCENARIO("Text capsulation in verbs", "[text]") {
 		REQUIRE(text.GetUses() == 1);
 
 		WHEN("Wrapped inside a verb's output") {
-			Verb wrapper = Verb::From<Verbs::Do>({}, {}, &text);
+			Verb wrapper = Verbs::Do({}, {}, &text);
 			Verb wrapper2 = wrapper;
 			THEN("The block's reference count must increase") {
 				REQUIRE(text.GetUses() == 1);
@@ -25,7 +25,7 @@ SCENARIO("Text capsulation in verbs", "[text]") {
 		}
 
 		WHEN("Wrapped inside a verb's argument") {
-			Verb wrapper = Verb::From<Verbs::Do>({}, &text, {});
+			Verb wrapper = Verbs::Do({}, &text, {});
 			THEN("The block's reference count must increase") {
 				REQUIRE(text.GetUses() == 1);
 				REQUIRE(text == "tests");
@@ -39,7 +39,7 @@ SCENARIO("Text capsulation in verbs", "[text]") {
 		}
 
 		WHEN("Wrapped inside a verb's source") {
-			Verb wrapper = Verb::From<Verbs::Do>(&text, {}, {});
+			Verb wrapper = Verbs::Do(&text, {}, {});
 			THEN("The block's reference count must increase") {
 				REQUIRE(text.GetUses() == 1);
 				REQUIRE(text == "tests");
@@ -53,7 +53,7 @@ SCENARIO("Text capsulation in verbs", "[text]") {
 		}
 
 		WHEN("Wrapped everywhere inside a verb") {
-			Verb wrapper = Verb::From<Verbs::Do>(&text, &text, &text);
+			Verb wrapper = Verbs::Do(&text, &text, &text);
 			THEN("The block's reference count must increase") {
 				REQUIRE(text.GetUses() == 1);
 				REQUIRE(text == "tests");
@@ -73,9 +73,9 @@ SCENARIO("Serializing verbs", "[verbs]") {
 		auto stuff = Any::Wrap(
 			Text("some text"),
 			10, 5, 20.0f, 40.0,
-			Verb::From<Verbs::Do>(5, 10),
-			Verb::From<Verbs::Do>(Text("some other text"), 10),
-			Verb::From<Verbs::Do>(Verb::From<Verbs::Do>(5, 10), Text("even more text"))
+			Verbs::Do(5, 10),
+			Verbs::Do(Text("some other text"), 10),
+			Verbs::Do(Verbs::Do(5, 10), Text("even more text"))
 		);
 
 		WHEN("Serialize and then deserialize container in binary") {

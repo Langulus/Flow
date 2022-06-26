@@ -28,10 +28,11 @@ namespace Langulus::Flow
 		return Text::Crop(0, o);
 	}
 
-	/// Check if the Code code container begins with skippable elements			
+	/// Check if the Code container begins with skippable elements					
 	///	@return true if the first symbol is a spacer									
 	inline bool Code::IsSkippable() const noexcept {
-		return GetCount() > 0 && pcIsSpecialChar((*this)[0]);
+		const auto& letter = (*this)[0];
+		return GetCount() > 0 && letter > 0 && letter <= 32;
 	}
 
 	/// Check if the Code code container begins with skippable elements			
@@ -43,25 +44,25 @@ namespace Langulus::Flow
 	/// Check if the Code code container begins with a letter or underscore		
 	///	@return true if the first symbol is a letter/underscore					
 	inline bool Code::IsLetter() const noexcept {
-		return GetCount() > 0 && (pcIsLetter((*this)[0]) || (*this)[0] == '_');
+		return GetCount() > 0 && (::std::isalpha((*this)[0]) || (*this)[0] == '_');
 	}
 
 	/// Check if the Code code container ends with a letter or underscore		
 	///	@return true if the last symbol is a letter/underscore					
 	inline bool Code::IsLetterRev() const noexcept {
-		return GetCount() > 0 && (pcIsLetter(last()) || last() == '_');
+		return GetCount() > 0 && (::std::isalpha(last()) || last() == '_');
 	}
 
 	/// Check if the Code code container begins with a number						
 	///	@return true if the first symbol is a number									
 	inline bool Code::IsNumber() const noexcept {
-		return GetCount() > 0 && pcIsNumber((*this)[0]);
+		return GetCount() > 0 && ::std::isdigit((*this)[0]);
 	}
 
 	/// Check if the Code code container ends with a number							
 	///	@return true if the last symbol is a number									
 	inline bool Code::IsNumberRev() const noexcept {
-		return GetCount() > 0 && pcIsNumber(last());
+		return GetCount() > 0 && ::std::isdigit(last());
 	}
 
 	/// Check if the Code code container begins with an operator					

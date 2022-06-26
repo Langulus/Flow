@@ -1,65 +1,30 @@
 #include "Verb.hpp"
 #include "Code.hpp"
-#include "IncludeLogger.hpp"
 
 #define DELEGATION_VERBOSE(a) pcLogSelfVerbose << a
-#define HASHING_VERBOSE(a) //pcLogSelfVerbose << a
 
 namespace Langulus::Flow
 {
 
 	/// Manual constructor with verb meta 													
 	///	@param call - the verb ID															
+	///	@param charge - the charge															
 	///	@param s - the source																
 	///	@param a - the argument																
 	///	@param o - the output																
-	Verb::Verb(VMeta call, const Any& s, const Any& a, const Any& o)
+	///	@param shortCircuit - short circuit												
+	Verb::Verb(VMeta call, const Any& s, const Any& a, const Any& o, const Charge& charge, bool shortCircuit)
 		: mVerb {call}
+		, mCharge {charge}
 		, mSource {s}
 		, mArgument {a}
-		, mOutput {o} { }
-
-	/// Manual constructor with verb id 													
-	///	@param call - the verb ID															
-	///	@param s - the source																
-	///	@param a - the argument																
-	///	@param o - the output																
-	Verb::Verb(const VerbID& call, const Any& s, const Any& a, const Any& o)
-		: mVerb {call.GetMeta()}
-		, mSource {s}
-		, mArgument {a}
-		, mOutput {o} { }
-
-	/// Manual constructor with modified verb id 										
-	///	@param call - the modified verb ID												
-	///	@param s - the source																
-	///	@param a - the argument																
-	///	@param o - the output																
-	Verb::Verb(const ChargedVerbID& call, const Any& s, const Any& a, const Any& o)
-		: mVerb {call}
-		, mSource {s}
-		, mArgument {a}
-		, mOutput {o} { }
-
-	/// Manual constructor with verb token 												
-	///	@param call - the verb token														
-	///	@param s - the source																
-	///	@param a - the argument																
-	///	@param o - the output																
-	Verb::Verb(const Text& call, const Any& s, const Any& a, const Any& o)
-		: Verb(PCMEMORY.GetMetaVerb(call), s, a, o) {
-		if (mVerb.mID->mStaticDescriptor.mTokenReverse == LiteralText{ call })
-			mVerb.mCharge.mMass *= real(-1);
-	}
+		, mOutput {o}
+		, mShortCircuited {shortCircuit} { }
 
 	/// Hash the verb																				
 	///	@return the hash of the content													
 	Hash Verb::GetHash() const {
-		HASHING_VERBOSE("mVerb hash: " << mVerb.GetHash());
-		HASHING_VERBOSE("mSource hash: " << mSource.GetHash() << "; type: " << mSource.GetToken());
-		HASHING_VERBOSE("mArgument hash: " << mArgument.GetHash() << "; type: " << mArgument.GetToken());
-		HASHING_VERBOSE("mOutput hash: " << mOutput.GetHash() << "; type: " << mOutput.GetToken());
-		return mVerb.GetHash() | mSource.GetHash() | mArgument.GetHash() | mOutput.GetHash();
+		return mVerb->GetHash() | mSource.GetHash() | mArgument.GetHash() | mOutput.GetHash();
 	}
 
 	/// Compare verbs for equality															
@@ -67,91 +32,77 @@ namespace Langulus::Flow
 	///	@return true if verbs match														
 	inline bool Verb::operator == (const Verb& rhs) const {
 		return mVerb == rhs.mVerb
+			&& mCharge == rhs.mCharge
 			&& mSource == rhs.mSource
 			&& mArgument == rhs.mArgument
 			&& mOutput == rhs.mOutput;
 	}
 
-	/// Compare verbs for inequality															
-	///	@param rhs - the verb to compare against										
-	///	@return true if verbs don't match												
-	inline bool Verb::operator != (const Verb& rhs) const {
-		return !(*this == rhs);
-	}
-
 	/// Compare verb types for equality														
 	///	@param rhs - the verb to compare against										
 	///	@return true if verbs match														
-	inline bool Verb::operator == (const VerbID& rhs) const noexcept {
+	inline bool Verb::operator == (VMeta rhs) const noexcept {
 		return Is(rhs); 
-	}
-
-	/// Compare verb types for inequality													
-	///	@param rhs - the verb to compare against										
-	///	@return true if verbs don't match												
-	inline bool Verb::operator != (const VerbID& rhs) const noexcept {
-		return !(*this == rhs); 
 	}
 
 	/// Partial copy (doesn't copy source, argument, and output)					
 	///	@param other - the verb to use as base											
 	///	@return the partially copied verb												
 	Verb Verb::PartialCopy() const noexcept {
-		return { mVerb };
+		return {mVerb, mCharge};
 	}
 
 	/// Clone the verb																			
 	///	@return the cloned verb																
 	Verb Verb::Clone() const {
-		Verb clone { mVerb };
+		Verb clone {mVerb, mCharge};
 		clone.mSource = mSource.Clone();
 		clone.mArgument = mArgument.Clone();
 		clone.mOutput = mOutput.Clone();
 		clone.mSuccesses = mSuccesses;
+		clone.mShortCircuited = mShortCircuited;
 		return clone;
 	}
 
 	/// Reset all verb members and energy													
 	void Verb::Reset() {
 		mVerb = {};
+		mCharge = {};
 		mSource.Reset();
 		mArgument.Reset();
 		mOutput.Reset();
-		mSuccesses = 0;
+		mSuccesses = {};
 	};
 
 	/// Check if verb id matches																
 	///	@param id - the verb id to check													
 	///	@return true if verb id matches													
-	bool Verb::Is(const VerbID& id) const noexcept {
-		return !mVerb.mID ? !id : mVerb.mID->GetID() == id;
+	bool Verb::Is(VMeta id) const noexcept {
+		return !mVerb ? !id : mVerb->Is(id);
 	}
 
 	/// Check if a verb is valid for the given priority								
 	///	@param priority - the priority to check										
 	///	@return true if this verb's priority matches the provided one			
 	bool Verb::Validate(const Index& priority) const noexcept {
-		return int(mVerb.mCharge.mPriority) == priority.mIndex || priority == uiAll;
+		return int(mCharge.mPriority) == priority.mIndex || priority == Index::All;
 	}
 	
 	/// Change the verb's circuitry															
 	///	@param toggle - enable or disable short-circuit								
 	///	@return a reference to this verb for chaining								
 	Verb& Verb::ShortCircuit(bool toggle) noexcept {
-		mVerb.mShortCircuited = toggle;
+		mShortCircuited = toggle;
 		return *this;
 	}
 
 	/// Get the verb token																		
 	///	@return the token as a literal													
-	LiteralText Verb::GetToken() const {
-		if (!mVerb.mID)
-			return VerbID::DefaultToken;
+	Token Verb::GetToken() const {
+		if (!mVerb)
+			return MetaVerb::DefaultToken;
 
-		if (mVerb.mCharge.mMass < 0)
-			return mVerb.mID->mStaticDescriptor.mTokenReverse;
-		else
-			return mVerb.mID->mStaticDescriptor.mToken;
+		return mCharge.mMass < 0 ? mVerb->mTokenReverse : mVerb->mToken;
 	}
 
 	/// Flat check if memory block contains executable verbs							
@@ -199,7 +150,8 @@ namespace Langulus::Flow
 	/// Serialize verb to Code																	
 	Verb::operator Code() const {
 		Code result;
-		result += GetChargedID();
+		result += GetVerb();
+		result += GetCharge();
 		result += Code::OpenScope;
 		if (mSource.IsValid()) {
 			result += pcSerialize<Code>(mSource);
@@ -218,7 +170,8 @@ namespace Langulus::Flow
 	/// Stringify verb																			
 	Verb::operator Debug() const {
 		Code result;
-		result += GetChargedID();
+		result += GetVerb();
+		result += GetCharge();
 		result += Code::OpenScope;
 		if (mSource.IsValid()) {
 			result += pcSerialize<Debug>(mSource);
@@ -233,7 +186,6 @@ namespace Langulus::Flow
 		result += Code::CloseScope;
 		return result;
 	}
-
 
 } // namespace Langulus::Flow
 

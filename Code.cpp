@@ -49,7 +49,7 @@ namespace Langulus::Flow
 
 	/// Stringify charged verb id, taking mass into account							
 	///	@param verb - the charged verb to serialize									
-	Code::Code(const ChargedVerbID& verb) {
+	Code::Code(const Verb& verb) {
 		Charge temp = verb.mCharge;
 		if (!verb.mID)
 			(*this) += VerbID::DefaultToken;
@@ -389,7 +389,7 @@ namespace Langulus::Flow
 		// Search for token in meta definitions									
 		const AMeta* meta = nullptr;
 		try { meta = PCMEMORY.GetMeta(keyword); }
-		catch (const Except::MissingMeta&) {
+		catch (const Except::Meta&) {
 			PRETTY_ERROR("Missing meta");
 		}
 

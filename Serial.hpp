@@ -1,6 +1,8 @@
 #pragma once
 #include "Code.hpp"
 
+LANGULUS_EXCEPTION(Serialize);
+
 namespace Langulus::Flow
 {
 
@@ -9,6 +11,7 @@ namespace Langulus::Flow
 
 	template<class FROM>
 	NOD() Any pcDeserialize(const FROM&);
+
 
 	namespace Detail
 	{
@@ -36,6 +39,11 @@ namespace Langulus::Flow
 		///																							
 		#pragma pack(push, 1)
 		struct Header {
+			uint8_t mAtomSize;
+			uint8_t mFlags;
+			uint16_t mUnused;
+
+		public:
 			Header() noexcept;
 
 			enum {
@@ -48,31 +56,27 @@ namespace Langulus::Flow
 			};
 
 			bool operator == (const Header&) const noexcept;
-			bool operator != (const Header&) const noexcept;
-
-			uint8_t mAtomSize;
-			uint8_t mFlags;
-			uint16_t mUnused;
 		};
 		#pragma pack(pop)
 
 		template<bool HEADER>
 		void SerializeBlockToBinary(const Block&, Bytes&);
 
-		using Loader = TFunctor<void(Bytes&, pcptr)>;
+		using Loader = TFunctor<void(Bytes&, Size)>;
 
-		NOD() pcptr DeserializeAtomFromBinary(const Bytes&, pcptr&, pcptr, const Header&, const Loader&);
+		NOD() Size DeserializeAtomFromBinary(const Bytes&, Offset&, Offset, const Header&, const Loader&);
 
 		template<bool HEADER>
-		NOD() pcptr DeserializeBlockFromBinary(const Bytes&, Block&, pcptr, const Header&, const Loader&);
+		NOD() Size DeserializeBlockFromBinary(const Bytes&, Block&, Offset, const Header&, const Loader&);
 
 		template<class META>
-		NOD() pcptr DeserializeMetaFromBinary(const Bytes&, META const*&, pcptr, const Header&, const Loader&);
+		NOD() Size DeserializeMetaFromBinary(const Bytes&, META const*&, Offset, const Header&, const Loader&);
 
 		template<class INTERNAL>
-		NOD() pcptr DeserializeInternalFromBinary(const Bytes&, INTERNAL&, pcptr, const Header&, const Loader&);
+		NOD() Size DeserializeInternalFromBinary(const Bytes&, INTERNAL&, Offset, const Header&, const Loader&);
 
 	} // namespace Detail
+
 } // namespace Langulus::Flow
 
 #include "Serial.inl"

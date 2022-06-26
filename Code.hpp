@@ -71,7 +71,7 @@ namespace Langulus::Flow
 		Code(Text&&) noexcept;
 
 		explicit Code(const Charge&);
-		explicit Code(VMeta, const Charge&);
+		explicit Code(const Verb&);
 		explicit Code(const Map&);
 		explicit Code(const Hash&);
 		explicit Code(Code::Operator);

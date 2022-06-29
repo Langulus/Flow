@@ -5,6 +5,19 @@ LANGULUS_DECLARE_EXCEPTION(MissingConversion)
 
 #define PC_VERBOSE_CONVERSION(a) //pcLogVerbose << a
 
+namespace Langulus::Verbs
+{
+
+	/// Statically optimized interpret verb												
+	template<class TO, class FROM>
+	TO Interpret::To(const FROM& from) {
+		return static_cast<TO>(from);
+		//if constexpr (CT::Covertible)
+	}
+
+}
+
+
 namespace Langulus::Flow
 {
 	namespace InnerInterpretation

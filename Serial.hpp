@@ -1,9 +1,9 @@
 #pragma once
 #include "Code.hpp"
 
-LANGULUS_EXCEPTION(Serialize);
+//LANGULUS_EXCEPTION(Serialize);
 
-namespace Langulus::Flow
+/*namespace Langulus::Flow
 {
 
 	template<class TO, bool HEADER = true, class FROM>
@@ -29,7 +29,7 @@ namespace Langulus::Flow
 		void SerializeStateToText(const Block&, TO&);
 
 		template<class META, class TO>
-		void SerializeMetaToText(const Block&, TO&, const Member*);
+		void SerializeMetaToText(const Block&, TO&, const RTTI::Member*);
 
 		template<class TO>
 		void SerializeMembersToText(const Block&, TO&);
@@ -50,9 +50,6 @@ namespace Langulus::Flow
 				Default = 0,
 				/// Mark the data inside to be big-endian									
 				BigEndian = 1,
-				/// Export all types as strings instead of hashes, which makes		
-				/// files bigger, but keeps them compatible for all architectures	
-				Portable = 2
 			};
 
 			bool operator == (const Header&) const noexcept;
@@ -79,4 +76,4 @@ namespace Langulus::Flow
 
 } // namespace Langulus::Flow
 
-#include "Serial.inl"
+#include "Serial.inl"*/

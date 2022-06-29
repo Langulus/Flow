@@ -220,10 +220,10 @@ namespace Langulus::Flow
 					to += Separator(from.IsOr());
 			}
 		}
-		else if (from.CastsTo<char8>()) {
+		else if (from.CastsTo<Letter>()) {
 			// Contained type is characters, wrap it in char scope			
 			for (Offset i = 0; i < from.GetCount(); ++i) {
-				auto& text = from.As<char8>(i);
+				auto& text = from.As<Letter>(i);
 				to += Code {Code::OpenCharacter};
 				to += Token {&text.mValue, 1};
 				to += Code {Code::CloseCharacter};
@@ -231,23 +231,9 @@ namespace Langulus::Flow
 					to += Separator(from.IsOr());
 			}
 		}
-		else if (from.CastsTo<charw>()) {
-			// Contained type is characters, wrap it in char scope			
-			for (Offset i = 0; i < from.GetCount(); ++i) {
-				auto& text = from.As<charw>(i);
-				to += Code {Code::OpenCharacter};
-				to += Token {
-					reinterpret_cast<const char*>(&text.mValue),
-					sizeof(text.mValue)
-				};
-				to += Code {Code::CloseCharacter};
-				if (i < from.GetCount() - 1)
-					to += Separator(from.IsOr());
-			}
-		}
-		else if (from.CastsTo<pcbyte>()) {
+		else if (from.CastsTo<Byte>()) {
 			// Contained type is raw bytes, wrap it in byte scope				
-			auto raw_bytes = from.GetBytes();
+			auto raw_bytes = from.GetRaw();
 			if (!from.IsOr()) {
 				to += Code {Code::OpenByte};
 				for (Offset i = 0; i < from.GetCount(); ++i)
@@ -303,7 +289,7 @@ namespace Langulus::Flow
 	///	@param to - [out] the serialized data											
 	///	@param member - reflection data about the member							
 	template<class META, class TO>
-	void Detail::SerializeMetaToText(const Block& from, TO& to, const Member* member) {
+	void Detail::SerializeMetaToText(const Block& from, TO& to, const RTTI::Member* member) {
 		static_assert(CT::DerivedFrom<META, Meta>,
 			"META has to be an AMeta derivative");
 		static_assert(CT::Text<TO>,
@@ -377,12 +363,6 @@ namespace Langulus::Flow
 		mFlags = Default;
 		if constexpr (BigEndianMachine)
 			mFlags = BigEndian;
-		#if LANGULUS_RTTI_IS(NAMED)
-			// Second bit of the flag means the file was written by a		
-			// machine using the NAMED internal IDs								
-			mFlags |= Portable;
-		#endif
-
 		mUnused = 0;
 	}
 
@@ -577,7 +557,7 @@ namespace Langulus::Flow
 	///	@return the number of read/peek bytes from byte container				
 	template<bool HEADER>
 	Size Detail::DeserializeBlockFromBinary(const Bytes& source, Block& result, Offset readOffset, const Header& header, const Loader& loader) {
-		pcptr deserializedCount = 0;
+		Count deserializedCount = 0;
 		auto read = readOffset;
 
 		if constexpr (HEADER) {

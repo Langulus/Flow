@@ -6,13 +6,13 @@ namespace Langulus::Flow
 
 	/// Construct by referencing a Text container										
 	///	@param other - the text container to use										
-	inline Code::Code(const Text& other)
+	/*inline Code::Code(const Text& other)
 		: Text {other} {}
 
 	/// Construct by moving a Text container												
 	///	@param other - the text container to use										
 	inline Code::Code(Text&& other) noexcept
-		: Text {Forward<Text>(other)} {}
+		: Text {Forward<Text>(other)} {}*/
 
 	/// Remove elements from the left side of Code code								
 	///	@param offset - the number of elements to discard from the front		
@@ -142,7 +142,7 @@ namespace Langulus::Flow
 	}
 
 	/// Destructive concatenation of Code with anything								
-	template<class ANYTHING>
+	/*template<class ANYTHING>
 	Code& Code::operator += (const ANYTHING& rhs) {
 		if constexpr (IsText<ANYTHING>) {
 			Text::template operator += <Text>(static_cast<const Text&>(rhs));
@@ -171,10 +171,10 @@ namespace Langulus::Flow
 		converted += lhs;
 		converted += rhs;
 		return converted;
-	}
+	}*/
 
 	/// Make a code literal																		
-	inline Code operator "" _gasm(const char* text, std::size_t size) {
+	inline Code operator "" _code(const char* text, ::std::size_t size) {
 		return Code {text, size};
 	}
 

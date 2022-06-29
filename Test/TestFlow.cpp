@@ -44,7 +44,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 
 	GIVEN("3) The Code script: associate(`things` > (\"thing\", `plural`))") {
 		const Code gasm = "associate(`things` > (\"thing\", `plural`))";
-		TAny<Any> package = Any::Wrap(Text("things"), Any::WrapOne(Text("thing"), Text("plural")));
+		TAny<Any> package = Any::Wrap(Text("things"), Any::WrapCommon(Text("thing"), Text("plural")));
 		package[0].MakePast();
 		package[1].MakeFuture();
 		const Any required = Verbs::Associate({}, package);
@@ -60,7 +60,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 
 	GIVEN("4) The Code script: associate(',' > ([Catenate(<ANumber?: >ANumber?)] or iSingle or \"and\"))") {
 		const Code gasm = "associate(',' > ([Catenate(<ANumber?: >ANumber?)] or iSingle or \"and\"))";
-		TAny<Any> package = Any::Wrap(char8(','), Any::Wrap(Code("Catenate(<ANumber?: >ANumber?)"), uiSingle, Text("and")));
+		TAny<Any> package = Any::Wrap(',', Any::Wrap(Code("Catenate(<ANumber?: >ANumber?)"), Index::Single, Text("and")));
 		package[0].MakePast();
 		package[1].MakeFuture();
 		package[1].MakeOr();
@@ -115,14 +115,14 @@ SCENARIO("Parsing Code", "[gasm]") {
 		const Code gasm = "associate(`is` > (<? = ?>))";
 		TAny<Any> package = Any::Wrap(
 			Text("is"),
-			Verb::From<Verbs::Associate>(
+			Verbs::Associate(
 				Any().MakePast().MakeMissing(),
 				Any().MakeFuture().MakeMissing()
 			).SetPriority(2)
 		);
 		package[0].MakePast();
 		package[1].MakeFuture();
-		const Any required = Verb::From<Verbs::Associate>({}, package);
+		const Any required = Verbs::Associate({}, package);
 
 		WHEN("Parsed") {
 			const auto parsed = gasm.Parse();
@@ -138,7 +138,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 		Any required = Verbs::Select(
 			Verbs::Select({}, MetaData::Of<Verb>()),
 			Any().MakeMissing().MakeRight(),
-			MetaTrait::Of<Traits::Context>()
+			Traits::Context()
 		);
 
 		WHEN("Parsed") {
@@ -172,7 +172,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 	GIVEN("10) The Code script: Create^1(Count(1)).Add^3(2)") {
 		const Code gasm = "Create^1(Count(1)).Add^3(2)";
 		Any required = Verbs::Add(
-			Verb::From<Verbs::Create>({}, Any {Traits::Count(Real(1))}).SetFrequency(1),
+			Verbs::Create({}, Any {Traits::Count(Real(1))}).SetFrequency(1),
 			Real(2)
 		).SetFrequency(3);
 

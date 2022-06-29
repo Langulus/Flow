@@ -6,12 +6,12 @@ SCENARIO("Serialization", "[serialization]") {
 		Any pack;
 
 		WHEN("Pack is serialized as binary") {
-			auto serialized = pcSerialize<Bytes, true>(pack);
+			auto serialized = Verbs::Interpret::To<Bytes>(pack);
 			THEN("The serialized binary pack must match some criteria") {
-				REQUIRE(serialized.Is<pcbyte>());
+				REQUIRE(serialized.Is<Byte>());
 			}
 
-			auto deserialized = pcDeserialize(serialized);
+			auto deserialized = Verbs::Interpret::To<Any>(serialized);
 			THEN("The deserialized binary pack must be completely identical with the original") {
 				REQUIRE(deserialized == pack);
 			}
@@ -20,11 +20,11 @@ SCENARIO("Serialization", "[serialization]") {
 
 	GIVEN("An Any instance containing other Any instances") {
 		Any pack;
-		pack << Any{ 1 } << Any{ 2 } << Any{ 3 };
+		pack << Any {1} << Any {2} << Any {3};
 
 		WHEN("Pack is serialized as binary") {
-			auto serialized = pcSerialize<Bytes, true>(pack);
-			auto deserialized = pcDeserialize(serialized);
+			auto serialized = Verbs::Interpret::To<Bytes>(pack);
+			auto deserialized = Verbs::Interpret::To<Any>(serialized);
 			THEN("The deserialized binary pack must be completely identical with the original") {
 				REQUIRE(deserialized == pack);
 			}
@@ -33,11 +33,11 @@ SCENARIO("Serialization", "[serialization]") {
 
 	GIVEN("A TAny instance containing other Any instances") {
 		TAny<Any> pack;
-		pack << Any{ 1 } << Any{ 2 } << Any{ 3 };
+		pack << Any {1} << Any {2} << Any {3};
 
 		WHEN("Pack is serialized as binary") {
-			auto serialized = pcSerialize<Bytes, true>(pack);
-			auto deserialized = pcDeserialize(serialized);
+			auto serialized = Verbs::Interpret::To<Bytes>(pack);
+			auto deserialized = Verbs::Interpret::To<Any>(serialized);
 			THEN("The deserialized binary pack must be completely identical with the original") {
 				REQUIRE(deserialized == pack);
 			}
@@ -46,11 +46,11 @@ SCENARIO("Serialization", "[serialization]") {
 
 	GIVEN("An Any instance containing Text") {
 		Any pack;
-		pack << Text{ "hello" } << Text{ "i love you" } << Text{ "won't you tell me your name" };
+		pack << Text {"hello"} << Text {"i love you"} << Text {"won't you tell me your name"};
 
 		WHEN("Pack is serialized as binary") {
-			auto serialized = pcSerialize<Bytes, true>(pack);
-			auto deserialized = pcDeserialize(serialized);
+			auto serialized = Verbs::Interpret::To<Bytes>(pack);
+			auto deserialized = Verbs::Interpret::To<Any>(serialized);
 			THEN("The deserialized binary pack must be completely identical with the original") {
 				REQUIRE(deserialized == pack);
 			}
@@ -58,14 +58,14 @@ SCENARIO("Serialization", "[serialization]") {
 	}
 
 	GIVEN("An Any instance containing Trait") {
-		Any pack; pack 
-			<< Trait::From<Traits::Name>(Text{ "hello" })
-			<< Trait::From<Traits::Name>(Text{ "i love you" })
-			<< Trait::From<Traits::Name>(Text{ "won't you tell me your name" });
+		Any pack; pack
+			<< Traits::Name(Text {"hello"})
+			<< Traits::Name(Text {"i love you"})
+			<< Traits::Name(Text {"won't you tell me your name"});
 
 		WHEN("Pack is serialized as binary") {
-			auto serialized = pcSerialize<Bytes, true>(pack);
-			auto deserialized = pcDeserialize(serialized);
+			auto serialized = Verbs::Interpret::To<Bytes>(pack);
+			auto deserialized = Verbs::Interpret::To<Any>(serialized);
 			THEN("The deserialized binary pack must be completely identical with the original") {
 				REQUIRE(deserialized == pack);
 			}

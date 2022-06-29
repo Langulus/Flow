@@ -54,19 +54,14 @@ namespace Langulus::Flow
 		Construct(Construct&&) noexcept = default;
 
 		Construct(DMeta);
-		Construct(const Text&);
-
-		Construct(DMeta, Any&&);
-		Construct(const Text&, Any&&);
-
 		Construct(DMeta, const Any&);
-		Construct(const Text&, const Any&);
+		Construct(DMeta, Any&&);
 
 		Construct& operator = (const Construct&) = default;
 		Construct& operator = (Construct&&) noexcept = default;
 
 		NOD() explicit operator Code() const;
-		//NOD() explicit operator Debug() const;
+		NOD() explicit operator Debug() const;
 
 	public:
 		NOD() Hash GetHash() const;
@@ -128,5 +123,16 @@ namespace Langulus::Flow
 	};
 
 } // namespace Langulus::Flow
+
+
+namespace Langulus
+{
+
+	/// Extend the logger to be capable of logging Construct							
+	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (Logger::A::Interface& lhs, const Flow::Construct& rhs) {
+		return lhs << Verbs::Interpret::To<Flow::Debug>(rhs);
+	}
+
+} // namespace Langulus
 
 #include "Construct.inl"

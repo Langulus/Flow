@@ -2,15 +2,6 @@
 #include "Verb.hpp"
 #include "Construct.hpp"
 
-namespace Langulus::CT
-{
-	template<class T>
-	concept Text = DerivedFrom<T, Anyness::Text>;
-
-	template<class T>
-	concept NotText = !Text<T>;
-}
-
 namespace Langulus::Flow
 {
 
@@ -67,20 +58,20 @@ namespace Langulus::Flow
 
 		using Text::Text;
 
-		Code(const Text&);
+		/*Code(const Text&);
 		Code(Text&&) noexcept;
 
 		explicit Code(const Charge&);
 		explicit Code(const Verb&);
 		explicit Code(const Map&);
 		explicit Code(const Hash&);
-		explicit Code(Code::Operator);
+		explicit Code(Code::Operator);*/
 
 		NOD() Any Parse(bool optimize = true) const;
 		NOD() Code Clone() const;
 
-		template<class ANYTHING>
-		Code& operator += (const ANYTHING&);
+		/*template<class ANYTHING>
+		Code& operator += (const ANYTHING&);*/
 
 		NOD() Code CropLeft(Offset) const;
 		NOD() Code CropRight(Offset) const;
@@ -101,7 +92,7 @@ namespace Langulus::Flow
 		NOD() static bool IsValidKeyword(const Text&);
 	};
 
-	NOD() Code operator + (const Code&, const Code&);
+	/*NOD() Code operator + (const Code&, const Code&);
 	NOD() Code operator + (const Code&, const Text&);
 	NOD() Code operator + (const Text&, const Code&);
 
@@ -109,9 +100,9 @@ namespace Langulus::Flow
 	NOD() Code operator + (const T&, const Code&);
 
 	template<CT::NotText T>
-	NOD() Code operator + (const Code&, const T&);
+	NOD() Code operator + (const Code&, const T&);*/
 
-	Code operator "" _code(const char*, std::size_t);
+	Code operator "" _code(const char*, ::std::size_t);
 
 } // namespace Langulus::Flow
 

@@ -2,10 +2,33 @@
 #include <Langulus.Logger.hpp>
 #include <Langulus.Anyness.hpp>
 
+LANGULUS_EXCEPTION(Flow);
+
 namespace Langulus::Flow
 {
 
-	using namespace ::Langulus::Anyness;
+	using Anyness::Index;
+	using Anyness::Block;
+	using Anyness::Any;
+	using Anyness::Text;
+	using Anyness::Debug;
+	using Anyness::Bytes;
+	using Anyness::Trait;
+	using Anyness::Map;
+	using Anyness::TAny;
+	using Anyness::Inner::Allocator;
+	using RTTI::VMeta;
+	using RTTI::TMeta;
+	using RTTI::DMeta;
+	using RTTI::MetaData;
+	using RTTI::MetaVerb;
+	using RTTI::MetaTrait;
+	using Anyness::DataState;
+
+	class Charge;
+	class Construct;
+	class Code;
+	class Verb;
 
 
 	///																								
@@ -28,10 +51,13 @@ namespace Langulus::Flow
 		) noexcept;
 
 		NOD() constexpr bool operator == (const Charge&) const noexcept;
-		NOD() constexpr bool operator != (const Charge&) const noexcept;
+		NOD() constexpr Charge operator * (const Real&) const noexcept;
 
 		NOD() constexpr bool IsDefault() const noexcept;
 		NOD() Hash GetHash() const noexcept;
+
+		NOD() explicit operator Code() const;
+		NOD() explicit operator Debug() const;
 
 	public:
 		// Mass of the verb																
@@ -43,9 +69,6 @@ namespace Langulus::Flow
 		// Priority of the verb															
 		Real mPriority = DefaultPriority;
 	};
-
-	class Construct;
-	class Code;
 
 
 	///																								
@@ -80,14 +103,11 @@ namespace Langulus::Flow
 
 		Verb(VMeta, const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-		template<CT::Verb T>
-		NOD() static Verb From(const Charge&, const Any& = {}, const Any& = {}, const Any& = {});
-
 		Verb& operator = (const Verb&) = default;
 		Verb& operator = (Verb&&) noexcept = default;
 
 		NOD() explicit operator Code() const;
-		//NOD() explicit operator Debug() const;
+		NOD() explicit operator Debug() const;
 
 	public:
 		NOD() Hash GetHash() const;
@@ -97,7 +117,7 @@ namespace Langulus::Flow
 		void Reset();
 
 		NOD() bool Is(VMeta) const noexcept;
-		template<CT::Verb T>
+		template<CT::Verb... T>
 		NOD() bool Is() const noexcept;
 
 		NOD() const Charge& GetCharge() const noexcept;
@@ -181,64 +201,87 @@ namespace Langulus::Flow
 		static bool IntegrateVerb(Any&, Verb&);
 	};
 
+	/// A handy container for verbs															
 	using Script = TAny<Verb>;
 
+} // namespace Langulus::Flow
+
+
+namespace Langulus
+{
+
+	/// Namespace containing all built-in Langulus verbs								
 	namespace Verbs
 	{
 
+		using Flow::Verb;
+		using Flow::Any;
+		using Flow::Charge;
+
 		class Create : public Verb {
 		public:
-			Create(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+			Create(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
 		};
 
 		class Select : public Verb {
 		public:
-			Select(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+			Select(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
 		};
 
 		class Associate : public Verb {
 		public:
-			Associate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+			Associate(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
 		};
 
 		class Scope : public Verb {
 		public:
-			Scope(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+			Scope(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
 		};
 
 		class Add : public Verb {
 		public:
-			Add(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+			Add(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
 		};
 
 		class Multiply : public Verb {
 		public:
-			Multiply(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+			Multiply(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
 		};
 
 		class Exponent : public Verb {
 		public:
-			Exponent(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+			Exponent(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
 		};
 
 		class Catenate : public Verb {
 		public:
-			Catenate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+			Catenate(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
 		};
 
 		class Interpret : public Verb {
 		public:
-			Interpret(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+			Interpret(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
+
+			template<class TO, class FROM>
+			static TO To(const FROM&);
 		};
 
 		class Do : public Verb {
 		public:
-			Do(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+			Do(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
 		};
 
-	} // namespace Langulus::Anyness::Traits
+	} // namespace Langulus::Verbs
 
-} // namespace Langulus::Flow
+
+	/// Extend the logger to be capable of logging Block								
+	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (Logger::A::Interface& lhs, const Flow::Block& rhs) {
+		return lhs << Verbs::Interpret::To<Flow::Debug>(rhs);
+	}
+
+} // namespace Langulus
+
+
 
 
 /// Start an OR sequence of operations, that relies on short-circuiting to		

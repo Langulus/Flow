@@ -5,6 +5,10 @@ namespace Langulus::Flow
 {
 
 	/// Charge construction																		
+	///	@param mass - the mass charge														
+	///	@param freq - the frequency charge												
+	///	@param time - the time charge														
+	///	@param prio - the priority charge												
 	constexpr Charge::Charge(Real mass, Real freq, Real time, Real prio) noexcept
 		: mMass {mass}
 		, mFrequency {freq}
@@ -12,19 +16,23 @@ namespace Langulus::Flow
 		, mPriority {prio} {}
 
 	/// Compare charges																			
-	constexpr bool Charge::operator == (const Charge& ext) const noexcept {
-		return mMass == ext.mMass 
-			&& mFrequency == ext.mFrequency 
-			&& mTime == ext.mTime
-			&& mPriority == ext.mPriority;
+	///	@param rhs - the charge to compare against									
+	///	@return true if both charges match exactly									
+	constexpr bool Charge::operator == (const Charge& rhs) const noexcept {
+		return mMass == rhs.mMass
+			&& mFrequency == rhs.mFrequency
+			&& mTime == rhs.mTime
+			&& mPriority == rhs.mPriority;
 	}
 
 	/// Check if charge is default															
+	///	@return true if charge is default												
 	constexpr bool Charge::IsDefault() const noexcept {
 		return *this == Charge {};
 	}
 
 	/// Get the hash of the charge															
+	///	@return the hash of the charge													
 	inline Hash Charge::GetHash() const noexcept {
 		return HashData(mMass) 
 			| HashData(mFrequency) 
@@ -34,21 +42,22 @@ namespace Langulus::Flow
 
 	/// Create a verb using a static verb type											
 	///	@tparam T - the verb to use														
+	///	@param c - the charge																
 	///	@param s - the source																
 	///	@param a - the argument																
 	///	@param o - the output																
 	///	@return the verb																		
-	template<CT::Verb T>
+	/*template<CT::Verb T>
 	Verb Verb::From(const Charge& c, const Any& s, const Any& a, const Any& o) {
 		return {MetaVerb::Of<T>(), c, s, a, o};
-	}
+	}*/
 
-	/// Check if verb is a specific type													
+	/// Check if verb is of a specific type												
 	///	@tparam T - the verb to compare against										
 	///	@return true if verbs match														
-	template<CT::Verb T>
+	template<CT::Verb... T>
 	bool Verb::Is() const noexcept {
-		return Is(T::ID);
+		return (Is(MetaVerb::Of<T>()) || ...);
 	}
 
 	/// Check if verb has been satisfied at least once									
@@ -317,7 +326,7 @@ namespace Langulus::Flow
 		}
 
 		if constexpr (CT::Sparse<T>) {
-			if (!Inner::Allocator::CheckAuthority(MetaData::Of<T>(), data))
+			if (!Allocator::CheckAuthority(MetaData::Of<T>(), data))
 				Throw<Except::Reference>(
 					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
@@ -344,7 +353,7 @@ namespace Langulus::Flow
 		}
 
 		if constexpr (CT::Sparse<T>) {
-			if (!Inner::Allocator::CheckAuthority(MetaData::Of<T>(), data))
+			if (!Allocator::CheckAuthority(MetaData::Of<T>(), data))
 				Throw<Except::Reference>(
 					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
@@ -371,7 +380,7 @@ namespace Langulus::Flow
 		}
 
 		if constexpr (CT::Sparse<T>) {
-			if (!Inner::Allocator::CheckAuthority(MetaData::Of<T>(), data))
+			if (!Allocator::CheckAuthority(MetaData::Of<T>(), data))
 				Throw<Except::Reference>(
 					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
@@ -398,7 +407,7 @@ namespace Langulus::Flow
 		}
 
 		if constexpr (CT::Sparse<T>) {
-			if (!Inner::Allocator::CheckAuthority(MetaData::Of<T>(), data))
+			if (!Allocator::CheckAuthority(MetaData::Of<T>(), data))
 				Throw<Except::Reference>(
 					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
@@ -421,7 +430,7 @@ namespace Langulus::Flow
 		}
 
 		if constexpr (CT::Sparse<T>) {
-			if (!Inner::Allocator::CheckAuthority(MetaData::Of<T>(), data))
+			if (!Allocator::CheckAuthority(MetaData::Of<T>(), data))
 				Throw<Except::Reference>(
 					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
@@ -444,7 +453,7 @@ namespace Langulus::Flow
 		}
 
 		if constexpr (CT::Sparse<T>) {
-			if (!Inner::Allocator::CheckAuthority(MetaData::Of<T>(), data))
+			if (!Allocator::CheckAuthority(MetaData::Of<T>(), data))
 				Throw<Except::Reference>(
 					"Pushing unowned pointer to verb is a baaaaad idea");
 		}

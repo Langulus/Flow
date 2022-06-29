@@ -6,6 +6,38 @@
 namespace Langulus::Flow
 {
 
+	/// Serialize charge as code																
+	Charge::operator Code() const {
+		Code code;
+		if (mMass != Charge::DefaultMass) {
+			code += Code::Mass;
+			code += mMass;
+		}
+		if (mFrequency != Charge::DefaultFrequency) {
+			code += Code::Frequency;
+			code += mFrequency;
+		}
+		if (mTime != Charge::DefaultTime) {
+			code += Code::Time;
+			code += mTime;
+		}
+		if (mPriority != Charge::DefaultPriority) {
+			code += Code::Priority;
+			code += mPriority;
+		}
+		return code;
+	}
+
+	/// Serialize charge as debug (same as code)											
+	Charge::operator Debug() const {
+		return Charge::operator Code();
+	}
+
+	/// Scale the mass of a charge															
+	constexpr Charge Charge::operator * (const Real& scalar) const noexcept {
+		return {mMass * scalar, mFrequency, mTime, mPriority};
+	}
+
 	/// Manual constructor with verb meta 													
 	///	@param call - the verb ID															
 	///	@param charge - the charge															
@@ -24,7 +56,7 @@ namespace Langulus::Flow
 	/// Hash the verb																				
 	///	@return the hash of the content													
 	Hash Verb::GetHash() const {
-		return mVerb->GetHash() | mSource.GetHash() | mArgument.GetHash() | mOutput.GetHash();
+		return mVerb->mHash | mSource.GetHash() | mArgument.GetHash() | mOutput.GetHash();
 	}
 
 	/// Compare verbs for equality															
@@ -147,42 +179,72 @@ namespace Langulus::Flow
 		return result;
 	}
 
-	/// Serialize verb to Code																	
+	/// Serialize verb to code																	
 	Verb::operator Code() const {
 		Code result;
-		result += GetVerb();
-		result += GetCharge();
+		if (!mVerb)
+			result += MetaVerb::DefaultToken;
+		else {
+			if (mCharge.mMass < 0) {
+				result += mVerb->mTokenReverse;
+				result += Verbs::Interpret::To<Code>(mCharge * -1);
+			}
+			else {
+				result += mVerb->mToken;
+				result += Verbs::Interpret::To<Code>(mCharge);
+			}
+		}
+
 		result += Code::OpenScope;
+
 		if (mSource.IsValid()) {
-			result += pcSerialize<Code>(mSource);
+			result += Verbs::Interpret::To<Code>(mSource);
 			result += Code::Context;
 		}
+
 		if (mArgument.IsValid())
-			result += pcSerialize<Code>(mArgument);
+			result += Verbs::Interpret::To<Code>(mArgument);
+
 		if (mOutput.IsValid()) {
 			result += Code::As;
-			result += pcSerialize<Code>(mOutput);
+			result += Verbs::Interpret::To<Code>(mOutput);
 		}
+
 		result += Code::CloseScope;
 		return result;
 	}
 
-	/// Stringify verb																			
+	/// Serialize verb for logger																
 	Verb::operator Debug() const {
 		Code result;
-		result += GetVerb();
-		result += GetCharge();
+		if (!mVerb)
+			result += MetaVerb::DefaultToken;
+		else {
+			if (mCharge.mMass < 0) {
+				result += mVerb->mTokenReverse;
+				result += Verbs::Interpret::To<Debug>(mCharge * -1);
+			}
+			else {
+				result += mVerb->mToken;
+				result += Verbs::Interpret::To<Debug>(mCharge);
+			}
+		}
+
 		result += Code::OpenScope;
+
 		if (mSource.IsValid()) {
-			result += pcSerialize<Debug>(mSource);
+			result += Verbs::Interpret::To<Debug>(mSource);
 			result += Code::Context;
 		}
+
 		if (mArgument.IsValid())
-			result += pcSerialize<Debug>(mArgument);
+			result += Verbs::Interpret::To<Debug>(mArgument);
+
 		if (mOutput.IsValid()) {
 			result += Code::As;
-			result += pcSerialize<Debug>(mOutput);
+			result += Verbs::Interpret::To<Debug>(mOutput);
 		}
+
 		result += Code::CloseScope;
 		return result;
 	}

@@ -59,13 +59,13 @@ namespace Langulus::Flow
 			Construct scope(meta);
 
 			// Scan for charges first													
-			TAny<real> mass;
+			TAny<Real> mass;
 			GatherAndInterpret(verb.GetArgument(), mass, uiFront);
 			if (!mass.IsEmpty()) {
 				// Mass is collected, but may be fragmented, so use the		
 				// concat verb to coalesce the numbers inside					
 				PC_SCOPE_VERBOSE(ccGreen << "Mass " << mass << " for " << scope);
-				real concatenatedMass = 0;
+				Real concatenatedMass = 0;
 				for (auto& n : mass)
 					concatenatedMass = pcConcat(concatenatedMass, n);
 				scope.GetCharge().mMass = concatenatedMass;

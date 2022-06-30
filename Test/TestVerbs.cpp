@@ -80,7 +80,7 @@ SCENARIO("Serializing verbs", "[verbs]") {
 
 		WHEN("Serialize and then deserialize container in binary") {
 			auto serialized = Verbs::Interpret::To<Bytes>(stuff);
-			auto deserialized = pcDeserialize(serialized);
+			auto deserialized = Verbs::Interpret::To<Any>(serialized);
 
 			THEN("Deserialized data must match original stuff completely") {
 				REQUIRE(stuff == deserialized);

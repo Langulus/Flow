@@ -17,68 +17,77 @@ namespace Langulus::Flow
 	/// Remove elements from the left side of Code code								
 	///	@param offset - the number of elements to discard from the front		
 	///	@return a shallow-copied container with the correct offset				
-	inline Code Code::CropLeft(Offset o) const {
+	inline Code Code::LeftOf(Offset o) const {
 		return Text::Crop(o, mCount - o);
 	}
 
 	/// Remove elements from the right side of Code code								
 	///	@param offset - the number of elements to remain in container			
 	///	@return a shallow-copied container with the correct offset				
-	inline Code Code::CropRight(Offset o) const {
+	inline Code Code::RightOf(Offset o) const {
 		return Text::Crop(0, o);
 	}
 
-	/// Check if the Code container begins with skippable elements					
+	/// Check if the Code container begins with special elements, such as		
+	/// special characters or escape sequences, like colors							
+	///	@return true if the first symbol is special									
+	inline bool Code::StartsWithSpecial() const noexcept {
+		const auto& letter = (*this)[0];
+		return GetCount() > 0 && letter > 0 && letter < 32;
+	}
+
+	/// Check if the Code container begins with skippable elements, such as		
+	/// tabs or spaces, or special characters/sequences								
 	///	@return true if the first symbol is a spacer									
-	inline bool Code::IsSkippable() const noexcept {
+	inline bool Code::StartsWithSkippable() const noexcept {
 		const auto& letter = (*this)[0];
 		return GetCount() > 0 && letter > 0 && letter <= 32;
 	}
 
 	/// Check if the Code code container begins with skippable elements			
 	///	@return true if the first symbol is a spacer									
-	inline bool Code::IsSkippableRev() const noexcept {
+	inline bool Code::EndsWithSkippable() const noexcept {
 		return GetCount() > 0 && last() > 0 && last() <= 32;
 	}
 
 	/// Check if the Code code container begins with a letter or underscore		
 	///	@return true if the first symbol is a letter/underscore					
-	inline bool Code::IsLetter() const noexcept {
+	inline bool Code::StartsWithLetter() const noexcept {
 		return GetCount() > 0 && (::std::isalpha((*this)[0]) || (*this)[0] == '_');
 	}
 
 	/// Check if the Code code container ends with a letter or underscore		
 	///	@return true if the last symbol is a letter/underscore					
-	inline bool Code::IsLetterRev() const noexcept {
+	inline bool Code::EndsWithLetter() const noexcept {
 		return GetCount() > 0 && (::std::isalpha(last()) || last() == '_');
 	}
 
 	/// Check if the Code code container begins with a number						
 	///	@return true if the first symbol is a number									
-	inline bool Code::IsNumber() const noexcept {
+	inline bool Code::StartsWithDigit() const noexcept {
 		return GetCount() > 0 && ::std::isdigit((*this)[0]);
 	}
 
 	/// Check if the Code code container ends with a number							
 	///	@return true if the last symbol is a number									
-	inline bool Code::IsNumberRev() const noexcept {
+	inline bool Code::EndsWithDigit() const noexcept {
 		return GetCount() > 0 && ::std::isdigit(last());
 	}
 
 	/// Check if the Code code container begins with an operator					
 	///	@param i - the operator to check for											
 	///	@return true if the operator matches											
-	inline bool Code::IsOperator(Offset i) const noexcept {
+	inline bool Code::StartsWithOperator(Offset i) const noexcept {
 		const Size tokenSize = Code::Token[i].mToken.size();
 		if (mCount < tokenSize)
 			return false;
 
 		const auto token = Code(Code::Token[i].mToken);
-		const auto remainder = CropLeft(tokenSize);
-		const auto endsWithALetter = token.IsLetterRev();
+		const auto remainder = LeftOf(tokenSize);
+		const auto endsWithALetter = token.EndsWithLetter();
 		return tokenSize > 0 && MatchesLoose(token) == tokenSize
 			&& (GetCount() == tokenSize 
-				|| (endsWithALetter && (!remainder.IsLetter() && !remainder.IsNumber()))
+				|| (endsWithALetter && (!remainder.StartsWithLetter() && !remainder.StartsWithDigit()))
 				|| !endsWithALetter
 			);
 	}

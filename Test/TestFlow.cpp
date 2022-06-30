@@ -112,14 +112,20 @@ SCENARIO("Parsing Code", "[gasm]") {
 	}
 
 	GIVEN("7) The Code script: associate(`is` > (<? = ?>))") {
+		Any pastMissing;
+		pastMissing.MakePast();
+		pastMissing.MakeMissing();
+
+		Any futureMissing;
+		futureMissing.MakeFuture();
+		futureMissing.MakeMissing();
+
 		const Code gasm = "associate(`is` > (<? = ?>))";
 		TAny<Any> package = Any::Wrap(
 			Text("is"),
-			Verbs::Associate(
-				Any().MakePast().MakeMissing(),
-				Any().MakeFuture().MakeMissing()
-			).SetPriority(2)
+			Verbs::Associate(pastMissing, futureMissing).SetPriority(2)
 		);
+
 		package[0].MakePast();
 		package[1].MakeFuture();
 		const Any required = Verbs::Associate({}, package);
@@ -134,10 +140,14 @@ SCENARIO("Parsing Code", "[gasm]") {
 	}
 
 	GIVEN("8) The Code script: .Verb.(>? as Context)") {
+		Any futureMissing;
+		futureMissing.MakeFuture();
+		futureMissing.MakeMissing();
+
 		const Code gasm = ".Verb.(>? as Context)";
 		Any required = Verbs::Select(
 			Verbs::Select({}, MetaData::Of<Verb>()),
-			Any().MakeMissing().MakeRight(),
+			futureMissing,
 			Traits::Context()
 		);
 
@@ -151,13 +161,18 @@ SCENARIO("Parsing Code", "[gasm]") {
 	}
 
 	GIVEN("9) The Code script: Scope!-1(Verb: <?(ANumber,DataID,Construct), >?(ANumber,DataID,Construct))") {
+		Any pastMissing = Any::WrapCommon(MetaData::Of<A::Number>(), MetaData::Of<MetaData>(), MetaData::Of<Construct>());
+		pastMissing.MakePast();
+		pastMissing.MakeMissing();
+
+		Any futureMissing = Any::WrapCommon(MetaData::Of<A::Number>(), MetaData::Of<MetaData>(), MetaData::Of<Construct>());
+		futureMissing.MakeFuture();
+		futureMissing.MakeMissing();
+
 		const Code gasm = "Scope!-1(Verb: <?(ANumber,DataID,Construct), >?(ANumber,DataID,Construct))";
 		Any required = Verbs::Scope(
 			MetaData::Of<Verb>(),
-			Any::WrapCommon(
-				Any::WrapCommon(MetaData::Of<A::Number>(), MetaData::Of<MetaData>(), MetaData::Of<Construct>()).MakeMissing().MakeLeft(),
-				Any::WrapCommon(MetaData::Of<A::Number>(), MetaData::Of<MetaData>(), MetaData::Of<Construct>()).MakeMissing().MakeRight()
-			)
+			Any::WrapCommon(pastMissing, futureMissing)
 		).SetPriority(-1);
 
 		WHEN("Parsed") {
@@ -172,7 +187,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 	GIVEN("10) The Code script: Create^1(Count(1)).Add^3(2)") {
 		const Code gasm = "Create^1(Count(1)).Add^3(2)";
 		Any required = Verbs::Add(
-			Verbs::Create({}, Any {Traits::Count(Real(1))}).SetFrequency(1),
+			Verbs::Create({}, Traits::Count(Real(1))).SetFrequency(1),
 			Real(2)
 		).SetFrequency(3);
 
@@ -189,7 +204,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 		const Code gasm = "Create^1(Count(1)).Add^2(2).Multiply^3(4)";
 		Any required = Verbs::Multiply(
 			Verbs::Add(
-				Verbs::Create({}, Any {Traits::Count(Real(1))}).SetFrequency(1),
+				Verbs::Create({}, Traits::Count(Real(1))).SetFrequency(1),
 				Real(2)
 			).SetFrequency(2),
 			Real(4)

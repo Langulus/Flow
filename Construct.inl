@@ -68,12 +68,12 @@ namespace Langulus::Flow
 	}
 
 	inline const Charge& Construct::GetCharge() const noexcept {
-		return mCharge;
+		return static_cast<const Charge&>(*this);
 	}
 
-	inline Charge& Construct::GetCharge() noexcept {
+	/*inline Charge& Construct::GetCharge() noexcept {
 		return mCharge;
-	}
+	}*/
 
 	inline DMeta Construct::GetType() const noexcept {
 		return mType;

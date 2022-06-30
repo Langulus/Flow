@@ -35,6 +35,16 @@ namespace Langulus::Flow
 	/// Charge, carrying the four verb dimensions, and state							
 	///																								
 	struct Charge {
+		// Mass of the verb																
+		Real mMass = DefaultMass;
+		// Frequency of the verb														
+		Real mFrequency = DefaultFrequency;
+		// Time of the verb																
+		Real mTime = DefaultTime;
+		// Priority of the verb															
+		Real mPriority = DefaultPriority;
+
+	public:
 		static constexpr Real DefaultMass {1};
 		static constexpr Real DefaultFrequency {0};
 		static constexpr Real DefaultTime {0};
@@ -51,23 +61,19 @@ namespace Langulus::Flow
 		) noexcept;
 
 		NOD() constexpr bool operator == (const Charge&) const noexcept;
+
 		NOD() constexpr Charge operator * (const Real&) const noexcept;
+		NOD() constexpr Charge operator ^ (const Real&) const noexcept;
+
+		NOD() constexpr Charge& operator *= (const Real&) noexcept;
+		NOD() constexpr Charge& operator ^= (const Real&) noexcept;
 
 		NOD() constexpr bool IsDefault() const noexcept;
 		NOD() Hash GetHash() const noexcept;
+		void Reset() noexcept;
 
 		NOD() explicit operator Code() const;
 		NOD() explicit operator Debug() const;
-
-	public:
-		// Mass of the verb																
-		Real mMass = DefaultMass;
-		// Frequency of the verb														
-		Real mFrequency = DefaultFrequency;
-		// Time of the verb																
-		Real mTime = DefaultTime;
-		// Priority of the verb															
-		Real mPriority = DefaultPriority;
 	};
 
 
@@ -78,12 +84,10 @@ namespace Langulus::Flow
 	/// in a Code flow. Piception is based around natural language processing	
 	/// theory based around verbs, so this is the natural name for such thing	
 	///																								
-	class Verb {
+	class Verb : public Charge {
 	private:
 		// Verb meta, mass, frequency, time and priority						
 		VMeta mVerb {};
-		// Verb charge and state														
-		Charge mCharge {};
 		// The number of successful executions										
 		Count mSuccesses {};
 		// Verb context																	
@@ -105,6 +109,12 @@ namespace Langulus::Flow
 
 		Verb& operator = (const Verb&) = default;
 		Verb& operator = (Verb&&) noexcept = default;
+
+		Verb operator * (const Real& rhs) const;
+		Verb operator ^ (const Real& rhs) const;
+
+		Verb& operator *= (const Real& rhs) noexcept;
+		Verb& operator ^= (const Real& rhs) noexcept;
 
 		NOD() explicit operator Code() const;
 		NOD() explicit operator Debug() const;

@@ -40,6 +40,13 @@ namespace Langulus::Flow
 			| HashData(mPriority); //TODO check hashing | add HashDataArray?
 	}
 
+	inline void Charge::Reset() noexcept {
+		mMass = DefaultMass;
+		mFrequency = DefaultFrequency;
+		mTime = DefaultTime;
+		mPriority = DefaultPriority;
+	}
+
 	/// Create a verb using a static verb type											
 	///	@tparam T - the verb to use														
 	///	@param c - the charge																
@@ -80,7 +87,7 @@ namespace Langulus::Flow
 	/// Invert the verb (use the antonym)													
 	///	@return a reference to self														
 	inline Verb& Verb::Invert() noexcept {
-		mCharge.mMass *= Real {-1};
+		mMass *= Real {-1};
 		return *this;
 	}
 
@@ -96,7 +103,7 @@ namespace Langulus::Flow
 	///	@param energy - the mass to set													
 	///	@return a reference to self														
 	inline Verb& Verb::SetMass(const Real energy) noexcept {
-		mCharge.mMass = energy;
+		mMass = energy;
 		return *this;
 	}
 
@@ -104,7 +111,7 @@ namespace Langulus::Flow
 	///	@param energy - the frequency to set											
 	///	@return a reference to self														
 	inline Verb& Verb::SetFrequency(const Real energy) noexcept {
-		mCharge.mFrequency = energy;
+		mFrequency = energy;
 		return *this;
 	}
 
@@ -112,7 +119,7 @@ namespace Langulus::Flow
 	///	@param energy - the time to set													
 	///	@return a reference to self														
 	inline Verb& Verb::SetTime(const Real energy) noexcept {
-		mCharge.mTime = energy;
+		mTime = energy;
 		return *this;
 	}
 
@@ -120,7 +127,7 @@ namespace Langulus::Flow
 	///	@param energy - the priority to set												
 	///	@return a reference to self														
 	inline Verb& Verb::SetPriority(const Real energy) noexcept {
-		mCharge.mPriority = energy;
+		mPriority = energy;
 		return *this;
 	}
 
@@ -128,7 +135,7 @@ namespace Langulus::Flow
 	///	@param charge - the charge to set												
 	///	@return a reference to self														
 	inline Verb& Verb::SetCharge(const Charge& charge) noexcept {
-		mCharge = charge;
+		Charge::operator = (charge);
 		return *this;
 	}
 
@@ -203,28 +210,28 @@ namespace Langulus::Flow
 	///	@param rhs - the verb to compare against										
 	///	@return true if rhs has larger or equal priority							
 	inline bool Verb::operator < (const Verb& ext) const noexcept {
-		return mCharge.mPriority < ext.mCharge.mPriority;
+		return mPriority < ext.mPriority;
 	}
 
 	/// Compare verb priorities																
 	///	@param rhs - the verb to compare against										
 	///	@return true if rhs has smaller or equal priority							
 	inline bool Verb::operator > (const Verb& ext) const noexcept {
-		return mCharge.mPriority > ext.mCharge.mPriority;
+		return mPriority > ext.mPriority;
 	}
 
 	/// Compare verb priorities																
 	///	@param rhs - the verb to compare against										
 	///	@return true if rhs has smaller priority										
 	inline bool Verb::operator >= (const Verb& ext) const noexcept {
-		return mCharge.mPriority >= ext.mCharge.mPriority;
+		return mPriority >= ext.mPriority;
 	}
 
 	/// Compare verb priorities																
 	///	@param rhs - the verb to compare against										
 	///	@return true if rhs has larger priority										
 	inline bool Verb::operator <= (const Verb& rhs) const noexcept {
-		return mCharge.mPriority <= rhs.mCharge.mPriority;
+		return mPriority <= rhs.mPriority;
 	}
 
 	/// Get the verb id																			
@@ -236,31 +243,31 @@ namespace Langulus::Flow
 	/// Get the verb id and charge															
 	///	@return verb charge																	
 	inline const Charge& Verb::GetCharge() const noexcept {
-		return mCharge;
+		return static_cast<const Charge&>(*this);
 	}
 
 	/// Get the verb mass (a.k.a. magnitude)												
 	///	@return the current mass															
 	inline Real Verb::GetMass() const noexcept {
-		return mCharge.mMass;
+		return mMass;
 	}
 
 	/// Get the verb frequency																	
 	///	@return the current frequency														
 	inline Real Verb::GetFrequency() const noexcept {
-		return mCharge.mFrequency; 
+		return mFrequency; 
 	}
 
 	/// Get the verb time 																		
 	///	@return the current time															
 	inline Real Verb::GetTime() const noexcept {
-		return mCharge.mTime;
+		return mTime;
 	}
 
 	/// Get the verb priority 																	
 	///	@return the current priority														
 	inline Real Verb::GetPriority() const noexcept {
-		return mCharge.mPriority;
+		return mPriority;
 	}
 
 	/// Get verb source																			

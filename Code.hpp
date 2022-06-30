@@ -25,7 +25,7 @@ namespace Langulus::Flow
 			CloseCharacter,
 			PolarizeLeft,
 			PolarizeRight,
-			Context,
+			//Context,
 			Copy,
 			Missing,
 			AndSeparator,
@@ -40,7 +40,7 @@ namespace Langulus::Flow
 			Multiply,
 			Divide,
 			Power,
-			As,
+			//As,
 			OpenByte,
 			CloseByte,
 
@@ -73,15 +73,16 @@ namespace Langulus::Flow
 		/*template<class ANYTHING>
 		Code& operator += (const ANYTHING&);*/
 
-		NOD() Code CropLeft(Offset) const;
-		NOD() Code CropRight(Offset) const;
-		NOD() bool IsSkippable() const noexcept;
-		NOD() bool IsSkippableRev() const noexcept;
-		NOD() bool IsLetter() const noexcept;
-		NOD() bool IsLetterRev() const noexcept;
-		NOD() bool IsNumber() const noexcept;
-		NOD() bool IsNumberRev() const noexcept;
-		NOD() bool IsOperator(Offset) const noexcept;
+		NOD() Code LeftOf(Offset) const;
+		NOD() Code RightOf(Offset) const;
+		NOD() bool StartsWithSpecial() const noexcept;
+		NOD() bool StartsWithSkippable() const noexcept;
+		NOD() bool EndsWithSkippable() const noexcept;
+		NOD() bool StartsWithLetter() const noexcept;
+		NOD() bool EndsWithLetter() const noexcept;
+		NOD() bool StartsWithDigit() const noexcept;
+		NOD() bool EndsWithDigit() const noexcept;
+		NOD() bool StartsWithOperator(Offset) const noexcept;
 
 		template<class T>
 		Code& TypeSuffix();

@@ -4,15 +4,15 @@
 #define PC_PARSE_VERBOSE_INNER(a) \
 		Logger::Verbose() << LANGULUS(FUNCTION) << ": " << a << " at " << progress << ": " << \
 		Logger::Verbose() << " -- " \
-			<< Logger::Green << input.CropRight(progress) \
-			<< Logger::Gray << input.CropLeft(progress)
+			<< Logger::Green << input.RightOf(progress) \
+			<< Logger::Gray << input.LeftOf(progress)
 
 #define PRETTY_ERROR(a) \
 	Throw<Except::Flow>( \
 		Logger::Error() << LANGULUS(FUNCTION) << ": " << a << " at " << progress << ": " << \
 		Logger::Error() << " -- " \
-			<< Logger::Green << input.CropRight(progress) \
-			<< Logger::Red << input.CropLeft(progress))
+			<< Logger::Green << input.RightOf(progress) \
+			<< Logger::Red << input.LeftOf(progress))
 
 #define PC_PARSE_VERBOSE(a) //PC_PARSE_VERBOSE_INNER(a)
 #define PC_PARSE_VERBOSE_ALT(a) //pcLogFuncVerbose << a
@@ -27,8 +27,8 @@ namespace Langulus::Flow
 	///	@return true if both loosely match												
 	constexpr bool CompareTokens(const Token& lhs, const Token& rhs) noexcept {
 		return (lhs.size() == rhs.size() && (
-			lhs.size() == 0 
-			|| ::std::equal(lhs.begin(), lhs.end(), rhs.begin(), 
+			lhs.size() == 0 ||
+			::std::equal(lhs.begin(), lhs.end(), rhs.begin(), 
 			[](const char& c1, const char& c2) noexcept {
 				return c1 == c2 || (::std::toupper(c1) == ::std::toupper(c2));
 			})
@@ -79,7 +79,7 @@ namespace Langulus::Flow
 		{ "'", "'", 0, false },		// CloseCharacter
 		{ "<", "<", 12, false },	// PolarizeLeft
 		{ ">", ">", 12, false },	// PolarizeRight
-		{ ":", ": ", 1, false },	// Context
+		//{ ":", ": ", 1, false },	// Context
 		{ "=", " = ", 1, false },	// Copy
 		{ "?", "?", 13, false },	// Missing
 		{ ",", ", ", 2, false },	// AndSeparator
@@ -94,7 +94,7 @@ namespace Langulus::Flow
 		{ "*", " * ", 5, false },	// Multiply
 		{ "/", " / ", 5, false },	// Divide
 		{ "^", " ^ ", 6, false },	// Power
-		{ "as", " as ", 1, false },// As
+		//{ "as", " as ", 1, false },// As
 		{ "0x", "0x", 0, false },	// OpenByte
 		{ "", "", 0, false }			// CloseByte
 	};
@@ -150,7 +150,7 @@ namespace Langulus::Flow
 	struct Keyword : public Expression {
 		NOD() static Offset Parse(const Code&, Any&);
 		NOD() inline static bool Peek(const Code& input) noexcept {
-			return input.IsLetter();
+			return input.StartsWithLetter();
 		}
 	};
 
@@ -158,7 +158,7 @@ namespace Langulus::Flow
 	struct Skipped : public Expression {
 		NOD() static Offset Parse(const Code&);
 		NOD() inline static bool Peek(const Code& input) noexcept {
-			return input.IsSkippable();
+			return input.StartsWithSkippable();
 		}
 	};
 
@@ -166,12 +166,13 @@ namespace Langulus::Flow
 	struct Number : public Expression {
 		NOD() static Offset Parse(const Code&, Any&);
 		NOD() inline static bool Peek(const Code& input) noexcept {
-			if (input.IsNumber())
+			if (input.StartsWithDigit())
 				return true;
 			else for (auto c : input) {
-				if (c == '-' || pcIsSpecialChar(c))
+				if (c == '-' || c <= 32)
 					continue;
-				else return pcIsNumber(c);
+				else
+					return ::std::isdigit(c);
 			}
 			return false;
 		}
@@ -182,7 +183,7 @@ namespace Langulus::Flow
 		NOD() static Offset Parse(const Code&, Any&, int priority, bool optimize);
 		NOD() inline static bool Peek(const Code& input) noexcept {
 			for (Offset i = 0; i < Code::OpCounter; ++i) {
-				if (input.IsOperator(i))
+				if (input.StartsWithOperator(i))
 					return true;
 			}
 			return false;
@@ -206,14 +207,14 @@ namespace Langulus::Flow
 	};
 
 	/// Context operator																			
-	struct OperatorContext : public Operator {
+	/*struct OperatorContext : public Operator {
 		NOD() static Offset Parse(const Code&, Any&, bool optimize);
 	};
 
 	/// As operator ("as")																		
 	struct OperatorAs : public Operator {
 		NOD() static Offset Parse(const Code&, Any&, bool optimize);
-	};
+	};*/
 
 	/// Copy operator																				
 	struct OperatorCopy : public Operator {
@@ -275,7 +276,7 @@ namespace Langulus::Flow
 
 		while (progress < input.GetCount()) {
 			// Scan input until end														
-			Code relevant = input.CropLeft(progress);
+			Code relevant = input.LeftOf(progress);
 			Offset localProgress = 0;
 
 			if (relevant[0] == '\0')
@@ -324,7 +325,7 @@ namespace Langulus::Flow
 	Offset Skipped::Parse(const Code& input) {
 		Offset progress = 0;
 		while (progress < input.GetCount()) {
-			const auto relevant = input.CropLeft(progress);
+			const auto relevant = input.LeftOf(progress);
 			if (Peek(relevant))
 				++progress;
 			else break;
@@ -342,7 +343,7 @@ namespace Langulus::Flow
 		PC_PARSE_VERBOSE("Parsing keyword...");
 		while (progress < input.GetCount()) {
 			// Collect all characters of the keyword								
-			const auto relevant = input.CropLeft(progress);
+			const auto relevant = input.LeftOf(progress);
 			if (!Keyword::Peek(relevant) && !Number::Peek(relevant))
 				break;
 
@@ -353,9 +354,10 @@ namespace Langulus::Flow
 			PRETTY_ERROR("No progress at keyword parse");
 
 		Any rhs;
-		const auto keyword = input.CropRight(progress);
+		const auto keyword = input.RightOf(progress);
 		if (keyword.IsEmpty())
 			PRETTY_ERROR("No keyword parsed");
+
 		PC_PARSE_VERBOSE("Parsed keyword: " << keyword);
 
 		// Search for token in meta definitions									
@@ -375,12 +377,14 @@ namespace Langulus::Flow
 				!CompareTokens(keyword, metaVerb->mToken) &&
 				 CompareTokens(keyword, metaVerb->mTokenReverse);
 
-			if (reversed)
+			if (reversed) {
 				// The keyword resulted in a negatively charged verb			
-				rhs << Verb(metaVerb) * Real(-1);
-			else
+				rhs << Verb(metaVerb) * -1;
+			}
+			else {
 				// The keyword resulted in a metaverb								
 				rhs << metaVerb;
+			}
 		}
 
 		if (rhs.IsEmpty())
@@ -424,7 +428,7 @@ namespace Langulus::Flow
 		auto op = Code::OpCounter;
 		for (Offset i = 0; i < Code::OpCounter; ++i) {
 			const bool typeMatch = !Code::Token[i].mCharge || lhs.Is<MetaData, MetaVerb>();
-			if (input.IsOperator(i) && typeMatch) {
+			if (input.StartsWithOperator(i) && typeMatch) {
 				op = Code::Operator(i);
 				progress += Code::Token[i].mToken.size();
 				break;
@@ -435,7 +439,7 @@ namespace Langulus::Flow
 			PRETTY_ERROR("Unknown operator");
 
 		PC_PARSE_VERBOSE("Parsing operator...");
-		const Code relevant = input.CropLeft(progress);
+		const Code relevant = input.LeftOf(progress);
 
 		if (Code::Token[op].mPriority && priority >= Code::Token[op].mPriority) {
 			PC_PARSE_VERBOSE(ccYellow << "Delaying because of a prioritized operator...");
@@ -443,8 +447,8 @@ namespace Langulus::Flow
 		}
 
 		switch (op) {
-		case Code::As:
-			return progress + OperatorAs::Parse(relevant, lhs, optimize);
+		//case Code::As:
+		//	return progress + OperatorAs::Parse(relevant, lhs, optimize);
 		case Code::OpenScope:
 			return progress + OperatorContent::Parse(relevant, lhs, optimize);
 		case Code::CloseScope:
@@ -459,8 +463,8 @@ namespace Langulus::Flow
 		case Code::PolarizeLeft:
 		case Code::PolarizeRight:
 			return progress + OperatorPolarize::Parse(op, relevant, lhs, optimize);
-		case Code::Context:
-			return progress + OperatorContext::Parse(relevant, lhs, optimize);
+		//case Code::Context:
+		//	return progress + OperatorContext::Parse(relevant, lhs, optimize);
 		case Code::Copy:
 			return progress + OperatorCopy::Parse(relevant, lhs, optimize);
 		case Code::Missing:
@@ -490,17 +494,17 @@ namespace Langulus::Flow
 		}
 	}
 
-	struct VerbHelper {
+	/*struct VerbHelper {
 		Any source;
 		Any argument;
-		Any output;
+		Any output;*/
 
 		/*operator Debug () {
 			Code result;
 			result += Verb{ uvInvalid, source, argument, output };
 			return result;
 		}*/
-	};
+	//};
 
 	/// Parse a content scope																	
 	///	@param input - the code to parse													
@@ -516,7 +520,7 @@ namespace Langulus::Flow
 		// We don't know what to expect, so we attempt blind parse			
 		Any rhs;
 		progress = Expression::Parse(input, rhs, Code::Token[Code::OpenScope].mPriority, optimize);
-		if (!input.CropLeft(progress).IsOperator(Code::CloseScope))
+		if (!input.LeftOf(progress).StartsWithOperator(Code::CloseScope))
 			PRETTY_ERROR("Missing closing bracket");
 
 		// Account for the closing content scope									
@@ -535,9 +539,9 @@ namespace Langulus::Flow
 			// If output is untyped, we directly push content, regardless	
 			// if it's filled with something or not - a scope is a scope	
 			// Combine states!															
-			auto stateBackup = lhs.GetUnconstrainedState();
+			const auto stateBackup = lhs.GetState();
 			lhs = Move(rhs);
-			lhs.ToggleState(stateBackup, true);
+			lhs.AddState(stateBackup);
 			PC_PARSE_VERBOSE_ALT("Untyped content: " << ccCyan << lhs);
 		}
 		else if (lhs.Is<DMeta>()) {
@@ -551,8 +555,7 @@ namespace Langulus::Flow
 			lhs.Reset();
 
 			Construct outputConstruct(lhs.Get<DMeta>(), Move(rhs));
-			try
-			{
+			try {
 				outputConstruct.StaticCreation(lhs);
 			}
 			catch (...) {
@@ -569,7 +572,7 @@ namespace Langulus::Flow
 				Throw<Except::Flow>();
 			}
 
-			if (rhs.Is<VerbHelper>()) {
+			/*if (rhs.Is<VerbHelper>()) {
 				const auto& helper = rhs.Get<VerbHelper>();
 				lhs = Verb {
 					lhs.Get<VMeta>(),
@@ -578,9 +581,9 @@ namespace Langulus::Flow
 					Move(helper.output)
 				};
 			}
-			else {
+			else {*/
 				lhs = Verb {lhs.Get<VMeta>(), {}, Move(rhs)};
-			}
+			//}
 
 			PC_PARSE_VERBOSE_ALT("Constructed from VerbID: " << ccCyan << lhs);
 		}
@@ -593,13 +596,13 @@ namespace Langulus::Flow
 			}
 
 			auto& verb = lhs.Get<Verb>();
-			if (rhs.Is<VerbHelper>()) {
+			/*if (rhs.Is<VerbHelper>()) {
 				const auto& helper = rhs.Get<VerbHelper>();
 				verb.GetSource().SmartPush(helper.source);
 				verb.GetArgument().SmartPush(helper.argument);
 				verb.GetOutput().SmartPush(helper.output);
 			}
-			else {
+			else {*/
 				// Push content scope to the argument								
 				if (verb.GetArgument().IsEmpty()) {
 					// Push as argument													
@@ -610,7 +613,7 @@ namespace Langulus::Flow
 					// for it, so nest													
 					OperatorContent::InsertContent(rhs, verb.GetArgument());
 				}
-			}
+			//}
 
 			PC_PARSE_VERBOSE_ALT("Constructed from Verb " << ccCyan << lhs);
 		}
@@ -644,14 +647,14 @@ namespace Langulus::Flow
 		while (progress < input.GetCount()) {
 			// Collect all characters in scope, essentially gobbling them	
 			// up into a text container until matching token is reached		
-			const auto relevant = input.CropLeft(progress);
+			const auto relevant = input.LeftOf(progress);
 
 			switch (op) {
 			case Code::OpenString:
 				// Finish up a "string"													
-				if (relevant.IsOperator(Code::CloseString)) {
+				if (relevant.StartsWithOperator(Code::CloseString)) {
 					const auto tokenSize = Code::Token[Code::CloseString].mToken.size();
-					lhs = Text{ input.CropRight(progress) };
+					lhs = Text {input.RightOf(progress)};
 					PC_PARSE_VERBOSE("Constructed string " << ccCyan << lhs);
 					return tokenSize + progress;
 				}
@@ -659,9 +662,9 @@ namespace Langulus::Flow
 
 			case Code::OpenStringAlt:
 				// Finish up a `string`													
-				if (relevant.IsOperator(Code::CloseStringAlt)) {
+				if (relevant.StartsWithOperator(Code::CloseStringAlt)) {
 					const auto tokenSize = Code::Token[Code::CloseStringAlt].mToken.size();
-					lhs = Text{ input.CropRight(progress) };
+					lhs = Text {input.RightOf(progress)};
 					PC_PARSE_VERBOSE("Constructed string " << ccCyan << lhs);
 					return tokenSize + progress;
 				}
@@ -669,7 +672,7 @@ namespace Langulus::Flow
 
 			case Code::OpenCharacter:
 				// Finish up a 'c'haracter												
-				if (relevant.IsOperator(Code::CloseCharacter)) {
+				if (relevant.StartsWithOperator(Code::CloseCharacter)) {
 					const auto tokenSize = Code::Token[Code::CloseCharacter].mToken.size();
 					lhs = input[0];
 					PC_PARSE_VERBOSE("Constructed character " << ccCyan << lhs);
@@ -679,13 +682,13 @@ namespace Langulus::Flow
 
 			case Code::OpenCode:
 				// Finish up a [code]													
-				if (relevant.IsOperator(Code::OpenCode))
+				if (relevant.StartsWithOperator(Code::OpenCode))
 					++depth;
-				else if (relevant.IsOperator(Code::CloseCode)) {
+				else if (relevant.StartsWithOperator(Code::CloseCode)) {
 					--depth;
 					if (0 == depth) {
 						const auto tokenSize = Code::Token[Code::CloseCode].mToken.size();
-						lhs = input.CropRight(progress);
+						lhs = input.RightOf(progress);
 						PC_PARSE_VERBOSE("Constructed code " << ccCyan << lhs);
 						return tokenSize + progress;
 					}
@@ -759,7 +762,7 @@ namespace Langulus::Flow
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here								
 	///	@return number of parsed characters												
-	Offset OperatorContext::Parse(const Code& input, Any& lhs, bool optimize) {
+	/*Offset OperatorContext::Parse(const Code& input, Any& lhs, bool optimize) {
 		Offset progress = 0;
 		if (!lhs.IsValid())
 			PRETTY_ERROR("Invalid context");
@@ -774,13 +777,13 @@ namespace Langulus::Flow
 		helper << VerbHelper {Move(lhs), Move(rhs), {}};
 		lhs = Move(static_cast<Any&>(helper));
 		return progress;
-	}
+	}*/
 
 	/// As operator																				
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here								
 	///	@return number of parsed characters												
-	Offset OperatorAs::Parse(const Code& input, Any& lhs, bool optimize) {
+	/*Offset OperatorAs::Parse(const Code& input, Any& lhs, bool optimize) {
 		// Parse RHS, and if valid, push Output(RHS) trait to output		
 		Any rhs;
 		const Offset progress = Expression::Parse(input, rhs, Code::Token[Code::As].mPriority, optimize);
@@ -800,7 +803,7 @@ namespace Langulus::Flow
 		}
 
 		return progress;
-	}
+	}*/
 
 	/// Missing operator '?'																	
 	///	@param input - the code to parse													
@@ -833,11 +836,11 @@ namespace Langulus::Flow
 	///	@return number of parsed characters												
 	Offset OperatorSelect::Parse(const Code& input, Any& lhs, bool optimize) {
 		Offset progress = 0;
-		if (input.IsOperator(Code::OpenScope)) {
+		if (input.StartsWithOperator(Code::OpenScope)) {
 			// Selection arguments provided as content on RHS					
 			const auto scopeOffset = Code::Token[Code::OpenScope].mToken.size();
 			lhs = Verbs::Select(Move(lhs));
-			progress = OperatorContent::Parse(input.CropLeft(scopeOffset), lhs, optimize);
+			progress = OperatorContent::Parse(input.LeftOf(scopeOffset), lhs, optimize);
 			PC_PARSE_VERBOSE("Select operator: " << lhs);
 			return scopeOffset + progress;
 		}
@@ -870,11 +873,11 @@ namespace Langulus::Flow
 	///	@return number of parsed characters												
 	Offset OperatorCopy::Parse(const Code& input, Any& lhs, bool optimize) {
 		Offset progress = 0;
-		if (input.IsOperator(Code::OpenScope)) {
+		if (input.StartsWithOperator(Code::OpenScope)) {
 			// Copy specification provided as content on RHS					
 			const auto scopeOffset = Code::Token[Code::OpenScope].mToken.size();
 			lhs = Verbs::Associate(Move(lhs)).SetPriority(2);
-			progress = OperatorContent::Parse(input.CropLeft(scopeOffset), lhs, optimize);
+			progress = OperatorContent::Parse(input.LeftOf(scopeOffset), lhs, optimize);
 			PC_PARSE_VERBOSE("Copy operator: " << lhs);
 			return scopeOffset + progress;
 		}
@@ -1129,16 +1132,16 @@ namespace Langulus::Flow
 
 			switch (op) {
 			case Code::Mass:
-				construct.mCharge.mMass = asReal;
+				construct.mMass = asReal;
 				break;
 			case Code::Time:
-				construct.mCharge.mTime = asReal;
+				construct.mTime = asReal;
 				break;
 			case Code::Frequency:
-				construct.mCharge.mFrequency = asReal;
+				construct.mFrequency = asReal;
 				break;
 			case Code::Priority:
-				construct.mCharge.mPriority = asReal;
+				construct.mPriority = asReal;
 				break;
 			default:
 				PRETTY_ERROR("Invalid data charge operator: " << Code::Token[op].mToken);
@@ -1162,8 +1165,8 @@ namespace Langulus::Flow
 		if (parsed != GetCount()) {
 			Logger::Warning() << "Some characters were left out at the end, while parsing Code code:";
 			Logger::Warning() << " -- " 
-				<< Logger::Green << CropRight(parsed) 
-				<< Logger::Red << CropLeft(parsed);
+				<< Logger::Green << RightOf(parsed) 
+				<< Logger::Red << LeftOf(parsed);
 		}
 		return output;
 	}
@@ -1189,11 +1192,11 @@ namespace Langulus::Flow
 	///	@param text - the text to check													
 	///	@return true if text is a valid Code keyword									
 	bool Code::IsValidKeyword(const Text& text) {
-		if (text.IsEmpty() || !pcIsLetter(text[0]))
+		if (text.IsEmpty() || !::std::isalpha(text[0]))
 			return false;
 
 		for (auto a : text) {
-			if (pcIsNumber(a) || pcIsLetter(a))
+			if (::std::isdigit(a) || ::std::isalpha(a))
 				continue;
 			return false;
 		}

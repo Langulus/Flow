@@ -7,19 +7,19 @@ namespace Langulus::Flow
 {
 
 	/// Construct from a header																
-	///	@param header - the type of the content										
+	///	@param type - the type of the content											
 	Construct::Construct(DMeta type)
 		: mType {type} {}
 
 	/// Construct from a header and movable arguments									
-	///	@param header - the type of the content										
+	///	@param type - the type of the content											
 	///	@param arguments - the argument container to move							
 	Construct::Construct(DMeta type, Any&& arguments)
 		: mType {type}
 		, mArguments {Forward<Any>(arguments)} { }
 
 	/// Construct from a header and shallow-copied arguments							
-	///	@param header - the type of the content										
+	///	@param type - the type of the content											
 	///	@param arguments - the argument container to copy							
 	Construct::Construct(DMeta type, const Any& arguments)
 		: mType {type}
@@ -28,15 +28,16 @@ namespace Langulus::Flow
 	/// Hash the descriptor																		
 	///	@return the hash of the content													
 	Hash Construct::GetHash() const {
-		if (mHashed)
+		if (mHash)
 			return mHash;
 
-		return Hashed::SetHash(mType->mHash | mArguments.GetHash());
+		mHash = mType->mHash | mArguments.GetHash();
+		return mHash;
 	}
 
 	/// Clears arguments and charge															
 	void Construct::Clear() {
-		mCharge = {};
+		Charge::Reset();
 		mArguments.Reset();
 		ResetHash();
 	}
@@ -46,10 +47,10 @@ namespace Langulus::Flow
 	///	@return a construct with cloned arguments										
 	Construct Construct::Clone(DMeta overrride) const {
 		Construct clone {overrride ? overrride : mType};
-		clone.mCharge = mCharge;
+		static_cast<Charge&>(clone) = static_cast<const Charge&>(*this);
 		clone.mArguments = mArguments.Clone();
 		if (!overrride)
-			clone.SetHash(GetHash());
+			clone.mHash = GetHash();
 		return clone;
 	}
 
@@ -57,7 +58,9 @@ namespace Langulus::Flow
 	///	@param other - descriptor to compare with										
 	///	@return true if both content descriptors are the same						
 	bool Construct::operator == (const Construct& rhs) const noexcept {
-		return CompareHash(rhs) && mType == rhs.mType && mArguments == rhs.mArguments;
+		return GetHash() == rhs.GetHash()
+			&& mType == rhs.mType
+			&& mArguments == rhs.mArguments;
 	}
 
 	/// Attempt to create construct statically if possible							
@@ -181,8 +184,8 @@ namespace Langulus::Flow
 	Construct::operator Code() const {
 		Code result;
 		result += mType->mToken;
-		if (!mCharge.IsDefault() || !mArguments.IsEmpty()) {
-			result += Verbs::Interpret::To<Code>(mCharge);
+		if (!Charge::IsDefault() || !mArguments.IsEmpty()) {
+			result += Verbs::Interpret::To<Code>(GetCharge());
 			result += Code::OpenScope;
 			result += Verbs::Interpret::To<Code>(mArguments);
 			result += Code::CloseScope;
@@ -195,8 +198,8 @@ namespace Langulus::Flow
 	Construct::operator Debug() const {
 		Code result;
 		result += mType->mToken;
-		if (!mCharge.IsDefault() || !mArguments.IsEmpty()) {
-			result += Verbs::Interpret::To<Debug>(mCharge);
+		if (!Charge::IsDefault() || !mArguments.IsEmpty()) {
+			result += Verbs::Interpret::To<Debug>(GetCharge());
 			result += Code::OpenScope;
 			result += Verbs::Interpret::To<Debug>(mArguments);
 			result += Code::CloseScope;

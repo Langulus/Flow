@@ -38,6 +38,24 @@ namespace Langulus::Flow
 		return {mMass * scalar, mFrequency, mTime, mPriority};
 	}
 
+	/// Scale the frequency of a charge														
+	constexpr Charge Charge::operator ^ (const Real& scalar) const noexcept {
+		return {mMass, mFrequency * scalar, mTime, mPriority};
+	}
+
+	/// Scale the mass of a charge															
+	constexpr Charge& Charge::operator *= (const Real& scalar) noexcept {
+		mMass *= scalar;
+		return *this;
+	}
+
+	/// Scale the frequency of a charge														
+	constexpr Charge& Charge::operator ^= (const Real& scalar) noexcept {
+		mFrequency *= scalar;
+		return *this;
+	}
+
+
 	/// Manual constructor with verb meta 													
 	///	@param call - the verb ID															
 	///	@param charge - the charge															
@@ -46,8 +64,8 @@ namespace Langulus::Flow
 	///	@param o - the output																
 	///	@param shortCircuit - short circuit												
 	Verb::Verb(VMeta call, const Any& s, const Any& a, const Any& o, const Charge& charge, bool shortCircuit)
-		: mVerb {call}
-		, mCharge {charge}
+		: Charge {charge}
+		, mVerb {call}
 		, mSource {s}
 		, mArgument {a}
 		, mOutput {o}
@@ -59,15 +77,38 @@ namespace Langulus::Flow
 		return mVerb->mHash | mSource.GetHash() | mArgument.GetHash() | mOutput.GetHash();
 	}
 
-	/// Compare verbs for equality															
-	///	@param rhs - the verb to compare against										
-	///	@return true if verbs match														
-	inline bool Verb::operator == (const Verb& rhs) const {
-		return mVerb == rhs.mVerb
-			&& mCharge == rhs.mCharge
-			&& mSource == rhs.mSource
-			&& mArgument == rhs.mArgument
-			&& mOutput == rhs.mOutput;
+	/// Multiply verb mass																		
+	///	@param rhs - the mass to multiply by											
+	///	@return a new verb, with the modified mass									
+	Verb Verb::operator * (const Real& rhs) const {
+		Verb shallowCopy = *this;
+		shallowCopy.mMass *= rhs;
+		return shallowCopy;
+	}
+
+	/// Multiply verb frequency																
+	///	@param rhs - the frequency to multiply by										
+	///	@return a new verb, with the modified frequency								
+	Verb Verb::operator ^ (const Real& rhs) const {
+		Verb shallowCopy = *this;
+		shallowCopy.mFrequency *= rhs;
+		return shallowCopy;
+	}
+
+	/// Multiply verb mass (destructively)													
+	///	@param rhs - the mass to multiply by											
+	///	@return a reference to this verb													
+	Verb& Verb::operator *= (const Real& rhs) noexcept {
+		mMass *= rhs;
+		return *this;
+	}
+
+	/// Multiply verb frequency (destructively)											
+	///	@param rhs - the frequency to multiply by										
+	///	@return a reference to this verb													
+	Verb& Verb::operator ^= (const Real& rhs) noexcept {
+		mFrequency *= rhs;
+		return *this;
 	}
 
 	/// Compare verb types for equality														
@@ -81,13 +122,13 @@ namespace Langulus::Flow
 	///	@param other - the verb to use as base											
 	///	@return the partially copied verb												
 	Verb Verb::PartialCopy() const noexcept {
-		return {mVerb, mCharge};
+		return {mVerb, GetCharge()};
 	}
 
 	/// Clone the verb																			
 	///	@return the cloned verb																
 	Verb Verb::Clone() const {
-		Verb clone {mVerb, mCharge};
+		Verb clone {mVerb, GetCharge()};
 		clone.mSource = mSource.Clone();
 		clone.mArgument = mArgument.Clone();
 		clone.mOutput = mOutput.Clone();
@@ -99,7 +140,7 @@ namespace Langulus::Flow
 	/// Reset all verb members and energy													
 	void Verb::Reset() {
 		mVerb = {};
-		mCharge = {};
+		Charge::Reset();
 		mSource.Reset();
 		mArgument.Reset();
 		mOutput.Reset();
@@ -117,7 +158,7 @@ namespace Langulus::Flow
 	///	@param priority - the priority to check										
 	///	@return true if this verb's priority matches the provided one			
 	bool Verb::Validate(const Index& priority) const noexcept {
-		return int(mCharge.mPriority) == priority.mIndex || priority == Index::All;
+		return int(mPriority) == priority.mIndex || priority == Index::All;
 	}
 	
 	/// Change the verb's circuitry															
@@ -134,7 +175,7 @@ namespace Langulus::Flow
 		if (!mVerb)
 			return MetaVerb::DefaultToken;
 
-		return mCharge.mMass < 0 ? mVerb->mTokenReverse : mVerb->mToken;
+		return mMass < 0 ? mVerb->mTokenReverse : mVerb->mToken;
 	}
 
 	/// Flat check if memory block contains executable verbs							
@@ -182,70 +223,136 @@ namespace Langulus::Flow
 	/// Serialize verb to code																	
 	Verb::operator Code() const {
 		Code result;
-		if (!mVerb)
+
+		if (mSuccesses) {
+			// If verb has been executed, just dump the output					
+			result += Verbs::Interpret::To<Code>(mOutput);
+			return result;
+		}
+
+		// If reached, then verb hasn't been executed yet						
+		// Let's check if there's a source in which verb is executed		
+		if (mSource.IsValid())
+			result += Verbs::Interpret::To<Code>(mSource);
+
+		// After the source, we decide whether to write . and verb token,	
+		// or simply an operator, depending on the verb definition			
+		bool enscope = true;
+		if (!mVerb) {
+			// An invalid verb is always written as token						
+			if (mSource.IsValid())
+				result += Code::Select;
 			result += MetaVerb::DefaultToken;
+		}
 		else {
-			if (mCharge.mMass < 0) {
-				result += mVerb->mTokenReverse;
-				result += Verbs::Interpret::To<Code>(mCharge * -1);
+			// A valid verb is written either as token, or as operator		
+			if (mMass < 0) {
+				if (!mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault()) {
+					// Write as operator													
+					result += mVerb->mOperatorReverse;
+					enscope = false;
+				}
+				else {
+					// Write as token														
+					if (mSource.IsValid())
+						result += Code::Select;
+					result += mVerb->mTokenReverse;
+					result += Verbs::Interpret::To<Code>(GetCharge() * -1);
+				}
 			}
 			else {
-				result += mVerb->mToken;
-				result += Verbs::Interpret::To<Code>(mCharge);
+				if (!mVerb->mOperator.empty() && GetCharge().IsDefault()) {
+					// Write as operator													
+					result += mVerb->mOperator;
+					enscope = false;
+				}
+				else {
+					// Write as token														
+					if (mSource.IsValid())
+						result += Code::Select;
+					result += mVerb->mToken;
+					result += Verbs::Interpret::To<Code>(GetCharge());
+				}
 			}
 		}
 
-		result += Code::OpenScope;
-
-		if (mSource.IsValid()) {
-			result += Verbs::Interpret::To<Code>(mSource);
-			result += Code::Context;
-		}
+		if (enscope)
+			result += Code::OpenScope;
 
 		if (mArgument.IsValid())
 			result += Verbs::Interpret::To<Code>(mArgument);
 
-		if (mOutput.IsValid()) {
-			result += Code::As;
-			result += Verbs::Interpret::To<Code>(mOutput);
-		}
+		if (enscope)
+			result += Code::CloseScope;
 
-		result += Code::CloseScope;
 		return result;
 	}
 
 	/// Serialize verb for logger																
 	Verb::operator Debug() const {
 		Code result;
-		if (!mVerb)
+
+		if (mSuccesses) {
+			// If verb has been executed, just dump the output					
+			result += Verbs::Interpret::To<Debug>(mOutput);
+			return result;
+		}
+
+		// If reached, then verb hasn't been executed yet						
+		// Let's check if there's a source in which verb is executed		
+		if (mSource.IsValid())
+			result += Verbs::Interpret::To<Debug>(mSource);
+
+		// After the source, we decide whether to write . and verb token,	
+		// or simply an operator, depending on the verb definition			
+		bool enscope = true;
+		if (!mVerb) {
+			// An invalid verb is always written as token						
+			if (mSource.IsValid())
+				result += Code::Select;
 			result += MetaVerb::DefaultToken;
+		}
 		else {
-			if (mCharge.mMass < 0) {
-				result += mVerb->mTokenReverse;
-				result += Verbs::Interpret::To<Debug>(mCharge * -1);
+			// A valid verb is written either as token, or as operator		
+			if (mMass < 0) {
+				if (!mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault()) {
+					// Write as operator													
+					result += mVerb->mOperatorReverse;
+					enscope = false;
+				}
+				else {
+					// Write as token														
+					if (mSource.IsValid())
+						result += Code::Select;
+					result += mVerb->mTokenReverse;
+					result += Verbs::Interpret::To<Debug>(GetCharge() * -1);
+				}
 			}
 			else {
-				result += mVerb->mToken;
-				result += Verbs::Interpret::To<Debug>(mCharge);
+				if (!mVerb->mOperator.empty() && GetCharge().IsDefault()) {
+					// Write as operator													
+					result += mVerb->mOperator;
+					enscope = false;
+				}
+				else {
+					// Write as token														
+					if (mSource.IsValid())
+						result += Code::Select;
+					result += mVerb->mToken;
+					result += Verbs::Interpret::To<Debug>(GetCharge());
+				}
 			}
 		}
 
-		result += Code::OpenScope;
-
-		if (mSource.IsValid()) {
-			result += Verbs::Interpret::To<Debug>(mSource);
-			result += Code::Context;
-		}
+		if (enscope)
+			result += Code::OpenScope;
 
 		if (mArgument.IsValid())
 			result += Verbs::Interpret::To<Debug>(mArgument);
 
-		if (mOutput.IsValid()) {
-			result += Code::As;
-			result += Verbs::Interpret::To<Debug>(mOutput);
-		}
+		if (enscope)
+			result += Code::CloseScope;
 
-		result += Code::CloseScope;
 		return result;
 	}
 

@@ -41,12 +41,11 @@ namespace Langulus::Flow
 	/// various characteristics, to finally the additional raw data in case		
 	/// of specific custom content.															
 	///																								
-	class Construct {
+	class Construct : public Charge {
 	private:
 		DMeta mType {};
-		Charge mCharge {};
 		Any mArguments;
-		Hash mHash;
+		Hash mHash {};
 
 	public:
 		Construct() = default;
@@ -98,7 +97,7 @@ namespace Langulus::Flow
 		NOD() Any& GetAll() noexcept;
 
 		NOD() const Charge& GetCharge() const noexcept;
-		NOD() Charge& GetCharge() noexcept;
+		//NOD() Charge& GetCharge() noexcept;
 
 		NOD() DMeta GetType() const noexcept;
 		NOD() bool IsEmpty() const noexcept;

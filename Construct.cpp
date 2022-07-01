@@ -28,10 +28,10 @@ namespace Langulus::Flow
 	/// Hash the descriptor																		
 	///	@return the hash of the content													
 	Hash Construct::GetHash() const {
-		if (mHash)
+		if (mHash.mHash)
 			return mHash;
 
-		mHash = mType->mHash | mArguments.GetHash();
+		const_cast<Hash&>(mHash) = HashData(mType->mHash, mArguments.GetHash());
 		return mHash;
 	}
 
@@ -39,7 +39,7 @@ namespace Langulus::Flow
 	void Construct::Clear() {
 		Charge::Reset();
 		mArguments.Reset();
-		ResetHash();
+		mHash = {};
 	}
 
 	/// Clone construct																			
@@ -136,7 +136,7 @@ namespace Langulus::Flow
 
 				if (counter == index) {
 					t = trait;
-					ResetHash();
+					mHash = {};
 					done = true;
 					return false;
 				}

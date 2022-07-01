@@ -458,8 +458,8 @@ namespace Langulus::Flow
 		case Code::OpenCode:
 		case Code::OpenCharacter:
 			return progress + OperatorString::Parse(op, relevant, lhs);
-		case Code::OpenByte:
-			TODO();
+		//case Code::OpenByte:
+		//	TODO();
 		case Code::PolarizeLeft:
 		case Code::PolarizeRight:
 			return progress + OperatorPolarize::Parse(op, relevant, lhs, optimize);

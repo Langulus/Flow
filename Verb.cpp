@@ -74,7 +74,7 @@ namespace Langulus::Flow
 	/// Hash the verb																				
 	///	@return the hash of the content													
 	Hash Verb::GetHash() const {
-		return mVerb->mHash | mSource.GetHash() | mArgument.GetHash() | mOutput.GetHash();
+		return HashData(mVerb->mHash, mSource, mArgument, mOutput);
 	}
 
 	/// Multiply verb mass																		

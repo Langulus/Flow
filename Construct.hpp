@@ -45,7 +45,7 @@ namespace Langulus::Flow
 	private:
 		DMeta mType {};
 		Any mArguments;
-		Hash mHash {};
+		Hash mHash;
 
 	public:
 		Construct() = default;
@@ -64,7 +64,6 @@ namespace Langulus::Flow
 
 	public:
 		NOD() Hash GetHash() const;
-		void ResetHash();
 
 		template<CT::Data DATA>
 		NOD() static Construct From(DMeta, DATA&&);

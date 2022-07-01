@@ -77,7 +77,10 @@ SCENARIO("Parsing Code", "[gasm]") {
 
 	GIVEN("5) The Code script: Catenate   (   <ANumber?	:	>ANumber?	)   ") {
 		const Code gasm = "Catenate   (   <ANumber?	:	>ANumber?	)   ";
-		TAny<Any> package = Any::Wrap(MetaData::Of<A::Number>(), MetaData::Of<A::Number>());
+		TAny<Any> package = Any::Wrap(
+			MetaData::Of<A::Number>(), 
+			MetaData::Of<A::Number>()
+		);
 		package[0].MakePast();
 		package[0].MakeMissing();
 		package[1].MakeFuture();
@@ -100,7 +103,10 @@ SCENARIO("Parsing Code", "[gasm]") {
 		package[0].MakeMissing();
 		package[1].MakeFuture();
 		package[1].MakeMissing();
-		const Any required = Verbs::Scope(MetaData::Of<Verb>(), package).SetPriority(-1);
+
+		const Any required = Verbs::Scope(
+			MetaData::Of<Verb>(), package
+		).SetPriority(-1);
 
 		WHEN("Parsed") {
 			const auto parsed = gasm.Parse();
@@ -161,11 +167,19 @@ SCENARIO("Parsing Code", "[gasm]") {
 	}
 
 	GIVEN("9) The Code script: Scope!-1(Verb: <?(ANumber,DataID,Construct), >?(ANumber,DataID,Construct))") {
-		Any pastMissing = Any::WrapCommon(MetaData::Of<A::Number>(), MetaData::Of<MetaData>(), MetaData::Of<Construct>());
+		Any pastMissing = Any::WrapCommon(
+			MetaData::Of<A::Number>(),
+			MetaData::Of<MetaData>(),
+			MetaData::Of<Construct>()
+		);
 		pastMissing.MakePast();
 		pastMissing.MakeMissing();
 
-		Any futureMissing = Any::WrapCommon(MetaData::Of<A::Number>(), MetaData::Of<MetaData>(), MetaData::Of<Construct>());
+		Any futureMissing = Any::WrapCommon(
+			MetaData::Of<A::Number>(), 
+			MetaData::Of<MetaData>(), 
+			MetaData::Of<Construct>()
+		);
 		futureMissing.MakeFuture();
 		futureMissing.MakeMissing();
 
@@ -187,7 +201,9 @@ SCENARIO("Parsing Code", "[gasm]") {
 	GIVEN("10) The Code script: Create^1(Count(1)).Add^3(2)") {
 		const Code gasm = "Create^1(Count(1)).Add^3(2)";
 		Any required = Verbs::Add(
-			Verbs::Create({}, Traits::Count(Real(1))).SetFrequency(1),
+			Verbs::Create(
+				{}, Traits::Count(Real(1))
+			).SetFrequency(1),
 			Real(2)
 		).SetFrequency(3);
 
@@ -204,7 +220,8 @@ SCENARIO("Parsing Code", "[gasm]") {
 		const Code gasm = "Create^1(Count(1)).Add^2(2).Multiply^3(4)";
 		Any required = Verbs::Multiply(
 			Verbs::Add(
-				Verbs::Create({}, Traits::Count(Real(1))).SetFrequency(1),
+				Verbs::Create(
+					{}, Traits::Count(Real(1))).SetFrequency(1),
 				Real(2)
 			).SetFrequency(2),
 			Real(4)

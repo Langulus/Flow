@@ -34,30 +34,16 @@ namespace Langulus::Flow
 	/// Get the hash of the charge															
 	///	@return the hash of the charge													
 	inline Hash Charge::GetHash() const noexcept {
-		return HashData(mMass) 
-			| HashData(mFrequency) 
-			| HashData(mTime) 
-			| HashData(mPriority); //TODO check hashing | add HashDataArray?
+		return HashData(mMass, mFrequency, mTime, mPriority);
 	}
 
+	/// Reset the charge to the default														
 	inline void Charge::Reset() noexcept {
 		mMass = DefaultMass;
 		mFrequency = DefaultFrequency;
 		mTime = DefaultTime;
 		mPriority = DefaultPriority;
 	}
-
-	/// Create a verb using a static verb type											
-	///	@tparam T - the verb to use														
-	///	@param c - the charge																
-	///	@param s - the source																
-	///	@param a - the argument																
-	///	@param o - the output																
-	///	@return the verb																		
-	/*template<CT::Verb T>
-	Verb Verb::From(const Charge& c, const Any& s, const Any& a, const Any& o) {
-		return {MetaVerb::Of<T>(), c, s, a, o};
-	}*/
 
 	/// Check if verb is of a specific type												
 	///	@tparam T - the verb to compare against										
@@ -92,7 +78,7 @@ namespace Langulus::Flow
 	}
 
 	/// Set the verb ID																			
-	///	@param call - the verb ID to assign												
+	///	@param verb - the verb to assign													
 	///	@return a reference to self														
 	inline Verb& Verb::SetVerb(VMeta verb) noexcept {
 		mVerb = verb;
@@ -100,34 +86,34 @@ namespace Langulus::Flow
 	}
 
 	/// Set the verb mass																		
-	///	@param energy - the mass to set													
+	///	@param mass - the mass to set														
 	///	@return a reference to self														
-	inline Verb& Verb::SetMass(const Real energy) noexcept {
-		mMass = energy;
+	inline Verb& Verb::SetMass(const Real mass) noexcept {
+		mMass = mass;
 		return *this;
 	}
 
 	/// Set the verb frequency																	
-	///	@param energy - the frequency to set											
+	///	@param frequency - the frequency to set										
 	///	@return a reference to self														
-	inline Verb& Verb::SetFrequency(const Real energy) noexcept {
-		mFrequency = energy;
+	inline Verb& Verb::SetFrequency(const Real frequency) noexcept {
+		mFrequency = frequency;
 		return *this;
 	}
 
 	/// Set the verb time																		
-	///	@param energy - the time to set													
+	///	@param time - the time to set														
 	///	@return a reference to self														
-	inline Verb& Verb::SetTime(const Real energy) noexcept {
-		mTime = energy;
+	inline Verb& Verb::SetTime(const Real time) noexcept {
+		mTime = time;
 		return *this;
 	}
 
 	/// Set the verb priority																	
-	///	@param energy - the priority to set												
+	///	@param priority - the priority to set											
 	///	@return a reference to self														
-	inline Verb& Verb::SetPriority(const Real energy) noexcept {
-		mPriority = energy;
+	inline Verb& Verb::SetPriority(const Real priority) noexcept {
+		mPriority = priority;
 		return *this;
 	}
 

@@ -71,10 +71,6 @@ namespace Langulus::Flow
 		return static_cast<const Charge&>(*this);
 	}
 
-	/*inline Charge& Construct::GetCharge() noexcept {
-		return mCharge;
-	}*/
-
 	inline DMeta Construct::GetType() const noexcept {
 		return mType;
 	}
@@ -92,8 +88,8 @@ namespace Langulus::Flow
 	///	@param whatever - the thing you wish to push									
 	template<CT::Data T>
 	Construct& Construct::operator << (const T& whatever) {
-		if (mArguments.SmartPush<Any>(whatever))
-			ResetHash();
+		if (mArguments.SmartPush<true, true, T, Any>(whatever))
+			mHash = {};
 		return *this;
 	}
 

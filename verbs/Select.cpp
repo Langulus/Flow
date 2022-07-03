@@ -1,7 +1,6 @@
 #include "../Code.hpp"
-#include "IncludeLogger.hpp"
 
-#define PC_SELECT_VERBOSE(a) //pcLogFuncVerbose << a
+#define PC_SELECT_VERBOSE(a) //Logger::Verbose() << a
 
 namespace Langulus::Flow
 {
@@ -26,7 +25,7 @@ namespace Langulus::Flow
 		}
 		else for (auto& idx : indices) {
 			if (idx.IsSpecial())
-				throw Except::BadAccess(pcLogFuncError << "Can't select with index " << idx);
+				Throw<Except::Access>(Logger::Error() << "Can't select with index " << idx);
 
 			auto variable = context.GetMember(meta, static_cast<pcptr>(idx));
 			if (variable.IsAllocated()) {
@@ -42,24 +41,24 @@ namespace Langulus::Flow
 	/// @param indices 
 	/// @param id 
 	/// @param context 
-	/// @param selectedTraits 
+	/// @param selectedTraits	
 	/// @param selectedVerbs 
 	/// @return 
-	bool SelectByMeta(const TAny<Index>& indices, DMeta id, Block& context, TAny<Trait>& selectedTraits, TAny<VerbID>& selectedVerbs) {
-		if (id->Is<VerbID>()) {
-			if (indices.IsEmpty() || (indices.GetCount() == 1 && indices[0] == uiAll)) {
+	bool SelectByMeta(const TAny<Index>& indices, DMeta id, Block& context, TAny<Trait>& selectedTraits, TAny<VMeta>& selectedVerbs) {
+		if (id->Is<VMeta>()) {
+			if (indices.IsEmpty() || indices == Index::All) { //TODO make sure the == operator is optimal
 				// Retrieve each verb inside rhs for this block					
-				for (auto& ability : context.GetMeta()->GetAbilityList())
-					selectedVerbs << ability.mStaticAbility.mVerb;
+				for (auto& ability : context.GetType()->mAbilities)
+					selectedVerbs << ability.second.mVerb;
 			}
 			else for (auto& idx : indices) {
 				// Retrieve specified abilities										
-				if (idx.IsSpecial() || idx >= context.GetMeta()->GetAbilityList().size()) {
-					pcLogWarning << "Skipping special index in default selection: " << idx;
+				if (idx.IsSpecial() || idx >= context.GetType()->mAbilities.size()) {
+					Logger::Warning() << "Skipping special index in default selection: " << idx;
 					continue;
 				}
 
-				selectedVerbs << context.GetMeta()->GetAbility(static_cast<pcptr>(idx)).mStaticAbility.mVerb;
+				selectedVerbs << context.GetType()->GetAbility(static_cast<pcptr>(idx)).mStaticAbility.mVerb;
 			}
 
 			return true;
@@ -69,7 +68,8 @@ namespace Langulus::Flow
 		return PerIndex(context, selectedTraits, nullptr, id, indices);
 	};
 
-	/// Default uvSelect - retrieves static traits and/or abilities				
+	/// Default selection - retrieves reflected traits and/or abilities			
+	///	@param context - the place to search for selection							
 	///	@param verb - the stuff to retrieve												
 	void Verb::DefaultSelect(Block& context, Verb& verb) {
 		if (context.IsEmpty())
@@ -80,7 +80,7 @@ namespace Langulus::Flow
 		bool containsOnlyIndices = !indices.IsEmpty();
 
 		TAny<Trait> selectedTraits;
-		TAny<VerbID> selectedVerbs;
+		TAny<VMeta> selectedVerbs;
 
 		// Scan verb argument for anything but indices							
 		verb.GetArgument().ForEachDeep([&](const Block& group) {
@@ -98,32 +98,21 @@ namespace Langulus::Flow
 			OrThis
 				group.ForEach([&](const Trait& trait) {
 					containsOnlyIndices = false;
-					auto tmeta = trait.GetTraitMeta();
+					auto tmeta = trait.GetTrait();
 					if (tmeta)
 						PerIndex(context, selectedTraits, tmeta, tmeta, indices);
 					else
-						PerIndex(context, selectedTraits, tmeta, trait.GetMeta(), indices);
+						PerIndex(context, selectedTraits, tmeta, trait.GetType(), indices);
 				})
 			OrThis
-				group.ForEach([&](const TraitID& trait) {
-					containsOnlyIndices = false;
-					auto tmeta = trait.GetMeta();
-					PerIndex(context, selectedTraits, tmeta, tmeta, indices);
-				})
-			OrThis
-				group.ForEach([&](const MetaTrait* tmeta) {
+				group.ForEach([&](TMeta tmeta) {
 					containsOnlyIndices = false;
 					PerIndex(context, selectedTraits, tmeta, tmeta, indices);
 				})
 			OrThis
-				group.ForEach([&](const DataID& id) {
+				group.ForEach([&](DMeta dmeta) {
 					containsOnlyIndices = false;
-					SelectByMeta(indices, id.GetMeta(), context, selectedTraits, selectedVerbs);
-				})
-			OrThis
-				group.ForEach([&](const MetaData* id) {
-					containsOnlyIndices = false;
-					SelectByMeta(indices, id, context, selectedTraits, selectedVerbs);
+					SelectByMeta(indices, dmeta, context, selectedTraits, selectedVerbs);
 				});
 		});
 
@@ -134,8 +123,8 @@ namespace Langulus::Flow
 		}
 
 		// Output results if any, satisfying the verb							
-		verb << selectedTraits.Decay();
-		verb << selectedVerbs.Decay();
+		verb << selectedTraits;// .Decay(); //TODO investigate this issue and if an issue generalize it by implementing it in verb::operator <<
+		verb << selectedVerbs;// .Decay();
 	}
 
 } // namespace Langulus::Flow

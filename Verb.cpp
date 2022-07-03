@@ -111,13 +111,6 @@ namespace Langulus::Flow
 		return *this;
 	}
 
-	/// Compare verb types for equality														
-	///	@param rhs - the verb to compare against										
-	///	@return true if verbs match														
-	inline bool Verb::operator == (VMeta rhs) const noexcept {
-		return Is(rhs); 
-	}
-
 	/// Partial copy (doesn't copy source, argument, and output)					
 	///	@param other - the verb to use as base											
 	///	@return the partially copied verb												

@@ -22,6 +22,7 @@ endif()
 
 # Build and install Flow library
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} SOURCE_FILES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/verbs SOURCE_FILES)
 add_library(Langulus.Flow ${SOURCE_FILES})
 
 target_include_directories(Langulus.Flow PUBLIC include)

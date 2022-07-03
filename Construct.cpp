@@ -14,15 +14,17 @@ namespace Langulus::Flow
 	/// Construct from a header and movable arguments									
 	///	@param type - the type of the content											
 	///	@param arguments - the argument container to move							
-	Construct::Construct(DMeta type, Any&& arguments)
-		: mType {type}
+	Construct::Construct(DMeta type, Any&& arguments, const Charge& charge)
+		: Charge {charge}
+		, mType {type}
 		, mArguments {Forward<Any>(arguments)} { }
 
 	/// Construct from a header and shallow-copied arguments							
 	///	@param type - the type of the content											
 	///	@param arguments - the argument container to copy							
-	Construct::Construct(DMeta type, const Any& arguments)
-		: mType {type}
+	Construct::Construct(DMeta type, const Any& arguments, const Charge& charge)
+		: Charge {charge}
+		, mType {type}
 		, mArguments {arguments} { }
 
 	/// Hash the descriptor																		

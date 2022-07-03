@@ -185,6 +185,24 @@ namespace Langulus::Flow
 		return *this;
 	}
 
+	/// Compare verbs																				
+	///	@param rhs - the verb to compare against										
+	///	@return true if verbs match														
+	inline bool Verb::operator == (const Verb& rhs) const noexcept {
+		return (mVerb == rhs.mVerb || (mVerb && mVerb->Is(rhs.mVerb)))
+			&& mSource == rhs.mSource
+			&& mArgument == rhs.mArgument
+			&& mOutput == rhs.mOutput
+			&& mShortCircuited == rhs.mShortCircuited;
+	}
+
+	/// Compare verb types for equality														
+	///	@param rhs - the verb to compare against										
+	///	@return true if verbs match														
+	inline bool Verb::operator == (VMeta rhs) const noexcept {
+		return Is(rhs); 
+	}
+
 	/// Check if verb is satisfied at least once											
 	///	@param rhs - flag to compare against											
 	///	@return true if verb satisfaction matches rhs								

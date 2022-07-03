@@ -7,6 +7,7 @@ LANGULUS_EXCEPTION(Flow);
 namespace Langulus::Flow
 {
 
+	using Anyness::DataState;
 	using Anyness::Index;
 	using Anyness::Block;
 	using Anyness::Any;
@@ -16,6 +17,8 @@ namespace Langulus::Flow
 	using Anyness::Trait;
 	using Anyness::Map;
 	using Anyness::TAny;
+	using Anyness::TMap;
+	using Anyness::THashMap;
 	using Anyness::Inner::Allocator;
 	using RTTI::VMeta;
 	using RTTI::TMeta;
@@ -23,7 +26,6 @@ namespace Langulus::Flow
 	using RTTI::MetaData;
 	using RTTI::MetaVerb;
 	using RTTI::MetaTrait;
-	using Anyness::DataState;
 
 	class Charge;
 	class Construct;
@@ -110,11 +112,11 @@ namespace Langulus::Flow
 		Verb& operator = (const Verb&) = default;
 		Verb& operator = (Verb&&) noexcept = default;
 
-		Verb operator * (const Real& rhs) const;
-		Verb operator ^ (const Real& rhs) const;
+		Verb operator * (const Real&) const;
+		Verb operator ^ (const Real&) const;
 
-		Verb& operator *= (const Real& rhs) noexcept;
-		Verb& operator ^= (const Real& rhs) noexcept;
+		Verb& operator *= (const Real&) noexcept;
+		Verb& operator ^= (const Real&) noexcept;
 
 		NOD() explicit operator Code() const;
 		NOD() explicit operator Debug() const;
@@ -168,7 +170,7 @@ namespace Langulus::Flow
 		Verb& SetOutput(Any&&) noexcept;
 		Verb& SetAll(const Any&, const Any&, const Any&);
 
-		NOD() bool operator == (const Verb&) const;
+		NOD() bool operator == (const Verb&) const noexcept;
 		NOD() bool operator == (VMeta) const noexcept;
 		NOD() bool operator == (bool) const noexcept;
 		NOD() bool operator <  (const Verb&) const noexcept;
@@ -176,12 +178,18 @@ namespace Langulus::Flow
 		NOD() bool operator >= (const Verb&) const noexcept;
 		NOD() bool operator <= (const Verb&) const noexcept;
 
-		template<CT::Data T> Verb& operator << (const T&);
-		template<CT::Data T> Verb& operator << (T&&);
-		template<CT::Data T> Verb& operator >> (const T&);
-		template<CT::Data T> Verb& operator >> (T&&);
-		template<CT::Data T> Verb& operator <<= (const T&);
-		template<CT::Data T> Verb& operator >>= (const T&);
+		template<CT::Data T>
+		Verb& operator << (const T&);
+		template<CT::Data T>
+		Verb& operator << (T&&);
+		template<CT::Data T>
+		Verb& operator >> (const T&);
+		template<CT::Data T>
+		Verb& operator >> (T&&);
+		template<CT::Data T>
+		Verb& operator <<= (const T&);
+		template<CT::Data T>
+		Verb& operator >>= (const T&);
 
 	public:
 		static bool ExecuteScope(Any&, const Any&);
@@ -228,57 +236,110 @@ namespace Langulus
 		using Flow::Any;
 		using Flow::Charge;
 
-		class Create : public Verb {
-		public:
-			Create(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
+		/// Create/destroy verb																	
+		/// Used for allocating new elements. If the type you're creating has	
+		/// a producer, you need to execute the verb in the correct context		
+		struct Create : public Verb {
+			LANGULUS(POSITIVE_VERB) "Create";
+			LANGULUS(NEGATIVE_VERB) "Destroy";
+			LANGULUS(INFO) 
+				"Used for allocating new elements. "
+				"If the type you're creating has	a producer, "
+				"you need to execute the verb in a matching producer, "
+				"or that producer will be created automatically for you, if possible";
+
+			Create(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 		};
 
-		class Select : public Verb {
-		public:
-			Select(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
+		/// Select/deselect verb																
+		/// Used to focus on a part of a container, or access members				
+		struct Select : public Verb {
+			LANGULUS(POSITIVE_VERB) "Select";
+			LANGULUS(NEGATIVE_VERB) "Deselect";
+			LANGULUS(INFO)
+				"Used to focus on a part of a container, or access members";
+
+			Select(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 		};
 
-		class Associate : public Verb {
-		public:
-			Associate(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
+		/// Associate/disassociate verb														
+		/// Either performs a shallow copy, or aggregates associations,			
+		/// depending on the context's complexity											
+		struct Associate : public Verb {
+			LANGULUS(POSITIVE_VERB) "Associate";
+			LANGULUS(NEGATIVE_VERB) "Disassocate";
+			LANGULUS(INFO)
+				"Either performs a shallow copy, or aggregates associations, "
+				"depending on the context's complexity";
+
+			Associate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 		};
 
-		class Scope : public Verb {
-		public:
-			Scope(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
+		/// Add/subtract verb																	
+		/// Performs arithmetic addition or subtraction									
+		struct Add : public Verb {
+			LANGULUS(POSITIVE_VERB) "Add";
+			LANGULUS(NEGATIVE_VERB) "Subtract";
+			LANGULUS(INFO)
+				"Performs arithmetic addition or subtraction";
+
+			Add(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 		};
 
-		class Add : public Verb {
-		public:
-			Add(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
+		/// Multiply/divide verb																
+		/// Performs arithmetic multiplication or division								
+		/// If context is no specified, it is always 1									
+		struct Multiply : public Verb {
+			LANGULUS(POSITIVE_VERB) "Multiply";
+			LANGULUS(NEGATIVE_VERB) "Divide";
+			LANGULUS(INFO)
+				"Performs arithmetic multiplication or division. "
+				"If context is no specified, it is always 1";
+
+			Multiply(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 		};
 
-		class Multiply : public Verb {
-		public:
-			Multiply(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
+		/// Exponentiate/logarithm verb														
+		/// Performs exponentiation or logarithm											
+		struct Exponent : public Verb {
+			LANGULUS(POSITIVE_VERB) "Exponent";
+			LANGULUS(NEGATIVE_VERB) "Logarithm";
+			LANGULUS(INFO)
+				"Performs exponentiation or logarithm";
+
+			Exponent(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 		};
 
-		class Exponent : public Verb {
-		public:
-			Exponent(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
+		/// Catenate/break verb																	
+		/// Catenates anything catenable, or breaks stuff apart using a mask		
+		struct Catenate : public Verb {
+			LANGULUS(POSITIVE_VERB) "Catenate";
+			LANGULUS(NEGATIVE_VERB) "Break";
+			LANGULUS(INFO)
+				"Catenates anything catenable, or breaks stuff apart using a mask";
+
+			Catenate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 		};
 
-		class Catenate : public Verb {
-		public:
-			Catenate(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
-		};
+		/// Interpret																				
+		/// Performs conversion																	
+		struct Interpret : public Verb {
+			LANGULUS(NAME) "Interpret";
+			LANGULUS(INFO) "Performs conversion";
 
-		class Interpret : public Verb {
-		public:
-			Interpret(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
+			Interpret(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
 			template<class TO, class FROM>
 			static TO To(const FROM&);
 		};
 
-		class Do : public Verb {
-		public:
-			Do(const Any & = {}, const Any & = {}, const Any & = {}, const Charge & = {}, bool = true);
+		/// Do verb																					
+		/// Used as a runtime dispatcher of composite types							
+		struct Do : public Verb {
+			LANGULUS(NAME) "Do";
+			LANGULUS(INFO) "Used as a runtime dispatcher of composite types";
+
+			Do(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 		};
 
 	} // namespace Langulus::Verbs
@@ -290,8 +351,6 @@ namespace Langulus
 	}
 
 } // namespace Langulus
-
-
 
 
 /// Start an OR sequence of operations, that relies on short-circuiting to		

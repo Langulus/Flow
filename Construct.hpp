@@ -53,8 +53,8 @@ namespace Langulus::Flow
 		Construct(Construct&&) noexcept = default;
 
 		Construct(DMeta);
-		Construct(DMeta, const Any&);
-		Construct(DMeta, Any&&);
+		Construct(DMeta, const Any&, const Charge&);
+		Construct(DMeta, Any&&, const Charge&);
 
 		Construct& operator = (const Construct&) = default;
 		Construct& operator = (Construct&&) noexcept = default;

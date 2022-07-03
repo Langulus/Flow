@@ -96,16 +96,16 @@ SCENARIO("Parsing Code", "[gasm]") {
 		}
 	}
 
-	GIVEN("6) The Code script: Scope!-1(Verb: ? > ?)") {
-		const Code gasm = "Scope!-1(Verb: ? > ?)";
+	GIVEN("6) The Code script: Create!-1(Verb(? > ?))") {
+		const Code gasm = "Create!-1(Verb(? > ?))";
 		TAny<Any> package = Any::Wrap(Any(), Any());
 		package[0].MakePast();
 		package[0].MakeMissing();
 		package[1].MakeFuture();
 		package[1].MakeMissing();
 
-		const Any required = Verbs::Scope(
-			MetaData::Of<Verb>(), package
+		const Any required = Verbs::Create(
+			Construct::From<Verb>(package)
 		).SetPriority(-1);
 
 		WHEN("Parsed") {
@@ -166,7 +166,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 		}
 	}
 
-	GIVEN("9) The Code script: Scope!-1(Verb: <?(ANumber,DataID,Construct), >?(ANumber,DataID,Construct))") {
+	GIVEN("9) The Code script: Create!-1(Verb(<?(ANumber,DataID,Construct), >?(ANumber,DataID,Construct)))") {
 		Any pastMissing = Any::WrapCommon(
 			MetaData::Of<A::Number>(),
 			MetaData::Of<MetaData>(),
@@ -183,10 +183,9 @@ SCENARIO("Parsing Code", "[gasm]") {
 		futureMissing.MakeFuture();
 		futureMissing.MakeMissing();
 
-		const Code gasm = "Scope!-1(Verb: <?(ANumber,DataID,Construct), >?(ANumber,DataID,Construct))";
-		Any required = Verbs::Scope(
-			MetaData::Of<Verb>(),
-			Any::WrapCommon(pastMissing, futureMissing)
+		const Code gasm = "Create!-1(Verb(<?(ANumber,DataID,Construct), >?(ANumber,DataID,Construct)))";
+		Any required = Verbs::Create(
+			Construct::From<Verb>(Any::WrapCommon(pastMissing, futureMissing))
 		).SetPriority(-1);
 
 		WHEN("Parsed") {

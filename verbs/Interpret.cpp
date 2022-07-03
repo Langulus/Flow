@@ -1,9 +1,11 @@
-#include "Converting.hpp"
+#include "../Code.hpp"
+
+#define VERBOSE_INTERPRET(a) //Logger::Verbose() << a
 
 namespace Langulus::Flow
 {
 
-	template<Number FROM, Number TO>
+	/*template<Number FROM, Number TO>
 	void TDefaultNumberConverter2(Verb& verb, const FROM& from) {
 		//TODO do some realtime conversion checks here
 		verb << static_cast<TO>(from);
@@ -54,7 +56,7 @@ namespace Langulus::Flow
 			TDefaultNumberConverter(verb, from.Get<pcr32>(), to);
 		else if (from.Is<pcr64>())
 			TDefaultNumberConverter(verb, from.Get<pcr64>(), to);
-	}
+	}*/
 
 	/// Default interpretation																	
 	/// Checks for trivial conversions, such as conversion to the same type,	
@@ -63,43 +65,31 @@ namespace Langulus::Flow
 	///	@param context - the block to execute in										
 	///	@param verb - interpretation verb												
 	void Verb::DefaultInterpret(Block& context, Verb& verb) {
-		const auto doer = [&](DMeta type) {
-			if (context.Is(type->GetID())) {
-				// Types match, nothing to really interpret, just forwrad	
-				PC_VERBOSE_CONVERSION("Implicitly converted " << context << " from " 
-					<< context.GetToken() << " to " << type << " (same type)");
+		SAFETY(if (context.IsDeep())
+			Throw<Except::Flow> (Logger::Error() <<
+				"Default-interpreting a deep context is no allowed"
+				" - the flow handle should've handled that"));
+
+		// For each type inside verb argument										
+		verb.GetArgument().ForEachDeep([&](DMeta type) {
+			if (context.Is(type) || (type->mIsAbstract && context.CastsToMeta(type))) {
+				// Types match, nothing to really interpret, just forward	
+				// and rely on pointer arithmetics									
+				VERBOSE_INTERPRET("Implicitly converted " << context << " from "
+					<< context.GetToken() << " to " << type << " (same type or abstract base)");
 				verb << Any {context};
 			}
-			else if (context.InterpretsAs(type) && type->IsAbstract()) {
-				// We're interpreting as an abstract base of some sort		
-				// - just return context without any interpretation			
-				PC_VERBOSE_CONVERSION("Implicitly converted " << context << " from " 
-					<< context.GetToken() << " to " << type << " (abstract base)");
-				verb << Any {context};
-			}
-			else if (context.InterpretsAs<ANumber>(1) && !context.IsAbstract() && type->InterpretsAs<ANumber>(1)) {
-				// We're interpreting one built-in number to another			
+			else if (context.CastsTo<A::Number>(1) && !context.IsAbstract() && type->CastsTo<A::Number>(1)) {
+				// We're casting one built-in number to another					
 				DefaultNumberConverter(verb, context, type);
 			}
 			else {
 				// Avoid serializing here, just literals allowed				
 				// Otherwise stack explosions will commence						
-				PC_VERBOSE_CONVERSION(ccRed << "Can't convert " 
-					<< context.GetToken() << "(s) to " << type->GetToken()
+				VERBOSE_INTERPRET(Logger::Red << "Can't convert "
+					<< context.GetToken() << "(s) to " << type->mToken
 					<< " - no conversion routine inferred or reflected");
 			}
-		};
-
-		// For each DataID or MetaData inside verb argument					
-		verb.GetArgument().ForEachDeep([&doer](const Block& group) {
-			EitherDoThis
-				group.ForEach([&doer](const DataID& t) {
-					doer(t.GetMeta());
-				})
-			OrThis
-				group.ForEach([&doer](const MetaData* t) {
-					doer(t);
-				});
 		});
 	}
 

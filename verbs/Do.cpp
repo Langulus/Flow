@@ -1,10 +1,9 @@
 #include "../Code.hpp"
-#include "IncludeLogger.hpp"
 
-#define VERBOSE_DISPATCH(a) //pcLogVerbose << a
-#define VERBOSE_FLOW(a) //pcLogVerbose << a
+#define VERBOSE_DISPATCH(a) // Logger::Verbose() << a
+#define VERBOSE_FLOW(a) //Logger::Verbose() << a
 #define VERBOSE_FLOW_TAB(a) //ScopedTab tab; pcLogVerbose << a << tab
-#define FLOW_ERRORS(a) //pcLogError << a
+#define FLOW_ERRORS(a) //Logger::Error() << a
 
 namespace Langulus::Flow
 {
@@ -16,8 +15,8 @@ namespace Langulus::Flow
 	///	@param verb - the verb to send over												
 	///	@return true on success																
 	bool Verb::DefaultDo(Block& context, Verb& verb) {
-		SAFETY(if (context.GetCount() > 1)
-			throw Except::BadOperation(pcLogFuncError
+		SAFETY(if (context.GetCount() > 1 || context.IsDeep())
+			Throw<Except::Flow>(Logger::Error()
 				<< "Should operate on single/empty instances only, but "
 				<< context.GetCount() << " instead"));
 
@@ -52,7 +51,7 @@ namespace Langulus::Flow
 	/// Only default verbs will be called													
 	///	@param verb - the verb to execute												
 	///	@return the number of successful executions									
-	pcptr Verb::DispatchEmpty(Verb& verb) {
+	Count Verb::DispatchEmpty(Verb& verb) {
 		Any emptyContext;
 		return Verb::DefaultDo(emptyContext, verb);
 	}
@@ -67,17 +66,17 @@ namespace Langulus::Flow
 	///	@param resolveElements - whether or not the most concrete type of		
 	///			 an element will be used - useful to resolve sparse elements	
 	///	@return the number of successful executions									
-	pcptr Verb::DispatchDeep(Block& context, Verb& verb, bool resolveElements, bool allowCustomDispatch, bool allowDefaultVerbs) {
+	Count Verb::DispatchDeep(Block& context, Verb& verb, bool resolveElements, bool allowCustomDispatch, bool allowDefaultVerbs) {
 		if (context.IsDeep() || context.Is<Trait>()) {
 			// Nest if context is deep, or a trait									
 			// Traits are considered deep only when executing in them		
 			// There is no escape from this scope									
-			pcptr successCount = 0;
-			auto output = Any::FromStateOf(context);
-			for (pcptr i = 0; i < context.GetCount(); ++i) {
+			Count successCount {};
+			auto output = Any::FromState(context);
+			for (Count i = 0; i < context.GetCount(); ++i) {
 				const auto hits = DispatchDeep(context.As<Block>(i), verb, resolveElements, allowCustomDispatch, allowDefaultVerbs);
 				successCount += hits;
-				if (verb.mVerb.mShortCircuited) {
+				if (verb.mShortCircuited) {
 					// Short-circuit if enabled for verb							
 					if (context.IsOr() == (successCount > 0)) {
 						// It is time for an early return							
@@ -101,10 +100,10 @@ namespace Langulus::Flow
 
 				// Cache each output, conserving the context hierarchy		
 				if (hits && !verb.mOutput.IsEmpty())
-					output << pcMove(verb.mOutput);
+					output << Move(verb.mOutput);
 			}
 
-			if (verb.mVerb.mShortCircuited) {
+			if (verb.mShortCircuited) {
 				// If reached, this will result in failure if OR, or			
 				// success if AND, as long as the verb is short-circuited	
 				verb.mSuccesses = context.IsOr() ? 0 : successCount;
@@ -118,7 +117,7 @@ namespace Langulus::Flow
 			// Set the output																
 			if (verb.mSuccesses) {
 				output.Optimize();
-				verb.mOutput = pcMove(output);
+				verb.mOutput = Move(output);
 			}
 			else verb.mOutput.Reset();
 
@@ -140,9 +139,8 @@ namespace Langulus::Flow
 	///	@param resolve - whether or not the most concrete type of				
 	///			 an element will be used - useful to resolve elements				
 	///	@return the number of successful executions									
-	pcptr Verb::DispatchFlat(Block& context, Verb& verb, bool resolve, bool allowCustomDispatch, bool allowDefaultVerbs) {
-		SAFETY(if (resolve && context.IsDeep())
-			throw Except::BadOperation());
+	Count Verb::DispatchFlat(Block& context, Verb& verb, bool resolve, bool allowCustomDispatch, bool allowDefaultVerbs) {
+		SAFETY(if (resolve && context.IsDeep()) Throw<Except::Flow>());
 
 		if (context.IsEmpty()) {
 			if (allowDefaultVerbs) {
@@ -153,9 +151,9 @@ namespace Langulus::Flow
 		}
 
 		// Iterate elements in the current context								
-		pcptr successCount = 0;
-		auto output = Any::FromStateOf(context);
-		for (pcptr i = 0; i < context.GetCount(); ++i) {
+		Count successCount {};
+		auto output = Any::FromState(context);
+		for (Count i = 0; i < context.GetCount(); ++i) {
 			// Reset verb to initial state											
 			auto resolved = resolve
 				? context.GetElementResolved(i) 
@@ -166,7 +164,7 @@ namespace Langulus::Flow
 			VERBOSE_DISPATCH("Dispatching " << verb.GetToken()
 				<< " to element " << (i + 1) << " (" << resolved.GetToken() << ") ");
 
-			auto customDispatcher = resolved.GetMeta()->GetDispatcher();
+			auto customDispatcher = resolved.GetType()->GetDispatcher();
 			if (allowCustomDispatch && customDispatcher) {
 				// Resolved element has a custom dispatcher						
 				// It's your responsibility to implement it adequately		
@@ -178,11 +176,10 @@ namespace Langulus::Flow
 			}
 			else {
 				// Scan the reflected abilities										
-				for (auto& ability : resolved.GetMeta()->GetAbilityList()) {
-					if (ability.mStaticAbility.mVerb != verb.GetID())
-						continue;
-
-					ability.mStaticAbility.mFunction(resolved.GetRaw(), verb);
+				auto& abilities = resolved.GetType()->mAbilities;
+				auto found = abilities.find(verb.GetToken());
+				if (found != abilities.end()) {
+					found->second.mFunction(resolved.GetRaw(), verb);
 					if (verb.IsDone())
 						break;
 				}
@@ -190,14 +187,16 @@ namespace Langulus::Flow
 				if (!verb.IsDone()) {
 					// Context has no abilities, or they failed, so try with	
 					// all bases' abilities												
-					for (auto& base : resolved.GetMeta()->GetBaseList()) {
-						if (base.mBase->IsDeep() || base.mStaticBase.mCount > 1)
+					for (auto& base : resolved.GetType()->mBases) {
+						if (base.mType->mIsDeep || base.mCount > 1)
 							continue; // TODO handle batchable
 
-						VERBOSE_DISPATCH(ccCyan << " (attempting execution in context base "
-							<< base.mBase << ") ");
+						VERBOSE_DISPATCH(Logger::Cyan
+							<< " (attempting execution in context base "
+							<< base.mType << ") ");
 						verb.Undo();
-						auto baseBlock = resolved.GetBaseMemory(base.mBase, base);
+
+						auto baseBlock = resolved.GetBaseMemory(base.mType, base);
 						Verb::DispatchFlat(baseBlock, verb, false, true, false);
 						if (verb.IsDone())
 							break;
@@ -205,22 +204,25 @@ namespace Langulus::Flow
 				}
 
 				if (!verb.IsDone() && allowDefaultVerbs) {
-					// Verb wasn't executed neither in current element, nor in	
-					// any of its bases, so we resort to the default abilities	
+					// Verb wasn't executed neither in current element, nor	
+					// in	any of its bases, so we resort to the default		
+					// abilities															
 					if (Verb::DefaultDo(resolved, verb))
 						verb.Done();
 
 					if (!verb.IsDone()) {
-						// Default ability didn't do anything, so we try all		
-						// default abilities in all bases								
-						for (auto& base : resolved.GetMeta()->GetBaseList()) {
-							if (base.mBase->IsDeep() || base.mStaticBase.mCount > 1)
+						// Default ability didn't do anything, so we try all	
+						// default abilities in all bases							
+						for (auto& base : resolved.GetType()->mBases) {
+							if (base.mType->mIsDeep || base.mCount > 1)
 								continue; // TODO handle batchable
 
-							VERBOSE_DISPATCH(ccCyan << " (attempting DEFAULT execution in context base "
-								<< base.mBase << ") ");
+							VERBOSE_DISPATCH(Logger::Cyan 
+								<< " (attempting DEFAULT execution in context base "
+								<< base.mType << ") ");
 							verb.Undo();
-							auto baseBlock = resolved.GetBaseMemory(base.mBase, base);
+
+							auto baseBlock = resolved.GetBaseMemory(base.mType, base);
 							if (Verb::DefaultDo(baseBlock, verb)) {
 								verb.Done();
 								break;
@@ -230,7 +232,7 @@ namespace Langulus::Flow
 				}
 			}
 
-			if (verb.mVerb.mShortCircuited) {
+			if (verb.mShortCircuited) {
 				// Short-circuit if enabled for verb								
 				if (verb.IsDone() == context.IsOr()) {
 					// Time to early-exit												
@@ -254,14 +256,14 @@ namespace Langulus::Flow
 			
 			if (verb.IsDone() && !verb.mOutput.IsEmpty()) {
 				// Cache output, conserving the context hierarchy				
-				output << pcMove(verb.mOutput);
+				output << Move(verb.mOutput);
 			}
 
 			if (verb.IsDone())
 				++successCount;
 		}
 		
-		if (verb.mVerb.mShortCircuited) {
+		if (verb.mShortCircuited) {
 			// If reached, this will result in failure in OR-context, or	
 			// success if AND, as long as the verb is short-circuited		
 			verb.mSuccesses = context.IsOr() ? 0 : successCount;
@@ -275,7 +277,7 @@ namespace Langulus::Flow
 		// Set output																		
 		if (verb.mSuccesses) {
 			output.Optimize();
-			verb.mOutput = pcMove(output);
+			verb.mOutput = Move(output);
 		}
 		else verb.mOutput.Reset();
 
@@ -302,7 +304,7 @@ namespace Langulus::Flow
 	bool Verb::ExecuteScope(Any& context, const Any& scope, Any& output, bool& skipVerbs) {
 		// Execute either an AND, or an OR scope									
 		bool executed = true;
-		auto results = Any::FromStateOf(scope);
+		auto results = Any::FromState(scope);
 		if (!scope.IsEmpty()) {
 			VERBOSE_FLOW_TAB("Executing scope: " << scope);
 			if (scope.IsOr() && scope.GetCount() > 1)
@@ -314,7 +316,7 @@ namespace Langulus::Flow
 		// Propagate the results														
 		if (executed && !results.IsEmpty()) {
 			results.Optimize();
-			output = pcMove(results);
+			output = Move(results);
 		}
 
 		return executed;
@@ -335,61 +337,52 @@ namespace Langulus::Flow
 	///	@param scope - the scope to execute												
 	///	@param output - [out] verb result will be pushed here						
 	///	@param skipVerbs - [out] whether to skip verbs (after an OR success)	
-	///	@param scopeOverwritesContext - [out] whether to overwrite context	
 	///	@return true of everything is alright											
 	bool Verb::ExecuteScopeAND(Any& context, const Any& scope, Any& output, bool& skipVerbs) {
 		if (scope.IsDeep()) {
 			// Nest if deep																
-			for (uint i = 0; i < scope.GetCount(); ++i) {
+			for (Count i = 0; i < scope.GetCount(); ++i) {
 				Any localOutput;
-				if (!Verb::ExecuteScope(
-					context, scope.As<Any>(i), localOutput, skipVerbs)
-				) {
-					VERBOSE_FLOW(ccRed << "Deep-AND failed: " << scope);
+				if (!Verb::ExecuteScope(context, scope.As<Any>(i), localOutput, skipVerbs)) {
+					VERBOSE_FLOW(Logger::Red << "Deep-AND failed: " << scope);
 					return false;
 				}
 
-				output << pcMove(localOutput);
+				output << Move(localOutput);
 			}
 		}
 		else if (scope.Is<Trait>()) {
 			// Nest if traits, but retain each trait 								
-			for (uint i = 0; i < scope.GetCount(); ++i) {
+			for (Count i = 0; i < scope.GetCount(); ++i) {
 				auto& trait = scope.Get<Trait>(i);
 				Any localOutput;
-				if (!Verb::ExecuteScope(
-					context, trait, localOutput, skipVerbs)
-				) {
-					VERBOSE_FLOW(ccRed << "Trait-AND failed: " << scope);
+				if (!Verb::ExecuteScope(context, trait, localOutput, skipVerbs)) {
+					VERBOSE_FLOW(Logger::Red << "Trait-AND failed: " << scope);
 					return false;
 				}
 
-				output << Trait { trait.GetTraitMeta(), pcMove(localOutput) };
+				output << Trait {trait.GetTrait(), Move(localOutput)};
 			}
 		}
 		else if (scope.Is<Construct>()) {
 			// Nest if constructs, but retain each construct					
-			for (uint i = 0; i < scope.GetCount(); ++i) {
+			for (Count i = 0; i < scope.GetCount(); ++i) {
 				auto& construct = scope.Get<Construct>(i);
 				Any localOutput;
-				if (!Verb::ExecuteScope(
-					context, construct.GetAll(), localOutput, skipVerbs)
-				) {
-					VERBOSE_FLOW(ccRed << "Construct-AND failed: " << scope);
+				if (!Verb::ExecuteScope(context, construct.GetAll(), localOutput, skipVerbs)) {
+					VERBOSE_FLOW(Logger::Red << "Construct-AND failed: " << scope);
 					return false;
 				}
 
-				Construct newc { construct.GetMeta(), pcMove(localOutput) };
-				newc.mCharge = construct.mCharge;
-
+				Construct newc {construct.GetType(), Move(localOutput), construct};
 				try {
 					// Attempt constructing the construct here if possible	
 					newc.StaticCreation(localOutput);
-					output << pcMove(localOutput);
+					output << Move(localOutput);
 				}
-				catch (const Except::BadConstruction&) {
+				catch (const Except::Construct&) {
 					// Construction failed, so just propagate construct		
-					output << pcMove(newc);
+					output << Move(newc);
 				}
 			}
 		}
@@ -397,24 +390,27 @@ namespace Langulus::Flow
 			if (skipVerbs)
 				return false;
 
+			SAFETY(if (scope.IsSparse())
+				Throw<Except::Access>());
+
 			// Scary cast, but should be alright									
-			SAFETY(if (scope.IsSparse()) throw Except::BadAccess();)
-			auto& asVerbs = pcReinterpret<Script>(scope);
+			auto& asVerbs = ReinterpretCast<Script>(scope);
 			for (auto& constVerb : asVerbs) {
 				// Shallow-copy the verb to make it modifiable					
 				Verb verb {
-					constVerb.GetChargedID(),
+					constVerb.mVerb,
 					constVerb.mSource,
-					constVerb.mArgument
+					constVerb.mArgument, {},
+					constVerb,
+					constVerb.mShortCircuited
 				};
 
 				// Check if verb outputs to context									
-				const bool verbOverwritesContext = 
-					constVerb.OutputsTo<Traits::Context>();
+				const bool verbOverwritesContext = constVerb.OutputsTo<Traits::Context>();
 
 				// Execute the verb														
 				if (!Verb::ExecuteVerb(context, verb)) {
-					VERBOSE_FLOW(ccRed << "Verb-AND failed: " << scope);
+					VERBOSE_FLOW(Logger::Red << "Verb-AND failed: " << scope);
 					return false;
 				}
 
@@ -422,10 +418,10 @@ namespace Langulus::Flow
 					if (verbOverwritesContext) {
 						// Substitute local environment if required				
 						context = verb.mOutput;
-						output = pcMove(verb.mOutput);
-						VERBOSE_FLOW(ccCyan << "Context changed to: " << context);
+						output = Move(verb.mOutput);
+						VERBOSE_FLOW(Logger::Cyan << "Context changed to: " << context);
 					}
-					else output << pcMove(verb.mOutput);
+					else output << Move(verb.mOutput);
 				}
 			}
 		}
@@ -435,7 +431,7 @@ namespace Langulus::Flow
 			output << scope;
 		}
 
-		VERBOSE_FLOW(ccGreen << "And-Scope done: " << scope);
+		VERBOSE_FLOW(Logger::Green << "And-Scope done: " << scope);
 		return true;
 	}
 
@@ -454,19 +450,17 @@ namespace Langulus::Flow
 			// Execute in order until a successful execution occurs,			
 			// then skip verbs - only collect data									
 			Any contextSubstitution;
-			for (uint i = 0; i < scope.GetCount(); ++i) {
-				Any localContext { context };
+			for (Count i = 0; i < scope.GetCount(); ++i) {
+				Any localContext {context};
 				Any localOutput;
-				if (Verb::ExecuteScope(
-					localContext, scope.As<Any>(i), localOutput, localSkipVerbs)
-				) {
+				if (Verb::ExecuteScope(localContext, scope.As<Any>(i), localOutput, localSkipVerbs)) {
 					// Do a simple check for a changed context					
 					if (localContext.GetRaw() != context.GetRaw() || localContext.GetCount() != context.GetCount())
-						contextSubstitution = pcMove(localContext);
+						contextSubstitution = Move(localContext);
 
 					executed = true;
 					if (!localOutput.IsEmpty())
-						output << pcMove(localOutput);
+						output << Move(localOutput);
 				}
 			}
 
@@ -474,7 +468,7 @@ namespace Langulus::Flow
 			// apply it - after all branches had been executed in the		
 			// original context															
 			if (!contextSubstitution.IsEmpty()) {
-				context = pcMove(contextSubstitution);
+				context = Move(contextSubstitution);
 				VERBOSE_FLOW(ccCyan << "Context changed to: " << context);
 			}
 
@@ -483,34 +477,28 @@ namespace Langulus::Flow
 		else if (scope.Is<Trait>()) {
 			// All traits get executed, but the failed scope traits get		
 			// discarded																	
-			for (uint i = 0; i < scope.GetCount(); ++i) {
+			for (Count i = 0; i < scope.GetCount(); ++i) {
 				bool unusedSkipVerbs = false;
-				Any localContext { context };
+				Any localContext {context};
 				Any localOutput;
 				auto& trait = scope.Get<Trait>(i);
-				if (Verb::ExecuteScope(
-					localContext, trait, localOutput, unusedSkipVerbs)
-				) {
+				if (Verb::ExecuteScope(localContext, trait, localOutput, unusedSkipVerbs)) {
 					executed = true;
-					output << Trait { trait.GetTraitMeta(), pcMove(localOutput) };
+					output << Trait {trait.GetTrait(), Move(localOutput)};
 				}
 			}
 		}
 		else if (scope.Is<Construct>()) {
 			// All constructs get executed, but the failed ones get			
 			// discarded																	
-			for (uint i = 0; i < scope.GetCount(); ++i) {
+			for (Count i = 0; i < scope.GetCount(); ++i) {
 				bool unusedSkipVerbs = false;
-				Any localContext { context };
+				Any localContext {context};
 				Any localOutput;
 				auto& construct = scope.Get<Construct>(i);
-				if (Verb::ExecuteScope(
-					localContext, construct.GetAll(), localOutput, unusedSkipVerbs)
-				) {
+				if (Verb::ExecuteScope(localContext, construct.GetAll(), localOutput, unusedSkipVerbs)) {
 					executed = true;
-					Construct newc { construct.GetMeta(), pcMove(localOutput) };
-					newc.mCharge = construct.mCharge;
-					output << pcMove(newc);
+					output << Construct {construct.GetType(), Move(localOutput), construct};
 				}
 			}
 		}
@@ -520,26 +508,30 @@ namespace Langulus::Flow
 			// successful execution occurs. On success simply skip other	
 			// verbs - only collect data along the way (using skipVerbs)	
 			if (localSkipVerbs) {
-				VERBOSE_FLOW(ccDarkYellow << "OR-Scope skipped: " << scope);
+				VERBOSE_FLOW(Logger::DarkYellow << "OR-Scope skipped: " << scope);
 				return false;
 			}
 
 			// Scary cast, but should be alright									
 			Any contextSubstitution;
-			SAFETY(if (scope.IsSparse()) throw Except::BadAccess();)
-			auto& asVerbs = pcReinterpret<Script>(scope);
+			SAFETY(if (scope.IsSparse())
+				Throw<Except::Access>());
+
+			auto& asVerbs = ReinterpretCast<Script>(scope);
 			for (auto& constVerb : asVerbs) {
 				Verb verb { 
-					constVerb.GetChargedID(), 
+					constVerb.mVerb, 
 					constVerb.mSource, 
-					constVerb.mArgument
+					constVerb.mArgument, {},
+					constVerb,
+					constVerb.mShortCircuited
 				};
 
 				// Check if verb outputs to context									
 				const bool verbOverwritesContext = 
 					constVerb.OutputsTo<Traits::Context>();
 
-				Any localContext { context };
+				Any localContext {context};
 				if (!Verb::ExecuteVerb(localContext, verb))
 					continue;
 
@@ -547,7 +539,7 @@ namespace Langulus::Flow
 				if (!verb.mOutput.IsEmpty()) {
 					if (verbOverwritesContext)
 						contextSubstitution = verb.mOutput;
-					output << pcMove(verb.mOutput);
+					output << Move(verb.mOutput);
 				}
 			}
 
@@ -555,8 +547,8 @@ namespace Langulus::Flow
 			// apply it - after all branches had been executed in the		
 			// original context															
 			if (!contextSubstitution.IsEmpty()) {
-				context = pcMove(contextSubstitution);
-				VERBOSE_FLOW(ccCyan << "Context changed to: " << context);
+				context = Move(contextSubstitution);
+				VERBOSE_FLOW(Logger::Cyan << "Context changed to: " << context);
 			}
 
 			skipVerbs = localSkipVerbs;
@@ -569,9 +561,9 @@ namespace Langulus::Flow
 		}
 
 		if (executed)
-			VERBOSE_FLOW(ccGreen << "OR-Scope done: " << scope);
+			VERBOSE_FLOW(Logger::Green << "OR-Scope done: " << scope);
 		else
-			VERBOSE_FLOW(ccRed << "OR-Scope failed: " << scope);
+			VERBOSE_FLOW(Logger::Red << "OR-Scope failed: " << scope);
 		return executed;
 	}
 
@@ -587,7 +579,7 @@ namespace Langulus::Flow
 		bool unusedSkipVerbs = false;
 		Any localOutput;
 		if (Verb::ExecuteScope(context, scope, localOutput, unusedSkipVerbs)) {
-			scope = pcMove(localOutput);
+			scope = Move(localOutput);
 			return true;
 		}
 
@@ -602,7 +594,7 @@ namespace Langulus::Flow
 		// Integrate the verb source to the current context					
 		// This might substitute the context										
 		if (!Verb::IntegrateScope(context, verb.mSource)) {
-			pcLogError << "Error at source: " << verb.mSource;
+			Logger::Error() << "Error at source: " << verb.mSource;
 			return false;
 		}
 
@@ -611,15 +603,15 @@ namespace Langulus::Flow
 
 		// Integrate the verb argument to the source								
 		// This also might substitute the context									
-		Any localContext { verb.mSource };
+		Any localContext {verb.mSource};
 		if (!Verb::IntegrateScope(localContext, verb.mArgument)) {
-			pcLogError << "Error at argument: " << verb.mArgument;
+			Logger::Error() << "Error at argument: " << verb.mArgument;
 			return false;
 		}
 
 		// Do context substitution on change										
 		if (localContext.GetRaw() != verb.mSource.GetRaw() || localContext.GetCount() != verb.mSource.GetCount())
-			context = pcMove(localContext);
+			context = Move(localContext);
 		return true;
 	}
 
@@ -652,7 +644,7 @@ namespace Langulus::Flow
 			return true;
 		}
 
-		VERBOSE_FLOW_TAB("Executing " << ccCyan << verb);
+		VERBOSE_FLOW_TAB("Executing " << Logger::Cyan << verb);
 
 		// Dispatch the verb to the context, executing it						
 		// Any results should be inside verb.mOutput								
@@ -661,7 +653,7 @@ namespace Langulus::Flow
 			return false;
 		}
 
-		VERBOSE_FLOW("Executed: " << ccGreen << verb);
+		VERBOSE_FLOW("Executed: " << Logger::Green << verb);
 		return true;
 	}
 

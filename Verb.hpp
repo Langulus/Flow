@@ -121,6 +121,14 @@ namespace Langulus::Flow
 		NOD() explicit operator Code() const;
 		NOD() explicit operator Debug() const;
 
+		template<CT::Data T>
+		static constexpr bool AvailableFor() noexcept {
+			LANGULUS_ASSERT("You must implement this function in your verb definitions");
+		}
+
+		template<CT::Data T>
+		static bool ExecuteIn(T&, Verb&);
+
 	public:
 		NOD() Hash GetHash() const;
 
@@ -250,6 +258,12 @@ namespace Langulus
 				"or that producer will be created automatically for you, if possible";
 
 			Create(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+
+			template<CT::Data T>
+			static constexpr bool AvailableFor() noexcept;
+
+			template<CT::Data T>
+			static bool ExecuteIn(T&, Verb&);
 		};
 
 		/// Select/deselect verb																
@@ -261,6 +275,12 @@ namespace Langulus
 				"Used to focus on a part of a container, or access members";
 
 			Select(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+
+			template<CT::Data T>
+			static constexpr bool AvailableFor() noexcept;
+
+			template<CT::Data T>
+			static bool ExecuteIn(T&, Verb&);
 		};
 
 		/// Associate/disassociate verb														
@@ -274,6 +294,12 @@ namespace Langulus
 				"depending on the context's complexity";
 
 			Associate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+
+			template<CT::Data T>
+			static constexpr bool AvailableFor() noexcept;
+
+			template<CT::Data T>
+			static bool ExecuteIn(T&, Verb&);
 		};
 
 		/// Add/subtract verb																	
@@ -285,6 +311,12 @@ namespace Langulus
 				"Performs arithmetic addition or subtraction";
 
 			Add(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+
+			template<CT::Data T>
+			static constexpr bool AvailableFor() noexcept;
+
+			template<CT::Data T>
+			static bool ExecuteIn(T&, Verb&);
 		};
 
 		/// Multiply/divide verb																
@@ -298,6 +330,12 @@ namespace Langulus
 				"If context is no specified, it is always 1";
 
 			Multiply(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+
+			template<CT::Data T>
+			static constexpr bool AvailableFor() noexcept;
+
+			template<CT::Data T>
+			static bool ExecuteIn(T&, Verb&);
 		};
 
 		/// Exponentiate/logarithm verb														
@@ -309,6 +347,12 @@ namespace Langulus
 				"Performs exponentiation or logarithm";
 
 			Exponent(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+
+			template<CT::Data T>
+			static constexpr bool AvailableFor() noexcept;
+
+			template<CT::Data T>
+			static bool ExecuteIn(T&, Verb&);
 		};
 
 		/// Catenate/break verb																	
@@ -320,6 +364,12 @@ namespace Langulus
 				"Catenates anything catenable, or breaks stuff apart using a mask";
 
 			Catenate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+
+			template<CT::Data T>
+			static constexpr bool AvailableFor() noexcept;
+
+			template<CT::Data T>
+			static bool ExecuteIn(T&, Verb&);
 		};
 
 		/// Interpret																				
@@ -330,8 +380,14 @@ namespace Langulus
 
 			Interpret(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
+			template<CT::Data T>
+			static constexpr bool AvailableFor() noexcept;
+
 			template<class TO, class FROM>
 			static TO To(const FROM&);
+
+			template<CT::Data T>
+			static bool ExecuteIn(T&, Verb&);
 		};
 
 		/// Do verb																					
@@ -341,6 +397,12 @@ namespace Langulus
 			LANGULUS(INFO) "Used as a runtime dispatcher of composite types";
 
 			Do(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+
+			template<CT::Data T>
+			static constexpr bool AvailableFor() noexcept;
+
+			template<CT::Data T>
+			static bool ExecuteIn(T&, Verb&);
 		};
 
 	} // namespace Langulus::Verbs

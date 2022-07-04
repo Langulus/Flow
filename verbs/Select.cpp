@@ -17,16 +17,18 @@ namespace Langulus::Flow
 	bool PerIndex(Block& context, TAny<Trait>& selectedTraits, TMeta resultingTrait, META meta, const TAny<Index>& indices) {
 		bool done = false;
 		if (indices.IsEmpty()) {
+			// Meta is the only filter													
 			auto variable = context.GetMember(meta);
 			if (variable.IsAllocated()) {
-				selectedTraits << Trait(resultingTrait, variable);
+				selectedTraits << Trait {resultingTrait, variable};
 				done = true;
 			}
 		}
 		else for (auto& idx : indices) {
+			// Search for each meta-index pair										
 			auto variable = context.GetMember(meta, idx.GetOffset());
 			if (variable.IsAllocated()) {
-				selectedTraits << Trait(resultingTrait, variable);
+				selectedTraits << Trait {resultingTrait, variable};
 				done = true;
 			}
 		}
@@ -41,17 +43,24 @@ namespace Langulus::Flow
 	///	@param selectedTraits - [out] found traits go here							
 	///	@param selectedVerbs - [out] found verb go here								
 	///	@return if at least trait/verb has been pushed to outputs				
-	bool SelectByMeta(const TAny<Index>& indices, DMeta id, Block& context, TAny<Trait>& selectedTraits, TAny<VMeta>& selectedVerbs) {
+	bool SelectByMeta(const TAny<Index>& indices, DMeta id, Block& context, TAny<Trait>& selectedTraits, TAny<const RTTI::Ability*>& selectedVerbs) {
 		const auto type = context.GetType();
 		if (id->Is<VMeta>()) {
 			if (indices.IsEmpty() || indices == Index::All) { //TODO make sure the == operator is optimal
-				// Retrieve each verb inside rhs for this block					
+				// Retrieve each ability corresponding to verbs in rhs		
 				for (auto& ability : type->mAbilities)
-					selectedVerbs << ability.second.mVerb;
+					selectedVerbs << &ability.second;
 			}
 			else for (auto& idx : indices) {
 				// Retrieve specified abilities by index							
-				selectedVerbs << type->GetAbility(idx.GetOffset()).mVerb;
+				Count counter {};
+				for (auto& ability : type->mAbilities) {
+					if (counter == idx.GetOffset()) {
+						selectedVerbs << &ability.second;
+						break;
+					}
+					++counter;
+				}
 			}
 
 			return true;
@@ -73,7 +82,7 @@ namespace Langulus::Flow
 		bool containsOnlyIndices = !indices.IsEmpty();
 
 		TAny<Trait> selectedTraits;
-		TAny<VMeta> selectedVerbs;
+		TAny<const RTTI::Ability*> selectedAbilities;
 
 		// Scan verb argument for anything but indices							
 		verb.GetArgument().ForEachDeep([&](const Block& group) {
@@ -105,7 +114,7 @@ namespace Langulus::Flow
 			OrThis
 				group.ForEach([&](DMeta dmeta) {
 					containsOnlyIndices = false;
-					SelectByMeta(indices, dmeta, context, selectedTraits, selectedVerbs);
+					SelectByMeta(indices, dmeta, context, selectedTraits, selectedAbilities);
 				});
 		});
 
@@ -117,7 +126,7 @@ namespace Langulus::Flow
 
 		// Output results if any, satisfying the verb							
 		verb << selectedTraits;// .Decay(); //TODO investigate this issue and if an issue generalize it by implementing it in verb::operator <<
-		verb << selectedVerbs;// .Decay();
+		verb << selectedAbilities;// .Decay();
 	}
 
 } // namespace Langulus::Flow

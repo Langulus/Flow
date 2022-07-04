@@ -49,7 +49,7 @@ namespace Langulus::Flow
 				if (element.Is<Trait>()) {
 					// Search for the trait												
 					const auto meta = element.Get<Trait>().GetTrait();
-					const auto sati = satisfiedTraits.ContainsKey(meta);
+					const auto sati = satisfiedTraits.FindKeyIndex(meta);
 					const auto index = sati
 						? satisfiedTraits.GetValue(sati)
 						: Index::First;

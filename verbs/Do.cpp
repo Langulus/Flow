@@ -1,60 +1,22 @@
 #include "../Code.hpp"
+#include "Do.inl"
 
-#define VERBOSE_DISPATCH(a) // Logger::Verbose() << a
-#define VERBOSE_FLOW(a) //Logger::Verbose() << a
-#define VERBOSE_FLOW_TAB(a) //ScopedTab tab; pcLogVerbose << a << tab
-#define FLOW_ERRORS(a) //Logger::Error() << a
+#define VERBOSE_DISPATCH(a)	// Logger::Verbose() << a
+#define VERBOSE_FLOW(a)			// Logger::Verbose() << a
+#define VERBOSE_FLOW_TAB(a)	// ScopedTab tab; Logger::Verbose() << a << tab
+#define FLOW_ERRORS(a)			// Logger::Error() << a
 
 namespace Langulus::Flow
 {
-
-	/// Call the default built-in memory abilities										
-	/// This should be called only in memory blocks that are flat and contain	
-	/// only a single element																	
-	///	@param context - the context in which scope will be executed			
-	///	@param verb - the verb to send over												
-	///	@return true on success																
-	bool Verb::DefaultDo(Block& context, Verb& verb) {
-		SAFETY(if (context.GetCount() > 1 || context.IsDeep())
-			Throw<Except::Flow>(Logger::Error()
-				<< "Should operate on single/empty instances only, but "
-				<< context.GetCount() << " instead"));
-
-		switch (verb.GetSwitch()) {
-		case Verbs::Interpret::Switch:
-			DefaultInterpret(context, verb);
-			break;
-		case Verbs::Associate::Switch:
-			DefaultAssociate(context, verb);
-			break;
-		case Verbs::Select::Switch:
-			DefaultSelect(context, verb);
-			break;
-		case Verbs::Create::Switch:
-			DefaultCreate(context, verb);
-			break;
-		case Verbs::Scope::Switch:
-			DefaultScope(context, verb);
-			break;
-		case Verbs::Conjunct::Switch:
-			DefaultConjunct(context, verb);
-			break;
-		case Verbs::Disjunct::Switch:
-			DefaultDisjunct(context, verb);
-			break;
-		}
-
-		return verb.IsDone();
-	}
 
 	/// Invoke a verb on an empty context													
 	/// Only default verbs will be called													
 	///	@param verb - the verb to execute												
 	///	@return the number of successful executions									
-	Count Verb::DispatchEmpty(Verb& verb) {
+	/*Count Verb::DispatchEmpty(Verb& verb) {
 		Any emptyContext;
 		return Verb::DefaultDo(emptyContext, verb);
-	}
+	}*/
 
 	/// Invoke a verb on a container, that is either deep or flat, either		
 	/// AND, or OR. The verb will be executed for each flat element inside		
@@ -143,11 +105,9 @@ namespace Langulus::Flow
 		SAFETY(if (resolve && context.IsDeep()) Throw<Except::Flow>());
 
 		if (context.IsEmpty()) {
-			if (allowDefaultVerbs) {
-				// Only default verbs can be called on empty contexts			
+			if (allowDefaultVerbs)
 				return Verb::DefaultDo(context, verb);
-			}
-			else return 0;
+			return 0;
 		}
 
 		// Iterate elements in the current context								

@@ -196,7 +196,7 @@ namespace Langulus::Flow
 		static bool ExecuteScope(Any&, const Any&, Any&);
 		static bool ExecuteScope(Any&, const Any&, Any&, bool& skipVerbs);
 		static bool ExecuteVerb(Any&, Verb&);
-		static Count DispatchEmpty(Verb&);
+		//static Count DispatchEmpty(Verb&);
 		static Count DispatchDeep(Block&, Verb&, bool resolveElements = true, bool allowCustomDispatch = true, bool allowDefaultVerbs = true);
 		static Count DispatchFlat(Block&, Verb&, bool resolveElements = true, bool allowCustomDispatch = true, bool allowDefaultVerbs = true);
 		NOD() static bool IsScopeExecutable(const Block&) noexcept;
@@ -205,7 +205,8 @@ namespace Langulus::Flow
 		static void SetMembers(Any&, const Any&);
 
 	protected:
-		static bool DefaultDo(Block&, Verb&);
+		/*template<CT::Verb V>
+		static bool DefaultDo(Block&, V&);*/
 		static void DefaultInterpret(Block&, Verb&);
 		static void DefaultAssociate(Block&, Verb&);
 		static void DefaultSelect(Block&, Verb&);

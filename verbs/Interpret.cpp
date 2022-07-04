@@ -65,16 +65,17 @@ namespace Langulus::Flow
 	///	@param context - the block to execute in										
 	///	@param verb - interpretation verb												
 	void Verb::DefaultInterpret(Block& context, Verb& verb) {
-		SAFETY(if (context.IsDeep())
-			Throw<Except::Flow> (Logger::Error() <<
+		SAFETY(if (context.IsDeep()) {
+			Throw<Except::Flow>(Logger::Error() <<
 				"Default-interpreting a deep context is no allowed"
-				" - the flow handle should've handled that"));
+				" - the flow handle should've handled that")\
+		});
 
 		// For each type inside verb argument										
 		verb.GetArgument().ForEachDeep([&](DMeta type) {
 			if (context.Is(type) || (type->mIsAbstract && context.CastsToMeta(type))) {
 				// Types match, nothing to really interpret, just forward	
-				// and rely on pointer arithmetics									
+				// and rely on pointer arithmetics eventually					
 				VERBOSE_INTERPRET("Implicitly converted " << context << " from "
 					<< context.GetToken() << " to " << type << " (same type or abstract base)");
 				verb << Any {context};

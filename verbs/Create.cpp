@@ -60,7 +60,7 @@ namespace Langulus::Flow
 					Verb::DefaultSelect(context, selector);
 					if (!selector.GetOutput().IsEmpty()) {
 						VERBOSE_CREATION("Initializing trait " << selector.GetOutput()
-							<< " with " << ccCyan << element << " (" << index << ")");
+							<< " with " << Logger::Cyan << element << " (" << index << ")");
 
 						auto associator = Verbs::Associate({}, element);
 						if (Verb::ExecuteVerb(selector.GetOutput(), associator)) {
@@ -177,8 +177,7 @@ namespace Langulus::Flow
 
 			SAFETY(if (construct.GetProducer())
 				Throw<Except::Construct>(Logger::Error()
-					<< "Creation of customly produced type "
-					<< construct.GetToken()
+					<< "Creation of customly produced type " << construct.GetToken()
 					<< " hit default creation, and that should not be allowed - "
 					<< "add the Create verb in the producer interface"
 				)

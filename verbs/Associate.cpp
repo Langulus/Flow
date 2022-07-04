@@ -28,7 +28,7 @@ namespace Langulus::Flow
 
 		// Collect all viably typed or interpreted stuff from argument		
 		Any result;
-		SuccessTrap atLeastOneSuccess;
+		bool atLeastOneSuccess {};
 		verb.GetArgument().ForEachDeep([&](const Block& group) {
 			EitherDoThis
 				// Nest inside traits manually here, because traits aren't	
@@ -39,7 +39,7 @@ namespace Langulus::Flow
 					auto nested = verb.PartialCopy()
 						.SetArgument(static_cast<const Any&>(trait));
 					Verb::DefaultAssociate(context, nested);
-					atLeastOneSuccess = nested.IsDone();
+					atLeastOneSuccess |= nested.IsDone();
 				})
 			OrThis
 				// Nest inside constructs manually here, because they			
@@ -51,14 +51,14 @@ namespace Langulus::Flow
 						auto nested = verb.PartialCopy()
 							.SetArgument(static_cast<const Any&>(trait));
 						Verb::DefaultAssociate(context, nested);
-						atLeastOneSuccess = nested.IsDone();
+						atLeastOneSuccess |= nested.IsDone();
 					});
 				})
 			AndReturnIfDone;
 
 			try {
 				// Attempt directly copying, if possible							
-				atLeastOneSuccess = group.Copy(context) > 0;
+				atLeastOneSuccess |= group.Copy(context) > 0;
 			}
 			catch (const Except::Copy&) {
 				// Attempt interpretation												
@@ -84,7 +84,7 @@ namespace Langulus::Flow
 				<< context << " with " << Logger::Cyan << result);
 
 			try {
-				atLeastOneSuccess = result.Copy(context) > 0;
+				atLeastOneSuccess |= result.Copy(context) > 0;
 			}
 			catch (const Except::Copy&) {
 				// Catenate results into one element, and then copy			
@@ -94,7 +94,7 @@ namespace Langulus::Flow
 
 				if (Verb::DispatchFlat(catenated, cat)) {
 					// Success																
-					atLeastOneSuccess = cat.GetOutput().Copy(context) > 0;
+					atLeastOneSuccess |= cat.GetOutput().Copy(context) > 0;
 				}
 				else {
 					// Failure																

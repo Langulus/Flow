@@ -5,14 +5,14 @@
 namespace Langulus::Flow
 {
 
-	/// @brief 
-	/// @tparam META 
-	/// @param context 
-	/// @param selectedTraits 
-	/// @param resultingTrait 
-	/// @param meta 
-	/// @param indices 
-	/// @return 
+	/// Select members by providing either meta data or meta trait					
+	///	@tparam META - type of filter we're using										
+	///	@param context - the thing we're searching in								
+	///	@param selectedTraits - [out] found traits go here							
+	///	@param resultingTrait - the type of trait to push to selectedTraits	
+	///	@param meta - the filter we'll be using										
+	///	@param indices - optional indices (i.e. Nth trait of a kind				
+	///	@return true if at least one trait has been pushed to selectedTraits	
 	template<class META>
 	bool PerIndex(Block& context, TAny<Trait>& selectedTraits, TMeta resultingTrait, META meta, const TAny<Index>& indices) {
 		bool done = false;
@@ -24,10 +24,7 @@ namespace Langulus::Flow
 			}
 		}
 		else for (auto& idx : indices) {
-			if (idx.IsSpecial())
-				Throw<Except::Access>(Logger::Error() << "Can't select with index " << idx);
-
-			auto variable = context.GetMember(meta, static_cast<pcptr>(idx));
+			auto variable = context.GetMember(meta, idx.GetOffset());
 			if (variable.IsAllocated()) {
 				selectedTraits << Trait(resultingTrait, variable);
 				done = true;
@@ -38,27 +35,23 @@ namespace Langulus::Flow
 	}
 
 	/// Select ability or member by a meta													
-	/// @param indices 
-	/// @param id 
-	/// @param context 
-	/// @param selectedTraits	
-	/// @param selectedVerbs 
-	/// @return 
+	///	@param indices - optional index for trait/verb (Nth trait/verb)		
+	///	@param id - type of data we'll be selecting									
+	///	@param context - the thing we're searching in								
+	///	@param selectedTraits - [out] found traits go here							
+	///	@param selectedVerbs - [out] found verb go here								
+	///	@return if at least trait/verb has been pushed to outputs				
 	bool SelectByMeta(const TAny<Index>& indices, DMeta id, Block& context, TAny<Trait>& selectedTraits, TAny<VMeta>& selectedVerbs) {
+		const auto type = context.GetType();
 		if (id->Is<VMeta>()) {
 			if (indices.IsEmpty() || indices == Index::All) { //TODO make sure the == operator is optimal
 				// Retrieve each verb inside rhs for this block					
-				for (auto& ability : context.GetType()->mAbilities)
+				for (auto& ability : type->mAbilities)
 					selectedVerbs << ability.second.mVerb;
 			}
 			else for (auto& idx : indices) {
-				// Retrieve specified abilities										
-				if (idx.IsSpecial() || idx >= context.GetType()->mAbilities.size()) {
-					Logger::Warning() << "Skipping special index in default selection: " << idx;
-					continue;
-				}
-
-				selectedVerbs << context.GetType()->GetAbility(static_cast<pcptr>(idx)).mStaticAbility.mVerb;
+				// Retrieve specified abilities by index							
+				selectedVerbs << type->GetAbility(idx.GetOffset()).mVerb;
 			}
 
 			return true;

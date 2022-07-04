@@ -266,7 +266,7 @@ namespace Langulus::Flow
 				Real concatenatedMass = 0;
 				for (auto& n : mass)
 					concatenatedMass = pcConcat(concatenatedMass, n);
-				scope.GetCharge().mMass = concatenatedMass;
+				scope.mMass = concatenatedMass;
 			}
 
 			// Scan for data types														

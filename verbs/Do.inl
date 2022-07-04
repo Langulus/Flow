@@ -48,14 +48,13 @@ namespace Langulus::Flow
 		return verb.IsDone();
 	}*/
 
-	template<bool DISPATCH, bool DEFAULT, CT::Data T, CT::Verb V>
+	template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::Verb V>
 	Count Execute(T& context, V& verb);
 
-	template<bool DISPATCH, bool DEFAULT, CT::Data T, CT::Verb V, CT::Data... BASES>
+	template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::Verb V, CT::Data... BASES>
 	Count ExecuteInBases(T& context, V& verb, TTypeList<BASES...> bases) {
-		return (V::Execute<DISPATCH, DEFAULT>(static_cast<BASE&>(context), verb) || ...);
+		return (Execute<DISPATCH, DEFAULT, FALLBACK>(static_cast<BASES&>(context), verb) || ...);
 	}
-
 
 	/// Invoke a static verb on a static type												
 	///	@tparam RESOLVE - perform runtime type-checking and execute in the	

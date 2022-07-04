@@ -17,7 +17,7 @@ namespace Langulus::Verbs
 
 }
 
-
+/*
 namespace Langulus::Flow
 {
 	namespace InnerInterpretation
@@ -131,3 +131,4 @@ namespace Langulus::Flow
 	MEMBER_VERB_EXT(Interpret, (::Langulus::Flow::pcInterpretList<ME>(LIST{})))
 #define REFLECT_CONVERSION_LIST_EXT(owner, LIST) \
 	MEMBER_VERB_EXT(Interpret, (::Langulus::Flow::pcInterpretList<owner>(LIST{})))
+	*/

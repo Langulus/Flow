@@ -137,7 +137,7 @@ namespace Langulus::Flow
 			else {
 				// Scan the reflected abilities										
 				auto& abilities = resolved.GetType()->mAbilities;
-				auto found = abilities.find(verb.GetToken());
+				auto found = abilities.find(verb.GetVerb());
 				if (found != abilities.end()) {
 					found->second.mFunction(resolved.GetRaw(), verb);
 					if (verb.IsDone())

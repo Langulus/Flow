@@ -57,8 +57,8 @@ namespace Langulus::Flow
 	}
 
 	/// Compare descriptors																		
-	///	@param other - descriptor to compare with										
-	///	@return true if both content descriptors are the same						
+	///	@param rhs - descriptor to compare with										
+	///	@return true if both constructs are the same									
 	bool Construct::operator == (const Construct& rhs) const noexcept {
 		return GetHash() == rhs.GetHash()
 			&& mType == rhs.mType

@@ -48,8 +48,10 @@ namespace Langulus::Flow
 	/// Check if verb is of a specific type												
 	///	@tparam T - the verb to compare against										
 	///	@return true if verbs match														
-	template<CT::Verb... T>
+	template<CT::Data... T>
 	bool Verb::Is() const noexcept {
+		static_assert((CT::Verb<T> && ...),
+			"Provided types must be verb definitions");
 		return (Is(MetaVerb::Of<T>()) || ...);
 	}
 
@@ -57,6 +59,23 @@ namespace Langulus::Flow
 	///	@return true if verb has been satisfied at least once						
 	inline bool Verb::IsDone() const noexcept {
 		return mSuccesses > 0;
+	}
+
+	/// Check if verb is short-circuited													
+	///	@return true if verb is short-circuited										
+	inline bool Verb::IsShortCircuited() const noexcept {
+		return mShortCircuited;
+	}
+
+	/// Get the number of successful execution of the verb							
+	///	@return the number of successful executions									
+	inline Count Verb::GetSuccesses() const noexcept {
+		return mSuccesses;
+	}
+
+	/// Satisfy verb a number of times														
+	inline void Verb::Done(Count c) noexcept {
+		mSuccesses = c;
 	}
 
 	/// Satisfy verb once																		
@@ -472,6 +491,53 @@ namespace Langulus::Flow
 		mOutput >>= data;
 		Done();
 		return *this;
+	}
+
+	/// Finalize a dispatch execution by setting satisfaction state and output	
+	///	@tparam OR - whether the dispatch happened in an OR context or not	
+	///	@param successes - number of successes											
+	///	@param output - the output container											
+	///	@return the number of successes for the verb									
+	template<bool OR>
+	Count Verb::CompleteDispatch(const Count successes, Abandoned<Any>&& output) {
+		if (mShortCircuited) {
+			// If reached, this will result in failure in OR-context, or	
+			// success if AND, as long as the verb is short-circuited		
+			if constexpr (OR)
+				mSuccesses = 0;
+			else
+				mSuccesses = successes;
+		}
+		else {
+			// If verb is not short-circuited, then a single success			
+			// is always enough															
+			mSuccesses = successes;
+		}
+
+		// Set output																		
+		if (mSuccesses) {
+			output.mValue.Optimize();
+			mOutput = output.Forward<Any>();
+		}
+		else mOutput.Reset();
+
+		return mSuccesses;
+	}
+
+	/// Check if reflected abilities in T support this verb							
+	///	@return true if the ability exists												
+	template<CT::Data T>
+	bool Verb::AvailableFor() const noexcept {
+		TODO();
+	}
+
+	template<CT::Data T>
+	bool Verb::ExecuteIn(T&, Verb&) {
+		TODO();
+	}
+
+	bool Verb::ExecuteStateless(Verb&) {
+		TODO();
 	}
 
 } // namespace Langulus::Flow

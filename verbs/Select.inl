@@ -1,3 +1,4 @@
+#pragma once
 #include "../Code.hpp"
 
 #define PC_SELECT_VERBOSE(a) //Logger::Verbose() << a

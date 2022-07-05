@@ -1,5 +1,7 @@
 #include "Code.hpp"
 #include "Serial.hpp"
+#include "verbs/Do.inl"
+#include "verbs/Associate.inl"
 
 #define PC_PARSE_VERBOSE_INNER(a) \
 		Logger::Verbose() << LANGULUS(FUNCTION) << ": " << a << " at " << progress << ": " << \
@@ -891,8 +893,8 @@ namespace Langulus::Flow
 			PRETTY_ERROR("Invalid RHS for copy operator");
 
 		// Invoke the verb in the context (slower)								
-		auto copier = Verbs::Associate({}, rhs);
-		if (!Verb::DispatchDeep(lhs, copier)) {
+		Verbs::Associate copier({}, rhs);
+		if (!DispatchDeep<true, true, true>(lhs, copier)) {
 			// If execution failed, just push the verb							
 			lhs = Move(copier.SetSource(Move(lhs)).SetPriority(2));
 			PC_PARSE_VERBOSE("Copy operator: " << lhs);
@@ -940,7 +942,7 @@ namespace Langulus::Flow
 		if (lhs.IsEmpty() && op == Code::Subtract) {
 			// No LHS, so we execute in RHS to invert								
 			auto inverter = Verbs::Add().Invert();
-			if (!optimize || !Verb::DispatchDeep(rhs, inverter)) {
+			if (!optimize || !DispatchDeep<true, true, true>(rhs, inverter)) {
 				// If execution failed, just push the verb						
 				lhs = Move(inverter.SetSource(Move(rhs)));
 				PC_PARSE_VERBOSE("Invert (-) operator: " << lhs);
@@ -958,7 +960,7 @@ namespace Langulus::Flow
 		if (op == Code::Subtract)
 			adder.Invert();
 
-		if (!optimize || !Verb::DispatchDeep(lhs, adder)) {
+		if (!optimize || !DispatchDeep<true, true, true>(lhs, adder)) {
 			// If execution failed, just push the verb							
 			lhs = Move(adder.SetSource(Move(lhs)));
 			PC_PARSE_VERBOSE("Add/subtract operator: " << lhs);
@@ -1008,7 +1010,7 @@ namespace Langulus::Flow
 		if (lhs.IsEmpty() && op == Code::Divide) {
 			// No LHS, so we execute in RHS to invert (1/x)						
 			auto inverter = Verbs::Multiply().Invert();
-			if (!optimize || !Verb::DispatchDeep(rhs, inverter)) {
+			if (!optimize || !DispatchDeep<true, true, true>(rhs, inverter)) {
 				// If execution failed, just push the verb						
 				lhs = Move(inverter.SetSource(Move(rhs)));
 				PC_PARSE_VERBOSE("Invert (/) operator: " << lhs);
@@ -1026,7 +1028,7 @@ namespace Langulus::Flow
 		if (op == Code::Divide)
 			multiplier.Invert();
 
-		if (!optimize || !Verb::DispatchDeep(lhs, multiplier)) {
+		if (!optimize || !DispatchDeep<true, true, true>(lhs, multiplier)) {
 			// If execution failed, just push the verb							
 			lhs = Move(multiplier.SetSource(Move(lhs)));
 			PC_PARSE_VERBOSE("Multiply/divide operator: " << lhs);
@@ -1061,7 +1063,7 @@ namespace Langulus::Flow
 
 		// Try invoking the verb in the context (slower)						
 		auto exponentiator = Verbs::Exponent({}, rhs);
-		if (!optimize || !Verb::DispatchDeep(lhs, exponentiator)) {
+		if (!optimize || !DispatchDeep<true, true, true>(lhs, exponentiator)) {
 			// If execution failed, just push the verb							
 			lhs = Move(exponentiator.SetSource(Move(lhs)));
 			PC_PARSE_VERBOSE("Power operator: " << lhs);

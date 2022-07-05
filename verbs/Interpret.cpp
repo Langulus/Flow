@@ -64,7 +64,7 @@ namespace Langulus::Flow
 	/// reflected (and implemented, if not a constructor or cast-operator)		
 	///	@param context - the block to execute in										
 	///	@param verb - interpretation verb												
-	void Verb::DefaultInterpret(Block& context, Verb& verb) {
+	/*void Verb::DefaultInterpret(Block& context, Verb& verb) {
 		SAFETY(if (context.IsDeep()) {
 			Throw<Except::Flow>(Logger::Error() <<
 				"Default-interpreting a deep context is no allowed"
@@ -92,6 +92,6 @@ namespace Langulus::Flow
 					<< " - no conversion routine inferred or reflected");
 			}
 		});
-	}
+	}*/
 
 } // namespace Langulus::Flow

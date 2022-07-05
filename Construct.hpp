@@ -41,10 +41,9 @@ namespace Langulus::Flow
 	/// various characteristics, to finally the additional raw data in case		
 	/// of specific custom content.															
 	///																								
-	class Construct : public Charge {
+	class Construct : public Any, public Charge {
 	private:
 		DMeta mType {};
-		Any mArguments;
 		Hash mHash;
 
 	public:
@@ -52,12 +51,18 @@ namespace Langulus::Flow
 		Construct(const Construct&) = default;
 		Construct(Construct&&) noexcept = default;
 
+		Construct(Abandoned<Construct>&&) noexcept;
+		Construct(Disowned<Construct>&&) noexcept;
+
 		Construct(DMeta);
 		Construct(DMeta, const Any&, const Charge& = {});
 		Construct(DMeta, Any&&, const Charge& = {});
 
 		Construct& operator = (const Construct&) = default;
 		Construct& operator = (Construct&&) noexcept = default;
+
+		Construct& operator = (Abandoned<Construct>&&) noexcept;
+		Construct& operator = (Disowned<Construct>&&) noexcept;
 
 		NOD() explicit operator Code() const;
 		NOD() explicit operator Debug() const;
@@ -99,7 +104,6 @@ namespace Langulus::Flow
 		//NOD() Charge& GetCharge() noexcept;
 
 		NOD() DMeta GetType() const noexcept;
-		NOD() bool IsEmpty() const noexcept;
 
 		void Clear();
 		NOD() Construct Clone(DMeta = nullptr) const;

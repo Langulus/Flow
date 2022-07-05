@@ -34,7 +34,7 @@ namespace Langulus::Flow
 
 
 	///																								
-	/// Charge, carrying the four verb dimensions, and state							
+	/// Charge, carrying the four verb dimensions										
 	///																								
 	struct Charge {
 		// Mass of the verb																
@@ -83,10 +83,11 @@ namespace Langulus::Flow
 	///	THE UNIVERSAL VERB																	
 	///																								
 	/// It's practically a single call to the framework, or a single statement	
-	/// in a Code flow. Piception is based around natural language processing	
+	/// in a code flow. Langulus is based around natural language processing	
 	/// theory based around verbs, so this is the natural name for such thing	
 	///																								
 	class Verb : public Charge {
+	friend class Scope;
 	private:
 		// Verb meta, mass, frequency, time and priority						
 		VMeta mVerb {};
@@ -121,13 +122,13 @@ namespace Langulus::Flow
 		NOD() explicit operator Code() const;
 		NOD() explicit operator Debug() const;
 
+		/// Replace these in your verbs, to specify their behavior statically	
+		/// Otherwise, these function fallbacks will perform slow RTTI checks	
 		template<CT::Data T>
-		static constexpr bool AvailableFor() noexcept {
-			LANGULUS_ASSERT("You must implement this function in your verb definitions");
-		}
-
+		bool AvailableFor() const noexcept;
 		template<CT::Data T>
 		static bool ExecuteIn(T&, Verb&);
+		static bool ExecuteStateless(Verb&);
 
 	public:
 		NOD() Hash GetHash() const;
@@ -137,7 +138,7 @@ namespace Langulus::Flow
 		void Reset();
 
 		NOD() bool Is(VMeta) const noexcept;
-		template<CT::Verb... T>
+		template<CT::Data... T>
 		NOD() bool Is() const noexcept;
 
 		NOD() const Charge& GetCharge() const noexcept;
@@ -160,6 +161,9 @@ namespace Langulus::Flow
 		NOD() Verb& ShortCircuit(bool) noexcept;
 		NOD() Token GetToken() const;
 		NOD() bool IsDone() const noexcept;
+		NOD() bool IsShortCircuited() const noexcept;
+		NOD() Count GetSuccesses() const noexcept;
+		void Done(Count) noexcept;
 		void Done() noexcept;
 		void Undo() noexcept;
 		Verb& Invert() noexcept;
@@ -199,8 +203,11 @@ namespace Langulus::Flow
 		template<CT::Data T>
 		Verb& operator >>= (const T&);
 
+		template<bool OR>
+		Count CompleteDispatch(const Count, Abandoned<Any>&&);
+
 	public:
-		static bool ExecuteScope(Any&, const Any&);
+		/*static bool ExecuteScope(Any&, const Any&);
 		static bool ExecuteScope(Any&, const Any&, Any&);
 		static bool ExecuteScope(Any&, const Any&, Any&, bool& skipVerbs);
 		static bool ExecuteVerb(Any&, Verb&);
@@ -210,12 +217,12 @@ namespace Langulus::Flow
 		NOD() static bool IsScopeExecutable(const Block&) noexcept;
 		NOD() static bool IsScopeExecutableDeep(const Block&);
 		static void DefaultCreateInner(Any&, const Any&, Any&);
-		static void SetMembers(Any&, const Any&);
+		static void SetMembers(Any&, const Any&);*/
 
 	protected:
 		/*template<CT::Verb V>
 		static bool DefaultDo(Block&, V&);*/
-		static void DefaultInterpret(Block&, Verb&);
+		/*static void DefaultInterpret(Block&, Verb&);
 		static void DefaultAssociate(Block&, Verb&);
 		static void DefaultSelect(Block&, Verb&);
 		static void DefaultConjunct(Block&, Verb&);
@@ -225,13 +232,25 @@ namespace Langulus::Flow
 		static bool ExecuteScopeOR(Any&, const Any&, Any&, bool& skipVerbs);
 		static bool ExecuteScopeAND(Any&, const Any&, Any&, bool& skipVerbs);
 		static bool IntegrateScope(Any&, Any&);
-		static bool IntegrateVerb(Any&, Verb&);
+		static bool IntegrateVerb(Any&, Verb&);*/
 	};
 
 	/// A handy container for verbs															
 	using Script = TAny<Verb>;
 
 } // namespace Langulus::Flow
+
+
+namespace Langulus::CT
+{
+
+	/// A reflected verb type is any type that inherits Verb, and is binary		
+	/// compatible to a Verb																	
+	template<class... T>
+	concept Verb = ((DerivedFrom<T, ::Langulus::Flow::Verb>
+		&& sizeof(T) == sizeof(::Langulus::Flow::Verb)) && ...);
+
+} // namespace Langulus::CT
 
 
 namespace Langulus
@@ -241,9 +260,7 @@ namespace Langulus
 	namespace Verbs
 	{
 
-		using Flow::Verb;
-		using Flow::Any;
-		using Flow::Charge;
+		using namespace ::Langulus::Flow;
 
 		/// Create/destroy verb																	
 		/// Used for allocating new elements. If the type you're creating has	
@@ -262,8 +279,10 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<CT::Data T>
+			template<bool DEFAULT, CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
+
+			static bool ExecuteStateless(Verb&);
 		};
 
 		/// Select/deselect verb																
@@ -279,7 +298,7 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<CT::Data T>
+			template<bool DEFAULT, CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 		};
 
@@ -298,7 +317,7 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<CT::Data T>
+			template<bool DEFAULT, CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 		};
 
@@ -315,8 +334,10 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<CT::Data T>
+			template<bool DEFAULT, CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
+
+			static bool ExecuteStateless(Verb&);
 		};
 
 		/// Multiply/divide verb																
@@ -334,8 +355,10 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<CT::Data T>
+			template<bool DEFAULT, CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
+
+			static bool ExecuteStateless(Verb&);
 		};
 
 		/// Exponentiate/logarithm verb														
@@ -351,25 +374,48 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<CT::Data T>
+			template<bool DEFAULT, CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 		};
 
-		/// Catenate/break verb																	
-		/// Catenates anything catenable, or breaks stuff apart using a mask		
+		/// Catenate/split verb																	
+		/// Catenates anything catenable, or split stuff apart using a mask		
 		struct Catenate : public Verb {
 			LANGULUS(POSITIVE_VERB) "Catenate";
-			LANGULUS(NEGATIVE_VERB) "Break";
+			LANGULUS(NEGATIVE_VERB) "Split";
 			LANGULUS(INFO)
-				"Catenates anything catenable, or breaks stuff apart using a mask";
+				"Catenates anything catenable, or splits stuff apart using a mask";
 
 			Catenate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<CT::Data T>
+			template<bool DEFAULT, CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
+
+			static bool ExecuteStateless(Verb&);
+		};
+
+		/// Conjunct/disjunct verb																
+		/// Either combines LHS and RHS as one AND container, or separates them	
+		/// as one OR container - does only shallow copying							
+		struct Conjunct : public Verb {
+			LANGULUS(POSITIVE_VERB) "Conjunct";
+			LANGULUS(NEGATIVE_VERB) "Disjunct";
+			LANGULUS(INFO)
+				"Either combines LHS and RHS as one AND container, or separates them "
+				"as one OR container - does only shallow copying";
+
+			Conjunct(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+
+			template<CT::Data T>
+			static constexpr bool AvailableFor() noexcept;
+
+			template<bool DEFAULT, CT::Data T>
+			static bool ExecuteIn(T&, Verb&);
+
+			static bool ExecuteStateless(Verb&);
 		};
 
 		/// Interpret																				
@@ -386,7 +432,7 @@ namespace Langulus
 			template<class TO, class FROM>
 			static TO To(const FROM&);
 
-			template<CT::Data T>
+			template<bool DEFAULT, CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 		};
 
@@ -401,8 +447,10 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<CT::Data T>
+			template<bool DEFAULT, CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
+
+			static bool ExecuteStateless(Verb&);
 		};
 
 	} // namespace Langulus::Verbs

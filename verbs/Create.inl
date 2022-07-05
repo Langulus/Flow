@@ -1,3 +1,4 @@
+#pragma once
 #include "../Code.hpp"
 
 #define VERBOSE_CREATION(a) //Logger::Verbose() << a
@@ -238,7 +239,7 @@ namespace Langulus::Flow
 		else {
 			// Attempt a slow interpretation to the output type				
 			Verbs::Interpret interpreter({}, output.GetType());
-			Verb::DispatchDeep(const_cast<Block&>(input), interpreter);
+			DispatchDeep(const_cast<Block&>(input), interpreter);
 			try {
 				count += output.InsertBlock(interpreter.GetOutput());
 			}
@@ -262,7 +263,8 @@ namespace Langulus::Flow
 			if (!mass.IsEmpty()) {
 				// Mass is collected, but may be fragmented, so use the		
 				// concat verb to coalesce the numbers inside					
-				VERBOSE_SCOPES(Logger::Green << "Mass " << mass << " for " << scope);
+				VERBOSE_SCOPES(Logger::Green 
+					<< "Mass " << mass << " for " << scope);
 				Real concatenatedMass = 0;
 				for (auto& n : mass)
 					concatenatedMass = pcConcat(concatenatedMass, n);
@@ -273,8 +275,8 @@ namespace Langulus::Flow
 			TAny<DMeta> metaDatas;
 			GatherAndInterpret(verb.GetArgument(), metaDatas, Index::Front);
 			if (!metaDatas.IsEmpty()) {
-				VERBOSE_SCOPES(Logger::Green << "DMeta(s) for "
-					<< meta->mToken << ": " << metaDatas);
+				VERBOSE_SCOPES(Logger::Green 
+					<< "DMeta(s) for " << meta->mToken << ": " << metaDatas);
 				scope << metaDatas;
 			}
 
@@ -282,8 +284,8 @@ namespace Langulus::Flow
 			TAny<Construct> constructs;
 			GatherAndInterpret(verb.GetArgument(), constructs, Index::Front);
 			if (!constructs.IsEmpty()) {
-				VERBOSE_SCOPES(Logger::Green << "Construct(s) for "
-					<< meta->mToken << ": " << constructs);
+				VERBOSE_SCOPES(Logger::Green
+					<< "Construct(s) for " << meta->mToken << ": " << constructs);
 				scope << constructs;
 			}
 
@@ -291,8 +293,8 @@ namespace Langulus::Flow
 			TAny<Trait> traits;
 			GatherAndInterpret(verb.GetArgument(), traits, Index::Front);
 			if (!constructs.IsEmpty()) {
-				VERBOSE_SCOPES(Logger::Green << "Trait(s) for "
-					<< meta->mToken << ": " << traits);
+				VERBOSE_SCOPES(Logger::Green
+					<< "Trait(s) for " << meta->mToken << ": " << traits);
 				scope << traits;
 			}
 

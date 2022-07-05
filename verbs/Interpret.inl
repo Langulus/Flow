@@ -1,9 +1,7 @@
 #pragma once
 #include "../Verb.hpp"
 
-LANGULUS_DECLARE_EXCEPTION(MissingConversion)
-
-#define PC_VERBOSE_CONVERSION(a) //pcLogVerbose << a
+#define VERBOSE_CONVERSION(a) //Logger::Verbose() << a
 
 namespace Langulus::Verbs
 {

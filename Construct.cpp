@@ -1,5 +1,7 @@
 #include "Construct.hpp"
 #include "Serial.hpp"
+#include "verbs/Do.inl"
+#include "verbs/Interpret.inl"
 
 #define VERBOSE_CONSTRUCT(a) //pcLogFuncVerbose << a
 
@@ -15,17 +17,17 @@ namespace Langulus::Flow
 	///	@param type - the type of the content											
 	///	@param arguments - the argument container to move							
 	Construct::Construct(DMeta type, Any&& arguments, const Charge& charge)
-		: Charge {charge}
-		, mType {type}
-		, mArguments {Forward<Any>(arguments)} { }
+		: Any {Forward<Any>(arguments)}
+		, Charge {charge}
+		, mType {type} { }
 
 	/// Construct from a header and shallow-copied arguments							
 	///	@param type - the type of the content											
 	///	@param arguments - the argument container to copy							
 	Construct::Construct(DMeta type, const Any& arguments, const Charge& charge)
-		: Charge {charge}
-		, mType {type}
-		, mArguments {arguments} { }
+		: Any {arguments}
+		, Charge {charge}
+		, mType {type} { }
 
 	/// Hash the descriptor																		
 	///	@return the hash of the content													
@@ -33,14 +35,14 @@ namespace Langulus::Flow
 		if (mHash.mHash)
 			return mHash;
 
-		const_cast<Hash&>(mHash) = HashData(mType->mHash, mArguments.GetHash());
+		const_cast<Hash&>(mHash) = HashData(mType->mHash, Any::GetHash());
 		return mHash;
 	}
 
 	/// Clears arguments and charge															
 	void Construct::Clear() {
 		Charge::Reset();
-		mArguments.Reset();
+		Any::Reset();
 		mHash = {};
 	}
 
@@ -48,29 +50,30 @@ namespace Langulus::Flow
 	///	@param override - whether or not to change header of the cloned		
 	///	@return a construct with cloned arguments										
 	Construct Construct::Clone(DMeta overrride) const {
-		Construct clone {overrride ? overrride : mType};
-		static_cast<Charge&>(clone) = static_cast<const Charge&>(*this);
-		clone.mArguments = mArguments.Clone();
-		if (!overrride)
+		Construct clone {
+			overrride ? overrride : mType,
+			Any::Clone(), *this
+		};
+
+		if (!overrride || overrride == mType)
 			clone.mHash = GetHash();
-		return clone;
+		return Abandon(clone);
 	}
 
-	/// Compare descriptors																		
+	/// Compare constructs																		
 	///	@param rhs - descriptor to compare with										
 	///	@return true if both constructs are the same									
 	bool Construct::operator == (const Construct& rhs) const noexcept {
 		return GetHash() == rhs.GetHash()
 			&& mType == rhs.mType
-			&& mArguments == rhs.mArguments;
+			&& Any::operator == (rhs.GetAll());
 	}
 
 	/// Attempt to create construct statically if possible							
 	/// If not possible, simply propagate the construct								
 	///	@param output - [out] results go here											
 	void Construct::StaticCreation(Any& output) const {
-		auto meta = GetType();
-		if (meta->mProducer) {
+		if (mType->mProducer) {
 			// If the construct requires a producer, just propagate it		
 			// without changing anything - static creation is impossibru	
 			output << *this;
@@ -79,15 +82,14 @@ namespace Langulus::Flow
 
 		// If reached, data doesn't rely on a producer							
 		// Make sure we're creating something concrete							
-		auto arguments = const_cast<Construct*>(this)->GetAll();
-		meta = meta->mConcrete;
-		if (arguments.GetCountElementsDeep() == 1) {
+		const auto meta = mType->GetMostConcrete();
+		if (GetCountElementsDeep() == 1) {
 			// Convert single argument to requested type							
 			// If a direct copy is available it will be utilized				
-			auto interpreter = Verbs::Interpret({}, meta);
-			if (Verb::DispatchDeep(arguments, interpreter) && !interpreter.GetOutput().IsEmpty()) {
+			Verbs::Interpret interpreter({}, meta);
+			if (DispatchDeep<true, true, true>(GetAll(), interpreter)) {
 				// Success																	
-				VERBOSE_CONSTRUCT("Constructed from DataID: "
+				VERBOSE_CONSTRUCT("Constructed from meta data: "
 					<< Logger::Cyan << interpreter.GetOutput());
 				output << Move(interpreter.GetOutput());
 				return;
@@ -97,17 +99,17 @@ namespace Langulus::Flow
 		// Either Interpret verb didn't do the trick, or multiple items	
 		// were provided, so we need to inspect members, and satisfy them	
 		// one by one																		
-		const auto concreteConstruct = Construct::From(meta, arguments);
-		auto creator = Verbs::Create({}, &concreteConstruct);
-		if (!Verb::DispatchEmpty(creator) || creator.GetOutput().IsEmpty()) {
-			Throw<Except::Construct>(Logger::Error()
-				<< "Can't construct " << meta->mToken
-				<< " from " << concreteConstruct);
+		const auto concreteConstruct = Construct::From(meta, *this);
+		Verbs::Create creator({}, &concreteConstruct);
+		if (DispatchEmpty(creator)) {
+			VERBOSE_CONSTRUCT("Constructed from initializer-list: "
+				<< Logger::Cyan << creator.GetOutput());
+			output << Move(creator.GetOutput());
 		}
 
-		VERBOSE_CONSTRUCT("Constructed from initializer-list: "
-			<< Logger::Cyan << creator.GetOutput());
-		output << Move(creator.GetOutput());
+		Throw<Except::Construct>(Logger::Error()
+			<< "Can't construct " << meta->mToken
+			<< " from " << concreteConstruct);
 	}
 
 	/// Check if constructor header can be interpreted as another type			
@@ -131,7 +133,7 @@ namespace Langulus::Flow
 	Construct& Construct::Set(const Trait& trait, const Offset& index) {
 		bool done = false;
 		Count counter = 0;
-		mArguments.ForEachDeep([&](Block& group) {
+		ForEachDeep([&](Block& group) {
 			group.ForEach([&](Trait& t) {
 				if (t.GetTrait() != trait.GetTrait())
 					return true;
@@ -162,7 +164,7 @@ namespace Langulus::Flow
 	const Trait* Construct::Get(TMeta meta, const Offset& index) const {
 		const Trait* found = nullptr;
 		Count counter = 0;
-		mArguments.ForEachDeep([&](const Block& group) {
+		ForEachDeep([&](const Block& group) {
 			group.ForEach([&](const Trait& t) {
 				if (t.GetTrait() != meta)
 					return true;
@@ -186,10 +188,10 @@ namespace Langulus::Flow
 	Construct::operator Code() const {
 		Code result;
 		result += mType->mToken;
-		if (!Charge::IsDefault() || !mArguments.IsEmpty()) {
+		if (!Charge::IsDefault() || !IsEmpty()) {
 			result += Verbs::Interpret::To<Code>(GetCharge());
 			result += Code::OpenScope;
-			result += Verbs::Interpret::To<Code>(mArguments);
+			result += Verbs::Interpret::To<Code>(GetAll());
 			result += Code::CloseScope;
 		}
 
@@ -200,10 +202,10 @@ namespace Langulus::Flow
 	Construct::operator Debug() const {
 		Code result;
 		result += mType->mToken;
-		if (!Charge::IsDefault() || !mArguments.IsEmpty()) {
+		if (!Charge::IsDefault() || !IsEmpty()) {
 			result += Verbs::Interpret::To<Debug>(GetCharge());
 			result += Code::OpenScope;
-			result += Verbs::Interpret::To<Debug>(mArguments);
+			result += Verbs::Interpret::To<Debug>(GetAll());
 			result += Code::CloseScope;
 		}
 

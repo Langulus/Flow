@@ -171,48 +171,6 @@ namespace Langulus::Flow
 		return mMass < 0 ? mVerb->mTokenReverse : mVerb->mToken;
 	}
 
-	/// Flat check if memory block contains executable verbs							
-	///	@param block - the block to check for verbs									
-	///	@return true if the flat memory block contains verbs						
-	bool Verb::IsScopeExecutable(const Block& block) noexcept {
-		if (block.Is<Verb>())
-			return true;
-
-		bool result{};
-		EitherDoThis
-			// Scan deeper into traits, because they're not marked deep		
-			// They are deep only in respect to execution						
-			block.ForEach([&result](const Trait& trait) {
-				result = Verb::IsScopeExecutable(trait);
-				return !result;
-			})
-		OrThis
-			// Scan deeper into constructs, because they're not marked deep
-			// They are deep only in respect to execution						
-			block.ForEach([&result](const Construct& construct) {
-				result = Verb::IsScopeExecutable(construct.GetAll());
-				return !result;
-			});
-
-		return result;
-	}
-
-	/// Deep (slower) check if memory block contains executable verbs				
-	///	@param block - the block to deeply iterate in search for verbs			
-	///	@return true if the deep or flat memory block contains verbs			
-	bool Verb::IsScopeExecutableDeep(const Block& block) {
-		if (Verb::IsScopeExecutable(block))
-			return true;
-
-		bool result{};
-		block.ForEachDeep([&result](const Block& group) {
-			result = Verb::IsScopeExecutable(group);
-			return !result;
-		});
-
-		return result;
-	}
-
 	/// Serialize verb to code																	
 	Verb::operator Code() const {
 		Code result;
@@ -348,6 +306,7 @@ namespace Langulus::Flow
 
 		return result;
 	}
+
 
 } // namespace Langulus::Flow
 

@@ -60,11 +60,11 @@ namespace Langulus::Flow
 	}
 
 	inline const Any& Construct::GetAll() const noexcept {
-		return mArguments;
+		return static_cast<const Any&>(*this);
 	}
 
 	inline Any& Construct::GetAll() noexcept {
-		return mArguments;
+		return static_cast<Any&>(*this);
 	}
 
 	inline const Charge& Construct::GetCharge() const noexcept {
@@ -73,10 +73,6 @@ namespace Langulus::Flow
 
 	inline DMeta Construct::GetType() const noexcept {
 		return mType;
-	}
-
-	inline bool Construct::IsEmpty() const noexcept {
-		return mArguments.IsEmpty();
 	}
 
 	template<CT::Data T>
@@ -88,7 +84,7 @@ namespace Langulus::Flow
 	///	@param whatever - the thing you wish to push									
 	template<CT::Data T>
 	Construct& Construct::operator << (const T& whatever) {
-		if (mArguments.SmartPush<true, true, T, Any>(whatever))
+		if (Any::SmartPush<true, true, T, Any>(whatever))
 			mHash = {};
 		return *this;
 	}
@@ -100,7 +96,7 @@ namespace Langulus::Flow
 		if constexpr (CT::Same<T, Trait>)
 			return Set(DenseCast(whatever));
 		else {
-			if (!mArguments.FindDeep(whatever))
+			if (!FindDeep(whatever))
 				*this << whatever;
 			return *this;
 		}

@@ -16,22 +16,22 @@ namespace Langulus::Flow
 			return true;
 
 		bool result{};
-		EitherDoThis
+		ForEach(
 			// Scan deeper into traits, because they're not marked deep		
 			// They are deep only in respect to execution						
-			ForEach([&result](const Trait& trait) noexcept {
+			[&result](const Trait& trait) noexcept {
 				const auto& scope = ReinterpretCast<Scope>(static_cast<const Block&>(trait));
 				result = scope.IsExecutable();
 				return !result;
-			})
-		OrThis
+			},
 			// Scan deeper into constructs, because they're not marked deep
 			// They are deep only in respect to execution						
-			ForEach([&result](const Construct& construct) noexcept {
+			[&result](const Construct& construct) noexcept {
 				const auto& scope = ReinterpretCast<Scope>(construct.GetAll());
 				result = scope.IsExecutable();
 				return !result;
-			});
+			}
+		);
 
 		return result;
 	}
@@ -102,42 +102,36 @@ namespace Langulus::Flow
 	///	@param skipVerbs - [in/out] whether to skip verbs after OR success	
 	///	@return true of no errors occured												
 	bool Scope::ExecuteAND(Any& environment, Any& output, bool& skipVerbs) const {
-		if (IsDeep()) {
+		const bool executed = ForEach(
 			// Nest if deep																
-			const auto& asScopes = ReinterpretCast<TAny<Scope>>(*this);
-			for (const auto& scope : asScopes) {
+			[&](const Block& block) {
+				const auto& scope = ReinterpretCast<Scope>(block);
 				Any local;
 				if (!scope.Execute(environment, local, skipVerbs)) {
-					VERBOSE_FLOW(Logger::Red << "Deep-AND failed: " << this);
-					return false;
+					Throw<Except::Flow>(VERBOSE_FLOW(Logger::Red
+						<< "Deep-AND failed: " << this));
 				}
 
 				output << Abandon(local);
-			}
-		}
-		else if (Is<Trait>()) {
+			},
 			// Nest if traits, but retain each trait 								
-			const auto& asTraits = ReinterpretCast<TAny<Trait>>(*this);
-			for (const auto& trait : asTraits) {
-				const auto& traitAsScope = ReinterpretCast<Scope>(static_cast<const Block&>(trait));
+			[&](const Trait& trait) {
+				const auto& scope = ReinterpretCast<Scope>(static_cast<const Block&>(trait));
 				Any local;
-				if (!traitAsScope.Execute(environment, local, skipVerbs)) {
-					VERBOSE_FLOW(Logger::Red << "Trait-AND failed: " << this);
-					return false;
+				if (!scope.Execute(environment, local, skipVerbs)) {
+					Throw<Except::Flow>(VERBOSE_FLOW(Logger::Red
+						<< "Trait-AND failed: " << this));
 				}
 
 				output << Trait {trait.GetTrait(), Abandon(local)};
-			}
-		}
-		else if (Is<Construct>()) {
+			},
 			// Nest if constructs, but retain each construct					
-			const auto& asConstructs = ReinterpretCast<TAny<Construct>>(*this);
-			for (const auto& construct : asConstructs) {
-				const auto& constructAsScope = ReinterpretCast<Scope>(construct.GetAll());
+			[&](const Construct& construct) {
+				const auto& scope = ReinterpretCast<Scope>(construct.GetAll());
 				Any local;
-				if (!constructAsScope.Execute(environment, local, skipVerbs)) {
-					VERBOSE_FLOW(Logger::Red << "Construct-AND failed: " << scope);
-					return false;
+				if (!scope.Execute(environment, local, skipVerbs)) {
+					Throw<Except::Flow>(VERBOSE_FLOW(Logger::Red
+						<< "Construct-AND failed: " << this));
 				}
 
 				Construct newc {construct.GetType(), Move(local), construct};
@@ -151,16 +145,14 @@ namespace Langulus::Flow
 					// A new attempt will be made at runtime						
 					output << Abandon(newc);
 				}
-			}
-		}
-		else if (Is<Verb>()) {
-			if (skipVerbs)
-				return false;
+			},
+			// Execute verbs																
+			[&](const Verb& constVerb) {
+				if (skipVerbs)
+					return false;
 
-			const auto& asVerbs = ReinterpretCast<Script>(*this);
-			for (const auto& constVerb : asVerbs) {
 				// Shallow-copy the verb to make it mutable						
-				// Also resets the output												
+				// Also resets its output												
 				Verb verb {
 					constVerb.mVerb,
 					constVerb.mSource,
@@ -171,17 +163,19 @@ namespace Langulus::Flow
 
 				// Execute the verb														
 				if (!Scope::ExecuteVerb(environment, verb)) {
-					VERBOSE_FLOW(Logger::Red << "Verb-AND failed: " << this);
-					return false;
+					Throw<Except::Flow>(VERBOSE_FLOW(Logger::Red
+						<< "Verb-AND failed: " << this));
 				}
 
 				if (!verb.mOutput.IsEmpty())
 					output << Abandon(verb.mOutput);
+				return true;
 			}
-		}
-		else {
-			// If this is reached, then we have non-verb content				
-			// Just propagate content													
+		);
+
+		if (!executed) {
+			// If this is reached, then we had non-verb content				
+			// Just propagate its contents											
 			output << *this;
 		}
 
@@ -196,83 +190,67 @@ namespace Langulus::Flow
 	///	@param skipVerbs - [out] whether to skip verbs after OR success		
 	///	@return true of no errors occured												
 	bool Scope::ExecuteOR(Any& environment, Any& output, bool& skipVerbs) const {
-		bool executed = false;
-		bool localSkipVerbs = skipVerbs; //TODO was false in old code, but should it be? doesn't make sense...
+		bool executed {};
+		bool localSkipVerbs {};
 
-		if (IsDeep()) {
-			// DEEP OR																		
-			// Execute in order until a successful execution occurs,			
-			// then skip verbs - only collect data									
-			const auto& asScopes = ReinterpretCast<TAny<Scope>>(*this);
-			for (const auto& scope : asScopes) {
-				//Any localContext {environment};
+		ForEach(
+			// Nest if deep																
+			[&](const Block& block) {
+				const auto& scope = ReinterpretCast<Scope>(block);
 				Any local;
 				if (scope.Execute(environment, local, localSkipVerbs)) {
 					executed = true;
 					if (!local.IsEmpty())
 						output << Abandon(local);
 				}
-			}
-
-			skipVerbs = localSkipVerbs;
-		}
-		else if (Is<Trait>()) {
-			// All traits get executed, but the failed scope traits get		
-			// discarded																	
-			for (Count i = 0; i < scope.GetCount(); ++i) {
-				bool unusedSkipVerbs = false;
-				Any localOutput;
-				auto& trait = scope.Get<Trait>(i);
-				if (Verb::ExecuteScope(environment, trait, localOutput, unusedSkipVerbs)) {
+			},
+			// Nest if traits, but retain each trait 								
+			[&](const Trait& trait) {
+				const auto& scope = ReinterpretCast<Scope>(static_cast<const Block&>(trait));
+				Any local;
+				if (scope.Execute(environment, local)) {
 					executed = true;
-					output << Trait {trait.GetTrait(), Move(localOutput)};
+					output << Trait {trait.GetTrait(), Abandon(local)};
 				}
-			}
-		}
-		else if (Is<Construct>()) {
-			// All constructs get executed, but the failed ones get			
-			// discarded																	
-			for (Count i = 0; i < scope.GetCount(); ++i) {
-				bool unusedSkipVerbs = false;
-				Any localOutput;
-				auto& construct = scope.Get<Construct>(i);
-				if (Verb::ExecuteScope(environment, construct.GetAll(), localOutput, unusedSkipVerbs)) {
+			},
+			// Nest if constructs, but retain each construct					
+			[&](const Construct& construct) {
+				const auto& scope = ReinterpretCast<Scope>(construct.GetAll());
+				Any local;
+				if (scope.Execute(environment, local)) {
 					executed = true;
-					output << Construct {construct.GetType(), Move(localOutput), construct};
+					output << Construct {construct.GetType(), Abandon(local), construct};
 				}
-			}
-		}
-		else if (Is<Verb>()) {
-			// SHALLOW OR																	
-			// We couldn't pick a verb, so execute in order until	a			
-			// successful execution occurs. On success simply skip other	
-			// verbs - only collect data along the way (using skipVerbs)	
-			if (localSkipVerbs) {
-				VERBOSE_FLOW(Logger::DarkYellow << "OR-Scope skipped: " << scope);
-				return false;
-			}
+			},
+			// Execute verbs																
+			[&](const Verb& constVerb) {
+				if (localSkipVerbs)
+					return false;
 
-			auto& asVerbs = ReinterpretCast<Script>(*this);
-			for (auto& constVerb : asVerbs) {
-				Verb verb { 
-					constVerb.mVerb, 
-					constVerb.mSource, 
+				// Shallow-copy the verb to make it mutable						
+				// Also resets its output												
+				Verb verb {
+					constVerb.mVerb,
+					constVerb.mSource,
 					constVerb.mArgument, {},
 					constVerb,
 					constVerb.mShortCircuited
 				};
 
 				if (!Scope::ExecuteVerb(environment, verb))
-					continue;
+					return true;
 
 				executed = true;
-				if (!verb.mOutput.IsEmpty())
-					output << Move(verb.mOutput);
-			}
 
-			skipVerbs = localSkipVerbs;
-		}
-		else {
+				if (!verb.mOutput.IsEmpty())
+					output << Abandon(verb.mOutput);
+				return true;
+			}
+		);
+
+		skipVerbs |= localSkipVerbs;
+
+		if (!executed) {
 			// If this is reached, then we have non-verb flat content		
 			// Just propagate it															
 			output << *this;

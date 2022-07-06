@@ -64,9 +64,6 @@ namespace Langulus::Flow
 	///	@return the number of successful executions									
 	template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::Verb V>
 	Count Execute(T& context, V& verb) {
-		//static_assert(!CT::Deep<T>,  "T must be flat");
-		//static_assert( CT::Dense<T>, "T must be dense");
-
 		// Always reset verb progress prior to execution						
 		verb.Undo();
 
@@ -77,17 +74,20 @@ namespace Langulus::Flow
 			// type, you no longer rely on reflected bases' verbs or			
 			// default verbs. You must invoke those by yourself in your		
 			// dispatcher - the custom dispatcher provides full control		
-			context.Do(verb);
+			DenseCast(context).Do(verb);
 		}
-		else if constexpr (V::template AvailableFor<T>()) {
+		else {
 			// Execute verb inside the context directly							
-			V::ExecuteIn<FALLBACK>(context, verb);
+			if constexpr (FALLBACK)
+				V::ExecuteDefault(context, verb);
+			else
+				V::ExecuteIn(context, verb);
 
 			// If that fails, attempt in all reflected bases					
 			if constexpr (requires { typename T::CTTI_Bases; }) {
 				if (!verb.IsDone()) {
-					// Context has no abilities, or they failed, so try with	
-					// all bases' abilities												
+					// Context has no abilities, or they failed, so try		
+					// with all bases' abilities										
 					ExecuteInBases<true, false, FALLBACK>(context, verb, typename T::CTTI_Bases {});
 				}
 			}
@@ -95,9 +95,9 @@ namespace Langulus::Flow
 			// If that fails, attempt executing the default verb				
 			if constexpr (DEFAULT && !FALLBACK) {
 				if (!verb.IsDone()) {
-					// Verb wasn't executed neither in current element, nor	
-					// in	any of its bases, so we resort to the default		
-					// abilities															
+					// Verb wasn't executed neither in current element,		
+					// nor in any of its bases, so we resort to the				
+					// default abilities													
 					Execute<false, false, true>(context, verb);
 				}
 			}
@@ -114,8 +114,6 @@ namespace Langulus::Flow
 	///	@return the number of successful executions									
 	template<bool RESOLVE, bool DISPATCH, bool DEFAULT, CT::Data T, CT::Verb V>
 	Count DispatchFlat(T& context, V& verb) {
-		//static_assert(!CT::Deep<T>, "T must be flat");
-
 		if (context.IsEmpty()) {
 			if constexpr (DEFAULT)
 				Execute<DISPATCH, true, true>(context, verb);

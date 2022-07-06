@@ -45,6 +45,7 @@ namespace Langulus::Flow
 		mPriority = DefaultPriority;
 	}
 
+
 	/// Check if verb is of a specific type												
 	///	@tparam T - the verb to compare against										
 	///	@return true if verbs match														
@@ -525,19 +526,59 @@ namespace Langulus::Flow
 	}
 
 	/// Check if reflected abilities in T support this verb							
+	/// This is a slow runtime check, use statically optimized variants inside	
+	/// specific verbs if you know them at compile time								
 	///	@return true if the ability exists												
 	template<CT::Data T>
 	bool Verb::AvailableFor() const noexcept {
-		TODO();
+		const auto meta = MetaData::Of<Decay<T>>();
+		return meta && meta->GetAbility(mVerb, mArgument.GetType());
 	}
 
+	/// Execute an unknown verb in a given context										
+	/// This is a slow runtime procedure, use statically optimized variants		
+	/// inside specific verbs if you know them at compile time						
+	///	@param context - the context to execute in									
+	///	@param verb - the verb to execute												
+	///	@return true if verb was executed												
 	template<CT::Data T>
-	bool Verb::ExecuteIn(T&, Verb&) {
-		TODO();
+	bool Verb::ExecuteIn(T& context, Verb& verb) {
+		const auto meta = MetaData::Of<Decay<T>>();
+		const auto found = meta->GetAbility(verb.mVerb, verb.mArgument.GetType());
+		if (!found)
+			return false;
+
+		found(SparseCast(context), verb);
+		return verb.IsDone();
 	}
 
-	bool Verb::ExecuteStateless(Verb&) {
-		TODO();
+	/// Execute an unknown verb with its default behavior								
+	/// This is a slow runtime procedure, use statically optimized variants		
+	/// inside specific verbs if you know them at compile time						
+	///	@param context - the context to execute in									
+	///	@param verb - the verb instance to execute									
+	///	@return true if verb was executed												
+	inline bool Verb::ExecuteDefault(Block& context, Verb& verb) {
+		if (verb.mVerb->mDefaultInvocation) {
+			verb.mVerb->mDefaultInvocation(context, verb);
+			return verb.IsDone();
+		}
+
+		return false;
+	}
+
+	/// Execute an unknown verb without context											
+	/// This is a slow runtime procedure, use statically optimized variants		
+	/// inside specific verbs if you know them at compile time						
+	///	@param verb - the verb instance to execute									
+	///	@return true if verb was executed												
+	inline bool Verb::ExecuteStateless(Verb& verb) {
+		if (verb.mVerb->mStatelessInvocation) {
+			verb.mVerb->mStatelessInvocation(verb);
+			return verb.IsDone();
+		}
+
+		return false;
 	}
 
 } // namespace Langulus::Flow

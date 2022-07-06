@@ -58,20 +58,8 @@ namespace Langulus::Flow
 
 		using Text::Text;
 
-		/*Code(const Text&);
-		Code(Text&&) noexcept;
-
-		explicit Code(const Charge&);
-		explicit Code(const Verb&);
-		explicit Code(const Map&);
-		explicit Code(const Hash&);
-		explicit Code(Code::Operator);*/
-
 		NOD() Any Parse(bool optimize = true) const;
 		NOD() Code Clone() const;
-
-		/*template<class ANYTHING>
-		Code& operator += (const ANYTHING&);*/
 
 		NOD() Code LeftOf(Offset) const;
 		NOD() Code RightOf(Offset) const;
@@ -92,16 +80,6 @@ namespace Langulus::Flow
 		NOD() static bool IsReserved(const Text&);
 		NOD() static bool IsValidKeyword(const Text&);
 	};
-
-	/*NOD() Code operator + (const Code&, const Code&);
-	NOD() Code operator + (const Code&, const Text&);
-	NOD() Code operator + (const Text&, const Code&);
-
-	template<CT::NotText T>
-	NOD() Code operator + (const T&, const Code&);
-
-	template<CT::NotText T>
-	NOD() Code operator + (const Code&, const T&);*/
 
 	Code operator "" _code(const char*, ::std::size_t);
 

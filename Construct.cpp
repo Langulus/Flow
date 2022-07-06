@@ -133,23 +133,19 @@ namespace Langulus::Flow
 	Construct& Construct::Set(const Trait& trait, const Offset& index) {
 		bool done = false;
 		Count counter = 0;
-		ForEachDeep([&](Block& group) {
-			group.ForEach([&](Trait& t) {
-				if (t.GetTrait() != trait.GetTrait())
-					return true;
-
-				if (counter == index) {
-					t = trait;
-					mHash = {};
-					done = true;
-					return false;
-				}
-				
-				++counter;
+		ForEachDeep([&](Trait& t) {
+			if (t.GetTrait() != trait.GetTrait())
 				return true;
-			});
 
-			return !done;
+			if (counter == index) {
+				t = trait;
+				mHash = {};
+				done = true;
+				return false;
+			}
+				
+			++counter;
+			return true;
 		});
 
 		if (!done)
@@ -164,21 +160,17 @@ namespace Langulus::Flow
 	const Trait* Construct::Get(TMeta meta, const Offset& index) const {
 		const Trait* found = nullptr;
 		Count counter = 0;
-		ForEachDeep([&](const Block& group) {
-			group.ForEach([&](const Trait& t) {
-				if (t.GetTrait() != meta)
-					return true;
-
-				if (counter == index) {
-					found = &t;
-					return false;
-				}
-
-				++counter;
+		ForEachDeep([&](const Trait& t) {
+			if (t.GetTrait() != meta)
 				return true;
-			});
 
-			return !found;
+			if (counter == index) {
+				found = &t;
+				return false;
+			}
+
+			++counter;
+			return true;
 		});
 
 		return found;

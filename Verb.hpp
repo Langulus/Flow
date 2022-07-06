@@ -123,11 +123,12 @@ namespace Langulus::Flow
 		NOD() explicit operator Debug() const;
 
 		/// Replace these in your verbs, to specify their behavior statically	
-		/// Otherwise, these function fallbacks will perform slow RTTI checks	
+		/// Otherwise, these functions fallback and perform slow RTTI checks		
 		template<CT::Data T>
 		bool AvailableFor() const noexcept;
 		template<CT::Data T>
 		static bool ExecuteIn(T&, Verb&);
+		static bool ExecuteDefault(Block&, Verb&);
 		static bool ExecuteStateless(Verb&);
 
 	public:
@@ -205,34 +206,6 @@ namespace Langulus::Flow
 
 		template<bool OR>
 		Count CompleteDispatch(const Count, Abandoned<Any>&&);
-
-	public:
-		/*static bool ExecuteScope(Any&, const Any&);
-		static bool ExecuteScope(Any&, const Any&, Any&);
-		static bool ExecuteScope(Any&, const Any&, Any&, bool& skipVerbs);
-		static bool ExecuteVerb(Any&, Verb&);
-		//static Count DispatchEmpty(Verb&);
-		static Count DispatchDeep(Block&, Verb&, bool resolveElements = true, bool allowCustomDispatch = true, bool allowDefaultVerbs = true);
-		static Count DispatchFlat(Block&, Verb&, bool resolveElements = true, bool allowCustomDispatch = true, bool allowDefaultVerbs = true);
-		NOD() static bool IsScopeExecutable(const Block&) noexcept;
-		NOD() static bool IsScopeExecutableDeep(const Block&);
-		static void DefaultCreateInner(Any&, const Any&, Any&);
-		static void SetMembers(Any&, const Any&);*/
-
-	protected:
-		/*template<CT::Verb V>
-		static bool DefaultDo(Block&, V&);*/
-		/*static void DefaultInterpret(Block&, Verb&);
-		static void DefaultAssociate(Block&, Verb&);
-		static void DefaultSelect(Block&, Verb&);
-		static void DefaultConjunct(Block&, Verb&);
-		static void DefaultDisjunct(Block&, Verb&);
-		static void DefaultCreate(Block&, Verb&);
-		static void DefaultScope(const Block&, Verb&);
-		static bool ExecuteScopeOR(Any&, const Any&, Any&, bool& skipVerbs);
-		static bool ExecuteScopeAND(Any&, const Any&, Any&, bool& skipVerbs);
-		static bool IntegrateScope(Any&, Any&);
-		static bool IntegrateVerb(Any&, Verb&);*/
 	};
 
 	/// A handy container for verbs															
@@ -279,9 +252,10 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<bool DEFAULT, CT::Data T>
+			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 
+			static bool ExecuteDefault(Block&, Verb&);
 			static bool ExecuteStateless(Verb&);
 		};
 
@@ -298,7 +272,7 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<bool DEFAULT, CT::Data T>
+			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 		};
 
@@ -317,8 +291,10 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<bool DEFAULT, CT::Data T>
+			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
+
+			static bool ExecuteDefault(Block&, Verb&);
 		};
 
 		/// Add/subtract verb																	
@@ -334,7 +310,7 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<bool DEFAULT, CT::Data T>
+			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 
 			static bool ExecuteStateless(Verb&);
@@ -355,7 +331,7 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<bool DEFAULT, CT::Data T>
+			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 
 			static bool ExecuteStateless(Verb&);
@@ -374,7 +350,7 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<bool DEFAULT, CT::Data T>
+			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 		};
 
@@ -391,7 +367,7 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<bool DEFAULT, CT::Data T>
+			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 
 			static bool ExecuteStateless(Verb&);
@@ -412,7 +388,7 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<bool DEFAULT, CT::Data T>
+			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 
 			static bool ExecuteStateless(Verb&);
@@ -432,7 +408,7 @@ namespace Langulus
 			template<class TO, class FROM>
 			static TO To(const FROM&);
 
-			template<bool DEFAULT, CT::Data T>
+			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 		};
 
@@ -447,7 +423,7 @@ namespace Langulus
 			template<CT::Data T>
 			static constexpr bool AvailableFor() noexcept;
 
-			template<bool DEFAULT, CT::Data T>
+			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 
 			static bool ExecuteStateless(Verb&);
@@ -462,20 +438,5 @@ namespace Langulus
 	}
 
 } // namespace Langulus
-
-
-/// Start an OR sequence of operations, that relies on short-circuiting to		
-/// abort on a successful operation															
-#define EitherDoThis [[maybe_unused]] volatile ::Langulus::Count _____________________sequence = 0 <
-
-/// Add another operation to an OR sequence of operations, relying on			
-/// short-circuiting to abort on a successful operation								
-#define OrThis || 0 <
-
-/// Return if any of the OR sequence operations succeeded							
-#define AndReturnIfDone ; if (_____________________sequence) return
-
-/// Enter scope if any of the OR sequence operations succeeded						
-#define AndIfDone ; if (_____________________sequence)
 
 #include "Verb.inl"

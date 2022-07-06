@@ -27,96 +27,105 @@ namespace Langulus::Verbs
 	///	@param context - the context to execute in									
 	///	@param verb - the verb to execute												
 	///	@return true if verb has been satisfied										
-	template<bool DEFAULT, CT::Data T>
+	template<CT::Data T>
 	bool Associate::ExecuteIn(T& context, Verb& verb) {
-		if constexpr (!DEFAULT) {
-			static_assert(Associate::AvailableFor<T>(),
-				"Verb is not available for this context");
+		if constexpr (Associate::AvailableFor<T>()) {
 			context.Associate(verb);
 			return verb.IsDone();
 		}
-		else {
-			// Collect all viably typed or interpreted stuff from argument	
-			Any result;
-			bool atLeastOneSuccess {};
-			verb.GetArgument().ForEachDeep([&](const Block& group) {
-				EitherDoThis
-					// Nest inside traits manually here, because traits		
-					// aren't considered deep containers otherwise				
-					group.ForEach([&](const Trait& trait) {
-						VERBOSE_ASSOCIATE("Default associating trait "
+		else return false;
+	}
+
+	/// Execute the default verb in a context												
+	///	@param context - the context to execute in									
+	///	@param verb - the verb instance to execute									
+	///	@return true if execution was a success										
+	inline bool Associate::ExecuteDefault(Block& context, Verb& verb) {
+		// Collect all viably typed or interpreted stuff from argument		
+		Any result;
+		bool atLeastOneSuccess {};
+		verb.GetArgument().ForEachDeep([&](const Block& group) {
+			const auto done = group.ForEach(
+				// Nest inside traits manually here, because traits			
+				// aren't considered deep containers otherwise					
+				[&](const Trait& trait) {
+					VERBOSE_ASSOCIATE("Default associating trait "
+						<< context << " with " << Logger::Cyan << trait);
+					auto nested = verb.PartialCopy().SetArgument(static_cast<const Any&>(trait));
+					Associate::ExecuteDefault(context, nested);
+					atLeastOneSuccess |= nested.IsDone();
+				},
+				// Nest inside constructs manually here, because they			
+				// aren't considered deep containers, also						
+				[&](const Construct& construct) {
+					construct.ForEach([&](const Trait& trait) {
+						VERBOSE_ASSOCIATE("Default associating trait (from request) " 
 							<< context << " with " << Logger::Cyan << trait);
-						auto nested = verb.PartialCopy()
-							.SetArgument(static_cast<const Any&>(trait));
-						Verb::DefaultAssociate(context, nested);
+						auto nested = verb.PartialCopy().SetArgument(trait);
+						Associate::ExecuteDefault(context, nested);
 						atLeastOneSuccess |= nested.IsDone();
-					})
-				OrThis
-					// Nest inside constructs manually here, because they		
-					// aren't considered deep containers, also					
-					group.ForEach([&](const Construct& construct) {
-						construct.GetAll().ForEach([&](const Trait& trait) {
-							VERBOSE_ASSOCIATE("Default associating trait (from request) " 
-								<< context << " with " << Logger::Cyan << trait);
-							auto nested = verb.PartialCopy().SetArgument(trait);
-							Verb::DefaultAssociate(context, nested);
-							atLeastOneSuccess |= nested.IsDone();
-						});
-					})
-				AndReturnIfDone;
-
-				try {
-					// Attempt directly copying, if possible						
-					atLeastOneSuccess |= group.Copy(context) > 0;
+					});
 				}
-				catch (const Except::Copy&) {
-					// Attempt interpretation											
-					if (!group.Is(result.GetType()) || !result.InsertBlock(group)) {
-						VERBOSE_ASSOCIATE("Attempting interpretation of "
-							<< group << " to " << context.GetMeta());
+			);
 
-						Verbs::Interpret interpreter({}, context.GetType());
-						if (DispatchFlat<true, true, false>(group, interpreter)) {
-							VERBOSE_ASSOCIATE("Interpreted " << group << " as " << Logger::Cyan
-								<< interpreter.GetOutput() << " -- from "
-								<< group.GetMeta() << " to " << context.GetType());
-							result << Move(interpreter.GetOutput());
-						}
-					}
-				}
-			});
+			if (done)
+				return;
 
-			// Concatenate and/or copy the found stuff							
-			if (!result.IsEmpty()) {
-				result.Optimize();
-				VERBOSE_ASSOCIATE("Attempting ovewriting " 
-					<< context << " with " << Logger::Cyan << result);
+			try {
+				// Attempt directly copying, if possible							
+				atLeastOneSuccess |= group.Copy(context) > 0;
+			}
+			catch (const Except::Copy&) {
+				// Attempt interpretation												
+				if (!group.Is(result.GetType()) || !result.InsertBlock(group)) {
+					VERBOSE_ASSOCIATE("Attempting interpretation of "
+						<< group << " to " << context.GetMeta());
 
-				try {
-					atLeastOneSuccess |= result.Copy(context) > 0;
-				}
-				catch (const Except::Copy&) {
-					// Catenate results into one element, and then copy		
-					Verbs::Catenate catenater({}, result);
-					auto catenated = Any::FromBlock(context, DataState::Typed);
-					catenated.Allocate<true>(1);
-
-					if (DispatchFlat<true, true, false>(catenated, catenater)) {
-						// Success															
-						atLeastOneSuccess |= catenater.GetOutput().Copy(context) > 0;
-					}
-					else {
-						// Failure															
-						VERBOSE_ASSOCIATE(Logger::Red << "Can't overwrite " << context
-							<< " with badly catenated " << result);
+					Verbs::Interpret interpreter({}, context.GetType());
+					if (DispatchFlat<true, true, false>(group, interpreter)) {
+						VERBOSE_ASSOCIATE("Interpreted " << group << " as " << Logger::Cyan
+							<< interpreter.GetOutput() << " -- from "
+							<< group.GetMeta() << " to " << context.GetType());
+						result << Move(interpreter.GetOutput());
 					}
 				}
 			}
+		});
 
-			// An association verb always pushes context as output			
-			if (atLeastOneSuccess)
-				verb << Any {context};
+		// Concatenate and/or copy the found stuff								
+		if (!result.IsEmpty()) {
+			result.Optimize();
+			VERBOSE_ASSOCIATE("Attempting ovewriting " 
+				<< context << " with " << Logger::Cyan << result);
+
+			try {
+				atLeastOneSuccess |= result.Copy(context) > 0;
+			}
+			catch (const Except::Copy&) {
+				// Catenate results into one element, and then copy			
+				Verbs::Catenate catenater({}, result);
+				auto catenated = Any::FromBlock(context, DataState::Typed);
+				catenated.Allocate<true>(1);
+
+				if (DispatchFlat<true, true, false>(catenated, catenater)) {
+					// Success																
+					atLeastOneSuccess |= catenater.GetOutput().Copy(context) > 0;
+				}
+				else {
+					// Failure																
+					VERBOSE_ASSOCIATE(Logger::Red << "Can't overwrite " << context
+						<< " with badly catenated " << result);
+				}
+			}
 		}
+
+		// An association verb always pushes context as output				
+		if (atLeastOneSuccess) {
+			verb << Any {context};
+			return true;
+		}
+
+		return false;
 	}
 
 } // namespace Langulus::Verbs

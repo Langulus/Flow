@@ -74,8 +74,8 @@ namespace Langulus::Flow
 		NOD() Hash GetHash() const noexcept;
 		void Reset() noexcept;
 
-		NOD() explicit operator Code() const;
-		NOD() explicit operator Debug() const;
+		NOD() operator Code() const;
+		NOD() operator Debug() const;
 	};
 
 
@@ -128,6 +128,7 @@ namespace Langulus::Flow
 		bool AvailableFor() const noexcept;
 		template<CT::Data T>
 		static bool ExecuteIn(T&, Verb&);
+		static bool ExecuteDefault(const Block&, Verb&);
 		static bool ExecuteDefault(Block&, Verb&);
 		static bool ExecuteStateless(Verb&);
 

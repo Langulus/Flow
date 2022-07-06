@@ -115,13 +115,13 @@ namespace Langulus::Flow
 	///	@param other - the verb to use as base											
 	///	@return the partially copied verb												
 	Verb Verb::PartialCopy() const noexcept {
-		return {mVerb, GetCharge()};
+		return {mVerb, {}, {}, {}, GetCharge()};
 	}
 
 	/// Clone the verb																			
 	///	@return the cloned verb																
 	Verb Verb::Clone() const {
-		Verb clone {mVerb, GetCharge()};
+		Verb clone {mVerb, {}, {}, {}, GetCharge()};
 		clone.mSource = mSource.Clone();
 		clone.mArgument = mArgument.Clone();
 		clone.mOutput = mOutput.Clone();

@@ -552,15 +552,30 @@ namespace Langulus::Flow
 		return verb.IsDone();
 	}
 
-	/// Execute an unknown verb with its default behavior								
-	/// This is a slow runtime procedure, use statically optimized variants		
-	/// inside specific verbs if you know them at compile time						
+	/// Execute an unknown verb with its default behavior inside a mutable		
+	/// context - this is a slow runtime procedure, use statically optimized	
+	/// variants inside specific verbs if you know them at compile time			
 	///	@param context - the context to execute in									
 	///	@param verb - the verb instance to execute									
 	///	@return true if verb was executed												
 	inline bool Verb::ExecuteDefault(Block& context, Verb& verb) {
-		if (verb.mVerb->mDefaultInvocation) {
-			verb.mVerb->mDefaultInvocation(context, verb);
+		if (verb.mVerb->mDefaultInvocationMutable) {
+			verb.mVerb->mDefaultInvocationMutable(context, verb);
+			return verb.IsDone();
+		}
+
+		return false;
+	}
+
+	/// Execute an unknown verb with its default behavior inside a constant		
+	/// context - this is a slow runtime procedure, use statically optimized	
+	/// variants inside specific verbs if you know them at compile time			
+	///	@param context - the context to execute in									
+	///	@param verb - the verb instance to execute									
+	///	@return true if verb was executed												
+	inline bool Verb::ExecuteDefault(const Block& context, Verb& verb) {
+		if (verb.mVerb->mDefaultInvocationConstant) {
+			verb.mVerb->mDefaultInvocationConstant(context, verb);
 			return verb.IsDone();
 		}
 

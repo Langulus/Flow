@@ -53,7 +53,10 @@ namespace Langulus::Flow
 
 	template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::Verb V, CT::Data... BASES>
 	Count ExecuteInBases(T& context, V& verb, TTypeList<BASES...> bases) {
-		return (Execute<DISPATCH, DEFAULT, FALLBACK>(static_cast<BASES&>(context), verb) || ...);
+		if constexpr (CT::Constant<T>)
+			return (Execute<DISPATCH, DEFAULT, FALLBACK>(static_cast<const BASES&>(context), verb) || ...);
+		else 
+			return (Execute<DISPATCH, DEFAULT, FALLBACK>(static_cast<BASES&>(context), verb) || ...);
 	}
 
 	/// Invoke a static verb on a static type												
@@ -67,7 +70,7 @@ namespace Langulus::Flow
 		// Always reset verb progress prior to execution						
 		verb.Undo();
 
-		if constexpr (!FALLBACK && DISPATCH && CT::Dispatcher<T>) {
+		if constexpr (!FALLBACK && DISPATCH && (CT::DispatcherMutable<T> || (CT::Constant<T> && CT::DispatcherConstant<T>))) {
 			// Custom reflected dispatcher is available							
 			// It's your responsibility to implement it adequately			
 			// Keep in mind, that once you declare a custom Do for your		

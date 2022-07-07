@@ -532,7 +532,7 @@ namespace Langulus::Flow
 	template<CT::Data T>
 	bool Verb::AvailableFor() const noexcept {
 		const auto meta = MetaData::Of<Decay<T>>();
-		return meta && meta->GetAbility(mVerb, mArgument.GetType());
+		return meta && meta->GetAbility<CT::Mutable<T>>(mVerb, mArgument.GetType());
 	}
 
 	/// Execute an unknown verb in a given context										
@@ -544,7 +544,7 @@ namespace Langulus::Flow
 	template<CT::Data T>
 	bool Verb::ExecuteIn(T& context, Verb& verb) {
 		const auto meta = MetaData::Of<Decay<T>>();
-		const auto found = meta->GetAbility(verb.mVerb, verb.mArgument.GetType());
+		const auto found = meta->GetAbility<CT::Mutable<T>>(verb.mVerb, verb.mArgument.GetType());
 		if (!found)
 			return false;
 
@@ -561,6 +561,10 @@ namespace Langulus::Flow
 	inline bool Verb::ExecuteDefault(Block& context, Verb& verb) {
 		if (verb.mVerb->mDefaultInvocationMutable) {
 			verb.mVerb->mDefaultInvocationMutable(context, verb);
+			return verb.IsDone();
+		}
+		else if (verb.mVerb->mDefaultInvocationConstant) {
+			verb.mVerb->mDefaultInvocationConstant(context, verb);
 			return verb.IsDone();
 		}
 

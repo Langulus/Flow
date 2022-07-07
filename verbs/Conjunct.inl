@@ -15,9 +15,33 @@ namespace Langulus::Verbs
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												
-	template<CT::Data T>
+	template<CT::Data T, CT::Data... A>
 	constexpr bool Conjunct::AvailableFor() noexcept {
-		return requires (T t, Verb v) { t.Conjunct(v); };
+		if constexpr (sizeof...(A) == 0)
+			return requires (T& t, Verb& v) { t.Conjunct(v); };
+		else
+			return requires (T& t, Verb& v, A... a) { t.Conjunct(v, a...); };
+	}
+
+	/// Get the verb functor for the given type and arguments						
+	///	@return the function, or nullptr if not available							
+	template<CT::Data T, CT::Data... A>
+	constexpr auto Conjunct::Of() noexcept {
+		if constexpr (!Conjunct::AvailableFor<T, A...>()) {
+			return nullptr;
+		}
+		else if constexpr (CT::Constant<T>) {
+			return [](const void* context, Flow::Verb& verb, A... args) {
+				auto typedContext = static_cast<const T*>(context);
+				typedContext->Conjunct(verb, args...);
+			};
+		}
+		else {
+			return [](void* context, Flow::Verb& verb, A... args) {
+				auto typedContext = static_cast<T*>(context);
+				typedContext->Conjunct(verb, args...);
+			};
+		}
 	}
 
 	/// Execute the conjunction/disjunction verb in a specific context			
@@ -25,18 +49,17 @@ namespace Langulus::Verbs
 	///	@param verb - the verb to execute												
 	///	@return true if verb has been satisfied										
 	template<CT::Data T>
-	bool Conjunct::ExecuteIn<false, T>(T& context, Verb& verb) {
+	bool Conjunct::ExecuteIn(T& context, Verb& verb) {
 		static_assert(Conjunct::AvailableFor<T>(),
 			"Verb is not available for this context");
-		context.Associate(verb);
+		context.Conjunct(verb);
 		return verb.IsDone();
 	}
 
 	/// Default conjunction/disjunction														
 	///	@param context - the block to execute in										
 	///	@param verb - conjunction verb													
-	template<CT::Data T>
-	bool Conjunct::ExecuteIn<true, T>(T& context, Verb& verb) {
+	inline bool Conjunct::ExecuteDefault(Block& context, Verb& verb) {
 		if (verb.GetArgument().IsEmpty()) {
 			verb << context;
 			return true;

@@ -4,41 +4,131 @@
 #define VERBOSE_CREATION(a) //Logger::Verbose() << a
 #define VERBOSE_SCOPES(a) Logger::Verbose() << a
 
-namespace Langulus::Flow
+namespace Langulus::Verbs
 {
 
-	/// A helper delegation function, that calls Create verb in all elements	
-	///	@param context - [in/out] the context to gelegate to						
-	///	@param argument - the data to use as argument								
-	///	@param sideproducts - [out] any resulting sideproducts					
-	void Delegate(Any& context, const Any& argument, Any& sideproducts) {
-		VERBOSE_CREATION(Logger::Yellow
-			<< "Delegating: " << argument << " to " << context);
+	/// Create/destroy verb construction													
+	///	@param s - the producer of the stuff											
+	///	@param a - the stuff to produce													
+	///	@param o - result mask (optional)												
+	///	@param c - the charge of the creation											
+	///	@param sc - is the creation short-circuited									
+	inline Create::Create(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Create>(), s, a, o, c, sc} {}
 
-		Verbs::Create creator({}, argument);
-		if (!Verb::ExecuteVerb(context, creator)) {
-			Throw<Except::Construct>(VERBOSE_CREATION(Logger::Yellow
-				<< "Couldn't delegate " << argument << " inside: " << context
-			));
-		}
+	/// Check if the verb is available in a type, and with given arguments		
+	///	@return true if verb is available in T with arguments A...				
+	template<CT::Data T, CT::Data... A>
+	constexpr bool Create::AvailableFor() noexcept {
+		if constexpr (sizeof...(A) == 0)
+			return requires (T& t, Verb& v) { t.Create(v); };
+		else
+			return requires (T& t, Verb& v, A... a) { t.Create(v, a...); };
+	}
 
-		auto& result = creator.GetOutput();
-		if (!result.IsEmpty() && result != context) {
-			// Push sideproduct only if the creator returns something new	
-			VERBOSE_CREATION(Logger::Yellow << "Sideproduct: " << result);
-			sideproducts << Move(result);
+	/// Get the verb functor for the given type and arguments						
+	///	@return the function, or nullptr if not available							
+	template<CT::Data T, CT::Data... A>
+	constexpr auto Create::Of() noexcept {
+		if constexpr (!Create::AvailableFor<T, A...>()) {
+			return nullptr;
 		}
+		else if constexpr (CT::Constant<T>) {
+			return [](const void* context, Flow::Verb& verb, A... args) {
+				auto typedContext = static_cast<const T*>(context);
+				typedContext->Create(verb, args...);
+			};
+		}
+		else {
+			return [](void* context, Flow::Verb& verb, A... args) {
+				auto typedContext = static_cast<T*>(context);
+				typedContext->Create(verb, args...);
+			};
+		}
+	}
+
+	/// Execute creation verb in a specific context										
+	///	@param context - the producer														
+	///	@param verb - the creation/destruction verb									
+	///	@return true if verb was satisfied												
+	template<CT::Data T>
+	bool Create::ExecuteIn(T& context, Verb& verb) {
+
+	}
+
+	/// Default creation/destruction in a context										
+	///	@param context - the producer														
+	///	@param verb - the creation/destruction verb									
+	///	@return true if verb was satisfied												
+	inline bool Create::ExecuteDefault(Anyness::Block& context, Verb& verb) {
+		// Attempt creating/destroying constructs									
+		verb.GetArgument().ForEachDeep([&](const Construct& construct) {
+			SAFETY(if (construct.GetProducer())
+				Throw<Except::Construct>(Logger::Error()
+					<< "Creation of customly produced type " << construct.GetToken()
+					<< " hit default creation, and that should not be allowed - "
+					<< "add and reflect the Create verb in the producer"
+				)
+			);
+
+			if (construct.GetCharge().mMass * verb.GetMass() < 0) {
+				// Destroy																	
+			}
+			else {
+				// Create																	
+				// First allocate and default-initialize the results			
+				auto created = Any::FromMeta(construct.GetType());
+				created.Allocate<true>(Count(construct.GetCharge().mMass));
+				auto& arguments = construct.GetAll();
+
+				// Then forward the constructors to each element				
+				if (!arguments.IsEmpty()) {
+					for (Count i = 0; i < created.GetCount(); ++i) {
+						Any element {created.GetElement(i)};
+
+						// First attempt delegating									
+						VERBOSE_CREATION(Logger::Yellow<<
+							"Delegating: " << arguments << " to " << element);
+
+						Verbs::Create creator({}, arguments);
+						if (Scope::ExecuteVerb(element, creator)) {
+							VERBOSE_CREATION(Logger::Yellow << "Sideproduct: " << creator.GetOutput());
+							created.MergeBlock(Abandon(creator.GetOutput()));
+							continue;
+						}
+
+						VERBOSE_CREATION(Logger::Yellow <<
+							"Couldn't delegate " << arguments << " inside: " << element);
+
+						// If reached, let's attempt to set reflected members	
+						SetMembers(element, arguments);
+					}
+				}
+
+				// Commit																	
+				verb << Abandon(created);
+			}
+		});
+	}
+
+	/// Stateless creation of any type without a producer								
+	///	@param verb - the creation verb													
+	///	@return true if verb was satisfied												
+	inline bool Create::ExecuteStateless(Verb& verb) {
+		if (verb.GetArgument().IsEmpty() || verb.GetMass() < 0)
+			return false;
+
+		return true;
 	}
 
 	/// Set members in all elements inside context to the provided data			
 	///	@param context - the contexts to analyze										
 	///	@param data - the data to set to													
 	///	@return true if at least one member in one element was set				
-	void Verb::SetMembers(Any& context, const Any& data) {
+	inline void Create::SetMembers(Any& context, const Any& data) {
 		THashMap<TMeta, Index> satisfiedTraits;
 		THashMap<DMeta, Index> satisfiedData;
 
-		// If reached, then delegation failed										
 		data.ForEachDeep([&](const Block& group) {
 			VERBOSE_CREATION("Manually initializing " << context
 				<< " with " << Logger::Cyan << group);
@@ -54,17 +144,18 @@ namespace Langulus::Flow
 					const auto index = sati
 						? satisfiedTraits.GetValue(sati)
 						: Index::First;
+
 					VERBOSE_CREATION("Searching trait " << meta
 						<< "... " << " (" << index << ")");
 
-					auto selector = Verbs::Select({}, Any::Wrap(meta, index));
-					Verb::DefaultSelect(context, selector);
+					Verbs::Select selector({}, Any::Wrap(meta, index));
+					Verb::ExecuteIn(context, selector);
 					if (!selector.GetOutput().IsEmpty()) {
 						VERBOSE_CREATION("Initializing trait " << selector.GetOutput()
 							<< " with " << Logger::Cyan << element << " (" << index << ")");
 
-						auto associator = Verbs::Associate({}, element);
-						if (Verb::ExecuteVerb(selector.GetOutput(), associator)) {
+						Verbs::Associate associator({}, element);
+						if (Verb::ExecuteIn(selector.GetOutput(), associator)) {
 							// Trait was found and overwritten						
 							if (sati)
 								++satisfiedTraits.GetValue(sati);
@@ -96,17 +187,18 @@ namespace Langulus::Flow
 				const auto index = sati
 					? satisfiedData.GetValue(sati)
 					: Index::First;
+
 				VERBOSE_CREATION("Searching for data " << meta
 					<< "... " << " (" << index << ")");
 
 				Verbs::Select selector({}, Any::Wrap(meta, index));
-				Verb::DefaultSelect(context, selector);
+				Verb::ExecuteIn(context, selector);
 				if (!selector.GetOutput().IsEmpty()) {
 					VERBOSE_CREATION("Initializing data " << selector.GetOutput()
 						<< " with " << Logger::Cyan << element << " (" << index << ")");
 
 					Verbs::Associate associator({}, Move(element));
-					if (Verb::ExecuteVerb(selector.GetOutput(), associator)) {
+					if (Verb::ExecuteIn(selector.GetOutput(), associator)) {
 						// Data was found and was overwritten						
 						if (sati)
 							++satisfiedData.GetValue(sati);
@@ -136,73 +228,13 @@ namespace Langulus::Flow
 		});
 	}
 
-	/// Satisfy members of a given element													
-	///	@param context - the context to initialize									
-	///	@param data - the data to satisfy with											
-	///	@param sideproducts - [out] sideproducts on nested constructs			
-	void Verb::DefaultCreateInner(Any& context, const Any& data, Any& sideproducts) {
-		if (data.IsEmpty())
-			return;
+} // namespace Langulus::Verbs
 
-		// First attempt directly delegating										
-		try {
-			Delegate(context, data, sideproducts);
-			return;
-		}
-		catch (const Except::Construct&) { }
 
-		Verb::SetMembers(context, data);
-	}
+namespace Langulus::Flow
+{
 
-	/// Default creation																			
-	///	@param context - the block to execute in										
-	///	@param verb - the stuff to create												
-	void Verb::DefaultCreate(Block& context, Verb& verb) {
-		auto& arguments = verb.GetArgument();
-		if (context.IsConstant() || arguments.IsEmpty())
-			return;
 
-		if (!context.IsEmpty()) {
-			if (context.IsStatic()) {
-				// The context can't be resized, so just return					
-				return;
-			}
-
-			TODO();
-		}
-
-		// First attempt creating constructs in the verb						
-		arguments.ForEachDeep([&](const Construct& construct) {
-			if (construct.GetCharge().mMass * verb.GetMass() <= 0)
-				TODO();
-
-			SAFETY(if (construct.GetProducer())
-				Throw<Except::Construct>(Logger::Error()
-					<< "Creation of customly produced type " << construct.GetToken()
-					<< " hit default creation, and that should not be allowed - "
-					<< "add the Create verb in the producer interface"
-				)
-			);
-
-			// First allocate all the required defaultly constructed			
-			auto created = Any::FromMeta(construct.GetType());
-			created.Allocate<true>(Count(construct.GetCharge().mMass));
-
-			// Then forward the constructors to each element					
-			Any sideproducts;
-			if (!construct.IsEmpty()) {
-				for (Count i = 0; i < created.GetCount(); ++i) {
-					Any element {created.GetElement(i)};
-					DefaultCreateInner(element, construct.GetAll(), sideproducts);
-				}
-			}
-
-			// Commit																		
-			verb << Move(created);
-			if (!sideproducts.IsEmpty())
-				verb << Move(sideproducts);
-		});
-	}
 
 	/// Helper that is analogous to Block::Gather, but also gives the option	
 	/// to do a runtime interpretation to elements, that are not compatible		
@@ -211,7 +243,7 @@ namespace Langulus::Flow
 	///	@param output - [in/out] container that collects results					
 	///	@param direction - the direction to search from								
 	///	@return the number of gathered elements										
-	Count GatherAndInterpret(const Block& input, Block& output, const Index direction) {
+	/*Count GatherAndInterpret(const Block& input, Block& output, const Index direction) {
 		if (output.IsUntyped() || output.IsDeep()) {
 			// Output is deep/any, so no need to iterate or interpret		
 			return output.InsertBlock(input);
@@ -239,7 +271,7 @@ namespace Langulus::Flow
 		else {
 			// Attempt a slow interpretation to the output type				
 			Verbs::Interpret interpreter({}, output.GetType());
-			DispatchDeep(const_cast<Block&>(input), interpreter);
+			DispatchDeep<true, true, true>(const_cast<Block&>(input), interpreter);
 			try {
 				count += output.InsertBlock(interpreter.GetOutput());
 			}
@@ -247,12 +279,12 @@ namespace Langulus::Flow
 		}
 
 		return count;
-	}
+	}*/
 
 	/// Produces constructs, strings, etc.													
 	///	@param context - the context to execute in									
 	///	@param verb - the scope's stuffing												
-	void Verb::DefaultScope(const Block& context, Verb& verb) {
+	/*void Verb::DefaultScope(const Block& context, Verb& verb) {
 		// Scan source for what we're constructing								
 		context.ForEach([&verb](DMeta meta) {
 			Construct scope(meta);
@@ -301,6 +333,6 @@ namespace Langulus::Flow
 			VERBOSE_SCOPES(Logger::Green << "Resulting scope: " << scope);
 			verb << scope;
 		});
-	}
+	}*/
 
 } // namespace Langulus::Flow

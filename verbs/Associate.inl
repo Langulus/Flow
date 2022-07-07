@@ -18,9 +18,33 @@ namespace Langulus::Verbs
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												
-	template<CT::Data T>
+	template<CT::Data T, CT::Data... A>
 	constexpr bool Associate::AvailableFor() noexcept {
-		return requires (T t, Verb v) { t.Associate(v); };
+		if constexpr (sizeof...(A) == 0)
+			return requires (T& t, Verb& v) { t.Associate(v); };
+		else
+			return requires (T& t, Verb& v, A... a) { t.Associate(v, a...); };
+	}
+
+	/// Get the verb functor for the given type and arguments						
+	///	@return the function, or nullptr if not available							
+	template<CT::Data T, CT::Data... A>
+	constexpr auto Associate::Of() noexcept {
+		if constexpr (!Associate::AvailableFor<T, A...>()) {
+			return nullptr;
+		}
+		else if constexpr (CT::Constant<T>) {
+			return [](const void* context, Flow::Verb& verb, A... args) {
+				auto typedContext = static_cast<const T*>(context);
+				typedContext->Associate(verb, args...);
+			};
+		}
+		else {
+			return [](void* context, Flow::Verb& verb, A... args) {
+				auto typedContext = static_cast<T*>(context);
+				typedContext->Associate(verb, args...);
+			};
+		}
 	}
 
 	/// Execute the association verb in a specific context							

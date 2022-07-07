@@ -1,5 +1,5 @@
 #pragma once
-#include "Verb.hpp"
+#include "Scope.hpp"
 #include "Construct.hpp"
 
 namespace Langulus::Flow
@@ -86,3 +86,11 @@ namespace Langulus::Flow
 } // namespace Langulus::Flow
 
 #include "Code.inl"
+
+namespace Langulus::Verbs
+{
+
+	using ::Langulus::Flow::Scope;
+	using ::Langulus::Flow::Construct;
+
+} // namespace Langulus::Verbs

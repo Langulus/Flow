@@ -541,8 +541,9 @@ namespace Langulus::Flow
 	///	@param context - the context to execute in									
 	///	@param verb - the verb to execute												
 	///	@return true if verb was executed												
-	template<CT::Data T>
-	bool Verb::ExecuteIn(T& context, Verb& verb) {
+	template<CT::Data T, CT::Data V>
+	bool Verb::ExecuteIn(T& context, V& verb) {
+		static_assert(CT::Verb<V>, "V must be a verb");
 		const auto meta = MetaData::Of<Decay<T>>();
 		const auto found = meta->GetAbility<CT::Mutable<T>>(verb.mVerb, verb.mArgument.GetType());
 		if (!found)
@@ -558,7 +559,9 @@ namespace Langulus::Flow
 	///	@param context - the context to execute in									
 	///	@param verb - the verb instance to execute									
 	///	@return true if verb was executed												
-	inline bool Verb::ExecuteDefault(Block& context, Verb& verb) {
+	template<CT::Data V>
+	bool Verb::ExecuteDefault(Block& context, V& verb) {
+		static_assert(CT::Verb<V>, "V must be a verb");
 		if (verb.mVerb->mDefaultInvocationMutable) {
 			verb.mVerb->mDefaultInvocationMutable(context, verb);
 			return verb.IsDone();
@@ -577,7 +580,9 @@ namespace Langulus::Flow
 	///	@param context - the context to execute in									
 	///	@param verb - the verb instance to execute									
 	///	@return true if verb was executed												
-	inline bool Verb::ExecuteDefault(const Block& context, Verb& verb) {
+	template<CT::Data V>
+	bool Verb::ExecuteDefault(const Block& context, V& verb) {
+		static_assert(CT::Verb<V>, "V must be a verb");
 		if (verb.mVerb->mDefaultInvocationConstant) {
 			verb.mVerb->mDefaultInvocationConstant(context, verb);
 			return verb.IsDone();
@@ -591,7 +596,9 @@ namespace Langulus::Flow
 	/// inside specific verbs if you know them at compile time						
 	///	@param verb - the verb instance to execute									
 	///	@return true if verb was executed												
-	inline bool Verb::ExecuteStateless(Verb& verb) {
+	template<CT::Data V>
+	bool Verb::ExecuteStateless(V& verb) {
+		static_assert(CT::Verb<V>, "V must be a verb");
 		if (verb.mVerb->mStatelessInvocation) {
 			verb.mVerb->mStatelessInvocation(verb);
 			return verb.IsDone();

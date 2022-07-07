@@ -126,11 +126,14 @@ namespace Langulus::Flow
 		/// Otherwise, these functions fallback and perform slow RTTI checks		
 		template<CT::Data T>
 		bool AvailableFor() const noexcept;
-		template<CT::Data T>
-		static bool ExecuteIn(T&, Verb&);
-		static bool ExecuteDefault(const Block&, Verb&);
-		static bool ExecuteDefault(Block&, Verb&);
-		static bool ExecuteStateless(Verb&);
+		template<CT::Data T, CT::Data V>
+		static bool ExecuteIn(T&, V&);
+		template<CT::Data V>
+		static bool ExecuteDefault(const Block&, V&);
+		template<CT::Data V>
+		static bool ExecuteDefault(Block&, V&);
+		template<CT::Data V>
+		static bool ExecuteStateless(V&);
 
 	public:
 		NOD() Hash GetHash() const;
@@ -250,14 +253,19 @@ namespace Langulus
 
 			Create(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-			template<CT::Data T>
+			template<CT::Data T, CT::Data... A>
 			static constexpr bool AvailableFor() noexcept;
+			template<CT::Data T, CT::Data... A>
+			static constexpr auto Of() noexcept;
 
 			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 
 			static bool ExecuteDefault(Block&, Verb&);
 			static bool ExecuteStateless(Verb&);
+
+		protected:
+			static void SetMembers(Any&, const Any&);
 		};
 
 		/// Select/deselect verb																
@@ -270,11 +278,22 @@ namespace Langulus
 
 			Select(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-			template<CT::Data T>
+			template<CT::Data T, CT::Data... A>
 			static constexpr bool AvailableFor() noexcept;
+			template<CT::Data T, CT::Data... A>
+			static constexpr auto Of() noexcept;
 
 			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
+
+			static bool ExecuteDefault(const Block&, Verb&);
+			static bool ExecuteDefault(Block&, Verb&);
+			static bool ExecuteStateless(Verb&);
+
+		protected:
+			template<class META>
+			static bool PerIndex(Block&, TAny<Trait>&, TMeta, META, const TAny<Index>&);
+			static bool SelectByMeta(const TAny<Index>&, DMeta, Block&, TAny<Trait>&, TAny<const RTTI::Ability*>&);
 		};
 
 		/// Associate/disassociate verb														
@@ -289,8 +308,10 @@ namespace Langulus
 
 			Associate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-			template<CT::Data T>
+			template<CT::Data T, CT::Data... A>
 			static constexpr bool AvailableFor() noexcept;
+			template<CT::Data T, CT::Data... A>
+			static constexpr auto Of() noexcept;
 
 			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
@@ -308,8 +329,10 @@ namespace Langulus
 
 			Add(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-			template<CT::Data T>
+			template<CT::Data T, CT::Data... A>
 			static constexpr bool AvailableFor() noexcept;
+			template<CT::Data T, CT::Data... A>
+			static constexpr auto Of() noexcept;
 
 			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
@@ -329,8 +352,10 @@ namespace Langulus
 
 			Multiply(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-			template<CT::Data T>
+			template<CT::Data T, CT::Data... A>
 			static constexpr bool AvailableFor() noexcept;
+			template<CT::Data T, CT::Data... A>
+			static constexpr auto Of() noexcept;
 
 			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
@@ -348,8 +373,10 @@ namespace Langulus
 
 			Exponent(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-			template<CT::Data T>
+			template<CT::Data T, CT::Data... A>
 			static constexpr bool AvailableFor() noexcept;
+			template<CT::Data T, CT::Data... A>
+			static constexpr auto Of() noexcept;
 
 			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
@@ -365,8 +392,10 @@ namespace Langulus
 
 			Catenate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-			template<CT::Data T>
+			template<CT::Data T, CT::Data... A>
 			static constexpr bool AvailableFor() noexcept;
+			template<CT::Data T, CT::Data... A>
+			static constexpr auto Of() noexcept;
 
 			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
@@ -386,12 +415,15 @@ namespace Langulus
 
 			Conjunct(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-			template<CT::Data T>
+			template<CT::Data T, CT::Data... A>
 			static constexpr bool AvailableFor() noexcept;
+			template<CT::Data T, CT::Data... A>
+			static constexpr auto Of() noexcept;
 
 			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 
+			static bool ExecuteDefault(Block&, Verb&);
 			static bool ExecuteStateless(Verb&);
 		};
 
@@ -403,8 +435,10 @@ namespace Langulus
 
 			Interpret(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-			template<CT::Data T>
+			template<CT::Data T, CT::Data... A>
 			static constexpr bool AvailableFor() noexcept;
+			template<CT::Data T, CT::Data... A>
+			static constexpr auto Of() noexcept;
 
 			template<class TO, class FROM>
 			static TO To(const FROM&);
@@ -421,8 +455,10 @@ namespace Langulus
 
 			Do(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-			template<CT::Data T>
+			template<CT::Data T, CT::Data... A>
 			static constexpr bool AvailableFor() noexcept;
+			template<CT::Data T, CT::Data... A>
+			static constexpr auto Of() noexcept;
 
 			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);

@@ -369,22 +369,24 @@ namespace Langulus::Flow
 
 	/// Output anything to the back by a move												
 	///	@tparam T - the type of the data to move (deducible)						
-	///	@param data - the data to push													
+	///	@param data - the data to move to output										
 	///	@return a reference to this verb for chaining								
 	template<CT::Data T>
 	Verb& Verb::operator << (T&& data) {
 		if constexpr (CT::Deep<T>) {
+			auto& denseData = DenseCast(data);
+
 			// Avoid pushing empty blocks												
-			if (DenseCast(data).IsEmpty())
+			if (denseData.IsEmpty())
 				return *this;
 
-			mOutput.SmartPush<Index::Back, true, true, T>(Move(data));
+			mOutput.SmartPush<Index::Back, true, true>(Move(denseData));
 			Done();
 			return *this;
 		}
 
 		if constexpr (CT::Sparse<T>) {
-			if (!Allocator::CheckAuthority(MetaData::Of<T>(), data))
+			if (!Allocator::CheckAuthority(MetaData::Of<Decay<T>>(), data))
 				Throw<Except::Reference>(
 					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
@@ -396,7 +398,7 @@ namespace Langulus::Flow
 
 	/// Output anything to the front by a shallow copy									
 	///	@tparam T - the type of the data to push (deducible)						
-	///	@param data - the data to push													
+	///	@param data - the data to push to output										
 	///	@return a reference to this verb for chaining								
 	template<CT::Data T>
 	Verb& Verb::operator >> (const T& data) {
@@ -411,7 +413,7 @@ namespace Langulus::Flow
 		}
 
 		if constexpr (CT::Sparse<T>) {
-			if (!Allocator::CheckAuthority(MetaData::Of<T>(), data))
+			if (!Allocator::CheckAuthority(MetaData::Of<Decay<T>>(), data))
 				Throw<Except::Reference>(
 					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
@@ -428,17 +430,19 @@ namespace Langulus::Flow
 	template<CT::Data T>
 	Verb& Verb::operator >> (T&& data) {
 		if constexpr (CT::Deep<T>) {
+			auto& denseData = DenseCast(data);
+
 			// Avoid pushing empty blocks												
-			if (DenseCast(data).IsEmpty())
+			if (denseData.IsEmpty())
 				return *this;
 
-			mOutput.SmartPush<Index::Front, true, true, T>(Move(data));
+			mOutput.SmartPush<Index::Front, true, true>(Move(denseData));
 			Done();
 			return *this;
 		}
 
 		if constexpr (CT::Sparse<T>) {
-			if (!Allocator::CheckAuthority(MetaData::Of<T>(), data))
+			if (!Allocator::CheckAuthority(MetaData::Of<Decay<T>>(), data))
 				Throw<Except::Reference>(
 					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
@@ -461,7 +465,7 @@ namespace Langulus::Flow
 		}
 
 		if constexpr (CT::Sparse<T>) {
-			if (!Allocator::CheckAuthority(MetaData::Of<T>(), data))
+			if (!Allocator::CheckAuthority(MetaData::Of<Decay<T>>(), data))
 				Throw<Except::Reference>(
 					"Pushing unowned pointer to verb is a baaaaad idea");
 		}
@@ -484,7 +488,7 @@ namespace Langulus::Flow
 		}
 
 		if constexpr (CT::Sparse<T>) {
-			if (!Allocator::CheckAuthority(MetaData::Of<T>(), data))
+			if (!Allocator::CheckAuthority(MetaData::Of<Decay<T>>(), data))
 				Throw<Except::Reference>(
 					"Pushing unowned pointer to verb is a baaaaad idea");
 		}

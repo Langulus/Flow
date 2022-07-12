@@ -2,6 +2,14 @@
 #include <Langulus.Logger.hpp>
 #include <Langulus.Anyness.hpp>
 
+#ifndef LANGULUS_ENABLE_FEATURE_MANAGED_MEMORY
+	#error Langulus::Flow can be compiled only with enabled LANGULUS_FEATURE_MANAGED_MEMORY
+#endif
+
+#ifndef LANGULUS_ENABLE_FEATURE_MANAGED_REFLECTION
+	#error Langulus::Flow can be compiled only with enabled LANGULUS_ENABLE_MANAGED_REFLECTION
+#endif
+
 LANGULUS_EXCEPTION(Flow);
 
 namespace Langulus::Flow
@@ -206,7 +214,11 @@ namespace Langulus::Flow
 		template<CT::Data T>
 		Verb& operator <<= (const T&);
 		template<CT::Data T>
+		Verb& operator <<= (T&&);
+		template<CT::Data T>
 		Verb& operator >>= (const T&);
+		template<CT::Data T>
+		Verb& operator >>= (T&&);
 
 		template<bool OR>
 		Count CompleteDispatch(const Count, Abandoned<Any>&&);
@@ -268,7 +280,7 @@ namespace Langulus
 			static void SetMembers(Any&, const Any&);
 		};
 
-		/// Select/deselect verb																
+		/// Select/Deselect verb																
 		/// Used to focus on a part of a container, or access members				
 		struct Select : public Verb {
 			LANGULUS(POSITIVE_VERB) "Select";
@@ -291,12 +303,15 @@ namespace Langulus
 			static bool ExecuteStateless(Verb&);
 
 		protected:
-			template<class META>
+			template<bool MUTABLE>
+			static bool DefaultSelect(Block&, Verb&);
+			template<bool MUTABLE, class META>
 			static bool PerIndex(Block&, TAny<Trait>&, TMeta, META, const TAny<Index>&);
+			template<bool MUTABLE>
 			static bool SelectByMeta(const TAny<Index>&, DMeta, Block&, TAny<Trait>&, TAny<const RTTI::Ability*>&);
 		};
 
-		/// Associate/disassociate verb														
+		/// Associate/Disassociate verb														
 		/// Either performs a shallow copy, or aggregates associations,			
 		/// depending on the context's complexity											
 		struct Associate : public Verb {
@@ -319,7 +334,7 @@ namespace Langulus
 			static bool ExecuteDefault(Block&, Verb&);
 		};
 
-		/// Add/subtract verb																	
+		/// Add/Subtract verb																	
 		/// Performs arithmetic addition or subtraction									
 		struct Add : public Verb {
 			LANGULUS(POSITIVE_VERB) "Add";
@@ -340,7 +355,7 @@ namespace Langulus
 			static bool ExecuteStateless(Verb&);
 		};
 
-		/// Multiply/divide verb																
+		/// Multiply/Divide verb																
 		/// Performs arithmetic multiplication or division								
 		/// If context is no specified, it is always 1									
 		struct Multiply : public Verb {
@@ -363,7 +378,7 @@ namespace Langulus
 			static bool ExecuteStateless(Verb&);
 		};
 
-		/// Exponentiate/logarithm verb														
+		/// Exponentiate/Logarithm verb														
 		/// Performs exponentiation or logarithm											
 		struct Exponent : public Verb {
 			LANGULUS(POSITIVE_VERB) "Exponent";
@@ -382,7 +397,7 @@ namespace Langulus
 			static bool ExecuteIn(T&, Verb&);
 		};
 
-		/// Catenate/split verb																	
+		/// Catenate/Split verb																	
 		/// Catenates anything catenable, or split stuff apart using a mask		
 		struct Catenate : public Verb {
 			LANGULUS(POSITIVE_VERB) "Catenate";
@@ -400,10 +415,12 @@ namespace Langulus
 			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 
+			static bool ExecuteDefault(const Block&, Verb&);
+			static bool ExecuteDefault(Block&, Verb&);
 			static bool ExecuteStateless(Verb&);
 		};
 
-		/// Conjunct/disjunct verb																
+		/// Conjunct/Disjunct verb																
 		/// Either combines LHS and RHS as one AND container, or separates them	
 		/// as one OR container - does only shallow copying							
 		struct Conjunct : public Verb {
@@ -423,6 +440,7 @@ namespace Langulus
 			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 
+			static bool ExecuteDefault(const Block&, Verb&);
 			static bool ExecuteDefault(Block&, Verb&);
 			static bool ExecuteStateless(Verb&);
 		};

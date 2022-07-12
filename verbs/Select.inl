@@ -6,7 +6,7 @@
 namespace Langulus::Verbs
 {
 
-	/// Select/deselect verb construction													
+	/// Select/Deselect verb construction													
 	///	@param s - where are we selecting?												
 	///	@param a - what are we searching for?											
 	///	@param o - result mask (optional)												
@@ -59,12 +59,44 @@ namespace Langulus::Verbs
 		else return false;
 	}
 
-	/// Execute the default verb in a mtuable context									
+	/// Stateless selection, for selecting some global entities, like the		
+	/// logger, for example																		
+	///	@param verb - selection verb														
+	///	@return true if verb has been satisfied										
+	inline bool Select::ExecuteStateless(Verb& verb) {
+		verb.GetArgument().ForEachDeep([&](TMeta t) {
+			if (t->Is<Traits::Logger>())
+				verb << &Logger::Instance;
+		});
+
+		return verb.IsDone();
+	}
+
+	/// Execute the default verb in an immutable context								
+	/// Returns immutable results																
+	///	@param context - the context to execute in									
+	///	@param verb - the verb instance to execute									
+	///	@return true if execution was a success										
+	inline bool Select::ExecuteDefault(const Block& context, Verb& verb) {
+		return DefaultSelect<false>(const_cast<Block&>(context), verb);
+	}
+
+	/// Execute the default verb in a mutable context									
 	/// Returns mutable results																
 	///	@param context - the context to execute in									
 	///	@param verb - the verb instance to execute									
 	///	@return true if execution was a success										
 	inline bool Select::ExecuteDefault(Block& context, Verb& verb) {
+		return DefaultSelect<true>(context, verb);
+	}
+
+	/// Default selection logic for members and abilities								
+	///	@tparam MUTABLE - whether or not selection is constant					
+	///	@param context - the context to execute in									
+	///	@param verb - the verb instance to execute									
+	///	@return true if execution was a success										
+	template<bool MUTABLE>
+	bool Select::DefaultSelect(Block& context, Verb& verb) {
 		TAny<Index> indices;
 		verb.GetArgument().Gather(indices);
 		bool containsOnlyIndices = !indices.IsEmpty();
@@ -89,17 +121,17 @@ namespace Langulus::Verbs
 					containsOnlyIndices = false;
 					auto tmeta = trait.GetTrait();
 					if (tmeta)
-						PerIndex(context, selectedTraits, tmeta, tmeta, indices);
+						PerIndex<MUTABLE>(context, selectedTraits, tmeta, tmeta, indices);
 					else
-						PerIndex(context, selectedTraits, tmeta, trait.GetType(), indices);
+						PerIndex<MUTABLE>(context, selectedTraits, tmeta, trait.GetType(), indices);
 				},
 				[&](TMeta tmeta) {
 					containsOnlyIndices = false;
-					PerIndex(context, selectedTraits, tmeta, tmeta, indices);
+					PerIndex<MUTABLE>(context, selectedTraits, tmeta, tmeta, indices);
 				},
 				[&](DMeta dmeta) {
 					containsOnlyIndices = false;
-					SelectByMeta(indices, dmeta, context, selectedTraits, selectedAbilities);
+					SelectByMeta<MUTABLE>(indices, dmeta, context, selectedTraits, selectedAbilities);
 				}
 			);
 		});
@@ -107,15 +139,17 @@ namespace Langulus::Verbs
 		if (containsOnlyIndices) {
 			// Try selecting via indices only										
 			// This is allowed only if no metas were found in the argument	
-			PerIndex(context, selectedTraits, nullptr, nullptr, indices);
+			PerIndex<MUTABLE>(context, selectedTraits, nullptr, nullptr, indices);
 		}
 
 		// Output results if any, satisfying the verb							
 		verb << selectedTraits;// .Decay(); //TODO investigate this issue and if an issue generalize it by implementing it in verb::operator <<
 		verb << selectedAbilities;// .Decay();
+		return verb.IsDone();
 	}
 
 	/// Select members by providing either meta data or meta trait					
+	///	@tparam MUTABLE - whether or not selection will be mutable				
 	///	@tparam META - type of filter we're using										
 	///	@param context - the thing we're searching in								
 	///	@param selectedTraits - [out] found traits go here							
@@ -123,12 +157,15 @@ namespace Langulus::Verbs
 	///	@param meta - the filter we'll be using										
 	///	@param indices - optional indices (i.e. Nth trait of a kind				
 	///	@return true if at least one trait has been pushed to selectedTraits	
-	template<class META>
+	template<bool MUTABLE, class META>
 	bool Select::PerIndex(Block& context, TAny<Trait>& selectedTraits, TMeta resultingTrait, META meta, const TAny<Index>& indices) {
 		bool done = false;
 		if (indices.IsEmpty()) {
 			// Meta is the only filter													
 			auto variable = context.GetMember(meta);
+			if constexpr (!MUTABLE)
+				variable.MakeConst();
+
 			if (variable.IsAllocated()) {
 				selectedTraits << Trait {resultingTrait, variable};
 				done = true;
@@ -137,6 +174,9 @@ namespace Langulus::Verbs
 		else for (auto& idx : indices) {
 			// Search for each meta-index pair										
 			auto variable = context.GetMember(meta, idx.GetOffset());
+			if constexpr (!MUTABLE)
+				variable.MakeConst();
+
 			if (variable.IsAllocated()) {
 				selectedTraits << Trait {resultingTrait, variable};
 				done = true;
@@ -153,7 +193,8 @@ namespace Langulus::Verbs
 	///	@param selectedTraits - [out] found traits go here							
 	///	@param selectedVerbs - [out] found verb go here								
 	///	@return if at least trait/verb has been pushed to outputs				
-	bool Select::SelectByMeta(const TAny<Index>& indices, DMeta id, Block& context, TAny<Trait>& selectedTraits, TAny<const RTTI::Ability*>& selectedVerbs) {
+	template<bool MUTABLE>
+	inline bool Select::SelectByMeta(const TAny<Index>& indices, DMeta id, Block& context, TAny<Trait>& selectedTraits, TAny<const RTTI::Ability*>& selectedVerbs) {
 		const auto type = context.GetType();
 		if (id->Is<VMeta>()) {
 			if (indices.IsEmpty() || indices == Index::All) { //TODO make sure the == operator is optimal
@@ -177,7 +218,7 @@ namespace Langulus::Verbs
 		}
 
 		// Select data IDs																
-		return PerIndex(context, selectedTraits, nullptr, id, indices);
+		return PerIndex<MUTABLE>(context, selectedTraits, nullptr, id, indices);
 	};
 
 } // namespace Langulus::Verbs

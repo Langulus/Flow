@@ -4,12 +4,12 @@
 namespace Langulus::Verbs
 {
 
-	/// Conjunct/disjunct verb construction												
+	/// Conjunct/Disjunct verb construction												
 	///	@param s - LHS																			
 	///	@param a - RHS																			
 	///	@param o - result mask (optional)												
 	///	@param c - the charge of the conjunction										
-	///	@param sc - is the conjunction short-circuited								
+	///	@param sc - is the conjunction/disjunction short-circuited				
 	inline Conjunct::Conjunct(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
 		: Verb {RTTI::MetaVerb::Of<Conjunct>(), s, a, o, c, sc} {}
 
@@ -56,10 +56,11 @@ namespace Langulus::Verbs
 		return verb.IsDone();
 	}
 
-	/// Default conjunction/disjunction														
+	/// Default conjunction/disjunction in an immutable context						
+	/// Produces a shallow copy of the provided context and arguments				
 	///	@param context - the block to execute in										
-	///	@param verb - conjunction verb													
-	inline bool Conjunct::ExecuteDefault(Block& context, Verb& verb) {
+	///	@param verb - conjunction/disjunction verb									
+	inline bool Conjunct::ExecuteDefault(const Block& context, Verb& verb) {
 		if (verb.GetArgument().IsEmpty()) {
 			verb << context;
 			return true;
@@ -71,6 +72,23 @@ namespace Langulus::Verbs
 		shallow << Any {context};
 		shallow << verb.GetArgument();
 		verb << Abandon(shallow);
+		return true;
+	}
+
+	/// Default conjunction/disjunction in a mutable context							
+	/// Reuses the context																		
+	///	@param context - the block to execute in										
+	///	@param verb - conjunction/disjunction verb									
+	inline bool Conjunct::ExecuteDefault(Block& context, Verb& verb) {
+		if (verb.GetArgument().IsEmpty()) {
+			verb << context;
+			return true;
+		}
+
+		if (verb.GetMass() < 0)
+			context.MakeOr();
+		context.SmartPush(Move(verb.GetArgument()));
+		verb << context;
 		return true;
 	}
 

@@ -72,7 +72,7 @@ namespace Langulus::Verbs
 			);
 
 			if (construct.GetCharge().mMass * verb.GetMass() < 0) {
-				// Destroy																	
+				//TODO destroy
 			}
 			else {
 				// Create																	
@@ -109,6 +109,8 @@ namespace Langulus::Verbs
 				verb << Abandon(created);
 			}
 		});
+
+		return verb.IsDone();
 	}
 
 	/// Stateless creation of any type without a producer								
@@ -118,6 +120,7 @@ namespace Langulus::Verbs
 		if (verb.GetArgument().IsEmpty() || verb.GetMass() < 0)
 			return false;
 
+		//TODO create only
 		return true;
 	}
 
@@ -126,8 +129,8 @@ namespace Langulus::Verbs
 	///	@param data - the data to set to													
 	///	@return true if at least one member in one element was set				
 	inline void Create::SetMembers(Any& context, const Any& data) {
-		THashMap<TMeta, Index> satisfiedTraits;
-		THashMap<DMeta, Index> satisfiedData;
+		THashMap<TMeta, Count> satisfiedTraits;
+		THashMap<DMeta, Count> satisfiedData;
 
 		data.ForEachDeep([&](const Block& group) {
 			VERBOSE_CREATION("Manually initializing " << context
@@ -218,7 +221,7 @@ namespace Langulus::Verbs
 					// Failure occurs for the given argument						
 					// It may be because of excess arguments, so check if		
 					// the constructed type is fully satisfied at this point	
-					if (!sati || satisfiedData.GetValue(sati) != context.GetType()->GetMemberCount(meta)) {
+					if (!sati || satisfiedData.GetValue(sati) != context.GetType()->GetMemberCount(nullptr, meta)) {
 						// The context wasn't satisfied								
 						Throw<Except::Construct>(Logger::Error()
 							<< "No member of type " << meta->mToken);

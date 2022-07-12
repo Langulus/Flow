@@ -37,35 +37,6 @@ namespace Langulus::Flow
 		));
 	}
 
-	/// Serialize a map																			
-	///	@param map - the map to serialize												
-	/*Code::Code(const Map& map) {
-		(*this) += Map::GetMapToken(map.Keys().GetMeta(), map.Values().GetMeta());
-		(*this) += Code::OpenScope;
-			(*this) += Code::OpenScope;
-				(void)Detail::SerializeBlockToText(map.Keys(), *this);
-			(*this) += Code::CloseScope;
-			(*this) += Code::AndSeparator;
-			(*this) += Code::OpenScope;
-				(void)Detail::SerializeBlockToText(map.Values(), *this);
-			(*this) += Code::CloseScope;
-		(*this) += Code::CloseScope;
-	}
-
-	/// Stringify Code operator																
-	///	@param op - the operator to stringify											
-	Code::Code(Code::Operator op)
-		: Text {Code::Token[op].mTokenWithSpacing} {}
-
-	/// Construct from a hash																	
-	///	@param from - the hash to stringify												
-	Code::Code(const Hash& from) : Code() {
-		(*this) += DataID::Of<Hash>;
-		(*this) += Code::OpenScope;
-		(*this) += pcToHex(from.GetValue());
-		(*this) += Code::CloseScope;
-	}*/
-
 	constexpr Code::TokenProperties Code::Token[OpCounter] = {
 		{ "(", "(", 0, false },		// OpenScope
 		{ ")", ")", 0, false },		// CloseScope

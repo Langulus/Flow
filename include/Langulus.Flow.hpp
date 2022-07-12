@@ -7,3 +7,9 @@
 #include "../verbs/Associate.inl"
 #include "../verbs/Interpret.inl"
 #include "../verbs/Select.inl"
+#include "../verbs/Add.inl"
+#include "../verbs/Multiply.inl"
+#include "../verbs/Exponent.inl"
+#include "../verbs/Catenate.inl"
+
+#define LANGULUS_MODULE_FLOW()

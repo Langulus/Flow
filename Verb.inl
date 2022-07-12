@@ -351,7 +351,7 @@ namespace Langulus::Flow
 			if (DenseCast(data).IsEmpty())
 				return *this;
 
-			mOutput.SmartPush<true, true, T>(data, DataState::Default, Index::Back);
+			mOutput.SmartPush<Index::Back, true, true, T>(data);
 			Done();
 			return *this;
 		}
@@ -378,7 +378,7 @@ namespace Langulus::Flow
 			if (DenseCast(data).IsEmpty())
 				return *this;
 
-			mOutput.SmartPush<true, true, T>(Forward<T>(data), DataState::Default, Index::Back);
+			mOutput.SmartPush<Index::Back, true, true, T>(Move(data));
 			Done();
 			return *this;
 		}
@@ -405,7 +405,7 @@ namespace Langulus::Flow
 			if (DenseCast(data).IsEmpty())
 				return *this;
 
-			mOutput.SmartPush<true, true, T>(data, DataState::Default, Index::Front);
+			mOutput.SmartPush<Index::Front, true, true, T>(data);
 			Done();
 			return *this;
 		}
@@ -432,7 +432,7 @@ namespace Langulus::Flow
 			if (DenseCast(data).IsEmpty())
 				return *this;
 
-			mOutput.SmartPush<true, true, T>(Forward<T>(data), DataState::Default, Index::Front);
+			mOutput.SmartPush<Index::Front, true, true, T>(Move(data));
 			Done();
 			return *this;
 		}

@@ -84,7 +84,7 @@ namespace Langulus::Flow
 	///	@param whatever - the thing you wish to push									
 	template<CT::Data T>
 	Construct& Construct::operator << (const T& whatever) {
-		if (Any::SmartPush<true, true, T, Any>(whatever))
+		if (Any::SmartPush<Index::Back, true, true, T, Any>(whatever))
 			mHash = {};
 		return *this;
 	}

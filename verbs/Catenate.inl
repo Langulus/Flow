@@ -51,7 +51,7 @@ namespace Langulus::Verbs
 	template<CT::Data T>
 	bool Catenate::ExecuteIn(T& context, Verb& verb) {
 		static_assert(Catenate::AvailableFor<T>(),
-			"Verb is not available for this context");
+			"Verb is not available for this context, this shouldn't be reached by flow");
 		context.Catenate(verb);
 		return verb.IsDone();
 	}
@@ -87,6 +87,14 @@ namespace Langulus::Verbs
 		//TODO split
 		context.SmartPush(Move(verb.GetArgument()));
 		verb << context;
+		return true;
+	}
+
+	/// A stateless catenation - just results in RHS									
+	///	@param verb - the verb instance to execute									
+	///	@return true if execution was a success										
+	inline bool Catenate::ExecuteStateless(Verb& verb) {
+		verb << Move(verb.GetArgument());
 		return true;
 	}
 

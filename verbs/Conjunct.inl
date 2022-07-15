@@ -51,7 +51,7 @@ namespace Langulus::Verbs
 	template<CT::Data T>
 	bool Conjunct::ExecuteIn(T& context, Verb& verb) {
 		static_assert(Conjunct::AvailableFor<T>(),
-			"Verb is not available for this context");
+			"Verb is not available for this context, this shouldn't be reached by flow");
 		context.Conjunct(verb);
 		return verb.IsDone();
 	}

@@ -463,6 +463,8 @@ namespace Langulus
 
 			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
+
+			static bool ExecuteDefault(const Block&, Verb&);
 		};
 
 		/// Do verb																					
@@ -481,16 +483,12 @@ namespace Langulus
 			template<CT::Data T>
 			static bool ExecuteIn(T&, Verb&);
 
+			static bool ExecuteDefault(const Block&, Verb&);
+			static bool ExecuteDefault(Block&, Verb&);
 			static bool ExecuteStateless(Verb&);
 		};
 
 	} // namespace Langulus::Verbs
-
-
-	/// Extend the logger to be capable of logging Block								
-	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (Logger::A::Interface& lhs, const Flow::Block& rhs) {
-		return lhs << Verbs::Interpret::To<Flow::Debug>(rhs);
-	}
 
 } // namespace Langulus
 

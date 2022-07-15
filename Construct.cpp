@@ -1,12 +1,28 @@
 #include "Construct.hpp"
 #include "Serial.hpp"
-#include "verbs/Do.inl"
 #include "verbs/Interpret.inl"
+#include "verbs/Do.inl"
 
 #define VERBOSE_CONSTRUCT(a) //pcLogFuncVerbose << a
 
 namespace Langulus::Flow
 {
+
+	/// Construct via a disowned copy														
+	///	@param other - the disowned construct to copy without referencing		
+	Construct::Construct(Disowned<Construct>&& other) noexcept
+		: Any {other.Forward<Any>()}
+		, Charge {other.mValue}
+		, mType {other.mValue.mType}
+		, mHash {other.mValue.mHash} { }
+
+	/// Construct via an abandoned move														
+	///	@param other - the disowned construct to move								
+	Construct::Construct(Abandoned<Construct>&& other) noexcept
+		: Any {other.Forward<Any>()}
+		, Charge {other.mValue}
+		, mType {other.mValue.mType}
+		, mHash {other.mValue.mHash} { }
 
 	/// Construct from a header																
 	///	@param type - the type of the content											
@@ -16,6 +32,7 @@ namespace Langulus::Flow
 	/// Construct from a header and movable arguments									
 	///	@param type - the type of the content											
 	///	@param arguments - the argument container to move							
+	///	@param charge - the charge for the construction								
 	Construct::Construct(DMeta type, Any&& arguments, const Charge& charge)
 		: Any {Forward<Any>(arguments)}
 		, Charge {charge}
@@ -24,12 +41,13 @@ namespace Langulus::Flow
 	/// Construct from a header and shallow-copied arguments							
 	///	@param type - the type of the content											
 	///	@param arguments - the argument container to copy							
+	///	@param charge - the charge for the construction								
 	Construct::Construct(DMeta type, const Any& arguments, const Charge& charge)
 		: Any {arguments}
 		, Charge {charge}
 		, mType {type} { }
 
-	/// Hash the descriptor																		
+	/// Hash the construct																		
 	///	@return the hash of the content													
 	Hash Construct::GetHash() const {
 		if (mHash.mHash)

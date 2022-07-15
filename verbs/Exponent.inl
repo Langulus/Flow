@@ -53,11 +53,10 @@ namespace Langulus::Verbs
 	///	@return true if verb has been satisfied										
 	template<CT::Data T>
 	bool Exponent::ExecuteIn(T& context, Verb& verb) {
-		if constexpr (Exponent::AvailableFor<T>()) {
-			context.Exponent(verb);
-			return verb.IsDone();
-		}
-		else return false;
+		static_assert(Exponent::AvailableFor<T>(),
+			"Verb is not available for this context, this shouldn't be reached by flow");
+		context.Exponent(verb);
+		return verb.IsDone();
 	}
 
 } // namespace Langulus::Verbs

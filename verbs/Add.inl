@@ -66,11 +66,10 @@ namespace Langulus::Verbs
 	///	@return true if verb has been satisfied										
 	template<CT::Data T>
 	bool Add::ExecuteIn(T& context, Verb& verb) {
-		if constexpr (Add::AvailableFor<T>()) {
-			context.Add(verb);
-			return verb.IsDone();
-		}
-		else return false;
+		static_assert(Add::AvailableFor<T>(),
+			"Verb is not available for this context, this shouldn't be reached by flow");
+		context.Add(verb);
+		return verb.IsDone();
 	}
 
 	/// A stateless subtraction																

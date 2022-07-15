@@ -52,11 +52,10 @@ namespace Langulus::Verbs
 	///	@return true if verb has been satisfied										
 	template<CT::Data T>
 	bool Select::ExecuteIn(T& context, Verb& verb) {
-		if constexpr (Select::AvailableFor<T>()) {
-			context.Select(verb);
-			return verb.IsDone();
-		}
-		else return false;
+		static_assert(Select::AvailableFor<T>(),
+			"Verb is not available for this context, this shouldn't be reached by flow");
+		context.Select(verb);
+		return verb.IsDone();
 	}
 
 	/// Stateless selection, for selecting some global entities, like the		
@@ -167,7 +166,7 @@ namespace Langulus::Verbs
 				variable.MakeConst();
 
 			if (variable.IsAllocated()) {
-				selectedTraits << Trait {resultingTrait, variable};
+				selectedTraits << Trait::From(resultingTrait, variable);
 				done = true;
 			}
 		}
@@ -178,7 +177,7 @@ namespace Langulus::Verbs
 				variable.MakeConst();
 
 			if (variable.IsAllocated()) {
-				selectedTraits << Trait {resultingTrait, variable};
+				selectedTraits << Trait::From(resultingTrait, variable);
 				done = true;
 			}
 		}

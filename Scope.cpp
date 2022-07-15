@@ -123,7 +123,7 @@ namespace Langulus::Flow
 						<< "Trait-AND failed: " << this));
 				}
 
-				output << Trait {trait.GetTrait(), Abandon(local)};
+				output << Trait::From(trait.GetTrait(), Abandon(local));
 			},
 			// Nest if constructs, but retain each construct					
 			[&](const Construct& construct) {
@@ -210,7 +210,7 @@ namespace Langulus::Flow
 				Any local;
 				if (scope.Execute(environment, local)) {
 					executed = true;
-					output << Trait {trait.GetTrait(), Abandon(local)};
+					output << Trait::From(trait.GetTrait(), Abandon(local));
 				}
 			},
 			// Nest if constructs, but retain each construct					

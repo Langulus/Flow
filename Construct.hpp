@@ -51,8 +51,8 @@ namespace Langulus::Flow
 		Construct(const Construct&) = default;
 		Construct(Construct&&) noexcept = default;
 
-		Construct(Abandoned<Construct>&&) noexcept;
 		Construct(Disowned<Construct>&&) noexcept;
+		Construct(Abandoned<Construct>&&) noexcept;
 
 		Construct(DMeta);
 		Construct(DMeta, const Any&, const Charge& = {});

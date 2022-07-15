@@ -2,6 +2,9 @@
 #include "Serial.hpp"
 #include "verbs/Do.inl"
 #include "verbs/Associate.inl"
+#include "verbs/Add.inl"
+#include "verbs/Multiply.inl"
+#include "verbs/Exponent.inl"
 
 #define PC_PARSE_VERBOSE_INNER(a) \
 		Logger::Verbose() << LANGULUS(FUNCTION) << ": " << a << " at " << progress << ": " << \
@@ -598,7 +601,7 @@ namespace Langulus::Flow
 				Throw<Except::Flow>();
 			}
 
-			lhs = Trait {lhs.Get<TMeta>(), Move(rhs)};
+			lhs = Trait::From(lhs.Get<TMeta>(), Move(rhs));
 
 			PC_PARSE_VERBOSE_ALT("Constructed trait " << ccCyan << lhs);
 		}

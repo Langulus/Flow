@@ -1,18 +1,20 @@
 #pragma once
 #include "../Code.hpp"
 #include "Do.inl"
+#include "Interpret.inl"
+#include "Catenate.inl"
 
 #define VERBOSE_ASSOCIATE(a) //Logger::Verbose() << a
 
 namespace Langulus::Verbs
 {
 
-	/// Associate verb construction															
-	///	@param s - what are we associating?												
-	///	@param a - what are we associating with?										
+	/// Associate/Dissociate verb construction											
+	///	@param s - what are we associating/dissociating?							
+	///	@param a - what are we associating/dissociating with?						
 	///	@param o - result mask (optional)												
-	///	@param c - the charge of the association										
-	///	@param sc - is the association short-circuited								
+	///	@param c - the charge of the association/dissociation						
+	///	@param sc - is the association/dissociation short-circuited				
 	inline Associate::Associate(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
 		: Verb {RTTI::MetaVerb::Of<Associate>(), s, a, o, c, sc} {}
 
@@ -47,17 +49,16 @@ namespace Langulus::Verbs
 		}
 	}
 
-	/// Execute the association verb in a specific context							
+	/// Execute the association/dissociation verb in a specific context			
 	///	@param context - the context to execute in									
 	///	@param verb - the verb to execute												
 	///	@return true if verb has been satisfied										
 	template<CT::Data T>
 	bool Associate::ExecuteIn(T& context, Verb& verb) {
-		if constexpr (Associate::AvailableFor<T>()) {
-			context.Associate(verb);
-			return verb.IsDone();
-		}
-		else return false;
+		static_assert(Associate::AvailableFor<T>(),
+			"Verb is not available for this context, this shouldn't be reached by flow");
+		context.Associate(verb);
+		return verb.IsDone();
 	}
 
 	/// Execute the default verb in a context												

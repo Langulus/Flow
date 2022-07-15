@@ -66,11 +66,10 @@ namespace Langulus::Verbs
 	///	@return true if verb has been satisfied										
 	template<CT::Data T>
 	bool Multiply::ExecuteIn(T& context, Verb& verb) {
-		if constexpr (Multiply::AvailableFor<T>()) {
-			context.Multiply(verb);
-			return verb.IsDone();
-		}
-		else return false;
+		static_assert(Multiply::AvailableFor<T>(),
+			"Verb is not available for this context, this shouldn't be reached by flow");
+		context.Multiply(verb);
+		return verb.IsDone();
 	}
 
 	/// A stateless division																	

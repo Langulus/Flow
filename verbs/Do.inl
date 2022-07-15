@@ -1,6 +1,91 @@
 #pragma once
 #include "../Verb.hpp"
 
+namespace Langulus::Verbs
+{
+
+	/// Do/Undo verb construction																
+	///	@param s - context to execute in													
+	///	@param a - what to execute															
+	///	@param o - result mask (optional)												
+	///	@param c - the charge of the do/undo											
+	///	@param sc - is the do/undo short-circuited									
+	inline Do::Do(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Do>(), s, a, o, c, sc} {}
+
+	/// Compile-time check if a verb is implemented in the provided type			
+	///	@return true if verb is available												
+	template<CT::Data T, CT::Data... A>
+	constexpr bool Do::AvailableFor() noexcept {
+		if constexpr (sizeof...(A) == 0)
+			return requires (T& t, Verb& v) { t.Do(v); };
+		else
+			return requires (T& t, Verb& v, A... a) { t.Do(v, a...); };
+	}
+
+	/// Get the verb functor for the given type and arguments						
+	///	@return the function, or nullptr if not available							
+	template<CT::Data T, CT::Data... A>
+	constexpr auto Do::Of() noexcept {
+		if constexpr (!Do::AvailableFor<T, A...>()) {
+			return nullptr;
+		}
+		else if constexpr (CT::Constant<T>) {
+			return [](const void* context, Flow::Verb& verb, A... args) {
+				auto typedContext = static_cast<const T*>(context);
+				typedContext->Do(verb, args...);
+			};
+		}
+		else {
+			return [](void* context, Flow::Verb& verb, A... args) {
+				auto typedContext = static_cast<T*>(context);
+				typedContext->Do(verb, args...);
+			};
+		}
+	}
+
+	/// Execute the do/undo verb in a specific context									
+	///	@param context - the context to execute in									
+	///	@param verb - the verb to execute												
+	///	@return true if verb has been satisfied										
+	template<CT::Data T>
+	bool Do::ExecuteIn(T& context, Verb& verb) {
+		static_assert(Do::AvailableFor<T>(),
+			"Verb is not available for this context, this shouldn't be reached by flow");
+		context.Do(verb);
+		return verb.IsDone();
+	}
+
+	/// Default do/undo in an immutable context											
+	///	@param context - the block to execute in										
+	///	@param verb - do/undo verb															
+	inline bool Do::ExecuteDefault(const Block& context, Verb& verb) {
+		//TODO
+		return true;
+	}
+
+	/// Default do/undo in a mutable context												
+	///	@param context - the block to execute in										
+	///	@param verb - do/undo verb															
+	inline bool Do::ExecuteDefault(Block& context, Verb& verb) {
+		//TODO
+		return true;
+	}
+
+	/// Stateless execution																		
+	///	@param verb - the do/undo verb													
+	///	@return true if verb was satisfied												
+	inline bool Do::ExecuteStateless(Verb& verb) {
+		if (verb.GetArgument().IsEmpty())
+			return false;
+
+		//TODO execute
+		return true;
+	}
+
+} // namespace Langulus::Verbs
+
+
 namespace Langulus::Flow
 {
 
@@ -59,11 +144,17 @@ namespace Langulus::Flow
 			return (Execute<DISPATCH, DEFAULT, FALLBACK>(static_cast<BASES&>(context), verb) || ...);
 	}
 
-	/// Invoke a static verb on a static type												
-	///	@tparam RESOLVE - perform runtime type-checking and execute in the	
-	///							most concrete result											
-	///	@param context - the context in which to dispatch the verb				
-	///	@param verb - the verb to send over												
+	/// Invoke a single verb on a single context											
+	///	@tparam DISPATCH - whether or not to use context's dispatcher, if		
+	///							 any is statically available or reflected				
+	///	@tparam DEFAULT - whether or not to attempt default verb execution	
+	///							if such is statically available or reflected			
+	///							this is done only if direct or dispatched execution
+	///							fails																
+	///	@tparam FALLBACK - for internal use by the function - used to nest	
+	///							 with default functionality, if DEFAULT is enabled	
+	///	@param context - the context in which to execute in						
+	///	@param verb - the verb to execute												
 	///	@return the number of successful executions									
 	template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::Verb V>
 	Count Execute(T& context, V& verb) {
@@ -81,10 +172,18 @@ namespace Langulus::Flow
 		}
 		else {
 			// Execute verb inside the context directly							
-			if constexpr (FALLBACK)
+			if constexpr (FALLBACK) {
 				V::ExecuteDefault(context, verb);
-			else
-				V::ExecuteIn(context, verb);
+			}
+			else if constexpr (!CT::Same<V, Verb>) {
+				if constexpr (V::template AvailableFor<T>())
+					V::ExecuteIn(context, verb);
+				else
+					Verb::ExecuteIn(context, verb);
+			}
+			else {
+				Verb::ExecuteIn(context, verb);
+			}
 
 			// If that fails, attempt in all reflected bases					
 			if constexpr (requires { typename T::CTTI_Bases; }) {

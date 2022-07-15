@@ -53,7 +53,10 @@ namespace Langulus::Verbs
 	///	@return true if verb was satisfied												
 	template<CT::Data T>
 	bool Create::ExecuteIn(T& context, Verb& verb) {
-
+		static_assert(Create::AvailableFor<T>(),
+			"Verb is not available for this context, this shouldn't be reached by flow");
+		context.Create(verb);
+		return verb.IsDone();
 	}
 
 	/// Default creation/destruction in a context										

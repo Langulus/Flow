@@ -105,7 +105,7 @@ namespace Langulus::Flow
 			// Convert single argument to requested type							
 			// If a direct copy is available it will be utilized				
 			Verbs::Interpret interpreter({}, meta);
-			if (DispatchDeep<true, true, true>(GetAll(), interpreter)) {
+			if (DispatchDeep(GetAll(), interpreter)) {
 				// Success																	
 				VERBOSE_CONSTRUCT("Constructed from meta data: "
 					<< Logger::Cyan << interpreter.GetOutput());
@@ -119,7 +119,7 @@ namespace Langulus::Flow
 		// one by one																		
 		const auto concreteConstruct = Construct::From(meta, *this);
 		Verbs::Create creator({}, &concreteConstruct);
-		if (DispatchEmpty(creator)) {
+		if (Verbs::Create::ExecuteStateless(creator)) {
 			VERBOSE_CONSTRUCT("Constructed from initializer-list: "
 				<< Logger::Cyan << creator.GetOutput());
 			output << Move(creator.GetOutput());

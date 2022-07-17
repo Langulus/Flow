@@ -127,8 +127,8 @@ namespace Langulus::Flow
 		Verb& operator *= (const Real&) noexcept;
 		Verb& operator ^= (const Real&) noexcept;
 
-		NOD() explicit operator Code() const;
-		NOD() explicit operator Debug() const;
+		NOD() operator Code() const;
+		NOD() operator Debug() const;
 
 		/// Replace these in your verbs, to specify their behavior statically	
 		/// Otherwise, these functions fallback and perform slow RTTI checks		

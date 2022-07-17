@@ -6,21 +6,21 @@
 #include "verbs/Multiply.inl"
 #include "verbs/Exponent.inl"
 
-#define PC_PARSE_VERBOSE_INNER(a) \
-		Logger::Verbose() << LANGULUS(FUNCTION) << ": " << a << " at " << progress << ": " << \
+#define VERBOSE_INNER(a) \
+		Logger::Verbose() << LANGULUS(FUNCTION_NAME) << ": " << a << " at " << progress << ": " << \
 		Logger::Verbose() << " -- " \
 			<< Logger::Green << input.RightOf(progress) \
 			<< Logger::Gray << input.LeftOf(progress)
 
 #define PRETTY_ERROR(a) \
 	Throw<Except::Flow>( \
-		Logger::Error() << LANGULUS(FUNCTION) << ": " << a << " at " << progress << ": " << \
+		Logger::Error() << LANGULUS(FUNCTION_NAME) << ": " << a << " at " << progress << ": " << \
 		Logger::Error() << " -- " \
 			<< Logger::Green << input.RightOf(progress) \
 			<< Logger::Red << input.LeftOf(progress))
 
-#define PC_PARSE_VERBOSE(a) //PC_PARSE_VERBOSE_INNER(a)
-#define PC_PARSE_VERBOSE_ALT(a) //pcLogFuncVerbose << a
+#define VERBOSE(a) VERBOSE_INNER(a)
+#define VERBOSE_ALT(a) Logger::Verbose() << a
 
 
 namespace Langulus::Flow
@@ -246,9 +246,9 @@ namespace Langulus::Flow
 		Any rhs;
 		Offset progress = 0;
 		if (!lhs.IsValid())
-			PC_PARSE_VERBOSE("Parsing unknown..." << ccTab);
+			VERBOSE("Parsing unknown..." << Logger::Tab);
 		else
-			PC_PARSE_VERBOSE("Parsing unknown with LHS(" << lhs << ") " << ccTab);
+			VERBOSE("Parsing unknown with LHS(" << lhs << ") " << Logger::Tab);
 
 		while (progress < input.GetCount()) {
 			// Scan input until end														
@@ -278,7 +278,7 @@ namespace Langulus::Flow
 
 				// ... and do an early exit to avoid endless loops				
 				progress += localProgress;
-				PC_PARSE_VERBOSE(ccGreen << "Unknown resulted in " << rhs << ccUntab);
+				VERBOSE(Logger::Green << "Unknown resulted in " << rhs << Logger::Untab);
 				lhs = Move(rhs);
 				return progress;
 			}
@@ -290,7 +290,7 @@ namespace Langulus::Flow
 		}
 
 		// Input was parsed, relay content to output								
-		PC_PARSE_VERBOSE(ccGreen << "Unknown resulted in " << rhs << ccUntab);
+		VERBOSE(Logger::Green << "Unknown resulted in " << rhs << Logger::Untab);
 		lhs = Move(rhs);
 		return progress;
 	}
@@ -316,7 +316,7 @@ namespace Langulus::Flow
 	///	@return number of parsed characters												
 	Offset Keyword::Parse(const Code& input, Any& lhs) {
 		Offset progress = 0;
-		PC_PARSE_VERBOSE("Parsing keyword...");
+		VERBOSE("Parsing keyword...");
 		while (progress < input.GetCount()) {
 			// Collect all characters of the keyword								
 			const auto relevant = input.LeftOf(progress);
@@ -334,7 +334,7 @@ namespace Langulus::Flow
 		if (keyword.IsEmpty())
 			PRETTY_ERROR("No keyword parsed");
 
-		PC_PARSE_VERBOSE("Parsed keyword: " << keyword);
+		VERBOSE("Parsed keyword: " << keyword);
 
 		// Search for token in meta definitions									
 		const auto metaData = RTTI::Database.GetMetaData(keyword);
@@ -366,7 +366,7 @@ namespace Langulus::Flow
 		if (rhs.IsEmpty())
 			PRETTY_ERROR("Missing meta");
 
-		PC_PARSE_VERBOSE("Keyword resulted in " 
+		VERBOSE("Keyword resulted in "
 			<< Logger::Push << Logger::Cyan << keyword << Logger::Pop << " -> " 
 			<< Logger::Cyan << rhs << " (" << rhs.GetToken() << ")");
 		lhs = Move(rhs);
@@ -380,14 +380,14 @@ namespace Langulus::Flow
 	Offset Number::Parse(const Code& input, Any& lhs) {
 		Real rhs = 0;
 		Offset progress = 0;
-		PC_PARSE_VERBOSE("Parsing number...");
+		VERBOSE("Parsing number...");
 
 		if (auto [p, ec] = ::std::from_chars(input.GetRaw(), input.GetRaw() + input.GetCount(), rhs); 
 			ec == ::std::errc()) {
 			progress = p - input.GetRaw();
 		}
 
-		PC_PARSE_VERBOSE(Logger::Green << "Number resulted in " << rhs);
+		VERBOSE(Logger::Green << "Number resulted in " << rhs);
 		lhs << rhs;
 		return progress;
 	}
@@ -414,11 +414,11 @@ namespace Langulus::Flow
 		if (op == Code::OpCounter)
 			PRETTY_ERROR("Unknown operator");
 
-		PC_PARSE_VERBOSE("Parsing operator...");
+		VERBOSE("Parsing operator...");
 		const Code relevant = input.LeftOf(progress);
 
 		if (Code::Token[op].mPriority && priority >= Code::Token[op].mPriority) {
-			PC_PARSE_VERBOSE(ccYellow << "Delaying because of a prioritized operator...");
+			VERBOSE(Logger::Yellow << "Delaying because of a prioritized operator...");
 			return 0;
 		}
 
@@ -518,7 +518,7 @@ namespace Langulus::Flow
 			const auto stateBackup = lhs.GetState();
 			lhs = Move(rhs);
 			lhs.AddState(stateBackup);
-			PC_PARSE_VERBOSE_ALT("Untyped content: " << ccCyan << lhs);
+			VERBOSE_ALT("Untyped content: " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<DMeta>()) {
 			// The content is for a data scope										
@@ -536,7 +536,7 @@ namespace Langulus::Flow
 			}
 			catch (...) {
 				// Failed to construct, so just propagate request				
-				PC_PARSE_VERBOSE_ALT(ccRed << "Can't statically construct " << outputConstruct);
+				VERBOSE_ALT(Logger::Red << "Can't statically construct " << outputConstruct);
 				lhs = Move(outputConstruct);
 			}
 		}
@@ -561,7 +561,7 @@ namespace Langulus::Flow
 				lhs = Verb {lhs.Get<VMeta>(), {}, Move(rhs)};
 			//}
 
-			PC_PARSE_VERBOSE_ALT("Constructed from VerbID: " << ccCyan << lhs);
+			VERBOSE_ALT("Constructed from VerbID: " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<Verb>()) {
 			// Modified verb id (expanded when using . primarily)				
@@ -591,7 +591,7 @@ namespace Langulus::Flow
 				}
 			//}
 
-			PC_PARSE_VERBOSE_ALT("Constructed from Verb " << ccCyan << lhs);
+			VERBOSE_ALT("Constructed from Verb " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<TMeta>()) {
 			// Trait scope																	
@@ -603,7 +603,7 @@ namespace Langulus::Flow
 
 			lhs = Trait::From(lhs.Get<TMeta>(), Move(rhs));
 
-			PC_PARSE_VERBOSE_ALT("Constructed trait " << ccCyan << lhs);
+			VERBOSE_ALT("Constructed trait " << Logger::Cyan << lhs);
 		}
 		else {
 			Logger::Error() << "Bad scope for " << lhs << " (" << lhs.GetToken() << ")";
@@ -631,7 +631,7 @@ namespace Langulus::Flow
 				if (relevant.StartsWithOperator(Code::CloseString)) {
 					const auto tokenSize = Code::Token[Code::CloseString].mToken.size();
 					lhs = Text {input.RightOf(progress)};
-					PC_PARSE_VERBOSE("Constructed string " << ccCyan << lhs);
+					VERBOSE("Constructed string " << Logger::Cyan << lhs);
 					return tokenSize + progress;
 				}
 				break;
@@ -641,7 +641,7 @@ namespace Langulus::Flow
 				if (relevant.StartsWithOperator(Code::CloseStringAlt)) {
 					const auto tokenSize = Code::Token[Code::CloseStringAlt].mToken.size();
 					lhs = Text {input.RightOf(progress)};
-					PC_PARSE_VERBOSE("Constructed string " << ccCyan << lhs);
+					VERBOSE("Constructed string " << Logger::Cyan << lhs);
 					return tokenSize + progress;
 				}
 				break;
@@ -651,7 +651,7 @@ namespace Langulus::Flow
 				if (relevant.StartsWithOperator(Code::CloseCharacter)) {
 					const auto tokenSize = Code::Token[Code::CloseCharacter].mToken.size();
 					lhs = input[0];
-					PC_PARSE_VERBOSE("Constructed character " << ccCyan << lhs);
+					VERBOSE("Constructed character " << Logger::Cyan << lhs);
 					return tokenSize + progress;
 				}
 				break;
@@ -665,7 +665,7 @@ namespace Langulus::Flow
 					if (0 == depth) {
 						const auto tokenSize = Code::Token[Code::CloseCode].mToken.size();
 						lhs = input.RightOf(progress);
-						PC_PARSE_VERBOSE("Constructed code " << ccCyan << lhs);
+						VERBOSE("Constructed code " << Logger::Cyan << lhs);
 						return tokenSize + progress;
 					}
 				}
@@ -729,8 +729,8 @@ namespace Langulus::Flow
 			}
 		}
 
-		PC_PARSE_VERBOSE("Polarize (" 
-			<< Code::Token[op].mToken << ") " << rhs << " -> " << ccCyan << lhs);
+		VERBOSE("Polarize ("
+			<< Code::Token[op].mToken << ") " << rhs << " -> " << Logger::Cyan << lhs);
 		return progress;
 	}
 
@@ -787,7 +787,7 @@ namespace Langulus::Flow
 	///	@return number of parsed characters												
 	Offset OperatorMissing::Parse(const Code&, Any& lhs) {
 		lhs.MakeMissing();
-		PC_PARSE_VERBOSE_ALT("Missing -> " << ccCyan << lhs);
+		VERBOSE_ALT("Missing -> " << Logger::Cyan << lhs);
 		return 0;
 	}
 
@@ -801,8 +801,8 @@ namespace Langulus::Flow
 		Any rhs;
 		const auto progress = Expression::Parse(input, rhs, Code::Token[op].mPriority, optimize);
 		lhs.SmartPush(rhs, (op == Code::OrSeparator ? DataState::Or : DataState::Default));
-		PC_PARSE_VERBOSE("Pushing (" 
-			<< Code::Token[op].mToken << ") " << rhs << " -> " << ccCyan << lhs);
+		VERBOSE("Pushing (" 
+			<< Code::Token[op].mToken << ") " << rhs << " -> " << Logger::Cyan << lhs);
 		return progress;
 	}
 
@@ -817,7 +817,7 @@ namespace Langulus::Flow
 			const auto scopeOffset = Code::Token[Code::OpenScope].mToken.size();
 			lhs = Verbs::Select(Move(lhs));
 			progress = OperatorContent::Parse(input.LeftOf(scopeOffset), lhs, optimize);
-			PC_PARSE_VERBOSE("Select operator: " << lhs);
+			VERBOSE("Select operator: " << lhs);
 			return scopeOffset + progress;
 		}
 
@@ -839,7 +839,7 @@ namespace Langulus::Flow
 		else
 			lhs = Verbs::Select(Move(lhs), Move(rhs));
 
-		PC_PARSE_VERBOSE("Select operator: " << lhs);
+		VERBOSE("Select operator: " << lhs);
 		return progress;
 	}
 
@@ -854,7 +854,7 @@ namespace Langulus::Flow
 			const auto scopeOffset = Code::Token[Code::OpenScope].mToken.size();
 			lhs = Verbs::Associate(Move(lhs)).SetPriority(2);
 			progress = OperatorContent::Parse(input.LeftOf(scopeOffset), lhs, optimize);
-			PC_PARSE_VERBOSE("Copy operator: " << lhs);
+			VERBOSE("Copy operator: " << lhs);
 			return scopeOffset + progress;
 		}
 
@@ -868,14 +868,14 @@ namespace Langulus::Flow
 
 		// Invoke the verb in the context (slower)								
 		Verbs::Associate copier({}, rhs);
-		if (!DispatchDeep<true, true, true>(lhs, copier)) {
+		if (!DispatchDeep(lhs, copier)) {
 			// If execution failed, just push the verb							
 			lhs = Move(copier.SetSource(Move(lhs)).SetPriority(2));
-			PC_PARSE_VERBOSE("Copy operator: " << lhs);
+			VERBOSE("Copy operator: " << lhs);
 			return progress;
 		}
 
-		PC_PARSE_VERBOSE("Copied: " << copier);
+		VERBOSE("Copied: " << copier);
 		return progress;
 	}
 
@@ -892,7 +892,7 @@ namespace Langulus::Flow
 		if (optimize) {
 			if (op == Code::Subtract && lhs.IsEmpty() && rhs.Is<Real>() && !rhs.IsEmpty()) {
 				// Quick optimization for inverting number in RHS				
-				PC_PARSE_VERBOSE("Built-in inversion (-): " << rhs << " "
+				VERBOSE("Built-in inversion (-): " << rhs << " "
 					<< Code::Token[op].mToken << " = " << -rhs.Get<Real>());
 				lhs = -rhs.Get<Real>();
 				return progress;
@@ -900,12 +900,12 @@ namespace Langulus::Flow
 			else if (lhs.Is<Real>() && rhs.Is<Real>() && !lhs.IsEmpty() && !rhs.IsEmpty()) {
 				// LHS + RHS and LHS - RHS if both reals (optimization)		
 				if (op == Code::Subtract) {
-					PC_PARSE_VERBOSE("Built-in subtract: " << lhs << " " << Code::Token[op].mToken
+					VERBOSE("Built-in subtract: " << lhs << " " << Code::Token[op].mToken
 						<< " " << rhs << " = " << (lhs.Get<Real>() - rhs.Get<Real>()));
 					lhs = lhs.Get<Real>() - rhs.Get<Real>();
 				}
 				else {
-					PC_PARSE_VERBOSE("Built-in add: " << lhs << " " << Code::Token[op].mToken
+					VERBOSE("Built-in add: " << lhs << " " << Code::Token[op].mToken
 						<< " " << rhs << " = " << (lhs.Get<Real>() + rhs.Get<Real>()));
 					lhs = lhs.Get<Real>() + rhs.Get<Real>();
 				}
@@ -916,14 +916,14 @@ namespace Langulus::Flow
 		if (lhs.IsEmpty() && op == Code::Subtract) {
 			// No LHS, so we execute in RHS to invert								
 			auto inverter = Verbs::Add().Invert();
-			if (!optimize || !DispatchDeep<true, true, true>(rhs, inverter)) {
+			if (!optimize || !DispatchDeep(rhs, inverter)) {
 				// If execution failed, just push the verb						
 				lhs = Move(inverter.SetSource(Move(rhs)));
-				PC_PARSE_VERBOSE("Invert (-) operator: " << lhs);
+				VERBOSE("Invert (-) operator: " << lhs);
 				return progress;
 			}
 
-			PC_PARSE_VERBOSE("Inverted (-): " << rhs << " " << Code::Token[op].mToken
+			VERBOSE("Inverted (-): " << rhs << " " << Code::Token[op].mToken
 				<< " = " << inverter.GetOutput());
 			lhs = Move(inverter.GetOutput());
 			return progress;
@@ -934,14 +934,14 @@ namespace Langulus::Flow
 		if (op == Code::Subtract)
 			adder.Invert();
 
-		if (!optimize || !DispatchDeep<true, true, true>(lhs, adder)) {
+		if (!optimize || !DispatchDeep(lhs, adder)) {
 			// If execution failed, just push the verb							
 			lhs = Move(adder.SetSource(Move(lhs)));
-			PC_PARSE_VERBOSE("Add/subtract operator: " << lhs);
+			VERBOSE("Add/subtract operator: " << lhs);
 			return progress;
 		}
 		
-		PC_PARSE_VERBOSE("Added/subtracted: " << lhs << " " << Code::Token[op].mToken
+		VERBOSE("Added/subtracted: " << lhs << " " << Code::Token[op].mToken
 			<< " " << rhs << " = " << adder.GetOutput());
 		lhs = Move(adder.GetOutput());
 		return progress;
@@ -960,7 +960,7 @@ namespace Langulus::Flow
 		if (optimize) {
 			if (op == Code::Divide && lhs.IsEmpty() && rhs.Is<Real>() && !rhs.IsEmpty()) {
 				// Quick optimization for inverting number in RHS				
-				PC_PARSE_VERBOSE("Built-in inversion (/): " << rhs << " "
+				VERBOSE("Built-in inversion (/): " << rhs << " "
 					<< Code::Token[op].mToken << " = " << (Real(1) / rhs.Get<Real>()));
 				lhs = Real(1) / rhs.Get<Real>();
 				return progress;
@@ -968,12 +968,12 @@ namespace Langulus::Flow
 			else if (lhs.Is<Real>() && rhs.Is<Real>() && !lhs.IsEmpty() && !rhs.IsEmpty()) {
 				// LHS * RHS and LHS / RHS if both reals (optimization)		
 				if (op == Code::Multiply) {
-					PC_PARSE_VERBOSE("Built-in multiply: " << lhs << " " << Code::Token[op].mToken
+					VERBOSE("Built-in multiply: " << lhs << " " << Code::Token[op].mToken
 						<< " " << rhs << " = " << (lhs.Get<Real>() * rhs.Get<Real>()));
 					lhs = lhs.Get<Real>() * rhs.Get<Real>();
 				}
 				else {
-					PC_PARSE_VERBOSE("Built-in divide: " << lhs << " " << Code::Token[op].mToken
+					VERBOSE("Built-in divide: " << lhs << " " << Code::Token[op].mToken
 						<< " " << rhs << " = " << (lhs.Get<Real>() / rhs.Get<Real>()));
 					lhs = lhs.Get<Real>() / rhs.Get<Real>();
 				}
@@ -984,14 +984,14 @@ namespace Langulus::Flow
 		if (lhs.IsEmpty() && op == Code::Divide) {
 			// No LHS, so we execute in RHS to invert (1/x)						
 			auto inverter = Verbs::Multiply().Invert();
-			if (!optimize || !DispatchDeep<true, true, true>(rhs, inverter)) {
+			if (!optimize || !DispatchDeep(rhs, inverter)) {
 				// If execution failed, just push the verb						
 				lhs = Move(inverter.SetSource(Move(rhs)));
-				PC_PARSE_VERBOSE("Invert (/) operator: " << lhs);
+				VERBOSE("Invert (/) operator: " << lhs);
 				return progress;
 			}
 
-			PC_PARSE_VERBOSE("Inverted (/): " << rhs << " " << Code::Token[op].mToken
+			VERBOSE("Inverted (/): " << rhs << " " << Code::Token[op].mToken
 				<< " = " << inverter.GetOutput());
 			lhs = Move(inverter.GetOutput());
 			return progress;
@@ -1002,14 +1002,14 @@ namespace Langulus::Flow
 		if (op == Code::Divide)
 			multiplier.Invert();
 
-		if (!optimize || !DispatchDeep<true, true, true>(lhs, multiplier)) {
+		if (!optimize || !DispatchDeep(lhs, multiplier)) {
 			// If execution failed, just push the verb							
 			lhs = Move(multiplier.SetSource(Move(lhs)));
-			PC_PARSE_VERBOSE("Multiply/divide operator: " << lhs);
+			VERBOSE("Multiply/divide operator: " << lhs);
 			return progress;
 		}
 		
-		PC_PARSE_VERBOSE("Multiplied/divided: " << lhs << " " << Code::Token[op].mToken
+		VERBOSE("Multiplied/divided: " << lhs << " " << Code::Token[op].mToken
 			<< " " << rhs << " = " << multiplier.GetOutput());
 		lhs = Move(multiplier.GetOutput());
 		return progress;
@@ -1028,7 +1028,7 @@ namespace Langulus::Flow
 			if (lhs.Is<Real>() && rhs.Is<Real>() && !lhs.IsEmpty() && !rhs.IsEmpty()) {
 				// LHS ^ RHS when both reals (optimization)						
 				Real result = std::pow(lhs.Get<Real>(), rhs.Get<Real>());
-				PC_PARSE_VERBOSE("Built-in exponentiation: " << lhs << " " << Code::Token[Code::Power].mToken
+				VERBOSE("Built-in exponentiation: " << lhs << " " << Code::Token[Code::Power].mToken
 					<< " " << rhs << " = " << result);
 				lhs = result;
 				return progress;
@@ -1037,14 +1037,14 @@ namespace Langulus::Flow
 
 		// Try invoking the verb in the context (slower)						
 		auto exponentiator = Verbs::Exponent({}, rhs);
-		if (!optimize || !DispatchDeep<true, true, true>(lhs, exponentiator)) {
+		if (!optimize || !DispatchDeep(lhs, exponentiator)) {
 			// If execution failed, just push the verb							
 			lhs = Move(exponentiator.SetSource(Move(lhs)));
-			PC_PARSE_VERBOSE("Power operator: " << lhs);
+			VERBOSE("Power operator: " << lhs);
 			return progress;
 		}
 		
-		PC_PARSE_VERBOSE("Exponentiated: " << lhs << " " << Code::Token[Code::Power].mToken
+		VERBOSE("Exponentiated: " << lhs << " " << Code::Token[Code::Power].mToken
 			<< " " << rhs << " = " << exponentiator.GetOutput());
 		lhs = Move(exponentiator.GetOutput());
 		return progress;
@@ -1098,8 +1098,8 @@ namespace Langulus::Flow
 				PRETTY_ERROR("Invalid verb charge operator: " << Code::Token[op].mToken);
 			}
 
-			PC_PARSE_VERBOSE(lhs << " " << Code::Token[op].mToken
-				<< " " << rhs << " = " << ccCyan << verb);
+			VERBOSE(lhs << " " << Code::Token[op].mToken
+				<< " " << rhs << " = " << Logger::Cyan << verb);
 			lhs = verb;
 		}
 		else if (lhs.Is<DMeta>()) {
@@ -1123,8 +1123,8 @@ namespace Langulus::Flow
 				PRETTY_ERROR("Invalid data charge operator: " << Code::Token[op].mToken);
 			}
 
-			PC_PARSE_VERBOSE(lhs << " " << Code::Token[op].mToken
-				<< " " << rhs << " = " << ccCyan << construct);
+			VERBOSE(lhs << " " << Code::Token[op].mToken
+				<< " " << rhs << " = " << Logger::Cyan << construct);
 			lhs = construct;
 		}
 		else PRETTY_ERROR("Uncharged meta " << lhs << " for operator: " << Code::Token[op].mToken);

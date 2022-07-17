@@ -89,50 +89,6 @@ namespace Langulus::Verbs
 namespace Langulus::Flow
 {
 
-	/// Call the default built-in memory abilities										
-	/// This should be called only in memory blocks that are flat and contain	
-	/// only a single element																	
-	///	@param context - the context in which scope will be executed			
-	///	@param verb - the verb to send over												
-	///	@return true on success																
-	/*template<CT::Verb V>
-	bool Verb::DefaultDo(Block& context, V& verb) {
-		SAFETY(if (context.GetCount() > 1 || context.IsDeep()) {
-			Throw<Except::Flow>(Logger::Error()
-				<< "Should operate on flat single/empty instances only, but "
-				<< context.GetCount() << " instead (or just deep)")
-		});
-
-		if constexpr (CT:Same<V, Verbs::Interpret>)
-			DefaultInterpret(context, verb);
-
-		switch (verb.GetSwitch()) {
-		case Verbs::Interpret::Switch:
-			DefaultInterpret(context, verb);
-			break;
-		case Verbs::Associate::Switch:
-			DefaultAssociate(context, verb);
-			break;
-		case Verbs::Select::Switch:
-			DefaultSelect(context, verb);
-			break;
-		case Verbs::Create::Switch:
-			DefaultCreate(context, verb);
-			break;
-		case Verbs::Scope::Switch:
-			DefaultScope(context, verb);
-			break;
-		case Verbs::Conjunct::Switch:
-			DefaultConjunct(context, verb);
-			break;
-		case Verbs::Disjunct::Switch:
-			DefaultDisjunct(context, verb);
-			break;
-		}
-
-		return verb.IsDone();
-	}*/
-
 	template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::Verb V>
 	Count Execute(T& context, V& verb);
 
@@ -211,10 +167,16 @@ namespace Langulus::Flow
 	/// Invoke a verb on a flat context of as much elements as you want			
 	/// If an element is not able to execute verb, attempt calling the default	
 	/// This should be called only in memory blocks that are flat					
+	///	@tparam RESOLVE - whether or not to perform runtime resolve of the	
+	///							contexts, getting the most concrete type				
+	///	@tparam DISPATCH - whether or not to use custom dispatcher for			
+	///							 contexts, if any												
+	///	@tparam DEFAULT - whether or not to wllo default/stateless verb		
+	///							execution, if all else fails								
 	///	@param context - the context in which to dispatch the verb				
 	///	@param verb - the verb to send over												
 	///	@return the number of successful executions									
-	template<bool RESOLVE, bool DISPATCH, bool DEFAULT, CT::Data T, CT::Verb V>
+	template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Data T, CT::Verb V>
 	Count DispatchFlat(T& context, V& verb) {
 		if (context.IsEmpty()) {
 			if constexpr (DEFAULT)
@@ -277,10 +239,16 @@ namespace Langulus::Flow
 	/// this block. If a failure occurs inside a scope, that scope will be		
 	/// considered failed, unless it's an OR scope - OR scopes stop execution	
 	/// right after the first success and fail only	if all branches fail			
-	///	@param context - the context in which scope will be executed			
+	///	@tparam RESOLVE - whether or not to perform runtime resolve of the	
+	///							contexts, getting the most concrete type				
+	///	@tparam DISPATCH - whether or not to use custom dispatcher for			
+	///							 contexts, if any												
+	///	@tparam DEFAULT - whether or not to wllo default/stateless verb		
+	///							execution, if all else fails								
+	///	@param context - the context in which scope will be dispatched to		
 	///	@param verb - the verb to execute												
 	///	@return the number of successful executions									
-	template<bool RESOLVE, bool DISPATCH, bool DEFAULT, CT::Data T, CT::Verb V>
+	template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Data T, CT::Verb V>
 	Count DispatchDeep(T& context, V& verb) {
 		if (context.IsDeep() || context.Is<Trait>()) {
 			// Nest if context is deep, or a trait									
@@ -327,14 +295,6 @@ namespace Langulus::Flow
 		// Execute implemented verbs if available, or fallback to			
 		// default verbs, eventually													
 		return DispatchFlat<RESOLVE, DISPATCH, DEFAULT>(context, verb);
-	}
-
-	/// Invoke a verb on an empty context													
-	///	@param verb - the verb to execute												
-	///	@return the number of successful executions									
-	template<CT::Verb V>
-	Count DispatchEmpty(V& verb) {
-		return V::ExecuteStateless(verb);
 	}
 
 } // namespace Langulus::Flow

@@ -1,6 +1,7 @@
 #include "Scope.hpp"
 #include "Construct.hpp"
 #include "verbs/Do.inl"
+#include "verbs/Interpret.inl"
 
 #define VERBOSE_FLOW(a)			// Logger::Verbose() << a
 #define VERBOSE_FLOW_TAB(a)	// ScopedTab tab; Logger::Verbose() << a << tab
@@ -323,7 +324,7 @@ namespace Langulus::Flow
 
 		// Dispatch the verb to the context, executing it						
 		// Any results should be inside verb.mOutput afterwards				
-		if (!DispatchDeep<true, true, true>(verb.mSource, verb)) {
+		if (!DispatchDeep(verb.mSource, verb)) {
 			FLOW_ERRORS("Error executing verb: " << verb);
 			return false;
 		}

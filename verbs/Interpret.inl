@@ -77,7 +77,6 @@ namespace Langulus::Verbs
 		return static_cast<TO>(from);
 	}
 
-
 } // namespace Langulus::Verbs
 
 
@@ -88,47 +87,59 @@ namespace Langulus
 	///	@param lhs - the logger interface												
 	///	@param rhs - the block to stringify												
 	///	@return a reference to the logger for chaining								
-	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (Logger::A::Interface& lhs, const Flow::Block& rhs) {
+	template<CT::Deep T>
+	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs) {
 		return lhs << Verbs::Interpret::To<Flow::Debug>(rhs);
 	}
 
-	namespace Anyness
-	{
+	/// Extend the logger to be capable of logging anything convertible to		
+	/// debug, or eventually, text															
+	///	@param lhs - the logger interface												
+	///	@param rhs - the verb to stringify												
+	///	@return a reference to the logger for chaining								
+	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (Logger::A::Interface& lhs, const Flow::Verb& rhs) {
+		return lhs << Verbs::Interpret::To<Flow::Debug>(rhs);
+	}
 
-		/// Define the otherwise undefined Langulus::Anyness::Block::AsCast		
-		/// to use the interpret verb pipeline for runtime conversion				
-		///	@tparam T - the type to convert to											
-		///	@tparam FATAL_FAILURE - true to throw on failure, otherwise			
-		///									return a default-initialized T on fail		
-		///	@return the first element, converted to T									
-		template<CT::Data T, bool FATAL_FAILURE>
-		T Block::AsCast() const {
-			// Attempt pointer arithmetic conversion first						
-			try { return As<T>(); }
-			catch (const Except::Access&) {}
+} // namespace Langulus
 
-			// If this is reached, we attempt runtime conversion by			
-			// dispatching Verbs::Interpret to the first element				
-			const auto meta = MetaData::Of<T>();
-			Verbs::Interpret interpreter {{}, meta};
-			if (!Flow::DispatchDeep(GetElementResolved(0), interpreter)) {
-				// Failure																	
-				if constexpr (FATAL_FAILURE) {
-					Throw<Except::Convert>(Logger::Error() <<
-						"Unable to AsCast from " << GetToken() << " to " << meta->mToken);
-				}
-				else if constexpr (CT::Defaultable<T>)
-					return {};
-				else {
-					LANGULUS_ASSERT(
-						"Unable to AsCast to non-default-constructible type, "
-						"when lack of FATAL_FAILURE demands it");
-				}
+
+namespace Langulus::Anyness
+{
+
+	/// Define the otherwise undefined Langulus::Anyness::Block::AsCast			
+	/// to use the interpret verb pipeline for runtime conversion					
+	///	@tparam T - the type to convert to												
+	///	@tparam FATAL_FAILURE - true to throw on failure, otherwise				
+	///									return a default-initialized T on fail			
+	///	@return the first element, converted to T										
+	template<CT::Data T, bool FATAL_FAILURE>
+	T Block::AsCast() const {
+		// Attempt pointer arithmetic conversion first							
+		try { return As<T>(); }
+		catch (const Except::Access&) {}
+
+		// If this is reached, we attempt runtime conversion by				
+		// dispatching Verbs::Interpret to the first element					
+		const auto meta = MetaData::Of<T>();
+		Verbs::Interpret interpreter {{}, meta};
+		if (!Flow::DispatchDeep(GetElementResolved(0), interpreter)) {
+			// Failure																		
+			if constexpr (FATAL_FAILURE) {
+				Throw<Except::Convert>(Logger::Error() <<
+					"Unable to AsCast from " << GetToken() << " to " << meta->mToken);
 			}
-
-			// Success																		
-			return interpreter.GetOutput().As<T>();
+			else if constexpr (CT::Defaultable<T>)
+				return {};
+			else {
+				LANGULUS_ASSERT(
+					"Unable to AsCast to non-default-constructible type, "
+					"when lack of FATAL_FAILURE demands it");
+			}
 		}
 
-	} // namespace Langulus::Anyness
-} // namespace Langulus
+		// Success																			
+		return interpreter.GetOutput().As<T>();
+	}
+
+} // namespace Langulus::Anyness

@@ -56,7 +56,12 @@ namespace Langulus::Flow
 
 		static const TokenProperties Token[OpCounter];
 
-		using Text::Text;
+		Code() = default;
+		Code(const Code&) = default;
+		Code(const Text& other) noexcept : Text {other} {}
+		template<Count C>
+		Code(const Letter(&other)[C]) : Text {other} {}
+
 
 		NOD() Any Parse(bool optimize = true) const;
 		NOD() Code Clone() const;

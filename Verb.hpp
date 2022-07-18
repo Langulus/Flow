@@ -82,8 +82,8 @@ namespace Langulus::Flow
 		NOD() Hash GetHash() const noexcept;
 		void Reset() noexcept;
 
-		NOD() operator Code() const;
-		NOD() operator Debug() const;
+		NOD() explicit operator Code() const;
+		NOD() explicit operator Debug() const;
 	};
 
 
@@ -127,8 +127,8 @@ namespace Langulus::Flow
 		Verb& operator *= (const Real&) noexcept;
 		Verb& operator ^= (const Real&) noexcept;
 
-		NOD() operator Code() const;
-		NOD() operator Debug() const;
+		NOD() explicit operator Code() const;
+		NOD() explicit operator Debug() const;
 
 		/// Replace these in your verbs, to specify their behavior statically	
 		/// Otherwise, these functions fallback and perform slow RTTI checks		
@@ -242,254 +242,249 @@ namespace Langulus::CT
 } // namespace Langulus::CT
 
 
-namespace Langulus
+/// Namespace containing all built-in Langulus verbs									
+namespace Langulus::Verbs
 {
+	using namespace ::Langulus::Flow;
 
-	/// Namespace containing all built-in Langulus verbs								
-	namespace Verbs
-	{
+	/// Create/Destroy verb																		
+	/// Used for allocating new elements. If the type you're creating has		
+	/// a producer, you need to execute the verb in the correct context			
+	struct Create : public Verb {
+		LANGULUS(POSITIVE_VERB) "Create";
+		LANGULUS(NEGATIVE_VERB) "Destroy";
+		LANGULUS(INFO) 
+			"Used for allocating new elements. "
+			"If the type you're creating has	a producer, "
+			"you need to execute the verb in a matching producer, "
+			"or that producer will be created automatically for you, if possible";
 
-		using namespace ::Langulus::Flow;
+		Create(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-		/// Create/destroy verb																	
-		/// Used for allocating new elements. If the type you're creating has	
-		/// a producer, you need to execute the verb in the correct context		
-		struct Create : public Verb {
-			LANGULUS(POSITIVE_VERB) "Create";
-			LANGULUS(NEGATIVE_VERB) "Destroy";
-			LANGULUS(INFO) 
-				"Used for allocating new elements. "
-				"If the type you're creating has	a producer, "
-				"you need to execute the verb in a matching producer, "
-				"or that producer will be created automatically for you, if possible";
+		template<CT::Data T, CT::Data... A>
+		static constexpr bool AvailableFor() noexcept;
+		template<CT::Data T, CT::Data... A>
+		static constexpr auto Of() noexcept;
 
-			Create(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		template<CT::Data T>
+		static bool ExecuteIn(T&, Verb&);
 
-			template<CT::Data T, CT::Data... A>
-			static constexpr bool AvailableFor() noexcept;
-			template<CT::Data T, CT::Data... A>
-			static constexpr auto Of() noexcept;
+		static bool ExecuteDefault(Block&, Verb&);
+		static bool ExecuteStateless(Verb&);
 
-			template<CT::Data T>
-			static bool ExecuteIn(T&, Verb&);
+	protected:
+		static void SetMembers(Any&, const Any&);
+	};
 
-			static bool ExecuteDefault(Block&, Verb&);
-			static bool ExecuteStateless(Verb&);
+	/// Select/Deselect verb																	
+	/// Used to focus on a part of a container, or access members					
+	struct Select : public Verb {
+		LANGULUS(POSITIVE_VERB) "Select";
+		LANGULUS(NEGATIVE_VERB) "Deselect";
+		LANGULUS(INFO)
+			"Used to focus on a part of a container, or access members";
 
-		protected:
-			static void SetMembers(Any&, const Any&);
-		};
+		Select(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-		/// Select/Deselect verb																
-		/// Used to focus on a part of a container, or access members				
-		struct Select : public Verb {
-			LANGULUS(POSITIVE_VERB) "Select";
-			LANGULUS(NEGATIVE_VERB) "Deselect";
-			LANGULUS(INFO)
-				"Used to focus on a part of a container, or access members";
+		template<CT::Data T, CT::Data... A>
+		static constexpr bool AvailableFor() noexcept;
+		template<CT::Data T, CT::Data... A>
+		static constexpr auto Of() noexcept;
 
-			Select(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		template<CT::Data T>
+		static bool ExecuteIn(T&, Verb&);
 
-			template<CT::Data T, CT::Data... A>
-			static constexpr bool AvailableFor() noexcept;
-			template<CT::Data T, CT::Data... A>
-			static constexpr auto Of() noexcept;
+		static bool ExecuteDefault(const Block&, Verb&);
+		static bool ExecuteDefault(Block&, Verb&);
+		static bool ExecuteStateless(Verb&);
 
-			template<CT::Data T>
-			static bool ExecuteIn(T&, Verb&);
+	protected:
+		template<bool MUTABLE>
+		static bool DefaultSelect(Block&, Verb&);
+		template<bool MUTABLE, class META>
+		static bool PerIndex(Block&, TAny<Trait>&, TMeta, META, const TAny<Index>&);
+		template<bool MUTABLE>
+		static bool SelectByMeta(const TAny<Index>&, DMeta, Block&, TAny<Trait>&, TAny<const RTTI::Ability*>&);
+	};
 
-			static bool ExecuteDefault(const Block&, Verb&);
-			static bool ExecuteDefault(Block&, Verb&);
-			static bool ExecuteStateless(Verb&);
+	/// Associate/Disassociate verb															
+	/// Either performs a shallow copy, or aggregates associations,				
+	/// depending on the context's complexity												
+	struct Associate : public Verb {
+		LANGULUS(POSITIVE_VERB) "Associate";
+		LANGULUS(NEGATIVE_VERB) "Disassocate";
+		LANGULUS(INFO)
+			"Either performs a shallow copy, or aggregates associations, "
+			"depending on the context's complexity";
 
-		protected:
-			template<bool MUTABLE>
-			static bool DefaultSelect(Block&, Verb&);
-			template<bool MUTABLE, class META>
-			static bool PerIndex(Block&, TAny<Trait>&, TMeta, META, const TAny<Index>&);
-			template<bool MUTABLE>
-			static bool SelectByMeta(const TAny<Index>&, DMeta, Block&, TAny<Trait>&, TAny<const RTTI::Ability*>&);
-		};
+		Associate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-		/// Associate/Disassociate verb														
-		/// Either performs a shallow copy, or aggregates associations,			
-		/// depending on the context's complexity											
-		struct Associate : public Verb {
-			LANGULUS(POSITIVE_VERB) "Associate";
-			LANGULUS(NEGATIVE_VERB) "Disassocate";
-			LANGULUS(INFO)
-				"Either performs a shallow copy, or aggregates associations, "
-				"depending on the context's complexity";
+		template<CT::Data T, CT::Data... A>
+		static constexpr bool AvailableFor() noexcept;
+		template<CT::Data T, CT::Data... A>
+		static constexpr auto Of() noexcept;
 
-			Associate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		template<CT::Data T>
+		static bool ExecuteIn(T&, Verb&);
 
-			template<CT::Data T, CT::Data... A>
-			static constexpr bool AvailableFor() noexcept;
-			template<CT::Data T, CT::Data... A>
-			static constexpr auto Of() noexcept;
+		static bool ExecuteDefault(Block&, Verb&);
+	};
 
-			template<CT::Data T>
-			static bool ExecuteIn(T&, Verb&);
+	/// Add/Subtract verb																		
+	/// Performs arithmetic addition or subtraction										
+	struct Add : public Verb {
+		LANGULUS(POSITIVE_VERB) "Add";
+		LANGULUS(NEGATIVE_VERB) "Subtract";
+		LANGULUS(INFO)
+			"Performs arithmetic addition or subtraction";
 
-			static bool ExecuteDefault(Block&, Verb&);
-		};
+		Add(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-		/// Add/Subtract verb																	
-		/// Performs arithmetic addition or subtraction									
-		struct Add : public Verb {
-			LANGULUS(POSITIVE_VERB) "Add";
-			LANGULUS(NEGATIVE_VERB) "Subtract";
-			LANGULUS(INFO)
-				"Performs arithmetic addition or subtraction";
+		template<CT::Data T, CT::Data... A>
+		static constexpr bool AvailableFor() noexcept;
+		template<CT::Data T, CT::Data... A>
+		static constexpr auto Of() noexcept;
 
-			Add(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		template<CT::Data T>
+		static bool ExecuteIn(T&, Verb&);
 
-			template<CT::Data T, CT::Data... A>
-			static constexpr bool AvailableFor() noexcept;
-			template<CT::Data T, CT::Data... A>
-			static constexpr auto Of() noexcept;
+		static bool ExecuteStateless(Verb&);
+	};
 
-			template<CT::Data T>
-			static bool ExecuteIn(T&, Verb&);
+	/// Multiply/Divide verb																	
+	/// Performs arithmetic multiplication or division									
+	/// If context is no specified, it is always 1										
+	struct Multiply : public Verb {
+		LANGULUS(POSITIVE_VERB) "Multiply";
+		LANGULUS(NEGATIVE_VERB) "Divide";
+		LANGULUS(INFO)
+			"Performs arithmetic multiplication or division. "
+			"If context is no specified, it is always 1";
 
-			static bool ExecuteStateless(Verb&);
-		};
+		Multiply(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-		/// Multiply/Divide verb																
-		/// Performs arithmetic multiplication or division								
-		/// If context is no specified, it is always 1									
-		struct Multiply : public Verb {
-			LANGULUS(POSITIVE_VERB) "Multiply";
-			LANGULUS(NEGATIVE_VERB) "Divide";
-			LANGULUS(INFO)
-				"Performs arithmetic multiplication or division. "
-				"If context is no specified, it is always 1";
+		template<CT::Data T, CT::Data... A>
+		static constexpr bool AvailableFor() noexcept;
+		template<CT::Data T, CT::Data... A>
+		static constexpr auto Of() noexcept;
 
-			Multiply(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		template<CT::Data T>
+		static bool ExecuteIn(T&, Verb&);
 
-			template<CT::Data T, CT::Data... A>
-			static constexpr bool AvailableFor() noexcept;
-			template<CT::Data T, CT::Data... A>
-			static constexpr auto Of() noexcept;
+		static bool ExecuteStateless(Verb&);
+	};
 
-			template<CT::Data T>
-			static bool ExecuteIn(T&, Verb&);
+	/// Exponent/Logarithm verb																
+	/// Performs exponentiation or logarithm												
+	struct Exponent : public Verb {
+		LANGULUS(POSITIVE_VERB) "Exponent";
+		LANGULUS(NEGATIVE_VERB) "Logarithm";
+		LANGULUS(INFO)
+			"Performs exponentiation or logarithm";
 
-			static bool ExecuteStateless(Verb&);
-		};
+		Exponent(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-		/// Exponentiate/Logarithm verb														
-		/// Performs exponentiation or logarithm											
-		struct Exponent : public Verb {
-			LANGULUS(POSITIVE_VERB) "Exponent";
-			LANGULUS(NEGATIVE_VERB) "Logarithm";
-			LANGULUS(INFO)
-				"Performs exponentiation or logarithm";
+		template<CT::Data T, CT::Data... A>
+		static constexpr bool AvailableFor() noexcept;
+		template<CT::Data T, CT::Data... A>
+		static constexpr auto Of() noexcept;
 
-			Exponent(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		template<CT::Data T>
+		static bool ExecuteIn(T&, Verb&);
+	};
 
-			template<CT::Data T, CT::Data... A>
-			static constexpr bool AvailableFor() noexcept;
-			template<CT::Data T, CT::Data... A>
-			static constexpr auto Of() noexcept;
+	/// Catenate/Split verb																		
+	/// Catenates anything catenable, or split stuff apart using a mask			
+	struct Catenate : public Verb {
+		LANGULUS(POSITIVE_VERB) "Catenate";
+		LANGULUS(NEGATIVE_VERB) "Split";
+		LANGULUS(INFO)
+			"Catenates anything catenable, or splits stuff apart using a mask";
 
-			template<CT::Data T>
-			static bool ExecuteIn(T&, Verb&);
-		};
+		Catenate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-		/// Catenate/Split verb																	
-		/// Catenates anything catenable, or split stuff apart using a mask		
-		struct Catenate : public Verb {
-			LANGULUS(POSITIVE_VERB) "Catenate";
-			LANGULUS(NEGATIVE_VERB) "Split";
-			LANGULUS(INFO)
-				"Catenates anything catenable, or splits stuff apart using a mask";
+		template<CT::Data T, CT::Data... A>
+		static constexpr bool AvailableFor() noexcept;
+		template<CT::Data T, CT::Data... A>
+		static constexpr auto Of() noexcept;
 
-			Catenate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		template<CT::Data T>
+		static bool ExecuteIn(T&, Verb&);
 
-			template<CT::Data T, CT::Data... A>
-			static constexpr bool AvailableFor() noexcept;
-			template<CT::Data T, CT::Data... A>
-			static constexpr auto Of() noexcept;
+		static bool ExecuteDefault(const Block&, Verb&);
+		static bool ExecuteDefault(Block&, Verb&);
+		static bool ExecuteStateless(Verb&);
+	};
 
-			template<CT::Data T>
-			static bool ExecuteIn(T&, Verb&);
+	/// Conjunct/Disjunct verb																	
+	/// Either combines LHS and RHS as one AND container, or separates them		
+	/// as one OR container - does only shallow copying								
+	struct Conjunct : public Verb {
+		LANGULUS(POSITIVE_VERB) "Conjunct";
+		LANGULUS(NEGATIVE_VERB) "Disjunct";
+		LANGULUS(INFO)
+			"Either combines LHS and RHS as one AND container, or separates them "
+			"as one OR container - does only shallow copying";
 
-			static bool ExecuteDefault(const Block&, Verb&);
-			static bool ExecuteDefault(Block&, Verb&);
-			static bool ExecuteStateless(Verb&);
-		};
+		Conjunct(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-		/// Conjunct/Disjunct verb																
-		/// Either combines LHS and RHS as one AND container, or separates them	
-		/// as one OR container - does only shallow copying							
-		struct Conjunct : public Verb {
-			LANGULUS(POSITIVE_VERB) "Conjunct";
-			LANGULUS(NEGATIVE_VERB) "Disjunct";
-			LANGULUS(INFO)
-				"Either combines LHS and RHS as one AND container, or separates them "
-				"as one OR container - does only shallow copying";
+		template<CT::Data T, CT::Data... A>
+		static constexpr bool AvailableFor() noexcept;
+		template<CT::Data T, CT::Data... A>
+		static constexpr auto Of() noexcept;
 
-			Conjunct(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		template<CT::Data T>
+		static bool ExecuteIn(T&, Verb&);
 
-			template<CT::Data T, CT::Data... A>
-			static constexpr bool AvailableFor() noexcept;
-			template<CT::Data T, CT::Data... A>
-			static constexpr auto Of() noexcept;
+		static bool ExecuteDefault(const Block&, Verb&);
+		static bool ExecuteDefault(Block&, Verb&);
+		static bool ExecuteStateless(Verb&);
+	};
 
-			template<CT::Data T>
-			static bool ExecuteIn(T&, Verb&);
+	/// Interpret																					
+	/// Performs conversion																		
+	struct Interpret : public Verb {
+		LANGULUS(NAME) "Interpret";
+		LANGULUS(INFO) "Performs conversion";
 
-			static bool ExecuteDefault(const Block&, Verb&);
-			static bool ExecuteDefault(Block&, Verb&);
-			static bool ExecuteStateless(Verb&);
-		};
+		Interpret(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-		/// Interpret																				
-		/// Performs conversion																	
-		struct Interpret : public Verb {
-			LANGULUS(NAME) "Interpret";
-			LANGULUS(INFO) "Performs conversion";
+		template<CT::Data T, CT::Data... A>
+		static constexpr bool AvailableFor() noexcept;
+		template<CT::Data T, CT::Data... A>
+		static constexpr auto Of() noexcept;
 
-			Interpret(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		template<class TO, class FROM>
+		static TO To(const FROM&);
 
-			template<CT::Data T, CT::Data... A>
-			static constexpr bool AvailableFor() noexcept;
-			template<CT::Data T, CT::Data... A>
-			static constexpr auto Of() noexcept;
+		template<CT::Data T>
+		static bool ExecuteIn(T&, Verb&);
 
-			template<class TO, class FROM>
-			static TO To(const FROM&);
+		static bool ExecuteDefault(const Block&, Verb&);
+	};
 
-			template<CT::Data T>
-			static bool ExecuteIn(T&, Verb&);
+	/// Do/Undo verb																				
+	/// Used as a runtime dispatcher of composite types								
+	struct Do : public Verb {
+		LANGULUS(POSITIVE_VERB) "Do";
+		LANGULUS(NEGATIVE_VERB) "Undo";
+		LANGULUS(INFO) "Used as a runtime dispatcher of composite types";
 
-			static bool ExecuteDefault(const Block&, Verb&);
-		};
+		Do(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
-		/// Do verb																					
-		/// Used as a runtime dispatcher of composite types							
-		struct Do : public Verb {
-			LANGULUS(NAME) "Do";
-			LANGULUS(INFO) "Used as a runtime dispatcher of composite types";
+		template<CT::Data T, CT::Data... A>
+		static constexpr bool AvailableFor() noexcept;
+		template<CT::Data T, CT::Data... A>
+		static constexpr auto Of() noexcept;
 
-			Do(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		template<CT::Data T>
+		static bool ExecuteIn(T&, Verb&);
 
-			template<CT::Data T, CT::Data... A>
-			static constexpr bool AvailableFor() noexcept;
-			template<CT::Data T, CT::Data... A>
-			static constexpr auto Of() noexcept;
+		static bool ExecuteDefault(const Block&, Verb&);
+		static bool ExecuteDefault(Block&, Verb&);
+		static bool ExecuteStateless(Verb&);
+	};
 
-			template<CT::Data T>
-			static bool ExecuteIn(T&, Verb&);
-
-			static bool ExecuteDefault(const Block&, Verb&);
-			static bool ExecuteDefault(Block&, Verb&);
-			static bool ExecuteStateless(Verb&);
-		};
-
-	} // namespace Langulus::Verbs
-
-} // namespace Langulus
+} // namespace Langulus::Verbs
 
 #include "Verb.inl"

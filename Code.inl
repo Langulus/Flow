@@ -18,14 +18,14 @@ namespace Langulus::Flow
 	///	@param offset - the number of elements to discard from the front		
 	///	@return a shallow-copied container with the correct offset				
 	inline Code Code::LeftOf(Offset o) const {
-		return Text::Crop(o, mCount - o);
+		return Code {Text::Crop(o, mCount - o)};
 	}
 
 	/// Remove elements from the right side of Code code								
 	///	@param offset - the number of elements to remain in container			
 	///	@return a shallow-copied container with the correct offset				
 	inline Code Code::RightOf(Offset o) const {
-		return Text::Crop(0, o);
+		return Code {Text::Crop(0, o)};
 	}
 
 	/// Check if the Code container begins with special elements, such as		
@@ -133,21 +133,21 @@ namespace Langulus::Flow
 	inline Code operator + (const Code& lhs, const Code& rhs) {
 		// It's essentially the same, as concatenating Text with Text		
 		// with the only difference being, that it retains Code type		
-		return static_cast<const Text&>(lhs) + static_cast<const Text&>(rhs);
+		return Code {static_cast<const Text&>(lhs) + static_cast<const Text&>(rhs)};
 	}
 
 	/// Concatenate Text with Code, Code always dominates								
 	inline Code operator + (const Text& lhs, const Code& rhs) {
 		// It's essentially the same, as concatenating Text with Text		
 		// with the only difference being, that it retains Code type		
-		return lhs + static_cast<const Text&>(rhs);
+		return Code {lhs + static_cast<const Text&>(rhs)};
 	}
 
 	/// Concatenate Code with Text, Code always dominates								
 	inline Code operator + (const Code& lhs, const Text& rhs) {
 		// It's essentially the same, as concatenating Text with Text		
 		// with the only difference being, that it retains Code type		
-		return static_cast<const Text&>(lhs) + rhs;
+		return Code {static_cast<const Text&>(lhs) + rhs};
 	}
 
 	/// Destructive concatenation of Code with anything								
@@ -184,7 +184,7 @@ namespace Langulus::Flow
 
 	/// Make a code literal																		
 	inline Code operator "" _code(const char* text, ::std::size_t size) {
-		return Code {text, size};
+		return Text {text, size};
 	}
 
 } // namespace Langulus::Flow

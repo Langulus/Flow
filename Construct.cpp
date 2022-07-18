@@ -219,7 +219,7 @@ namespace Langulus::Flow
 			result += Code::CloseScope;
 		}
 
-		return result;
+		return Debug {static_cast<Text&>(result)};
 	}
 
 } // namespace Langulus::Flow

@@ -30,7 +30,7 @@ namespace Langulus::Flow
 
 	/// Serialize charge as debug (same as code)											
 	Charge::operator Debug() const {
-		return Charge::operator Code();
+		return Debug {Charge::operator Code()};
 	}
 
 	/// Scale the mass of a charge															
@@ -246,7 +246,7 @@ namespace Langulus::Flow
 		if (mSuccesses) {
 			// If verb has been executed, just dump the output					
 			result += Verbs::Interpret::To<Debug>(mOutput);
-			return result;
+			return Debug {result};
 		}
 
 		// If reached, then verb hasn't been executed yet						
@@ -304,7 +304,7 @@ namespace Langulus::Flow
 		if (enscope)
 			result += Code::CloseScope;
 
-		return result;
+		return Debug {result};
 	}
 
 

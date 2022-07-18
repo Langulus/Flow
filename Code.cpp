@@ -436,17 +436,17 @@ namespace Langulus::Flow
 			return progress + OperatorString::Parse(op, relevant, lhs);
 		//case Code::OpenByte:
 		//	TODO();
-		case Code::PolarizeLeft:
-		case Code::PolarizeRight:
+		case Code::Past:
+		case Code::Future:
 			return progress + OperatorPolarize::Parse(op, relevant, lhs, optimize);
 		//case Code::Context:
 		//	return progress + OperatorContext::Parse(relevant, lhs, optimize);
-		case Code::Copy:
+		case Code::Associate:
 			return progress + OperatorCopy::Parse(relevant, lhs, optimize);
 		case Code::Missing:
 			return progress + OperatorMissing::Parse(relevant, lhs);
-		case Code::AndSeparator:
-		case Code::OrSeparator:
+		case Code::And:
+		case Code::Or:
 			return progress + OperatorSeparator::Parse(op, relevant, lhs, optimize);
 		case Code::Select:
 			return progress + OperatorSelect::Parse(relevant, lhs, optimize);
@@ -456,7 +456,8 @@ namespace Langulus::Flow
 		case Code::Priority:
 			if (OperatorCharge::IsChargable(lhs))
 				return progress + OperatorCharge::Parse(op, relevant, lhs);
-			else PRETTY_ERROR("Mass operator on non-chargable LHS: " << lhs);
+			else
+				PRETTY_ERROR("Mass operator on non-chargable LHS: " << lhs);
 		case Code::Add:
 		case Code::Subtract:
 			return progress + OperatorAdd::Parse(op, relevant, lhs, optimize);
@@ -695,7 +696,7 @@ namespace Langulus::Flow
 			// AND separator and concatenates LHS << RHS, polarizing both	
 			// Example: do(left > right), do(right < left)						
 			Any deeper;
-			if (op == Code::PolarizeRight) {
+			if (op == Code::Future) {
 				lhs.MakePast();
 				rhs.MakeFuture();
 				deeper << Move(lhs) << Move(rhs);
@@ -711,7 +712,7 @@ namespace Langulus::Flow
 		else if (lhs.IsValid()) {
 			// Only LHS is available, so polarize it								
 			// Example: do(left>), do(right<)										
-			if (op == Code::PolarizeRight)
+			if (op == Code::Future)
 				lhs.MakeFuture();
 			else
 				lhs.MakePast();
@@ -719,7 +720,7 @@ namespace Langulus::Flow
 		else if (rhs.IsValid()) {
 			// Only RHS is available, so polarize it								
 			// Example: do(>right), do(<left)										
-			if (op == Code::PolarizeRight) {
+			if (op == Code::Past) {
 				rhs.MakeFuture();
 				lhs = Move(rhs);
 			}
@@ -800,7 +801,7 @@ namespace Langulus::Flow
 		// Output is LHS, new content is RHS, just do a smart push to LHS	
 		Any rhs;
 		const auto progress = Expression::Parse(input, rhs, Code::Token[op].mPriority, optimize);
-		lhs.SmartPush(rhs, (op == Code::OrSeparator ? DataState::Or : DataState::Default));
+		lhs.SmartPush(rhs, (op == Code::Or ? DataState::Or : DataState::Default));
 		VERBOSE("Pushing (" 
 			<< Code::Token[op].mToken << ") " << rhs << " -> " << Logger::Cyan << lhs);
 		return progress;
@@ -862,7 +863,7 @@ namespace Langulus::Flow
 		// If no LHS exists, we simply copy in current environment			
 		// We wrap both RHS, and LHS into a Verbs::Associate					
 		Any rhs;
-		progress = Expression::Parse(input, rhs, Code::Token[Code::Copy].mPriority, optimize);
+		progress = Expression::Parse(input, rhs, Code::Token[Code::Associate].mPriority, optimize);
 		if (rhs.IsInvalid())
 			PRETTY_ERROR("Invalid RHS for copy operator");
 

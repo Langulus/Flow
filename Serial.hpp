@@ -1,16 +1,15 @@
 #pragma once
 #include "Code.hpp"
 
-//LANGULUS_EXCEPTION(Serialize);
-
-/*namespace Langulus::Flow
+namespace Langulus::Flow
 {
 
-	template<class TO, bool HEADER = true, class FROM>
-	NOD() TO pcSerialize(const FROM&);
-
-	template<class FROM>
-	NOD() Any pcDeserialize(const FROM&);
+	template<CT::Block TO, bool HEADER = true, CT::Dense FROM>
+	NOD() TO Serialize(const FROM&);
+	template<CT::Block TO, bool HEADER = true, CT::Sparse FROM>
+	NOD() TO Serialize(FROM);
+	template<CT::Block FROM>
+	NOD() Any Deserialize(const FROM&);
 
 
 	namespace Detail
@@ -34,14 +33,15 @@
 		template<class TO>
 		void SerializeMembersToText(const Block&, TO&);
 
+
 		///																							
 		///	General binary serializer tools												
 		///																							
 		#pragma pack(push, 1)
 		struct Header {
-			uint8_t mAtomSize;
-			uint8_t mFlags;
-			uint16_t mUnused;
+			::std::uint8_t mAtomSize;
+			::std::uint8_t mFlags;
+			::std::uint16_t mUnused;
 
 		public:
 			Header() noexcept;
@@ -69,11 +69,7 @@
 		template<class META>
 		NOD() Size DeserializeMetaFromBinary(const Bytes&, META const*&, Offset, const Header&, const Loader&);
 
-		template<class INTERNAL>
-		NOD() Size DeserializeInternalFromBinary(const Bytes&, INTERNAL&, Offset, const Header&, const Loader&);
-
 	} // namespace Detail
-
 } // namespace Langulus::Flow
 
-#include "Serial.inl"*/
+#include "Serial.inl"

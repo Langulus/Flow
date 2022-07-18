@@ -1,5 +1,6 @@
 #pragma once
 #include "../Verb.hpp"
+#include "../Serial.hpp"
 #include "Do.inl"
 
 #define VERBOSE_CONVERSION(a) //Logger::Verbose() << a
@@ -73,8 +74,36 @@ namespace Langulus::Verbs
 	///	@return the converted element														
 	template<class TO, class FROM>
 	TO Interpret::To(const FROM& from) {
-		static_assert(CT::Convertible<FROM, TO>, "Type is not convertible");
-		return static_cast<TO>(from);
+		if constexpr (CT::Same<TO, FROM>) {
+			// Types are the same														
+			return from;
+		}
+		else if constexpr (CT::Convertible<FROM, TO>) {
+			// Directly convert if constructs/conversion operators			
+			// exist. These might throw! For example, converting Any to		
+			// Text may	fail, because Text is type-constrained, and Any		
+			// might not be of the same type											
+			try {
+				return static_cast<TO>(from);
+			}
+			catch (const Langulus::Exception&) {
+				// Conversion failed, but not fatal - we can attempt to		
+				// serialize to one of the supported types						
+				if constexpr (CT::SameAsOneOf<TO, Code, Text, Debug, Bytes>)
+					return Serialize<TO>(from);
+			}
+
+			Throw<Except::Convert>(Logger::Error()
+				<< "No runtime conversion succeeded from "
+				<< RTTI::NameOf<FROM>() << " to " << RTTI::NameOf<TO>());
+		}
+		else if constexpr (CT::SameAsOneOf<TO, Code, Text, Debug, Bytes>) {
+			// No constructor/conversion operator exists, that would do		
+			// the conversion, but we can rely on the serializer, if TO is	
+			// supported																	
+			return Serialize<TO>(from);
+		}
+		else LANGULUS_ASSERT("No static conversion routine exists between these types");
 	}
 
 } // namespace Langulus::Verbs
@@ -83,7 +112,7 @@ namespace Langulus::Verbs
 namespace Langulus
 {
 
-	/// Extend the logger to be capable of logging Block(s)							
+	/// Extend the logger to be capable of logging anything considered deep		
 	///	@param lhs - the logger interface												
 	///	@param rhs - the block to stringify												
 	///	@return a reference to the logger for chaining								
@@ -92,8 +121,7 @@ namespace Langulus
 		return lhs << Verbs::Interpret::To<Flow::Debug>(rhs);
 	}
 
-	/// Extend the logger to be capable of logging anything convertible to		
-	/// debug, or eventually, text															
+	/// Extend the logger to be capable of logging verbs								
 	///	@param lhs - the logger interface												
 	///	@param rhs - the verb to stringify												
 	///	@return a reference to the logger for chaining								

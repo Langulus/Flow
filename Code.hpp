@@ -23,13 +23,13 @@ namespace Langulus::Flow
 			CloseStringAlt,
 			OpenCharacter,
 			CloseCharacter,
-			PolarizeLeft,
-			PolarizeRight,
+			Past,
+			Future,
 			//Context,
-			Copy,
+			Associate,
 			Missing,
-			AndSeparator,
-			OrSeparator,
+			And,
+			Or,
 			Select,
 			Mass,
 			Frequency,
@@ -56,12 +56,7 @@ namespace Langulus::Flow
 
 		static const TokenProperties Token[OpCounter];
 
-		Code() = default;
-		Code(const Code&) = default;
-		Code(const Text& other) noexcept : Text {other} {}
-		template<Count C>
-		Code(const Letter(&other)[C]) : Text {other} {}
-
+		using Text::Text;
 
 		NOD() Any Parse(bool optimize = true) const;
 		NOD() Code Clone() const;

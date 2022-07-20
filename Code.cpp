@@ -251,43 +251,50 @@ namespace Langulus::Flow
 		else
 			VERBOSE("Parsing unknown with LHS(" << lhs << ") " << Logger::Tab);
 
-		while (progress < input.GetCount()) {
-			// Scan input until end														
-			Code relevant = input.LeftOf(progress);
-			Offset localProgress = 0;
+		try {
+			while (progress < input.GetCount()) {
+				// Scan input until end													
+				Code relevant = input.LeftOf(progress);
+				Offset localProgress = 0;
 
-			if (relevant[0] == '\0')
-				break;
-			else if (Skipped::Peek(relevant))
-				localProgress = Skipped::Parse(relevant);
-			else if (Operator::Peek(relevant))
-				localProgress = Operator::Parse(relevant, rhs, priority, optimize);
-			else if (!rhs.IsValid()) {
-				if (Keyword::Peek(relevant))
-					localProgress = Keyword::Parse(relevant, rhs);
-				else if (Number::Peek(relevant))
-					localProgress = Number::Parse(relevant, rhs);
-				else 
-					PRETTY_ERROR("Unexpected symbol");
-			}
-			else {
-				// There's already something in RHS, so nest						
-				// Make sure we parse in a fresh container and then push		
-				Any subrhs;
-				localProgress = Expression::Parse(relevant, subrhs, priority, optimize);
-				rhs.SmartPush(subrhs);
+				if (relevant[0] == '\0')
+					break;
+				else if (Skipped::Peek(relevant))
+					localProgress = Skipped::Parse(relevant);
+				else if (Operator::Peek(relevant))
+					localProgress = Operator::Parse(relevant, rhs, priority, optimize);
+				else if (!rhs.IsValid()) {
+					if (Keyword::Peek(relevant))
+						localProgress = Keyword::Parse(relevant, rhs);
+					else if (Number::Peek(relevant))
+						localProgress = Number::Parse(relevant, rhs);
+					else
+						PRETTY_ERROR("Unexpected symbol");
+				}
+				else {
+					// There's already something in RHS, so nest					
+					// Make sure we parse in a fresh container and then push	
+					Any subrhs;
+					localProgress = Expression::Parse(relevant, subrhs, priority, optimize);
+					rhs.SmartPush(subrhs);
 
-				// ... and do an early exit to avoid endless loops				
+					// ... and do an early exit to avoid endless loops			
+					progress += localProgress;
+					VERBOSE(Logger::Green << "Unknown resulted in " << rhs << Logger::Untab);
+					lhs = Move(rhs);
+					return progress;
+				}
+
+				if (0 == localProgress)
+					break;
+
 				progress += localProgress;
-				VERBOSE(Logger::Green << "Unknown resulted in " << rhs << Logger::Untab);
-				lhs = Move(rhs);
-				return progress;
 			}
-
-			if (0 == localProgress)
-				break;
-
-			progress += localProgress;
+		}
+		catch (const Except::Flow& e) {
+			VERBOSE(Logger::Error() << "Failed to parse: " << input);
+			VERBOSE(Logger::Error() << "Due to exception: " << e.what() << Logger::Untab);
+			throw;
 		}
 
 		// Input was parsed, relay content to output								
@@ -374,7 +381,7 @@ namespace Langulus::Flow
 		return progress;
 	}
 
-	/// Parse an integer or Real number														
+	/// Parse an integer or real number														
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
 	///	@return number of parsed characters												
@@ -1135,6 +1142,11 @@ namespace Langulus::Flow
 
 		return progress;
 	}
+
+	/// Generate code from operator															
+	///	@param op - the operator to stringify											
+	Code::Code(Operator op)
+		: Text {Disowned(Token[op].mTokenWithSpacing.data())} { }
 
 	/// Parse Code code																			
 	///	@param optimize - whether or not to precalculate constexpr				

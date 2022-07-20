@@ -57,6 +57,7 @@ namespace Langulus::Flow
 		static const TokenProperties Token[OpCounter];
 
 		using Text::Text;
+		explicit Code(Operator);
 
 		NOD() Any Parse(bool optimize = true) const;
 		NOD() Code Clone() const;

@@ -536,7 +536,7 @@ namespace Langulus::Flow
 	template<CT::Data T>
 	bool Verb::AvailableFor() const noexcept {
 		const auto meta = MetaData::Of<Decay<T>>();
-		return meta && meta->GetAbility<CT::Mutable<T>>(mVerb, mArgument.GetType());
+		return meta && meta->template GetAbility<CT::Mutable<T>>(mVerb, mArgument.GetType());
 	}
 
 	/// Execute an unknown verb in a given context										
@@ -549,7 +549,7 @@ namespace Langulus::Flow
 	bool Verb::ExecuteIn(T& context, V& verb) {
 		static_assert(CT::Verb<V>, "V must be a verb");
 		const auto meta = MetaData::Of<Decay<T>>();
-		const auto found = meta->GetAbility<CT::Mutable<T>>(verb.mVerb, verb.mArgument.GetType());
+		const auto found = meta->template GetAbility<CT::Mutable<T>>(verb.mVerb, verb.mArgument.GetType());
 		if (!found)
 			return false;
 

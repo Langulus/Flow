@@ -230,8 +230,8 @@ namespace Langulus::Flow
 		}
 		
 		if (context.IsOr())
-			return verb.CompleteDispatch<true>(successCount, Abandon(output));
-		return verb.CompleteDispatch<false>(successCount, Abandon(output));
+			return verb.template CompleteDispatch<true>(successCount, Abandon(output));
+		return verb.template CompleteDispatch<false>(successCount, Abandon(output));
 	}
 
 	/// Invoke a verb on a container, that is either deep or flat, either		
@@ -250,14 +250,14 @@ namespace Langulus::Flow
 	///	@return the number of successful executions									
 	template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Data T, CT::Verb V>
 	Count DispatchDeep(T& context, V& verb) {
-		if (context.IsDeep() || context.Is<Trait>()) {
+		if (context.IsDeep() || context.template Is<Trait>()) {
 			// Nest if context is deep, or a trait									
 			// Traits are considered deep only when executing in them		
 			// There is no escape from this scope									
 			Count successCount {};
 			auto output = Any::FromState(context);
 			for (Count i = 0; i < context.GetCount(); ++i) {
-				const auto hits = DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(context.As<Block>(i), verb);
+				const auto hits = DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(context.template As<Block>(i), verb);
 				successCount += hits;
 
 				if (verb.IsShortCircuited()) {
@@ -287,8 +287,8 @@ namespace Langulus::Flow
 			}
 
 			if (context.IsOr())
-				return verb.CompleteDispatch<true>(successCount, Abandon(output));
-			return verb.CompleteDispatch<false>(successCount, Abandon(output));
+				return verb.template CompleteDispatch<true>(successCount, Abandon(output));
+			return verb.template CompleteDispatch<false>(successCount, Abandon(output));
 		}
 
 		// If reached, then block is flat											

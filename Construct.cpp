@@ -125,9 +125,7 @@ namespace Langulus::Flow
 			output << Move(creator.GetOutput());
 		}
 
-		Throw<Except::Construct>(Logger::Error()
-			<< "Can't construct " << meta->mToken
-			<< " from " << concreteConstruct);
+		Throw<Except::Construct>("StaticCreation failed");
 	}
 
 	/// Check if constructor header can be interpreted as another type			

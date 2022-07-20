@@ -45,7 +45,7 @@ namespace Langulus::Flow
 			try {
 				// Attempt converting to debug via reflected converters		
 				Debug result;
-				(void)Detail::SerializeBlockToText(block, result);
+				(void)Detail::SerializeBlock(block, result);
 				return result;
 			}
 			catch (const Except::Convert&) {}
@@ -59,7 +59,7 @@ namespace Langulus::Flow
 				// of redundant and irrelevant data, but better something	
 				// than nothing...														
 				Code result;
-				(void)Detail::SerializeBlockToText(block, result);
+				(void)Detail::SerializeBlock(block, result);
 				return result;
 			}
 			catch (const Except::Convert&) {}
@@ -71,7 +71,7 @@ namespace Langulus::Flow
 
 			try {
 				Code result;
-				(void)Detail::SerializeBlockToText(block, result);
+				(void)Detail::SerializeBlock(block, result);
 				return result;
 			}
 			catch (const Except::Convert&) {}
@@ -83,19 +83,16 @@ namespace Langulus::Flow
 
 			try {
 				Bytes result;
-				(void)Detail::SerializeBlockToBinary<HEADER>(block, result);
+				(void)Detail::SerializeBlock<HEADER>(block, result);
 				return result;
 			}
 			catch (const Except::Convert&) {}
 		}
 		else LANGULUS_ASSERT("Serializer not implemented");
 
-		// If this is reached, then we weren't able toserialize the item	
+		// If this is reached, then we weren't able to serialize the item	
 		// to the desired type															
-		throw Except::Convert(Logger::Error()
-			<< "An element of type " << RTTI::NameOf<FROM>()
-			<< " couldn't be serialized to " << RTTI::NameOf<TO>()
-		);
+		throw Except::Convert("Can't serialize");
 	}
 
 	/// Deserialize from Code/Bytes															
@@ -115,7 +112,7 @@ namespace Langulus::Flow
 		else if constexpr (CT::Same<FROM, Bytes>) {
 			Detail::Header header;
 			Any result;
-			(void)Detail::DeserializeBlockFromBinary<true>(item, result, 0, header, {});
+			(void)Detail::DeserializeBlock<true>(item, result, 0, header, {});
 			return result;
 		}
 		else LANGULUS_ASSERT("Deserializer not implemented");
@@ -148,10 +145,8 @@ namespace Langulus::Flow
 	/// Serialize a data state																	
 	///	@param from - the block to scan for state										
 	///	@param to - the serialized state													
-	template<class TO>
-	void Detail::SerializeStateToText(const Block& from, TO& to) {
-		static_assert(CT::Text<TO>, "TO has to be a Text derivative");
-
+	template<CT::Text TO>
+	void Detail::SerializeState(const Block& from, TO& to) {
 		if (from.IsPast())
 			to += Code {Code::Past};
 		else if (from.IsFuture())
@@ -165,12 +160,10 @@ namespace Langulus::Flow
 	///	@param from - the block to serialize											
 	///	@param to - [out] the serialized block goes here							
 	///	@return the number of written characters										
-	template<class TO>
-	Count Detail::SerializeBlockToText(const Block& from, TO& to) {
-		static_assert(CT::Text<TO>, "TO has to be a Text derivative");
-
+	template<CT::Text TO>
+	Count Detail::SerializeBlock(const Block& from, TO& to) {
 		const auto initial = to.GetCount();
-		SerializeStateToText(from, to);
+		SerializeState(from, to);
 
 		const bool scoped = NeedsScope(from);
 		if (scoped)
@@ -183,7 +176,7 @@ namespace Langulus::Flow
 		else if (from.IsDeep()) {
 			// Nested serialization, wrap it in content scope					
 			for (Offset i = 0; i < from.GetCount(); ++i) {
-				(void) SerializeBlockToText(from.As<Block>(i), to);
+				(void) SerializeBlock(from.As<Block>(i), to);
 				if (i < from.GetCount() - 1)
 					to += Separator(from.IsOr());
 			}
@@ -229,6 +222,15 @@ namespace Langulus::Flow
 					to += Separator(from.IsOr());
 			}
 		}
+		else if (from.CastsTo<RTTI::Meta>()) {
+			// Contained type is meta definitions, write the token			
+			for (Offset i = 0; i < from.GetCount(); ++i) {
+				auto& meta = from.As<RTTI::Meta>(i);
+				to += meta.mToken;
+				if (i < from.GetCount() - 1)
+					to += Separator(from.IsOr());
+			}
+		}
 		else if (from.CastsTo<Byte>()) {
 			// Contained type is raw bytes, wrap it in byte scope				
 			auto raw_bytes = from.GetRaw();
@@ -254,23 +256,14 @@ namespace Langulus::Flow
 
 				// Element is already resolved, so don't resolve it			
 				if (DispatchFlat<false>(element, interpreter)) {
-					if (!interpreter.GetOutput().template Is<TO>()) {
+					if (!interpreter.GetOutput().template Is<TO>())
 						Throw<Except::Convert>(
-							LGLS_VERBOSE_SERIALIZATION(Logger::Error()
-							<< "Can't interpret " << element.GetToken() 
-							<< "[" << i << "] to " << MetaData::Of<TO>()
-							<< "; interpreted to " << interpreter.GetOutput().GetToken() 
-							<< " instead")
-						);
-					}
+							"Can't serialize resolved element to text");
 
 					to += interpreter.GetOutput().template Get<TO>();
 				}
 				else Throw<Except::Convert>(
-					LGLS_VERBOSE_SERIALIZATION(Logger::Error()
-					<< "Can't interpret " << element.GetToken() 
-					<< "[" << i << "] to " << MetaData::Of<TO>())
-				);
+					"Can't serialize resolved element to text");
 
 				// Separate each element												
 				if (i < from.GetCount() - 1)
@@ -288,12 +281,10 @@ namespace Langulus::Flow
 	///	@param from - the member block to serialize									
 	///	@param to - [out] the serialized data											
 	///	@param member - reflection data about the member							
-	template<class META, class TO>
-	void Detail::SerializeMetaToText(const Block& from, TO& to, const RTTI::Member* member) {
+	template<class META, CT::Text TO>
+	void Detail::SerializeMeta(const Block& from, TO& to, const RTTI::Member* member) {
 		static_assert(CT::DerivedFrom<META, RTTI::Meta>,
 			"META has to be an AMeta derivative");
-		static_assert(CT::Text<TO>,
-			"TO has to be a Text derivative");
 
 		auto meta = member->As<META>(from.GetRaw());
 		if (meta)	to += meta->GetToken();
@@ -303,12 +294,10 @@ namespace Langulus::Flow
 	/// Serialize all reflected data members in all bases								
 	///	@param from - the member block to serialize									
 	///	@param to - the serialized data													
-	template<class TO>
-	void Detail::SerializeMembersToText(const Block& from, TO& to) {
-		static_assert(CT::Text<TO>, "TO has to be a Text derivative");
-
+	template<CT::Text TO>
+	void Detail::SerializeMembers(const Block& from, TO& to) {
 		if (from.Is<Block>() || from.Is<Any>()) {
-			SerializeBlockToText(from.Get<Block>(), to);
+			SerializeBlock(from.Get<Block>(), to);
 			return;
 		}
 
@@ -324,25 +313,25 @@ namespace Langulus::Flow
 				}
 
 				const auto initial = to.GetCount();
-				SerializeMembersToText(from.GetBaseMemory(base.mBase, base), to);
+				SerializeMembers(from.GetBaseMemory(base.mBase, base), to);
 				if (initial < to.GetCount())
 					separate = true;
 			}
 		}
 
 		// Iterate members for each object											
-		for (auto& member : from.GetType()->GetMemberList()) {
+		for (auto& member : from.GetType()->mMembers) {
 			if (separate)
 				to += Code {Code::And};
 
 			if (member->mType->Is<DMeta>())
-				SerializeMetaToText<DMeta>(from, to, &member);
+				SerializeMeta<DMeta>(from, to, &member);
 			else if (member->mType->Is<TMeta>())
-				SerializeMetaToText<TMeta>(from, to, &member);
+				SerializeMeta<TMeta>(from, to, &member);
 			else if (member->mType->Is<VMeta>())
-				SerializeMetaToText<VMeta>(from, to, &member);
+				SerializeMeta<VMeta>(from, to, &member);
 			else
-				SerializeBlockToText(from.GetMember(member), to);
+				SerializeBlock(from.GetMember(member), to);
 
 			separate = true;
 		}
@@ -371,7 +360,7 @@ namespace Langulus::Flow
 	///	@param result - [out] the resulting byte array								
 	///	@return the number of written bytes												
 	template<bool HEADER>
-	void Detail::SerializeBlockToBinary(const Block& source, Bytes& result) {
+	void Detail::SerializeBlock(const Block& source, Bytes& result) {
 		if constexpr (HEADER) {
 			result += source.GetCount();
 			result += source.GetUnconstrainedState();
@@ -407,7 +396,7 @@ namespace Langulus::Flow
 			else if (source.IsDeep()) {
 				// If data is deep, nest-serialize each sub-block				
 				source.ForEach([&result](const Block& block) {
-					SerializeBlockToBinary<true>(block, result);
+					SerializeBlock<true>(block, result);
 				});
 
 				return;
@@ -440,13 +429,13 @@ namespace Langulus::Flow
 						continue;
 
 					const auto baseBlock = element.GetBaseMemory(base);
-					SerializeBlockToBinary<false>(baseBlock, result);
+					SerializeBlock<false>(baseBlock, result);
 				}
 
 				// Serialize all reflected members									
 				for (auto& member : element.GetType()->mMembers) {
 					const auto memberBlock = element.GetMember(member);
-					SerializeBlockToBinary<false>(memberBlock, result);
+					SerializeBlock<false>(memberBlock, result);
 				}
 			}
 
@@ -454,9 +443,7 @@ namespace Langulus::Flow
 		}
 
 		// Failure if reached															
-		Throw<Except::Convert>(Logger::Error()
-			<< "Can't binary serialize " << source.GetCount()
-			<< " elements of type " << source.GetToken());
+		Throw<Except::Convert>("Can't binary serialize");
 	}
 
 	namespace Detail
@@ -464,7 +451,7 @@ namespace Langulus::Flow
 		inline void RequestMoreBytes(const Bytes& source, Offset read, Size byteCount, const Loader& loader) {
 			if (read >= source.GetCount() || source.GetCount() - read < byteCount) {
 				if (!loader)
-					Throw<Except::Access>(Logger::Error("Deserializer has no loader"));
+					Throw<Except::Access>("Deserializer has no loader");
 				loader(const_cast<Bytes&>(source), byteCount - (source.GetCount() - read));
 			}
 		}
@@ -477,7 +464,7 @@ namespace Langulus::Flow
 	///	@param header - environment header												
 	///	@param loader - loader for streaming											
 	///	@return the number of read bytes from byte container						
-	inline Size Detail::DeserializeAtomFromBinary(const Bytes& source, Offset& result, Offset read, const Header& header, const Loader& loader) {
+	inline Size Detail::DeserializeAtom(const Bytes& source, Offset& result, Offset read, const Header& header, const Loader& loader) {
 		if (header.mAtomSize == 4) {
 			// We're deserializing data, that was serialized on a 32-bit	
 			// architecture																
@@ -495,14 +482,14 @@ namespace Langulus::Flow
 			::std::memcpy(&count8, source.At(read), 8);
 			read += 8;
 			if (count8 > std::numeric_limits<Offset>::max()) {
-				Throw<Except::Convert>(Logger::Error() << 
+				Throw<Except::Convert>(
 					"Deserialized atom contains a value "
 					"too powerful for your architecture");
 			}
 			result = static_cast<Offset>(count8);
 		}
 		else {
-			Throw<Except::Convert>(Logger::Error() << 
+			Throw<Except::Convert>(
 				"An unknown atomic size was deserialized "
 				"from source - is the source corrupted?");
 		}
@@ -520,14 +507,14 @@ namespace Langulus::Flow
 	///	@param loader - loader for streaming											
 	///	@return the number of read/peek bytes from byte container				
 	template<bool HEADER>
-	Size Detail::DeserializeBlockFromBinary(const Bytes& source, Block& result, Offset readOffset, const Header& header, const Loader& loader) {
+	Size Detail::DeserializeBlock(const Bytes& source, Block& result, Offset readOffset, const Header& header, const Loader& loader) {
 		Count deserializedCount = 0;
 		auto read = readOffset;
 
 		if constexpr (HEADER) {
 			// Read the header - means we have unpredictable data				
 			// The header contains instructions on how data was serialized	
-			read = DeserializeAtomFromBinary(
+			read = DeserializeAtom(
 				source, deserializedCount, read, header, loader);
 
 			// First read the serialized data state								
@@ -539,7 +526,7 @@ namespace Langulus::Flow
 
 			// Finally, read type														
 			DMeta deserializedType;
-			read = DeserializeMetaFromBinary(
+			read = DeserializeMeta(
 				source, deserializedType, read, header, loader);
 
 			if (!deserializedType)
@@ -585,7 +572,7 @@ namespace Langulus::Flow
 					result.Allocate<true>(deserializedCount);
 
 				result.ForEach<false>([&](Block& block) {
-					read = DeserializeBlockFromBinary<true>(
+					read = DeserializeBlock<true>(
 						source, block, read, header, loader);
 				});
 
@@ -593,8 +580,7 @@ namespace Langulus::Flow
 			}
 			else if (result.CastsTo<RTTI::Meta>()) {
 				SAFETY(if (!result.IsSparse())
-					Throw<Except::Convert>(Logger::Error() <<
-						"Meta block is not sparse"));
+					Throw<Except::Convert>("Meta block is not sparse"));
 
 				// Deserialize meta definitions										
 				if constexpr (HEADER) {
@@ -606,19 +592,19 @@ namespace Langulus::Flow
 				const auto pEnd = p + result.GetCount();
 				if (result.Is<MetaData>()) {
 					while (p != pEnd) {
-						read = DeserializeMetaFromBinary<MetaData>(source, p->mPointer, read, header, loader);
+						read = DeserializeMeta<MetaData>(source, p->mPointer, read, header, loader);
 						++p;
 					}
 				}
 				else if (result.Is<MetaTrait>()) {
 					while (p != pEnd) {
-						read = DeserializeMetaFromBinary<MetaTrait>(source, p->mPointer, read, header, loader);
+						read = DeserializeMeta<MetaTrait>(source, p->mPointer, read, header, loader);
 						++p;
 					}
 				}
 				else if (result.Is<MetaVerb>()) {
 					while (p != pEnd) {
-						read = DeserializeMetaFromBinary<MetaVerb>(source, p->mPointer, read, header, loader);
+						read = DeserializeMeta<MetaVerb>(source, p->mPointer, read, header, loader);
 						++p;
 					}
 				}
@@ -637,7 +623,7 @@ namespace Langulus::Flow
 			for (Count i = 0; i < deserializedCount; ++i) {
 				auto resolvedType = result.GetType();
 				if (resolvable)
-					read = DeserializeMetaFromBinary(source, resolvedType, read, header, loader);
+					read = DeserializeMeta(source, resolvedType, read, header, loader);
 
 				Any element;
 				if constexpr (HEADER) {
@@ -658,13 +644,13 @@ namespace Langulus::Flow
 						continue;
 
 					auto baseBlock = element.GetBaseMemory(base);
-					read = DeserializeBlockFromBinary<false>(source, baseBlock, read, header, loader);
+					read = DeserializeBlock<false>(source, baseBlock, read, header, loader);
 				}
 
 				// Deserialize all reflected members								
 				for (auto& member : element.GetType()->mMembers) {
 					auto memberBlock = element.GetMember(member);
-					read = DeserializeBlockFromBinary<false>(source, memberBlock, read, header, loader);
+					read = DeserializeBlock<false>(source, memberBlock, read, header, loader);
 				}
 
 				if constexpr (HEADER)
@@ -675,9 +661,7 @@ namespace Langulus::Flow
 		}
 
 		// Failure if reached															
-		Throw<Except::Convert>(Logger::Error()
-			<< "Can't binary-deserialize " << result.GetCount()
-			<< " elements of type " << result.GetToken());
+		Throw<Except::Convert>("Can't binary-deserialize");
 	}
 
 	/// A snippet for conveniently deserializing a meta from binary				
@@ -689,9 +673,9 @@ namespace Langulus::Flow
 	///	@param loader - loader for streaming											
 	///	@return number of read bytes														
 	template<class META>
-	Size Detail::DeserializeMetaFromBinary(const Bytes& source, META const*& result, Offset read, const Header& header, const Loader& loader) {
+	Size Detail::DeserializeMeta(const Bytes& source, META const*& result, Offset read, const Header& header, const Loader& loader) {
 		Count count = 0;
-		read = DeserializeAtomFromBinary(source, count, read, header, loader);
+		read = DeserializeAtom(source, count, read, header, loader);
 		if (count) {
 			RequestMoreBytes(source, read, count, loader);
 			const Token token {source.As<char*>(read), count};

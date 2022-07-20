@@ -12,12 +12,13 @@
 			<< Logger::Green << input.RightOf(progress) \
 			<< Logger::Gray << input.LeftOf(progress)
 
-#define PRETTY_ERROR(a) \
-	Throw<Except::Flow>( \
+#define PRETTY_ERROR(a) { \
 		Logger::Error() << LANGULUS(FUNCTION_NAME) << ": " << a << " at " << progress << ": " << \
 		Logger::Error() << " -- " \
 			<< Logger::Green << input.RightOf(progress) \
-			<< Logger::Red << input.LeftOf(progress))
+			<< Logger::Red << input.LeftOf(progress); \
+		Throw<Except::Flow>("Parse error"); \
+	}
 
 #define VERBOSE(a) VERBOSE_INNER(a)
 #define VERBOSE_ALT(a) Logger::Verbose() << a
@@ -828,10 +829,12 @@ namespace Langulus::Flow
 		// We wrap both RHS, and LHS into a Verbs::Select						
 		Any rhs;
 		progress = Expression::Parse(input, rhs, Code::Token[Code::Select].mPriority, optimize);
-		if (rhs.IsEmpty())
+		if (rhs.IsEmpty()) {
 			PRETTY_ERROR("Empty RHS for selection operator");
-		else if (rhs.GetCount() > 1)
+		}
+		else if (rhs.GetCount() > 1) {
 			PRETTY_ERROR("RHS(" << rhs << ") is too big");
+		}
 
 		if (rhs.Is<VMeta>())
 			lhs = Verb(rhs.Get<VMeta>()).SetSource(Move(lhs));

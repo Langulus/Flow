@@ -21,17 +21,17 @@ namespace Langulus::Flow
 		NOD() bool NeedsScope(const Block& block) noexcept;
 		NOD() Code Separator(bool isOr);
 
-		template<class TO>
-		NOD() Count SerializeBlockToText(const Block&, TO&);
+		template<CT::Text TO>
+		NOD() Count SerializeBlock(const Block&, TO&);
 
-		template<class TO>
-		void SerializeStateToText(const Block&, TO&);
+		template<CT::Text TO>
+		void SerializeState(const Block&, TO&);
 
-		template<class META, class TO>
-		void SerializeMetaToText(const Block&, TO&, const RTTI::Member*);
+		template<class META, CT::Text TO>
+		void SerializeMeta(const Block&, TO&, const RTTI::Member*);
 
-		template<class TO>
-		void SerializeMembersToText(const Block&, TO&);
+		template<CT::Text TO>
+		void SerializeMembers(const Block&, TO&);
 
 
 		///																							
@@ -57,17 +57,17 @@ namespace Langulus::Flow
 		#pragma pack(pop)
 
 		template<bool HEADER>
-		void SerializeBlockToBinary(const Block&, Bytes&);
+		void SerializeBlock(const Block&, Bytes&);
 
 		using Loader = TFunctor<void(Bytes&, Size)>;
 
-		NOD() Size DeserializeAtomFromBinary(const Bytes&, Offset&, Offset, const Header&, const Loader&);
+		NOD() Size DeserializeAtom(const Bytes&, Offset&, Offset, const Header&, const Loader&);
 
 		template<bool HEADER>
-		NOD() Size DeserializeBlockFromBinary(const Bytes&, Block&, Offset, const Header&, const Loader&);
+		NOD() Size DeserializeBlock(const Bytes&, Block&, Offset, const Header&, const Loader&);
 
 		template<class META>
-		NOD() Size DeserializeMetaFromBinary(const Bytes&, META const*&, Offset, const Header&, const Loader&);
+		NOD() Size DeserializeMeta(const Bytes&, META const*&, Offset, const Header&, const Loader&);
 
 	} // namespace Detail
 } // namespace Langulus::Flow

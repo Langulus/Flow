@@ -216,8 +216,7 @@ namespace Langulus::Verbs
 					}
 					else {
 						// Can't set the member											
-						Throw<Except::Construct>(Logger::Error()
-							<< "Couldn't initialize member ");
+						Throw<Except::Construct>("Couldn't initialize member ");
 					}
 				}
 				else {
@@ -226,8 +225,7 @@ namespace Langulus::Verbs
 					// the constructed type is fully satisfied at this point	
 					if (!sati || satisfiedData.GetValue(sati) != context.GetType()->GetMemberCount(nullptr, meta)) {
 						// The context wasn't satisfied								
-						Throw<Except::Construct>(Logger::Error()
-							<< "No member of type " << meta->mToken);
+						Throw<Except::Construct>("Excess, or insufficient arguments");
 					}
 				}
 			}

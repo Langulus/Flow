@@ -93,9 +93,7 @@ namespace Langulus::Verbs
 					return Serialize<TO>(from);
 			}
 
-			Throw<Except::Convert>(Logger::Error()
-				<< "No runtime conversion succeeded from "
-				<< RTTI::NameOf<FROM>() << " to " << RTTI::NameOf<TO>());
+			Throw<Except::Convert>("Interpret::To failed");
 		}
 		else if constexpr (CT::SameAsOneOf<TO, Code, Text, Debug, Bytes>) {
 			// No constructor/conversion operator exists, that would do		
@@ -153,10 +151,8 @@ namespace Langulus::Anyness
 		Verbs::Interpret interpreter {{}, meta};
 		if (!Flow::DispatchDeep(GetElementResolved(0), interpreter)) {
 			// Failure																		
-			if constexpr (FATAL_FAILURE) {
-				Throw<Except::Convert>(Logger::Error() <<
-					"Unable to AsCast from " << GetToken() << " to " << meta->mToken);
-			}
+			if constexpr (FATAL_FAILURE)
+				Throw<Except::Convert>("Unable to AsCast");
 			else if constexpr (CT::Defaultable<T>)
 				return {};
 			else {

@@ -1,5 +1,6 @@
 #pragma once
 #include "Serial.hpp"
+#include "verbs/Do.inl"
 
 #define LGLS_VERBOSE_SERIALIZATION(a)
 
@@ -305,15 +306,15 @@ namespace Langulus::Flow
 		bool separate = false;
 
 		// First we serialize all bases' members									
-		for (auto& base : from.GetType()->GetBaseList()) {
-			if (base.mBase->GetStride() > 0) {
+		for (auto& base : from.GetType()->mBases) {
+			if (base.mType->mSize > 0) {
 				if (separate) {
 					to += Code {Code::And};
 					separate = false;
 				}
 
 				const auto initial = to.GetCount();
-				SerializeMembers(from.GetBaseMemory(base.mBase, base), to);
+				SerializeMembers(from.GetBaseMemory(base.mType, base), to);
 				if (initial < to.GetCount())
 					separate = true;
 			}
@@ -324,11 +325,11 @@ namespace Langulus::Flow
 			if (separate)
 				to += Code {Code::And};
 
-			if (member->mType->Is<DMeta>())
+			if (member.mType->Is<DMeta>())
 				SerializeMeta<DMeta>(from, to, &member);
-			else if (member->mType->Is<TMeta>())
+			else if (member.mType->Is<TMeta>())
 				SerializeMeta<TMeta>(from, to, &member);
-			else if (member->mType->Is<VMeta>())
+			else if (member.mType->Is<VMeta>())
 				SerializeMeta<VMeta>(from, to, &member);
 			else
 				SerializeBlock(from.GetMember(member), to);
@@ -592,19 +593,25 @@ namespace Langulus::Flow
 				const auto pEnd = p + result.GetCount();
 				if (result.Is<MetaData>()) {
 					while (p != pEnd) {
-						read = DeserializeMeta<MetaData>(source, p->mPointer, read, header, loader);
+						MetaData* ptr;
+						read = DeserializeMeta<MetaData>(source, ptr, read, header, loader);
+						p->mPointer = ptr;
 						++p;
 					}
 				}
 				else if (result.Is<MetaTrait>()) {
 					while (p != pEnd) {
-						read = DeserializeMeta<MetaTrait>(source, p->mPointer, read, header, loader);
+						MetaData* ptr;
+						read = DeserializeMeta<MetaTrait>(source, ptr, read, header, loader);
+						p->mPointer = ptr;
 						++p;
 					}
 				}
 				else if (result.Is<MetaVerb>()) {
 					while (p != pEnd) {
-						read = DeserializeMeta<MetaVerb>(source, p->mPointer, read, header, loader);
+						MetaData* ptr;
+						read = DeserializeMeta<MetaVerb>(source, ptr, read, header, loader);
+						p->mPointer = ptr;
 						++p;
 					}
 				}

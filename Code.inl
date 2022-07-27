@@ -96,21 +96,21 @@ namespace Langulus::Flow
 	///	@return the suffix depending on the template argument						
 	template<class T>
 	Code& Code::TypeSuffix() {
-		if constexpr (UnsignedInteger<T>) {
+		if constexpr (CT::UnsignedInteger<T>) {
 			*this += "u";
 			if constexpr (sizeof(T) * 8 != 32)
 				*this += sizeof(T) * 8;
 		}
-		else if constexpr (SignedInteger<T>) {
+		else if constexpr (CT::SignedInteger<T>) {
 			*this += "i";
 			if constexpr (sizeof(T) * 8 != 32)
 				*this += sizeof(T) * 8;
 		}
-		else if constexpr (Same<T, float>)
+		else if constexpr (CT::Same<T, float>)
 			*this += "f";
-		else if constexpr (Same<T, double>)
+		else if constexpr (CT::Same<T, double>)
 			*this += "d";
-		else if constexpr (Boolean<T>)
+		else if constexpr (CT::Bool<T>)
 			*this += "b";
 		else
 			*this += MetaData::Of<T>();

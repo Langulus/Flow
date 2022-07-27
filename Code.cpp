@@ -1,6 +1,7 @@
 #include "Code.hpp"
 #include "Serial.hpp"
 #include "verbs/Do.inl"
+#include "verbs/Select.inl"
 #include "verbs/Associate.inl"
 #include "verbs/Add.inl"
 #include "verbs/Multiply.inl"

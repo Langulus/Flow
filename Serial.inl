@@ -533,7 +533,7 @@ namespace Langulus::Flow
 			if (!deserializedType)
 				return read;
 
-			result.SetType<false>(deserializedType);
+			result.Mutate<false>(deserializedType);
 		}
 		else {
 			// Don't read header - we have a predictable single element,	
@@ -580,14 +580,12 @@ namespace Langulus::Flow
 				return read;
 			}
 			else if (result.CastsTo<RTTI::Meta>()) {
-				SAFETY(if (!result.IsSparse())
-					Throw<Except::Convert>("Meta block is not sparse"));
-
 				// Deserialize meta definitions										
-				if constexpr (HEADER) {
-					result.Allocate<false>(deserializedCount);
-					result.mCount += deserializedCount;
-				}
+				// The resulting container should be always const & sparse	
+				result.MakeSparse();
+
+				if constexpr (HEADER)
+					result.Allocate<true>(deserializedCount);
 
 				auto p = result.GetRawSparse();
 				const auto pEnd = p + result.GetCount();
@@ -595,7 +593,7 @@ namespace Langulus::Flow
 					while (p != pEnd) {
 						DMeta ptr;
 						read = DeserializeMeta(source, ptr, read, header, loader);
-						p->mPointer = ptr;
+						p->mPointer = const_cast<Byte*>(reinterpret_cast<const Byte*>(ptr));
 						++p;
 					}
 				}
@@ -603,7 +601,7 @@ namespace Langulus::Flow
 					while (p != pEnd) {
 						TMeta ptr;
 						read = DeserializeMeta(source, ptr, read, header, loader);
-						p->mPointer = ptr;
+						p->mPointer = const_cast<Byte*>(reinterpret_cast<const Byte*>(ptr));
 						++p;
 					}
 				}
@@ -611,7 +609,7 @@ namespace Langulus::Flow
 					while (p != pEnd) {
 						VMeta ptr;
 						read = DeserializeMeta(source, ptr, read, header, loader);
-						p->mPointer = ptr;
+						p->mPointer = const_cast<Byte*>(reinterpret_cast<const Byte*>(ptr));
 						++p;
 					}
 				}

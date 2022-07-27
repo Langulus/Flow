@@ -556,10 +556,8 @@ namespace Langulus::Flow
 					TODO();
 
 				// If data is POD, optimize by directly memcpying it			
-				if constexpr (HEADER) {
-					result.Allocate<false>(deserializedCount);
-					result.mCount += deserializedCount;
-				}
+				if constexpr (HEADER)
+					result.Allocate<false, true>(deserializedCount);
 
 				const auto byteSize = result.GetByteSize();
 				RequestMoreBytes(source, read, byteSize, loader);

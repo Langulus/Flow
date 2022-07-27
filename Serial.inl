@@ -593,24 +593,24 @@ namespace Langulus::Flow
 				const auto pEnd = p + result.GetCount();
 				if (result.Is<MetaData>()) {
 					while (p != pEnd) {
-						MetaData* ptr;
-						read = DeserializeMeta<MetaData>(source, ptr, read, header, loader);
+						DMeta ptr;
+						read = DeserializeMeta(source, ptr, read, header, loader);
 						p->mPointer = ptr;
 						++p;
 					}
 				}
 				else if (result.Is<MetaTrait>()) {
 					while (p != pEnd) {
-						MetaData* ptr;
-						read = DeserializeMeta<MetaTrait>(source, ptr, read, header, loader);
+						TMeta ptr;
+						read = DeserializeMeta(source, ptr, read, header, loader);
 						p->mPointer = ptr;
 						++p;
 					}
 				}
 				else if (result.Is<MetaVerb>()) {
 					while (p != pEnd) {
-						MetaData* ptr;
-						read = DeserializeMeta<MetaVerb>(source, ptr, read, header, loader);
+						VMeta ptr;
+						read = DeserializeMeta(source, ptr, read, header, loader);
 						p->mPointer = ptr;
 						++p;
 					}

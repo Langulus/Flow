@@ -2,6 +2,8 @@
 #include "Serial.hpp"
 #include "verbs/Interpret.inl"
 #include "verbs/Do.inl"
+#include "verbs/Create.inl"
+#include "verbs/Select.inl"
 
 #define VERBOSE_CONSTRUCT(a) //pcLogFuncVerbose << a
 

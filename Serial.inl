@@ -620,7 +620,7 @@ namespace Langulus::Flow
 			}
 		}
 
-		if (result.IsDefaultable) {
+		if (result.IsDefaultable()) {
 			if (result.IsSparse())
 				TODO();
 
@@ -635,7 +635,7 @@ namespace Langulus::Flow
 				Any element;
 				if constexpr (HEADER) {
 					// Create default copy only if not predictable				
-					element = Any::From(resolvedType);
+					element = Any::FromMeta(resolvedType);
 					element.Allocate<true>(1);
 				}
 				else {

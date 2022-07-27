@@ -182,9 +182,14 @@ namespace Langulus::Flow
 		return converted;
 	}*/
 
+} // namespace Langulus::Flow
+
+namespace Langulus
+{
+
 	/// Make a code literal																		
-	inline Code operator "" _code(const char* text, ::std::size_t size) {
-		return Text {text, size};
+	inline Flow::Code operator "" _code(const char* text, ::std::size_t size) {
+		return Anyness::Text {text, size};
 	}
 
-} // namespace Langulus::Flow
+}

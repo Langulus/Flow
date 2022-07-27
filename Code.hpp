@@ -82,8 +82,6 @@ namespace Langulus::Flow
 		NOD() static bool IsValidKeyword(const Text&);
 	};
 
-	Code operator "" _code(const char*, ::std::size_t);
-
 } // namespace Langulus::Flow
 
 #include "Code.inl"
@@ -95,3 +93,8 @@ namespace Langulus::Verbs
 	using ::Langulus::Flow::Construct;
 
 } // namespace Langulus::Verbs
+
+namespace Langulus
+{
+	Flow::Code operator "" _code(const char*, ::std::size_t);
+}

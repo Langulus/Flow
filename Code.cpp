@@ -33,8 +33,7 @@ namespace Langulus::Flow
 	///	@return true if both loosely match												
 	constexpr bool CompareTokens(const Token& lhs, const Token& rhs) noexcept {
 		return (lhs.size() == rhs.size() && (
-			lhs.size() == 0 ||
-			::std::equal(lhs.begin(), lhs.end(), rhs.begin(), 
+			lhs.size() == 0 || ::std::equal(lhs.begin(), lhs.end(), rhs.begin(), 
 			[](const char& c1, const char& c2) noexcept {
 				return c1 == c2 || (::std::toupper(c1) == ::std::toupper(c2));
 			})

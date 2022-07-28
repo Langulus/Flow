@@ -6,7 +6,7 @@ namespace Langulus::Flow
 {
 
 	///																								
-	///	CODE CONTAINER AND PARSER															
+	///	Langulus code container and parser, as well as keyword database		
 	///																								
 	class Code : public Text {
 	public:
@@ -47,15 +47,75 @@ namespace Langulus::Flow
 			OpCounter
 		};
 
-		struct TokenProperties {
+	protected:
+		/// Parser for unknown expressions													
+		/// An unknown-expressions will be scanned to figure what it contains	
+		struct UnknownParser {
+			NOD() static Offset Parse(const Code&, Any&, int priority, bool optimize);
+		};
+
+		/// Parser for keyword expressions													
+		/// A key-expression is any expression that begins with a letter			
+		struct KeywordParser {
+			NOD() static Offset Parse(const Code&, Any&);
+			NOD() static bool Peek(const Code&) noexcept;
+		};
+
+		/// Parser for skipping expressions													
+		/// A skip-expression is any that begins with escapes, tabs, or spaces	
+		struct SkippedParser {
+			NOD() static Offset Parse(const Code&);
+			NOD() static bool Peek(const Code&) noexcept;
+		};
+
+		/// Parser for number expressions													
+		/// A num-expression is any that begins with a digit, a minus				
+		/// followed by a digit, or a dot followed by a digit							
+		struct NumberParser {
+			NOD() static Offset Parse(const Code&, Any&);
+			NOD() static bool Peek(const Code&) noexcept;
+		};
+
+		/// Parser for operators																
+		/// An op-expression is one matching the built-in ones, or one matching	
+		/// one in reflected verb database, where LHS is not DMeta or VMeta		
+		struct OperatorParser {
+			NOD() static Offset Parse(const Code&, Any&, int priority, bool optimize);
+			NOD() static bool Peek(const Code&) noexcept;
+
+			NOD() static Offset ParseContent(const Code&, Any&, bool optimize);
+			NOD() static Offset ParseString(Code::Operator, const Code&, Any&);
+			NOD() static Offset ParsePolarize(Code::Operator, const Code&, Any&, bool optimize);
+			NOD() static Offset ParseMissing(const Code&, Any&);
+
+			static void InsertContent(Any&, Any&);
+		};
+
+		/// Parser for chargers																	
+		/// A charge-expression is any operator *^@! after a DMeta or VMeta		
+		struct ChargeParser {
+			NOD() static Offset Parse(const Code&, Any&, int priority, bool optimize);
+			NOD() static bool Peek(const Code&) noexcept;
+			NOD() static bool IsChargable(const Any&) noexcept;
+		};
+
+		struct MetaConstant {
+			Token mToken;
+			Any mValue;
+		};
+
+		static THashMap<Text, MetaConstant> mConstants;
+
+		struct OperatorProperties {
 			Token mToken;
 			Token mTokenWithSpacing;
 			int mPriority;
 			bool mCharge;
 		};
 
-		static const TokenProperties Token[OpCounter];
+		static const OperatorProperties mOperators[OpCounter];
 
+	public:
 		using Text::Text;
 		explicit Code(Operator);
 

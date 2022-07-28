@@ -78,11 +78,11 @@ namespace Langulus::Flow
 	///	@param i - the operator to check for											
 	///	@return true if the operator matches											
 	inline bool Code::StartsWithOperator(Offset i) const noexcept {
-		const Size tokenSize = Code::Token[i].mToken.size();
+		const Size tokenSize = mOperators[i].mToken.size();
 		if (!tokenSize || mCount < tokenSize)
 			return false;
 
-		const auto token = Code(Code::Token[i].mToken);
+		const auto token = Code(mOperators[i].mToken);
 		const auto remainder = LeftOf(tokenSize);
 		const auto endsWithALetter = token.EndsWithLetter();
 		return tokenSize > 0 && MatchesLoose(token) == tokenSize

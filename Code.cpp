@@ -41,7 +41,7 @@ namespace Langulus::Flow
 		));
 	}
 
-	constexpr Code::TokenProperties Code::Token[OpCounter] = {
+	constexpr Code::OperatorProperties Code::mOperators[OpCounter] = {
 		{ "(", "(", 0, false },		// OpenScope
 		{ ")", ")", 0, false },		// CloseScope
 		{ "[", "[", 0, false },		// OpenCode
@@ -76,166 +76,18 @@ namespace Langulus::Flow
 		{ "", "", 0, false }			// CloseByte
 	};
 
-
-	/// The syntax of Code is characterized by this expression tree:				
-	///																								
-	///																								
-	///		|-> Escape (colors, formatting)												
-	///		|-> Space ('\n', '\r', '\t', ' ')											
-	///		|-> Comment Scope ('|')															
-	///		|-> Comment Line ('||')															
-	///		|																						
-	///	Skipped <---- Known -----> Number literal										
-	///				    /	     \																
-	///				   v	      v																
-	///		   Keyword   ->   Operator														
-	///			|							 |														
-	///			|-> Data ID				 |-> Content Scope ('(', ')')					
-	///			|-> Verb ID				 |-> String Scope ('"' or '`')				
-	///			|-> Trait ID			 |-> Character Scope ('\'') 					
-	///			|-> Constant ID		 |-> Code Scope ('[', ']')						
-	///			|							 |-> Negate ('-' w/o lhs) 						
-	///			|-> Reserved			 |-> Polarize ('<', '>')						
-	///			|-> User-Defined		 |-> Source (':')									
-	///			|-> Index        		 |-> Output ("as")								
-	///			|        				 |-> Missing ('?')								
-	///			|        				 |-> Or-Separator ("or")						
-	///			|        				 |-> And-Separator (',' or "and")			
-	///			|        				 |-> Select ('.' w/o lhs/rhs digit)			
-	///			|        				 |-> Fraction ('.' with lhs/rhs digit)		
-	///			|        				 |-> Add ('+')										
-	///			|        				 |-> Add one to lhs ('++')						
-	///			|        				 |-> Subtract ('-' with lhs)					
-	///			|        				 |-> Subtract one from lhs ('--')			
-	///			|        				 |-> Multiply ('*')								
-	///			|        				 |-> Divide ('/')									
-	///			|        				 |-> Time ('@')									
-	///			|        				 |-> Power/Periodicity ('^')					
-	///			|        				 |-> Priority ('!')								
-	///			|        				 |-> Copy/Associate ('=')						
-	///			+----------+----------+														
-	///						  |																	
-	///						  v																	
-	///					  Content																
-	///																								
-	/// Base abstract Code expression														
-	struct Expression {
-		static Offset Parse(const Code&, Any&, int priority, bool optimize);
-	};
-
-	/// Abstract keyword expression															
-	struct Keyword : public Expression {
-		NOD() static Offset Parse(const Code&, Any&);
-		NOD() inline static bool Peek(const Code& input) noexcept {
-			return input.StartsWithLetter();
-		}
-	};
-
-	/// Abstract skippable expression														
-	struct Skipped : public Expression {
-		NOD() static Offset Parse(const Code&);
-		NOD() inline static bool Peek(const Code& input) noexcept {
-			return input.StartsWithSkippable();
-		}
-	};
-
-	/// Code number expression																	
-	struct Number : public Expression {
-		NOD() static Offset Parse(const Code&, Any&);
-		NOD() inline static bool Peek(const Code& input) noexcept {
-			if (input.StartsWithDigit())
+	inline bool Code::OperatorParser::Peek(const Code& input) noexcept {
+		for (Offset i = 0; i < Code::OpCounter; ++i) {
+			if (input.StartsWithOperator(i))
 				return true;
-			else for (auto c : input) {
-				if (c == '-' || c <= 32)
-					continue;
-				else
-					return ::std::isdigit(c);
-			}
-			return false;
 		}
-	};
+		return false;
+	}
 
-	/// Abstract operator expression															
-	struct Operator : public Expression {
-		NOD() static Offset Parse(const Code&, Any&, int priority, bool optimize);
-		NOD() inline static bool Peek(const Code& input) noexcept {
-			for (Offset i = 0; i < Code::OpCounter; ++i) {
-				if (input.StartsWithOperator(i))
-					return true;
-			}
-			return false;
-		}
-	};
-
-	/// Content scope operator																	
-	struct OperatorContent : public Operator {
-		NOD() static Offset Parse(const Code&, Any&, bool optimize);
-		static void InsertContent(Any& input, Any& output);
-	};
-
-	/// String/character/code scope operator												
-	struct OperatorString : public Operator {
-		NOD() static Offset Parse(Code::Operator, const Code&, Any&);
-	};
-
-	/// Polarizer operator																		
-	struct OperatorPolarize : public Operator {
-		NOD() static Offset Parse(Code::Operator, const Code&, Any&, bool optimize);
-	};
-
-	/// Context operator																			
-	/*struct OperatorContext : public Operator {
-		NOD() static Offset Parse(const Code&, Any&, bool optimize);
-	};
-
-	/// As operator ("as")																		
-	struct OperatorAs : public Operator {
-		NOD() static Offset Parse(const Code&, Any&, bool optimize);
-	};*/
-
-	/// Copy operator																				
-	struct OperatorCopy : public Operator {
-		NOD() static Offset Parse(const Code&, Any&, bool optimize);
-	};
-
-	/// Missing operator																			
-	struct OperatorMissing : public Operator {
-		NOD() static Offset Parse(const Code&, Any&);
-	};
-
-	/// Separator (and/or) operator															
-	struct OperatorSeparator : public Operator {
-		NOD() static Offset Parse(Code::Operator, const Code&, Any&, bool optimize);
-	};
-
-	/// Dot operator																				
-	struct OperatorSelect : public Operator {
-		NOD() static Offset Parse(const Code&, Any&, bool optimize);
-	};
-
-	/// Add/subtract operator																	
-	struct OperatorAdd : public Operator {
-		NOD() static Offset Parse(Code::Operator, const Code&, Any&, bool optimize);
-	};
-
-	/// Multiply/divide operator																
-	struct OperatorMultiply : public Operator {
-		NOD() static Offset Parse(Code::Operator, const Code&, Any&, bool optimize);
-	};
-
-	/// Power/log operator																		
-	struct OperatorPower : public Operator {
-		NOD() static Offset Parse(const Code&, Any&, bool optimize);
-	};
-
-	/// Charge operators																			
-	struct OperatorCharge : public Operator {
-		NOD() static Offset Parse(Code::Operator, const Code&, Any&);
-		NOD() inline static bool IsChargable(const Any& output) noexcept {
-			return !output.IsMissing() && output.GetCount() == 1 &&
-				output.Is<MetaData, MetaVerb, Verb>();
-		}
-	};
+	inline bool Code::ChargeParser::IsChargable(const Any& output) noexcept {
+		return !output.IsMissing() && output.GetCount() == 1 &&
+			output.Is<MetaData, MetaVerb, Verb>();
+	}
 
 
 	/// Parse any Code expression																
@@ -243,7 +95,7 @@ namespace Langulus::Flow
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
 	///	@param priority - the current lhs priority									
 	///	@return number of parsed characters												
-	Offset Expression::Parse(const Code& input, Any& lhs, int priority, bool optimize) {
+	Offset Code::UnknownParser::Parse(const Code& input, Any& lhs, int priority, bool optimize) {
 		Any rhs;
 		Offset progress = 0;
 		if (!lhs.IsValid())
@@ -259,15 +111,15 @@ namespace Langulus::Flow
 
 				if (relevant[0] == '\0')
 					break;
-				else if (Skipped::Peek(relevant))
-					localProgress = Skipped::Parse(relevant);
-				else if (Operator::Peek(relevant))
-					localProgress = Operator::Parse(relevant, rhs, priority, optimize);
+				else if (SkippedParser::Peek(relevant))
+					localProgress = SkippedParser::Parse(relevant);
+				else if (OperatorParser::Peek(relevant))
+					localProgress = OperatorParser::Parse(relevant, rhs, priority, optimize);
 				else if (!rhs.IsValid()) {
-					if (Keyword::Peek(relevant))
-						localProgress = Keyword::Parse(relevant, rhs);
-					else if (Number::Peek(relevant))
-						localProgress = Number::Parse(relevant, rhs);
+					if (KeywordParser::Peek(relevant))
+						localProgress = KeywordParser::Parse(relevant, rhs);
+					else if (NumberParser::Peek(relevant))
+						localProgress = NumberParser::Parse(relevant, rhs);
 					else
 						PRETTY_ERROR("Unexpected symbol");
 				}
@@ -275,7 +127,7 @@ namespace Langulus::Flow
 					// There's already something in RHS, so nest					
 					// Make sure we parse in a fresh container and then push	
 					Any subrhs;
-					localProgress = Expression::Parse(relevant, subrhs, priority, optimize);
+					localProgress = UnknownParser::Parse(relevant, subrhs, priority, optimize);
 					rhs.SmartPush(subrhs);
 
 					// ... and do an early exit to avoid endless loops			
@@ -306,7 +158,7 @@ namespace Langulus::Flow
 	/// Parse a skippable, no content produced											
 	///	@param input - code that starts with a skippable character				
 	///	@return number of parsed characters												
-	Offset Skipped::Parse(const Code& input) {
+	Offset Code::SkippedParser::Parse(const Code& input) {
 		Offset progress = 0;
 		while (progress < input.GetCount()) {
 			const auto relevant = input.LeftOf(progress);
@@ -318,17 +170,21 @@ namespace Langulus::Flow
 		return progress;
 	}
 
+	bool Code::SkippedParser::Peek(const Code& input) noexcept {
+		return input.StartsWithSkippable();
+	}
+
 	/// Parse keyword																				
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
 	///	@return number of parsed characters												
-	Offset Keyword::Parse(const Code& input, Any& lhs) {
+	Offset Code::KeywordParser::Parse(const Code& input, Any& lhs) {
 		Offset progress = 0;
 		VERBOSE("Parsing keyword...");
 		while (progress < input.GetCount()) {
 			// Collect all characters of the keyword								
 			const auto relevant = input.LeftOf(progress);
-			if (!Keyword::Peek(relevant) && !Number::Peek(relevant))
+			if (!KeywordParser::Peek(relevant) && !NumberParser::Peek(relevant))
 				break;
 
 			++progress;
@@ -381,11 +237,15 @@ namespace Langulus::Flow
 		return progress;
 	}
 
+	bool Code::KeywordParser::Peek(const Code& input) noexcept {
+		return input.StartsWithLetter();
+	}
+
 	/// Parse an integer or real number														
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
 	///	@return number of parsed characters												
-	Offset Number::Parse(const Code& input, Any& lhs) {
+	Offset Code::NumberParser::Parse(const Code& input, Any& lhs) {
 		Real rhs = 0;
 		Offset progress = 0;
 		VERBOSE("Parsing number...");
@@ -400,21 +260,33 @@ namespace Langulus::Flow
 		return progress;
 	}
 
+	inline bool Code::NumberParser::Peek(const Code& input) noexcept {
+		if (input.StartsWithDigit())
+			return true;
+		else for (auto c : input) {
+			if (c == '-' || c <= 32)
+				continue;
+			else
+				return ::std::isdigit(c);
+		}
+		return false;
+	}
+
 	/// Parse an operator, operate on current output (lhs) and content (rhs)	
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
 	///	@param priority - the priority of the last parsed element				
 	///	@param optimize - the priority of the last parsed element				
 	///	@return number of parsed characters												
-	Offset Operator::Parse(const Code& input, Any& lhs, int priority, bool optimize) {
+	Offset Code::OperatorParser::Parse(const Code& input, Any& lhs, int priority, bool optimize) {
 		// Determine operator															
 		Offset progress = 0;
 		auto op = Code::OpCounter;
 		for (Offset i = 0; i < Code::OpCounter; ++i) {
-			const bool typeMatch = !Code::Token[i].mCharge || lhs.Is<MetaData, MetaVerb>();
+			const bool typeMatch = !mOperators[i].mCharge || lhs.Is<MetaData, MetaVerb>();
 			if (input.StartsWithOperator(i) && typeMatch) {
 				op = Code::Operator(i);
-				progress += Code::Token[i].mToken.size();
+				progress += mOperators[i].mToken.size();
 				break;
 			}
 		}
@@ -425,7 +297,7 @@ namespace Langulus::Flow
 		VERBOSE("Parsing operator...");
 		const Code relevant = input.LeftOf(progress);
 
-		if (Code::Token[op].mPriority && priority >= Code::Token[op].mPriority) {
+		if (mOperators[op].mPriority && priority >= mOperators[op].mPriority) {
 			VERBOSE(Logger::Yellow << "Delaying because of a prioritized operator...");
 			return 0;
 		}
@@ -434,19 +306,19 @@ namespace Langulus::Flow
 		//case Code::As:
 		//	return progress + OperatorAs::Parse(relevant, lhs, optimize);
 		case Code::OpenScope:
-			return progress + OperatorContent::Parse(relevant, lhs, optimize);
+			return progress + ParseContent(relevant, lhs, optimize);
 		case Code::CloseScope:
 			return 0;
 		case Code::OpenString:
 		case Code::OpenStringAlt:
 		case Code::OpenCode:
 		case Code::OpenCharacter:
-			return progress + OperatorString::Parse(op, relevant, lhs);
+			return progress + ParseString(op, relevant, lhs);
 		//case Code::OpenByte:
 		//	TODO();
 		case Code::Past:
 		case Code::Future:
-			return progress + OperatorPolarize::Parse(op, relevant, lhs, optimize);
+			return progress + ParsePolarize(op, relevant, lhs, optimize);
 		//case Code::Context:
 		//	return progress + OperatorContext::Parse(relevant, lhs, optimize);
 		case Code::Associate:
@@ -495,7 +367,7 @@ namespace Langulus::Flow
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
 	///	@return number of parsed characters												
-	Offset OperatorContent::Parse(const Code& input, Any& lhs, bool optimize) {
+	Offset Code::OperatorParser::ParseContent(const Code& input, Any& lhs, bool optimize) {
 		Offset progress = 0;
 
 		// Can define contents for one element at a time						
@@ -519,7 +391,7 @@ namespace Langulus::Flow
 	/// Insert content to lhs, instantiating it											
 	///	@param rhs - the content to insert												
 	///	@param lhs - the place where the content will be inserted				
-	void OperatorContent::InsertContent(Any& rhs, Any& lhs) {
+	void Code::OperatorParser::InsertContent(Any& rhs, Any& lhs) {
 		if (lhs.IsUntyped()) {
 			// If output is untyped, we directly push content, regardless	
 			// if it's filled with something or not - a scope is a scope	
@@ -626,7 +498,7 @@ namespace Langulus::Flow
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
 	///	@return number of parsed characters												
-	Offset OperatorString::Parse(const Code::Operator op, const Code& input, Any& lhs) {
+	Offset Code::OperatorParser::ParseString(const Code::Operator op, const Code& input, Any& lhs) {
 		Offset progress = 0;
 		Offset depth = 1;
 		while (progress < input.GetCount()) {
@@ -695,7 +567,7 @@ namespace Langulus::Flow
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here								
 	///	@return number of parsed characters												
-	Offset OperatorPolarize::Parse(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
+	Offset Code::OperatorParser::ParsePolarize(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
 		Any rhs;
 		auto progress = Expression::Parse(input, rhs, Code::Token[op].mPriority, optimize);
 		
@@ -794,7 +666,7 @@ namespace Langulus::Flow
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here								
 	///	@return number of parsed characters												
-	Offset OperatorMissing::Parse(const Code&, Any& lhs) {
+	Offset Code::OperatorParser::ParseMissing(const Code&, Any& lhs) {
 		lhs.MakeMissing();
 		VERBOSE_ALT("Missing -> " << Logger::Cyan << lhs);
 		return 0;
@@ -805,7 +677,7 @@ namespace Langulus::Flow
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here								
 	///	@return number of parsed characters												
-	Offset OperatorSeparator::Parse(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
+	/*Offset OperatorSeparator::Parse(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
 		// Output is LHS, new content is RHS, just do a smart push to LHS	
 		Any rhs;
 		const auto progress = Expression::Parse(input, rhs, Code::Token[op].mPriority, optimize);
@@ -1059,7 +931,7 @@ namespace Langulus::Flow
 			<< " " << rhs << " = " << exponentiator.GetOutput());
 		lhs = Move(exponentiator.GetOutput());
 		return progress;
-	}
+	}*/
 
 	/// Mass/time/frequency/priority operators (+, -, *, /, @, ^, !)				
 	/// Can be applied to things with charge, like verbs and constructs			
@@ -1146,7 +1018,7 @@ namespace Langulus::Flow
 	/// Generate code from operator															
 	///	@param op - the operator to stringify											
 	Code::Code(Operator op)
-		: Text {Disowned(Token[op].mTokenWithSpacing.data())} { }
+		: Text {Disowned(mOperators[op].mTokenWithSpacing.data())} { }
 
 	/// Parse Code code																			
 	///	@param optimize - whether or not to precalculate constexpr				
@@ -1173,7 +1045,7 @@ namespace Langulus::Flow
 	///	@param text - the text to check													
 	///	@return true if text is reserved													
 	bool Code::IsReserved(const Text& text) {
-		for (auto& a : Code::Token) {
+		for (auto& a : mOperators) {
 			if (CompareTokens(text, a.mToken))
 				return true;
 		}

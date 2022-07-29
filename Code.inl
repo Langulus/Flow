@@ -17,14 +17,14 @@ namespace Langulus::Flow
 	/// Remove elements from the left side of Code code								
 	///	@param offset - the number of elements to discard from the front		
 	///	@return a shallow-copied container with the correct offset				
-	inline Code Code::LeftOf(Offset o) const {
+	inline Code Code::RightOf(Offset o) const {
 		return Code {Text::Crop(o, mCount - o)};
 	}
 
 	/// Remove elements from the right side of Code code								
 	///	@param offset - the number of elements to remain in container			
 	///	@return a shallow-copied container with the correct offset				
-	inline Code Code::RightOf(Offset o) const {
+	inline Code Code::LeftOf(Offset o) const {
 		return Code {Text::Crop(0, o)};
 	}
 
@@ -83,7 +83,7 @@ namespace Langulus::Flow
 			return false;
 
 		const auto token = Code(mOperators[i].mToken);
-		const auto remainder = LeftOf(tokenSize);
+		const auto remainder = RightOf(tokenSize);
 		const auto endsWithALetter = token.EndsWithLetter();
 		return tokenSize > 0 && MatchesLoose(token) == tokenSize
 			&& (GetCount() == tokenSize 

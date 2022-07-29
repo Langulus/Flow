@@ -10,14 +10,14 @@
 #define VERBOSE_INNER(a) \
 		Logger::Verbose() << LANGULUS(FUNCTION_NAME) << ": " << a << " at " << progress << ": " << \
 		Logger::Verbose() << " -- " \
-			<< Logger::Green << input.RightOf(progress) \
-			<< Logger::Gray << input.LeftOf(progress)
+			<< Logger::Green << input.LeftOf(progress) \
+			<< Logger::Gray << input.RightOf(progress)
 
 #define PRETTY_ERROR(a) { \
 		Logger::Error() << LANGULUS(FUNCTION_NAME) << ": " << a << " at " << progress << ": " << \
 		Logger::Error() << " -- " \
-			<< Logger::Green << input.RightOf(progress) \
-			<< Logger::Red << input.LeftOf(progress); \
+			<< Logger::Green << input.LeftOf(progress) \
+			<< Logger::Red << input.RightOf(progress); \
 		Throw<Except::Flow>("Parse error"); \
 	}
 
@@ -76,14 +76,6 @@ namespace Langulus::Flow
 		{ "", "", 0, false }			// CloseByte
 	};
 
-	inline bool Code::OperatorParser::Peek(const Code& input) noexcept {
-		for (Offset i = 0; i < Code::OpCounter; ++i) {
-			if (input.StartsWithOperator(i))
-				return true;
-		}
-		return false;
-	}
-
 	inline bool Code::ChargeParser::IsChargable(const Any& output) noexcept {
 		return !output.IsMissing() && output.GetCount() == 1 &&
 			output.Is<MetaData, MetaVerb, Verb>();
@@ -106,16 +98,19 @@ namespace Langulus::Flow
 		try {
 			while (progress < input.GetCount()) {
 				// Scan input until end													
-				Code relevant = input.LeftOf(progress);
+				Code relevant = input.RightOf(progress);
 				Offset localProgress = 0;
+				Operator op;
 
 				if (relevant[0] == '\0')
 					break;
 				else if (SkippedParser::Peek(relevant))
 					localProgress = SkippedParser::Parse(relevant);
-				else if (OperatorParser::Peek(relevant))
-					localProgress = OperatorParser::Parse(relevant, rhs, priority, optimize);
+				else if ((op = OperatorParser::Peek(relevant)) != Operator::NoOperator)
+					localProgress = OperatorParser::Parse(op, relevant, rhs, priority, optimize);
 				else if (!rhs.IsValid()) {
+					// RHS is empty, so we can parse a keyword or a number	
+					// in it																	
 					if (KeywordParser::Peek(relevant))
 						localProgress = KeywordParser::Parse(relevant, rhs);
 					else if (NumberParser::Peek(relevant))
@@ -132,27 +127,37 @@ namespace Langulus::Flow
 
 					// ... and do an early exit to avoid endless loops			
 					progress += localProgress;
-					VERBOSE(Logger::Green << "Unknown resulted in " << rhs << Logger::Untab);
-					lhs = Move(rhs);
+					VERBOSE(Logger::Green << "Unknown parsed: " << rhs << Logger::Untab);
+					lhs = Abandon(rhs);
 					return progress;
 				}
 
-				if (0 == localProgress)
+				if (0 == localProgress) {
+					// This occurs often, when a higher priority operator is	
+					// waiting for lower priority stuff to be parsed first	
 					break;
+				}
 
 				progress += localProgress;
 			}
 		}
 		catch (const Except::Flow& e) {
-			VERBOSE(Logger::Error() << "Failed to parse: " << input);
-			VERBOSE(Logger::Error() << "Due to exception: " << e.what() << Logger::Untab);
+			VERBOSE(Logger::Error() << "Failed to parse: " << input 
+				<< "; Reason: " << e.what() << Logger::Untab);
 			throw;
 		}
 
 		// Input was parsed, relay content to output								
-		VERBOSE(Logger::Green << "Unknown resulted in " << rhs << Logger::Untab);
-		lhs = Move(rhs);
+		VERBOSE(Logger::Green << "Unknown parsed: " << rhs << Logger::Untab);
+		lhs = Abandon(rhs);
 		return progress;
+	}
+
+	/// Peek inside input, and return true if first symbol is skippable			
+	///	@param input - the code to peek into											
+	///	@return true if input is skippable												
+	bool Code::SkippedParser::Peek(const Code& input) noexcept {
+		return input.StartsWithSkippable();
 	}
 
 	/// Parse a skippable, no content produced											
@@ -161,7 +166,7 @@ namespace Langulus::Flow
 	Offset Code::SkippedParser::Parse(const Code& input) {
 		Offset progress = 0;
 		while (progress < input.GetCount()) {
-			const auto relevant = input.LeftOf(progress);
+			const auto relevant = input.RightOf(progress);
 			if (Peek(relevant))
 				++progress;
 			else break;
@@ -170,20 +175,24 @@ namespace Langulus::Flow
 		return progress;
 	}
 
-	bool Code::SkippedParser::Peek(const Code& input) noexcept {
-		return input.StartsWithSkippable();
+	/// Peek inside input, and return true if first symbol is a character		
+	///	@param input - the code to peek into											
+	///	@return true if input is a character											
+	bool Code::KeywordParser::Peek(const Code& input) noexcept {
+		return input.StartsWithLetter();
 	}
 
 	/// Parse keyword																				
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
+	///	@param allowCharge - whether to parse charge (internal use)				
 	///	@return number of parsed characters												
-	Offset Code::KeywordParser::Parse(const Code& input, Any& lhs) {
+	Offset Code::KeywordParser::Parse(const Code& input, Any& lhs, bool allowCharge) {
 		Offset progress = 0;
 		VERBOSE("Parsing keyword...");
 		while (progress < input.GetCount()) {
 			// Collect all characters of the keyword								
-			const auto relevant = input.LeftOf(progress);
+			const auto relevant = input.RightOf(progress);
 			if (!KeywordParser::Peek(relevant) && !NumberParser::Peek(relevant))
 				break;
 
@@ -193,8 +202,9 @@ namespace Langulus::Flow
 		if (0 == progress)
 			PRETTY_ERROR("No progress at keyword parse");
 
+		// Isolate the keyword															
 		Any rhs;
-		const auto keyword = input.RightOf(progress);
+		const auto keyword = input.LeftOf(progress);
 		if (keyword.IsEmpty())
 			PRETTY_ERROR("No keyword parsed");
 
@@ -202,12 +212,16 @@ namespace Langulus::Flow
 
 		// Search for token in meta definitions									
 		const auto metaData = RTTI::Database.GetMetaData(keyword);
-		if (metaData)
+		if (metaData) {
+			//TODO parse charge and materialize if needed to
 			rhs << metaData;
+		}
 
 		const auto metaTrait = RTTI::Database.GetMetaTrait(keyword);
-		if (metaTrait)
+		if (metaTrait) {
+			//TODO parse charge and materialize if needed to
 			rhs << metaTrait;
+		}
 
 		const auto metaVerb = RTTI::Database.GetMetaVerb(keyword);
 		if (metaVerb) {
@@ -217,6 +231,7 @@ namespace Langulus::Flow
 				!CompareTokens(keyword, metaVerb->mToken) &&
 				 CompareTokens(keyword, metaVerb->mTokenReverse);
 
+			//TODO parse charge and materialize if needed to
 			if (reversed) {
 				// The keyword resulted in a negatively charged verb			
 				rhs << Verb(metaVerb) * -1;
@@ -233,12 +248,25 @@ namespace Langulus::Flow
 		VERBOSE("Keyword resulted in "
 			<< Logger::Push << Logger::Cyan << keyword << Logger::Pop << " -> " 
 			<< Logger::Cyan << rhs << " (" << rhs.GetToken() << ")");
+
 		lhs = Move(rhs);
 		return progress;
 	}
 
-	bool Code::KeywordParser::Peek(const Code& input) noexcept {
-		return input.StartsWithLetter();
+	/// Peek inside input, and return true if first symbol is a digit, or a		
+	/// minus followed by a digit																
+	///	@param input - the code to peek into											
+	///	@return true if input begins with a number									
+	bool Code::NumberParser::Peek(const Code& input) noexcept {
+		if (input.StartsWithDigit())
+			return true;
+		else for (auto c : input) {
+			if (c == '-' || c <= 32)
+				continue;
+			else
+				return ::std::isdigit(c);
+		}
+		return false;
 	}
 
 	/// Parse an integer or real number														
@@ -260,108 +288,68 @@ namespace Langulus::Flow
 		return progress;
 	}
 
-	inline bool Code::NumberParser::Peek(const Code& input) noexcept {
-		if (input.StartsWithDigit())
-			return true;
-		else for (auto c : input) {
-			if (c == '-' || c <= 32)
-				continue;
-			else
-				return ::std::isdigit(c);
+	/// Peek inside input, and return true if it begins with one of the			
+	/// builtin or reflected operators														
+	///	@param input - the code to peek into											
+	///	@return true if input begins with an operators								
+	Code::Operator Code::OperatorParser::Peek(const Code& input) noexcept {
+		for (Offset i = 0; i < Code::OpCounter; ++i) {
+			if (!mOperators[i].mCharge && input.StartsWithOperator(i))
+				return Operator(i);
 		}
-		return false;
+
+		return NoOperator;
 	}
 
-	/// Parse an operator, operate on current output (lhs) and content (rhs)	
+	/// Parse op-expression, operate on current output (lhs) and content (rhs)	
+	/// Beware, that charge-expressions are not handled here							
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
 	///	@param priority - the priority of the last parsed element				
 	///	@param optimize - the priority of the last parsed element				
 	///	@return number of parsed characters												
-	Offset Code::OperatorParser::Parse(const Code& input, Any& lhs, int priority, bool optimize) {
-		// Determine operator															
+	Offset Code::OperatorParser::Parse(Operator op, const Code& input, Any& lhs, int priority, bool optimize) {
 		Offset progress = 0;
-		auto op = Code::OpCounter;
-		for (Offset i = 0; i < Code::OpCounter; ++i) {
-			const bool typeMatch = !mOperators[i].mCharge || lhs.Is<MetaData, MetaVerb>();
-			if (input.StartsWithOperator(i) && typeMatch) {
-				op = Code::Operator(i);
-				progress += mOperators[i].mToken.size();
-				break;
-			}
-		}
+		SAFETY(if (op == Code::NoOperator)
+			PRETTY_ERROR("Unknown operator"));
 
-		if (op == Code::OpCounter)
-			PRETTY_ERROR("Unknown operator");
-
-		VERBOSE("Parsing operator...");
-		const Code relevant = input.LeftOf(progress);
-
+		// Operators have priority, we can't execute a higher priority		
+		// operator, before all lower priority operators have been taken	
+		// care of																			
 		if (mOperators[op].mPriority && priority >= mOperators[op].mPriority) {
-			VERBOSE(Logger::Yellow << "Delaying because of a prioritized operator...");
+			VERBOSE(Logger::Yellow << "Delaying operator " << mOperators[op].mToken
+				<< " due to a prioritized operator");
 			return 0;
 		}
+
+		// Skip the operator, we already know it									
+		VERBOSE("Parsing operator " << mOperators[op].mToken);
+		progress += mOperators[op].mToken.size();
+		const Code relevant = input.RightOf(progress);
 
 		switch (op) {
-		//case Code::As:
-		//	return progress + OperatorAs::Parse(relevant, lhs, optimize);
-		case Code::OpenScope:
+		// Handle built-in operators first											
+		case OpenScope:
 			return progress + ParseContent(relevant, lhs, optimize);
-		case Code::CloseScope:
+		case CloseScope:
 			return 0;
-		case Code::OpenString:
-		case Code::OpenStringAlt:
-		case Code::OpenCode:
-		case Code::OpenCharacter:
+		case OpenString:
+		case OpenStringAlt:
+		case OpenCode:
+		case OpenCharacter:
 			return progress + ParseString(op, relevant, lhs);
 		//case Code::OpenByte:
 		//	TODO();
-		case Code::Past:
-		case Code::Future:
+		case Past:
+		case Future:
 			return progress + ParsePolarize(op, relevant, lhs, optimize);
-		//case Code::Context:
-		//	return progress + OperatorContext::Parse(relevant, lhs, optimize);
-		case Code::Associate:
-			return progress + OperatorCopy::Parse(relevant, lhs, optimize);
-		case Code::Missing:
-			return progress + OperatorMissing::Parse(relevant, lhs);
-		case Code::And:
-		case Code::Or:
-			return progress + OperatorSeparator::Parse(op, relevant, lhs, optimize);
-		case Code::Select:
-			return progress + OperatorSelect::Parse(relevant, lhs, optimize);
-		case Code::Mass:
-		case Code::Frequency:
-		case Code::Time:
-		case Code::Priority:
-			if (OperatorCharge::IsChargable(lhs))
-				return progress + OperatorCharge::Parse(op, relevant, lhs);
-			else
-				PRETTY_ERROR("Mass operator on non-chargable LHS: " << lhs);
-		case Code::Add:
-		case Code::Subtract:
-			return progress + OperatorAdd::Parse(op, relevant, lhs, optimize);
-		case Code::Multiply:
-		case Code::Divide:
-			return progress + OperatorMultiply::Parse(op, relevant, lhs, optimize);
-		case Code::Power:
-			return progress + OperatorPower::Parse(relevant, lhs, optimize);
+		case Missing:
+			return progress + ParseMissing(relevant, lhs);
+		// FInally, execute reflected operators									
 		default:
-			PRETTY_ERROR("Unexpected operator ID: " << int(op));
+			return progress + ParseReflected(op, relevant, lhs, optimize);
 		}
 	}
-
-	/*struct VerbHelper {
-		Any source;
-		Any argument;
-		Any output;*/
-
-		/*operator Debug () {
-			Code result;
-			result += Verb{ uvInvalid, source, argument, output };
-			return result;
-		}*/
-	//};
 
 	/// Parse a content scope																	
 	///	@param input - the code to parse													
@@ -376,120 +364,104 @@ namespace Langulus::Flow
 
 		// We don't know what to expect, so we attempt blind parse			
 		Any rhs;
-		progress = Expression::Parse(input, rhs, Code::Token[Code::OpenScope].mPriority, optimize);
-		if (!input.LeftOf(progress).StartsWithOperator(Code::CloseScope))
+		progress = UnknownParser::Parse(input, rhs, mOperators[OpenScope].mPriority, optimize);
+		if (!input.RightOf(progress).StartsWithOperator(CloseScope))
 			PRETTY_ERROR("Missing closing bracket");
 
 		// Account for the closing content scope									
-		progress += Code::Token[Code::CloseScope].mToken.size();
+		progress += mOperators[CloseScope].mToken.size();
 
 		// Insert to new content in rhs to the already available lhs		
-		OperatorContent::InsertContent(rhs, lhs);
+		InsertContent(rhs, lhs);
 		return progress;
 	}
 
-	/// Insert content to lhs, instantiating it											
+	/// Insert content to lhs, instantiating it if we have to						
+	/// Content is always inserted to the last element in LHS, if multiple		
+	/// elements are present. If last element is a meta definition, the			
+	/// definition will be replaced by the instantiated element						
 	///	@param rhs - the content to insert												
 	///	@param lhs - the place where the content will be inserted				
 	void Code::OperatorParser::InsertContent(Any& rhs, Any& lhs) {
 		if (lhs.IsUntyped()) {
 			// If output is untyped, we directly push content, regardless	
 			// if it's filled with something or not - a scope is a scope	
-			// Combine states!															
+			// Also, don't forget to combine states!								
 			const auto stateBackup = lhs.GetState();
 			lhs = Move(rhs);
 			lhs.AddState(stateBackup);
 			VERBOSE_ALT("Untyped content: " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<DMeta>()) {
-			// The content is for a data scope										
-			if (lhs.GetCount() > 1) {
-				Logger::Error() << "Can't submit content to multiple DataIDs: " << lhs;
-				Logger::Error() << "Content is: " << rhs << " (" << rhs.GetToken() << ")";
-				Throw<Except::Flow>();
-			}
-
-			lhs.Reset();
-
-			Construct outputConstruct(lhs.Get<DMeta>(), Move(rhs));
+			// The content is for an uninstantiated data scope					
+			const auto meta = lhs.As<DMeta>(-1);
+			Any precompiled;
+			Construct outputConstruct {meta, Move(rhs)};
 			try {
-				outputConstruct.StaticCreation(lhs);
+				outputConstruct.StaticCreation(precompiled);
 			}
-			catch (...) {
-				// Failed to construct, so just propagate request				
-				VERBOSE_ALT(Logger::Red << "Can't statically construct " << outputConstruct);
-				lhs = Move(outputConstruct);
+			catch (const Exception& e) {
+				// Failed to precompile, so just propagate request				
+				VERBOSE_ALT(Logger::Red << "Can't statically construct " << outputConstruct
+					<< "; Reason: " << e.what());
+
+				if (lhs.GetCount() > 1) {
+					lhs.RemoveIndex(-1);
+					lhs << Abandon(outputConstruct);
+				}
+				else lhs = Abandon(outputConstruct);
+
+				VERBOSE_ALT("Constructed from DMeta: " << Logger::Cyan << lhs);
+				return;
 			}
+
+			// Precompiled successfully, append it to LHS						
+			if (lhs.GetCount() > 1) {
+				lhs.RemoveIndex(-1);
+				lhs << Abandon(precompiled);
+			}
+			else lhs = Abandon(precompiled);
+
+			VERBOSE_ALT("Constructed from DMeta: " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<VMeta>()) {
-			// Verbs are always constructed in place								
+			// The content is for an uninstantiated verb scope					
+			Verb verb {lhs.As<VMeta>(-1), {}, Move(rhs)};
 			if (lhs.GetCount() > 1) {
-				Logger::Error() << "Can't submit content to multiple VerbIDs: " << lhs;
-				Logger::Error() << "Content is: " << rhs << " (" << rhs.GetToken() << ")";
-				Throw<Except::Flow>();
+				lhs.RemoveIndex(-1);
+				lhs << Abandon(verb);
 			}
+			else lhs = Abandon(verb);
 
-			/*if (rhs.Is<VerbHelper>()) {
-				const auto& helper = rhs.Get<VerbHelper>();
-				lhs = Verb {
-					lhs.Get<VMeta>(),
-					Move(helper.source),
-					Move(helper.argument),
-					Move(helper.output)
-				};
-			}
-			else {*/
-				lhs = Verb {lhs.Get<VMeta>(), {}, Move(rhs)};
-			//}
-
-			VERBOSE_ALT("Constructed from VerbID: " << Logger::Cyan << lhs);
-		}
-		else if (lhs.Is<Verb>()) {
-			// Modified verb id (expanded when using . primarily)				
-			if (lhs.GetCount() > 1) {
-				Logger::Error() << "Can't submit content to multiple Verbs: " << lhs;
-				Logger::Error() << "Content is: " << rhs << " (" << rhs.GetToken() << ")";
-				Throw<Except::Flow>();
-			}
-
-			auto& verb = lhs.Get<Verb>();
-			/*if (rhs.Is<VerbHelper>()) {
-				const auto& helper = rhs.Get<VerbHelper>();
-				verb.GetSource().SmartPush(helper.source);
-				verb.GetArgument().SmartPush(helper.argument);
-				verb.GetOutput().SmartPush(helper.output);
-			}
-			else {*/
-				// Push content scope to the argument								
-				if (verb.GetArgument().IsEmpty()) {
-					// Push as argument													
-					verb.GetArgument().SmartPush(rhs);
-				}
-				else {
-					// An argument already exists, and the content should be	
-					// for it, so nest													
-					OperatorContent::InsertContent(rhs, verb.GetArgument());
-				}
-			//}
-
-			VERBOSE_ALT("Constructed from Verb " << Logger::Cyan << lhs);
+			VERBOSE_ALT("Constructed from VMeta: " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<TMeta>()) {
-			// Trait scope																	
+			// The content is for an uninstantiated trait scope				
+			auto trait = Trait::From(lhs.As<TMeta>(-1), Move(rhs));
 			if (lhs.GetCount() > 1) {
-				Logger::Error() << "Can't submit content to multiple TraitIDs: " << lhs;
-				Logger::Error() << "Content is: " << rhs << " (" << rhs.GetToken() << ")";
-				Throw<Except::Flow>();
+				lhs.RemoveIndex(-1);
+				lhs << Abandon(trait);
 			}
+			else lhs = Abandon(trait);
 
-			lhs = Trait::From(lhs.Get<TMeta>(), Move(rhs));
-
-			VERBOSE_ALT("Constructed trait " << Logger::Cyan << lhs);
+			VERBOSE_ALT("Constructed from TMeta: " << Logger::Cyan << lhs);
+		}
+		else if (lhs.Is<Verb>()) {
+			// The content is for an instantiated verb scope					
+			auto& verb = lhs.As<Verb>(-1);
+			verb.GetArgument() = Move(rhs);
+			VERBOSE_ALT("Constructed from Verb " << Logger::Cyan << lhs);
+		}
+		else if (lhs.Is<Construct>()) {
+			// The content is for an instantiated data scope					
+			auto& construct = lhs.As<Construct>(-1);
+			construct.GetAll() = Move(rhs);
+			VERBOSE_ALT("Constructed from Construct " << Logger::Cyan << lhs);
 		}
 		else {
 			Logger::Error() << "Bad scope for " << lhs << " (" << lhs.GetToken() << ")";
-			Logger::Error() << "Content is: " << rhs << " (" << rhs.GetToken() << ")";
-			Throw<Except::Flow>();
+			Logger::Error() << "Content to insert is: " << rhs << " (" << rhs.GetToken() << ")";
+			Throw<Except::Flow>("Syntax error - bad scope");
 		}
 	}
 
@@ -504,56 +476,51 @@ namespace Langulus::Flow
 		while (progress < input.GetCount()) {
 			// Collect all characters in scope, essentially gobbling them	
 			// up into a text container until matching token is reached		
-			const auto relevant = input.LeftOf(progress);
+			const auto relevant = input.RightOf(progress);
 
 			switch (op) {
 			case Code::OpenString:
-				// Finish up a "string"													
-				if (relevant.StartsWithOperator(Code::CloseString)) {
-					const auto tokenSize = Code::Token[Code::CloseString].mToken.size();
-					lhs = Text {input.RightOf(progress)};
+			case Code::OpenStringAlt: {
+				// Finish up a "string" or `string`									
+				//TODO handle escapes!
+				const auto closer = op == OpenString ? CloseString : CloseStringAlt;
+				if (relevant.StartsWithOperator(closer)) {
+					const auto tokenSize = mOperators[closer].mToken.size();
+					lhs = Text {input.LeftOf(progress)};
 					VERBOSE("Constructed string " << Logger::Cyan << lhs);
 					return tokenSize + progress;
 				}
 				break;
-
-			case Code::OpenStringAlt:
-				// Finish up a `string`													
-				if (relevant.StartsWithOperator(Code::CloseStringAlt)) {
-					const auto tokenSize = Code::Token[Code::CloseStringAlt].mToken.size();
-					lhs = Text {input.RightOf(progress)};
-					VERBOSE("Constructed string " << Logger::Cyan << lhs);
-					return tokenSize + progress;
-				}
-				break;
-
-			case Code::OpenCharacter:
+			}
+			case Code::OpenCharacter: {
 				// Finish up a 'c'haracter												
-				if (relevant.StartsWithOperator(Code::CloseCharacter)) {
-					const auto tokenSize = Code::Token[Code::CloseCharacter].mToken.size();
+				//TODO handle escapes!
+				if (relevant.StartsWithOperator(CloseCharacter)) {
+					const auto tokenSize = mOperators[CloseCharacter].mToken.size();
 					lhs = input[0];
 					VERBOSE("Constructed character " << Logger::Cyan << lhs);
 					return tokenSize + progress;
 				}
 				break;
-
-			case Code::OpenCode:
+			}
+			case Code::OpenCode: {
 				// Finish up a [code]													
-				if (relevant.StartsWithOperator(Code::OpenCode))
+				// Nested code scopes are handled gracefully						
+				if (relevant.StartsWithOperator(OpenCode))
 					++depth;
-				else if (relevant.StartsWithOperator(Code::CloseCode)) {
+				else if (relevant.StartsWithOperator(CloseCode)) {
 					--depth;
 					if (0 == depth) {
-						const auto tokenSize = Code::Token[Code::CloseCode].mToken.size();
-						lhs = input.RightOf(progress);
+						const auto tokenSize = mOperators[CloseCode].mToken.size();
+						lhs = input.LeftOf(progress);
 						VERBOSE("Constructed code " << Logger::Cyan << lhs);
 						return tokenSize + progress;
 					}
 				}
 				break;
-
+			}
 			default:
-				PRETTY_ERROR("Unexpected operator");
+				PRETTY_ERROR("Unexpected string operator");
 			}
 
 			++progress;
@@ -569,7 +536,7 @@ namespace Langulus::Flow
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParsePolarize(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
 		Any rhs;
-		auto progress = Expression::Parse(input, rhs, Code::Token[op].mPriority, optimize);
+		auto progress = UnknownParser::Parse(input, rhs, mOperators[op].mPriority, optimize);
 		
 		if (lhs.IsValid() && rhs.IsValid()) {
 			// If both LHS and RHS are available, the polarizer acts as		
@@ -611,56 +578,9 @@ namespace Langulus::Flow
 		}
 
 		VERBOSE("Polarize ("
-			<< Code::Token[op].mToken << ") " << rhs << " -> " << Logger::Cyan << lhs);
+			<< mOperators[op].mToken << ") " << rhs << " -> " << Logger::Cyan << lhs);
 		return progress;
 	}
-
-	/// Context operator	':'																	
-	///	@param input - the code to parse													
-	///	@param lhs - [in/out] parsed content goes here								
-	///	@return number of parsed characters												
-	/*Offset OperatorContext::Parse(const Code& input, Any& lhs, bool optimize) {
-		Offset progress = 0;
-		if (!lhs.IsValid())
-			PRETTY_ERROR("Invalid context");
-		PC_PARSE_VERBOSE("Context -> " << ccCyan << lhs);
-
-		// Parse right side now, to avoid interfering with context			
-		Any rhs;
-		progress += Expression::Parse(input, rhs, Code::Token[Code::Context].mPriority, optimize);
-
-		// Reflect and push a helper													
-		TAny<VerbHelper> helper;
-		helper << VerbHelper {Move(lhs), Move(rhs), {}};
-		lhs = Move(static_cast<Any&>(helper));
-		return progress;
-	}*/
-
-	/// As operator																				
-	///	@param input - the code to parse													
-	///	@param lhs - [in/out] parsed content goes here								
-	///	@return number of parsed characters												
-	/*Offset OperatorAs::Parse(const Code& input, Any& lhs, bool optimize) {
-		// Parse RHS, and if valid, push Output(RHS) trait to output		
-		Any rhs;
-		const Offset progress = Expression::Parse(input, rhs, Code::Token[Code::As].mPriority, optimize);
-		if (!rhs.IsValid())
-			PRETTY_ERROR("Invalid RHS for AS operator");
-		PC_PARSE_VERBOSE("Output -> " << ccCyan << rhs);
-
-		if (lhs.Is<VerbHelper>()) {
-			// Add to helper, if available											
-			lhs.Get<VerbHelper>().output = Move(rhs);
-		}
-		else {
-			// Reflect and push a helper												
-			TAny<VerbHelper> helper;
-			helper << VerbHelper {{}, Move(lhs), Move(rhs)};
-			lhs = Move(static_cast<Any&>(helper));
-		}
-
-		return progress;
-	}*/
 
 	/// Missing operator '?'																	
 	///	@param input - the code to parse													
@@ -697,7 +617,7 @@ namespace Langulus::Flow
 			// Selection arguments provided as content on RHS					
 			const auto scopeOffset = Code::Token[Code::OpenScope].mToken.size();
 			lhs = Verbs::Select(Move(lhs));
-			progress = OperatorContent::Parse(input.LeftOf(scopeOffset), lhs, optimize);
+			progress = OperatorContent::Parse(input.RightOf(scopeOffset), lhs, optimize);
 			VERBOSE("Select operator: " << lhs);
 			return scopeOffset + progress;
 		}
@@ -736,7 +656,7 @@ namespace Langulus::Flow
 			// Copy specification provided as content on RHS					
 			const auto scopeOffset = Code::Token[Code::OpenScope].mToken.size();
 			lhs = Verbs::Associate(Move(lhs)).SetPriority(2);
-			progress = OperatorContent::Parse(input.LeftOf(scopeOffset), lhs, optimize);
+			progress = OperatorContent::Parse(input.RightOf(scopeOffset), lhs, optimize);
 			VERBOSE("Copy operator: " << lhs);
 			return scopeOffset + progress;
 		}
@@ -760,19 +680,18 @@ namespace Langulus::Flow
 
 		VERBOSE("Copied: " << copier);
 		return progress;
-	}
+	}*/
 
-	/// Add/subtract operator (+, -)															
-	///	@param op - the starting operator												
+	/// Execute a reflected verb operator													
+	///	@param op - the operator to execute												
 	///	@param input - the code to parse													
-	///	@param lhs - [in/out] parsed content goes here								
+	///	@param lhs - [in/out] result of the operator goes here					
 	///	@return number of parsed characters												
-	Offset OperatorAdd::Parse(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
-		// Perform addition or substraction on LHS and RHS						
-		// Naturally, LHS is output; RHS is the newly parsed content		
+	Offset Code::OperatorParser::ParseReflected(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
+		// Parse RHS for the operator													
 		Any rhs;
-		const auto progress = Expression::Parse(input, rhs, Code::Token[op].mPriority, optimize);
-		if (optimize) {
+		const auto progress = UnknownParser::Parse(input, rhs, mOperators[op].mPriority, false);
+		/*if (optimize) {
 			if (op == Code::Subtract && lhs.IsEmpty() && rhs.Is<Real>() && !rhs.IsEmpty()) {
 				// Quick optimization for inverting number in RHS				
 				VERBOSE("Built-in inversion (-): " << rhs << " "
@@ -794,8 +713,8 @@ namespace Langulus::Flow
 				}
 				return progress;
 			}
-		}
-
+		}*/
+		TODO();
 		if (lhs.IsEmpty() && op == Code::Subtract) {
 			// No LHS, so we execute in RHS to invert								
 			auto inverter = Verbs::Add().Invert();
@@ -835,7 +754,7 @@ namespace Langulus::Flow
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here								
 	///	@return number of parsed characters												
-	Offset OperatorMultiply::Parse(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
+	/*Offset OperatorMultiply::Parse(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
 		// Perform multiplication or division on LHS and RHS					
 		// Naturally, LHS is output; RHS is the newly parsed content		
 		Any rhs;
@@ -933,85 +852,93 @@ namespace Langulus::Flow
 		return progress;
 	}*/
 
+	/// Peek inside input, and return true if it begins with one of the			
+	/// builtin operators for charging														
+	///	@param input - the code to peek into											
+	///	@return true if input begins with an operator for charging				
+	Code::Operator Code::ChargeParser::Peek(const Code& input) noexcept {
+		for (Offset i = 0; i < Code::OpCounter; ++i) {
+			if (mOperators[i].mCharge && input.StartsWithOperator(i))
+				return Operator(i);
+		}
+
+		return NoOperator;
+	}
+
 	/// Mass/time/frequency/priority operators (+, -, *, /, @, ^, !)				
 	/// Can be applied to things with charge, like verbs and constructs			
-	///	@param op - the starting operator												
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here								
 	///	@return number of parsed characters												
-	Offset OperatorCharge::Parse(const Code::Operator op, const Code& input, Any& lhs) {
-		// LHS must be chargable														
+	Offset Code::ChargeParser::Parse(const Code& input, Charge& charge) {
 		Offset progress = 0;
-		if (lhs.IsEmpty() || !IsChargable(lhs))
-			PRETTY_ERROR("Invalid LHS(" << lhs << ") for charge operator");
+		VERBOSE("Parsing charge... " << Logger::Tab);
 
-		// RHS must evaluate to a number												
-		// It can be either a number literal, or a number constant			
-		Any rhs;
-		if (Number::Peek(input))
-			progress += Number::Parse(input, rhs);
-		else if (Keyword::Peek(input))
-			progress += Keyword::Parse(input, rhs);
+		try {
+			while (progress < input.GetCount()) {
+				// Scan input until end of charge operators/code				
+				const auto relevant = input.RightOf(progress);
+				if (relevant[0] == '\0')
+					break;
 
-		if (!rhs.CastsTo<A::Number>(1) || rhs.IsEmpty()) {
-			PRETTY_ERROR("Invalid RHS(" << rhs << ") for charge operator '"
-				<< Code::Token[op].mToken << "' on LHS(" << lhs << ")");
-		}
+				const auto op = ChargeParser::Peek(input);
+				if (op == Operator::NoOperator)
+					return progress;
 
-		const auto asReal = rhs.AsCast<Real>();
-		if (lhs.Is<VMeta>()) {
-			// After operating on a verb ID, we always end up with a			
-			// modified verb id, that is later used to construct a verb		
-			Verb verb {lhs.Get<VMeta>()};
+				// For each charge operator encountered - parse a RHS			
+				Offset localProgress = 0;
+				Any rhs;
+				if (SkippedParser::Peek(relevant))
+					// Skip empty space and escape symbols							
+					localProgress = SkippedParser::Parse(relevant);
+				else if (KeywordParser::Peek(relevant))
+					// Charge parameter can be a keyword, like a constant, 	
+					// but is not allowed to have charge on its own, to		
+					// avoid endless nesting - you must wrap it in a scope	
+					localProgress = KeywordParser::Parse(relevant, rhs, false);
+				else if (NumberParser::Peek(relevant))
+					// Can be a literal number											
+					localProgress = NumberParser::Parse(relevant, rhs);
+				else if (OperatorParser::Peek(relevant) == Operator::OpenScope)
+					// Can be anything wrapped in a scope							
+					localProgress = OperatorParser::Parse(Operator::OpenScope, relevant, rhs, 0, true);
+				else
+					PRETTY_ERROR("Unexpected symbol");
 
-			switch (op) {
-			case Code::Mass:
-				verb.SetMass(asReal);
-				break;
-			case Code::Time:
-				verb.SetTime(asReal);
-				break;
-			case Code::Frequency:
-				verb.SetFrequency(asReal);
-				break;
-			case Code::Priority:
-				verb.SetPriority(asReal);
-				break;
-			default:
-				PRETTY_ERROR("Invalid verb charge operator: " << Code::Token[op].mToken);
+				if (0 == localProgress)
+					break;
+
+				progress += localProgress;
+
+				// Save changes															
+				// AsCast may throw here, if RHS did not evaluate or convert
+				// to real - this is later caught and handled gracefully		
+				const auto asReal = rhs.AsCast<Real>();
+				switch (op) {
+				case Code::Mass:
+					charge.mMass = asReal;
+					break;
+				case Code::Frequency:
+					charge.mFrequency = asReal;
+					break;
+				case Code::Time:
+					charge.mTime = asReal;
+					break;
+				case Code::Priority:
+					charge.mPriority = asReal;
+					break;
+				default:
+					PRETTY_ERROR("Invalid charge operator: " << mOperators[op].mToken);
+				}
 			}
-
-			VERBOSE(lhs << " " << Code::Token[op].mToken
-				<< " " << rhs << " = " << Logger::Cyan << verb);
-			lhs = verb;
 		}
-		else if (lhs.Is<DMeta>()) {
-			Construct construct;
-			construct = Construct {lhs.Get<DMeta>()};
-
-			switch (op) {
-			case Code::Mass:
-				construct.mMass = asReal;
-				break;
-			case Code::Time:
-				construct.mTime = asReal;
-				break;
-			case Code::Frequency:
-				construct.mFrequency = asReal;
-				break;
-			case Code::Priority:
-				construct.mPriority = asReal;
-				break;
-			default:
-				PRETTY_ERROR("Invalid data charge operator: " << Code::Token[op].mToken);
-			}
-
-			VERBOSE(lhs << " " << Code::Token[op].mToken
-				<< " " << rhs << " = " << Logger::Cyan << construct);
-			lhs = construct;
+		catch (const Except::Flow& e) {
+			VERBOSE(Logger::Error() << "Failed to parse charge: " << input 
+				<< "; Reason: " << e.what() << Logger::Untab);
+			throw;
 		}
-		else PRETTY_ERROR("Uncharged meta " << lhs << " for operator: " << Code::Token[op].mToken);
 
+		VERBOSE("Charge parsed" << Logger::Untab);
 		return progress;
 	}
 
@@ -1020,17 +947,17 @@ namespace Langulus::Flow
 	Code::Code(Operator op)
 		: Text {Disowned(mOperators[op].mTokenWithSpacing.data())} { }
 
-	/// Parse Code code																			
+	/// Parse code																					
 	///	@param optimize - whether or not to precalculate constexpr				
 	///	@returned the parsed data															
 	Any Code::Parse(bool optimize) const {
 		Any output;
-		const auto parsed = Expression::Parse(*this, output, 0, optimize);
+		const auto parsed = UnknownParser::Parse(*this, output, 0, optimize);
 		if (parsed != GetCount()) {
 			Logger::Warning() << "Some characters were left out at the end, while parsing Code code:";
 			Logger::Warning() << " -- " 
-				<< Logger::Green << RightOf(parsed) 
-				<< Logger::Red << LeftOf(parsed);
+				<< Logger::Green << LeftOf(parsed) 
+				<< Logger::Red << RightOf(parsed);
 		}
 		return output;
 	}

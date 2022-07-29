@@ -56,6 +56,25 @@ namespace Langulus::Flow
 		return *this;
 	}
 
+	/// Disown-construct a verb																
+	///	@param other - the verb to disown and copy									
+	Verb::Verb(Disowned<Verb>&& other) noexcept
+		: Charge {other.mValue}
+		, mVerb {other.mValue.mVerb}
+		, mSource {Disown(other.mValue.mSource)}
+		, mArgument {Disown(other.mValue.mArgument)}
+		, mOutput {Disown(other.mValue.mOutput)}
+		, mShortCircuited {other.mValue.mShortCircuited} { }
+
+	/// Abandon-construct a verb																
+	///	@param other - the verb to abandon and move									
+	Verb::Verb(Abandoned<Verb>&& other) noexcept
+		: Charge {other.mValue}
+		, mVerb {other.mValue.mVerb}
+		, mSource {Abandon(other.mValue.mSource)}
+		, mArgument {Abandon(other.mValue.mArgument)}
+		, mOutput {Abandon(other.mValue.mOutput)}
+		, mShortCircuited {other.mValue.mShortCircuited} { }
 
 	/// Manual constructor with verb meta 													
 	///	@param call - the verb ID															
@@ -71,6 +90,32 @@ namespace Langulus::Flow
 		, mArgument {a}
 		, mOutput {o}
 		, mShortCircuited {shortCircuit} { }
+
+	/// Disown-assign a verb																	
+	///	@param other - the verb to disown and copy									
+	///	@return a reference to this verb													
+	Verb& Verb::operator = (Disowned<Verb>&& other) {
+		Charge::operator = (other.mValue);
+		mVerb = other.mValue.mVerb;
+		mSource = Disown(other.mValue.mSource);
+		mArgument = Disown(other.mValue.mArgument);
+		mOutput = Disown(other.mValue.mOutput);
+		mShortCircuited = other.mValue.mShortCircuited;
+		return *this;
+	}
+
+	/// Abandon-assign a verb																	
+	///	@param other - the verb to abandon and move									
+	///	@return a reference to this verb													
+	Verb& Verb::operator = (Abandoned<Verb>&& other) {
+		Charge::operator = (other.mValue);
+		mVerb = other.mValue.mVerb;
+		mSource = Abandon(other.mValue.mSource);
+		mArgument = Abandon(other.mValue.mArgument);
+		mOutput = Abandon(other.mValue.mOutput);
+		mShortCircuited = other.mValue.mShortCircuited;
+		return *this;
+	}
 
 	/// Hash the verb																				
 	///	@return the hash of the content													

@@ -112,14 +112,22 @@ namespace Langulus::Flow
 
 	public:
 		Verb() noexcept {}
+
 		Verb(const Verb&) = default;
 		Verb(Verb&&) noexcept = default;
+
+		Verb(Disowned<Verb>&&) noexcept;
+		Verb(Abandoned<Verb>&&) noexcept;
+
 		~Verb() = default;
 
 		Verb(VMeta, const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
 
 		Verb& operator = (const Verb&) = default;
 		Verb& operator = (Verb&&) noexcept = default;
+
+		Verb& operator = (Disowned<Verb>&&);
+		Verb& operator = (Abandoned<Verb>&&);
 
 		Verb operator * (const Real&) const;
 		Verb operator ^ (const Real&) const;

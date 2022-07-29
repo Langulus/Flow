@@ -44,7 +44,8 @@ namespace Langulus::Flow
 			OpenByte,
 			CloseByte,
 
-			OpCounter
+			OpCounter,
+			NoOperator = OpCounter
 		};
 
 	protected:
@@ -57,7 +58,7 @@ namespace Langulus::Flow
 		/// Parser for keyword expressions													
 		/// A key-expression is any expression that begins with a letter			
 		struct KeywordParser {
-			NOD() static Offset Parse(const Code&, Any&);
+			NOD() static Offset Parse(const Code&, Any&, bool allowCharge = true);
 			NOD() static bool Peek(const Code&) noexcept;
 		};
 
@@ -80,13 +81,15 @@ namespace Langulus::Flow
 		/// An op-expression is one matching the built-in ones, or one matching	
 		/// one in reflected verb database, where LHS is not DMeta or VMeta		
 		struct OperatorParser {
-			NOD() static Offset Parse(const Code&, Any&, int priority, bool optimize);
-			NOD() static bool Peek(const Code&) noexcept;
+			NOD() static Offset Parse(Operator, const Code&, Any&, int priority, bool optimize);
+			NOD() static Operator Peek(const Code&) noexcept;
 
+		private:
 			NOD() static Offset ParseContent(const Code&, Any&, bool optimize);
 			NOD() static Offset ParseString(Code::Operator, const Code&, Any&);
 			NOD() static Offset ParsePolarize(Code::Operator, const Code&, Any&, bool optimize);
 			NOD() static Offset ParseMissing(const Code&, Any&);
+			NOD() static Offset ParseReflected(Code::Operator, const Code&, Any&, bool optimize);
 
 			static void InsertContent(Any&, Any&);
 		};
@@ -94,8 +97,9 @@ namespace Langulus::Flow
 		/// Parser for chargers																	
 		/// A charge-expression is any operator *^@! after a DMeta or VMeta		
 		struct ChargeParser {
-			NOD() static Offset Parse(const Code&, Any&, int priority, bool optimize);
-			NOD() static bool Peek(const Code&) noexcept;
+			NOD() static Offset Parse(const Code&, Charge&);
+			NOD() static Operator Peek(const Code&) noexcept;
+
 			NOD() static bool IsChargable(const Any&) noexcept;
 		};
 
@@ -122,8 +126,8 @@ namespace Langulus::Flow
 		NOD() Any Parse(bool optimize = true) const;
 		NOD() Code Clone() const;
 
-		NOD() Code LeftOf(Offset) const;
 		NOD() Code RightOf(Offset) const;
+		NOD() Code LeftOf(Offset) const;
 		NOD() bool StartsWithSpecial() const noexcept;
 		NOD() bool StartsWithSkippable() const noexcept;
 		NOD() bool EndsWithSkippable() const noexcept;

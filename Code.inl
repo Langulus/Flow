@@ -4,16 +4,6 @@
 namespace Langulus::Flow
 {
 
-	/// Construct by referencing a Text container										
-	///	@param other - the text container to use										
-	/*inline Code::Code(const Text& other)
-		: Text {other} {}
-
-	/// Construct by moving a Text container												
-	///	@param other - the text container to use										
-	inline Code::Code(Text&& other) noexcept
-		: Text {Forward<Text>(other)} {}*/
-
 	/// Remove elements from the left side of Code code								
 	///	@param offset - the number of elements to discard from the front		
 	///	@return a shallow-copied container with the correct offset				
@@ -98,89 +88,29 @@ namespace Langulus::Flow
 	Code& Code::TypeSuffix() {
 		if constexpr (CT::UnsignedInteger<T>) {
 			*this += "u";
-			if constexpr (sizeof(T) * 8 != 32)
+			if constexpr (sizeof(T) != sizeof(void*))
 				*this += sizeof(T) * 8;
 		}
 		else if constexpr (CT::SignedInteger<T>) {
 			*this += "i";
-			if constexpr (sizeof(T) * 8 != 32)
+			if constexpr (sizeof(T) != sizeof(void*))
 				*this += sizeof(T) * 8;
 		}
-		else if constexpr (CT::Same<T, float>)
+		else if constexpr (CT::Same<T, Real>)
+			;
+		else if constexpr (CT::Same<T, RealSP>)
 			*this += "f";
-		else if constexpr (CT::Same<T, double>)
+		else if constexpr (CT::Same<T, RealDP>)
 			*this += "d";
 		else if constexpr (CT::Bool<T>)
 			*this += "b";
-		else
-			*this += MetaData::Of<T>();
-		return *this;
-	}
-
-	/// Generate a standard token from the current container							
-	///	@return the token																		
-	inline Code Code::StandardToken() const {
-		Code result = *this;
-		result += ",";
-		result += *this;
-		result += "Ptr,";
-		result += *this;
-		result += "ConstPtr";
-		return result;
-	}
-
-	/// Concatenate Code with Code															
-	inline Code operator + (const Code& lhs, const Code& rhs) {
-		// It's essentially the same, as concatenating Text with Text		
-		// with the only difference being, that it retains Code type		
-		return Code {static_cast<const Text&>(lhs) + static_cast<const Text&>(rhs)};
-	}
-
-	/// Concatenate Text with Code, Code always dominates								
-	inline Code operator + (const Text& lhs, const Code& rhs) {
-		// It's essentially the same, as concatenating Text with Text		
-		// with the only difference being, that it retains Code type		
-		return Code {lhs + static_cast<const Text&>(rhs)};
-	}
-
-	/// Concatenate Code with Text, Code always dominates								
-	inline Code operator + (const Code& lhs, const Text& rhs) {
-		// It's essentially the same, as concatenating Text with Text		
-		// with the only difference being, that it retains Code type		
-		return Code {static_cast<const Text&>(lhs) + rhs};
-	}
-
-	/// Destructive concatenation of Code with anything								
-	/*template<class ANYTHING>
-	Code& Code::operator += (const ANYTHING& rhs) {
-		if constexpr (IsText<ANYTHING>) {
-			Text::template operator += <Text>(static_cast<const Text&>(rhs));
-		}
 		else {
-			Code converted;
-			TConverter<ANYTHING, Code>::Convert(rhs, converted);
-			operator += (converted);
+			*this += "<";
+			*this += MetaData::Of<T>()->mToken;
+			*this += ">";
 		}
 		return *this;
 	}
-
-	/// Concatenate anything with Code														
-	template<CT::NotText T>
-	NOD() Code operator + (const T& lhs, const Code& rhs) {
-		Code converted;
-		converted += lhs;
-		converted += rhs;
-		return converted;
-	}
-
-	/// Concatenate Code with anything														
-	template<CT::NotText T>
-	NOD() Code operator + (const Code& lhs, const T& rhs) {
-		Code converted;
-		converted += lhs;
-		converted += rhs;
-		return converted;
-	}*/
 
 } // namespace Langulus::Flow
 
@@ -192,4 +122,4 @@ namespace Langulus
 		return Anyness::Text {text, size};
 	}
 
-}
+} // namespace Langulus

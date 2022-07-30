@@ -92,4 +92,13 @@ namespace Langulus::Verbs
 		return true;
 	}
 
+	/// Stateless conjunction/disjunction													
+	/// Essentially forwards the arguments to the output								
+	///	@param verb - the conjunction/disjunction verb								
+	///	@return true if verb was satisfied												
+	inline bool Conjunct::ExecuteStateless(Verb& verb) {
+		verb << Move(verb.GetArgument());
+		return true;
+	}
+
 } // namespace Langulus::Verbs

@@ -23,30 +23,46 @@ namespace Langulus::Flow
 			CloseStringAlt,
 			OpenCharacter,
 			CloseCharacter,
+			OpenByte,
+
 			Past,
 			Future,
-			//Context,
-			Associate,
+
 			Missing,
-			And,
-			Or,
-			Select,
+
 			Mass,
 			Frequency,
 			Time,
 			Priority,
-			Add,
-			Subtract,
-			Multiply,
-			Divide,
-			Power,
-			//As,
-			OpenByte,
-			CloseByte,
 
 			OpCounter,
-			NoOperator = OpCounter
+			NoOperator = OpCounter,
+
+			Reflected
 		};
+
+		using Text::Text;
+		explicit Code(Operator);
+
+		NOD() Any Parse(bool optimize = true) const;
+		NOD() Code Clone() const;
+
+		NOD() Code RightOf(Offset) const;
+		NOD() Code LeftOf(Offset) const;
+		NOD() bool StartsWithSpecial() const noexcept;
+		NOD() bool StartsWithSkippable() const noexcept;
+		NOD() bool EndsWithSkippable() const noexcept;
+		NOD() bool StartsWithLetter() const noexcept;
+		NOD() bool EndsWithLetter() const noexcept;
+		NOD() bool StartsWithDigit() const noexcept;
+		NOD() bool EndsWithDigit() const noexcept;
+		NOD() bool StartsWithOperator(Offset) const noexcept;
+
+		template<class T>
+		Code& TypeSuffix();
+
+		NOD() static bool IsReserved(const Text&);
+		NOD() static bool IsValidKeyword(const Text&);
 
 	protected:
 		/// Parser for unknown expressions													
@@ -60,6 +76,7 @@ namespace Langulus::Flow
 		struct KeywordParser {
 			NOD() static Offset Parse(const Code&, Any&, bool allowCharge = true);
 			NOD() static bool Peek(const Code&) noexcept;
+			NOD() static Token IsolateKeyword(const Code&) noexcept;
 		};
 
 		/// Parser for skipping expressions													
@@ -83,13 +100,15 @@ namespace Langulus::Flow
 		struct OperatorParser {
 			NOD() static Offset Parse(Operator, const Code&, Any&, int priority, bool optimize);
 			NOD() static Operator Peek(const Code&) noexcept;
+			NOD() static Token Isolate(const Code&) noexcept;
 
 		private:
 			NOD() static Offset ParseContent(const Code&, Any&, bool optimize);
 			NOD() static Offset ParseString(Code::Operator, const Code&, Any&);
+			NOD() static Offset ParseBytes(const Code&, Any&);
 			NOD() static Offset ParsePolarize(Code::Operator, const Code&, Any&, bool optimize);
 			NOD() static Offset ParseMissing(const Code&, Any&);
-			NOD() static Offset ParseReflected(Code::Operator, const Code&, Any&, bool optimize);
+			NOD() static Offset ParseReflected(Verb&, const Code&, Any&, bool optimize);
 
 			static void InsertContent(Any&, Any&);
 		};
@@ -108,6 +127,7 @@ namespace Langulus::Flow
 			Any mValue;
 		};
 
+		/// Constants database																	
 		static THashMap<Text, MetaConstant> mConstants;
 
 		struct OperatorProperties {
@@ -117,33 +137,8 @@ namespace Langulus::Flow
 			bool mCharge;
 		};
 
+		/// Built-in operators database														
 		static const OperatorProperties mOperators[OpCounter];
-
-	public:
-		using Text::Text;
-		explicit Code(Operator);
-
-		NOD() Any Parse(bool optimize = true) const;
-		NOD() Code Clone() const;
-
-		NOD() Code RightOf(Offset) const;
-		NOD() Code LeftOf(Offset) const;
-		NOD() bool StartsWithSpecial() const noexcept;
-		NOD() bool StartsWithSkippable() const noexcept;
-		NOD() bool EndsWithSkippable() const noexcept;
-		NOD() bool StartsWithLetter() const noexcept;
-		NOD() bool EndsWithLetter() const noexcept;
-		NOD() bool StartsWithDigit() const noexcept;
-		NOD() bool EndsWithDigit() const noexcept;
-		NOD() bool StartsWithOperator(Offset) const noexcept;
-
-		template<class T>
-		Code& TypeSuffix();
-
-		NOD() Code StandardToken() const;
-
-		NOD() static bool IsReserved(const Text&);
-		NOD() static bool IsValidKeyword(const Text&);
 	};
 
 } // namespace Langulus::Flow

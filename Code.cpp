@@ -41,6 +41,31 @@ namespace Langulus::Flow
 		));
 	}
 
+	/// Isolate an operator token																
+	///	@param token - the operator														
+	///	@return the isolated operator token												
+	constexpr Token IsolateOperator(const Token& token) noexcept {
+		// Skip skippable at the front and the back of token					
+		auto l = token.data();
+		auto r = token.data() + token.size();
+		while (l < r && *l <= 32)
+			++l;
+
+		while (r > l && *(r-1) <= 32)
+			--r;
+
+		return token.substr(l - token.data(), r - l);
+	}
+
+	/// Compare two operators, ignoring case and spacing								
+	///	@param lhs - the left operator													
+	///	@param rhs - the right operator													
+	///	@return true if both loosely match												
+	constexpr bool CompareOperators(const Token& lhs, const Token& rhs) noexcept {
+		// Compare isolated operators													
+		return CompareTokens(IsolateOperator(lhs), IsolateOperator(rhs));
+	}
+
 	constexpr Code::OperatorProperties Code::mOperators[OpCounter] = {
 		{ "(", "(", 0, false },		// OpenScope
 		{ ")", ")", 0, false },		// CloseScope
@@ -54,33 +79,15 @@ namespace Langulus::Flow
 		{ "`", "`", 0, false },		// CloseStringAlt
 		{ "'", "'", 0, false },		// OpenCharacter
 		{ "'", "'", 0, false },		// CloseCharacter
-		{ "<", "<", 12, false },	// PolarizeLeft
-		{ ">", ">", 12, false },	// PolarizeRight
-		//{ ":", ": ", 1, false },	// Context
-		{ "=", " = ", 1, false },	// Copy
+		{ "0x", "0x", 0, false },	// OpenByte
+		{ "<-", "<-", 12, false },	// PolarizeLeft
+		{ "->", "->", 12, false },	// PolarizeRight
 		{ "?", "?", 13, false },	// Missing
-		{ ",", ", ", 2, false },	// AndSeparator
-		{ "or", " or ", 2, false },// OrSeparator
-		{ ".", ".", 7, false },		// Select
 		{ "*", "*", 20, true },		// Mass
 		{ "^", "^", 20, true },		// Frequency
 		{ "@", "@", 20, true },		// Time
-		{ "!", "!", 20, true },		// Priority
-		{ "+", " + ", 4, false },	// Add
-		{ "-", " - ", 4, false },	// Subtract
-		{ "*", " * ", 5, false },	// Multiply
-		{ "/", " / ", 5, false },	// Divide
-		{ "^", " ^ ", 6, false },	// Power
-		//{ "as", " as ", 1, false },// As
-		{ "0x", "0x", 0, false },	// OpenByte
-		{ "", "", 0, false }			// CloseByte
+		{ "!", "!", 20, true }		// Priority
 	};
-
-	inline bool Code::ChargeParser::IsChargable(const Any& output) noexcept {
-		return !output.IsMissing() && output.GetCount() == 1 &&
-			output.Is<MetaData, MetaVerb, Verb>();
-	}
-
 
 	/// Parse any Code expression																
 	///	@param input - the code to parse													
@@ -181,7 +188,25 @@ namespace Langulus::Flow
 	bool Code::KeywordParser::Peek(const Code& input) noexcept {
 		return input.StartsWithLetter();
 	}
+	
+	/// Gather all symbols of a keyword														
+	///	@param input - the code to peek into											
+	///	@return the isolated keyword token												
+	Token Code::KeywordParser::IsolateKeyword(const Code& input) noexcept {
+		Offset progress = 0;
+		while (progress < input.GetCount()) {
+			const auto relevant = input.RightOf(progress);
+			if (!KeywordParser::Peek(relevant) && !NumberParser::Peek(relevant))
+				break;
+			++progress;
+		}
 
+		if (0 == progress)
+			return {};
+
+		return input.LeftOf(progress);
+	}
+	
 	/// Parse keyword																				
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
@@ -190,27 +215,17 @@ namespace Langulus::Flow
 	Offset Code::KeywordParser::Parse(const Code& input, Any& lhs, bool allowCharge) {
 		Offset progress = 0;
 		VERBOSE("Parsing keyword...");
-		while (progress < input.GetCount()) {
-			// Collect all characters of the keyword								
-			const auto relevant = input.RightOf(progress);
-			if (!KeywordParser::Peek(relevant) && !NumberParser::Peek(relevant))
-				break;
-
-			++progress;
-		}
-
-		if (0 == progress)
-			PRETTY_ERROR("No progress at keyword parse");
 
 		// Isolate the keyword															
-		Any rhs;
-		const auto keyword = input.LeftOf(progress);
-		if (keyword.IsEmpty())
+		const auto keyword = IsolateKeyword(input);
+		if (keyword.empty())
 			PRETTY_ERROR("No keyword parsed");
 
-		VERBOSE("Parsed keyword: " << keyword);
+		progress += keyword.size();
+		VERBOSE("Keyword collected: " << keyword);
 
 		// Search for token in meta definitions									
+		Any rhs;
 		const auto metaData = RTTI::Database.GetMetaData(keyword);
 		if (metaData) {
 			//TODO parse charge and materialize if needed to
@@ -245,7 +260,7 @@ namespace Langulus::Flow
 		if (rhs.IsEmpty())
 			PRETTY_ERROR("Missing meta");
 
-		VERBOSE("Keyword resulted in "
+		VERBOSE("Keyword parsed: "
 			<< Logger::Push << Logger::Cyan << keyword << Logger::Pop << " -> " 
 			<< Logger::Cyan << rhs << " (" << rhs.GetToken() << ")");
 
@@ -283,7 +298,7 @@ namespace Langulus::Flow
 			progress = p - input.GetRaw();
 		}
 
-		VERBOSE(Logger::Green << "Number resulted in " << rhs);
+		VERBOSE(Logger::Green << "Number parsed: " << rhs);
 		lhs << rhs;
 		return progress;
 	}
@@ -293,61 +308,105 @@ namespace Langulus::Flow
 	///	@param input - the code to peek into											
 	///	@return true if input begins with an operators								
 	Code::Operator Code::OperatorParser::Peek(const Code& input) noexcept {
+		// Compare against the built-in operators									
 		for (Offset i = 0; i < Code::OpCounter; ++i) {
 			if (!mOperators[i].mCharge && input.StartsWithOperator(i))
 				return Operator(i);
 		}
 
-		return NoOperator;
+		// Compare against reflected operators										
+		const auto word = Isolate(input);
+		const auto found = RTTI::Database.GetOperator(word);
+		return found ? Reflected : NoOperator;
+	}
+
+	/// Isolate an operator																		
+	///	@param input - the code to parse													
+	///	@return the isolated operator														
+	Token Code::OperatorParser::Isolate(const Code& input) noexcept {
+		// These can be either a word separated by operators/spaces, or	
+		// operators separated by spaces/numbers/chatacters					
+		if (input.StartsWithLetter()) {
+			// Isolate a keyword separated by spaces/operators					
+			return KeywordParser::IsolateKeyword(input);
+		}
+
+		// Isolate an operator separated by spaces/letters/digits			
+		Offset progress = 0;
+		while (progress < input.GetCount()) {
+			const auto relevant = input.RightOf(progress);
+			if (KeywordParser::Peek(relevant) || NumberParser::Peek(relevant) || SkippedParser::Peek(relevant))
+				break;
+			++progress;
+		}
+
+		if (0 == progress)
+			return {};
+
+		return input.LeftOf(progress);
 	}
 
 	/// Parse op-expression, operate on current output (lhs) and content (rhs)	
 	/// Beware, that charge-expressions are not handled here							
+	///	@param op - the built-in operator if any, or Reflected					
 	///	@param input - the code to parse													
-	///	@param lhs - [in/out] parsed content goes here (lhs)						
+	///	@param lhs - [in/out] the operator expression will go here				
 	///	@param priority - the priority of the last parsed element				
 	///	@param optimize - the priority of the last parsed element				
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::Parse(Operator op, const Code& input, Any& lhs, int priority, bool optimize) {
 		Offset progress = 0;
-		SAFETY(if (op == Code::NoOperator)
-			PRETTY_ERROR("Unknown operator"));
+		if (op != Reflected) {
+			// Handle a built-in operator												
+			// Operators have priority, we can't execute a higher priority	
+			// operator, before all lower priority operators have been		
+			// taken	care of																
+			if (mOperators[op].mPriority && priority >= mOperators[op].mPriority) {
+				VERBOSE(Logger::Yellow << "Delaying operator " << mOperators[op].mToken
+					<< " due to a prioritized operator");
+				return 0;
+			}
 
-		// Operators have priority, we can't execute a higher priority		
-		// operator, before all lower priority operators have been taken	
-		// care of																			
-		if (mOperators[op].mPriority && priority >= mOperators[op].mPriority) {
-			VERBOSE(Logger::Yellow << "Delaying operator " << mOperators[op].mToken
-				<< " due to a prioritized operator");
-			return 0;
+			// Skip the operator, we already know it								
+			VERBOSE("Parsing built-in operator: " << mOperators[op].mToken);
+			progress += mOperators[op].mToken.size();
+			const Code relevant = input.RightOf(progress);
+
+			switch (op) {
+				// Handle built-in operators first									
+			case OpenScope:
+				return progress + ParseContent(relevant, lhs, optimize);
+			case CloseScope:
+				return 0;
+			case OpenString:
+			case OpenStringAlt:
+			case OpenCode:
+			case OpenCharacter:
+				return progress + ParseString(op, relevant, lhs);
+			case OpenByte:
+				return progress + ParseBytes(relevant, lhs);
+			case Past:
+			case Future:
+				return progress + ParsePolarize(op, relevant, lhs, optimize);
+			case Missing:
+				return progress + ParseMissing(relevant, lhs);
+			default:
+				PRETTY_ERROR("Unhandled built-in operator");
+			}
 		}
+		else {
+			// Handle a reflected operator											
+			const auto word = Isolate(input);
+			const auto found = RTTI::Database.GetOperator(word);
 
-		// Skip the operator, we already know it									
-		VERBOSE("Parsing operator " << mOperators[op].mToken);
-		progress += mOperators[op].mToken.size();
-		const Code relevant = input.RightOf(progress);
+			VERBOSE("Parsing reflected operator: " << word << " (" << found->mToken << ")");
+			progress += word.size();
+			const Code relevant = input.RightOf(progress);
+			Verb operation {found};
+			if (CompareOperators(word, found->mOperatorReverse))
+				operation.SetMass(-1);
 
-		switch (op) {
-		// Handle built-in operators first											
-		case OpenScope:
-			return progress + ParseContent(relevant, lhs, optimize);
-		case CloseScope:
-			return 0;
-		case OpenString:
-		case OpenStringAlt:
-		case OpenCode:
-		case OpenCharacter:
-			return progress + ParseString(op, relevant, lhs);
-		//case Code::OpenByte:
-		//	TODO();
-		case Past:
-		case Future:
-			return progress + ParsePolarize(op, relevant, lhs, optimize);
-		case Missing:
-			return progress + ParseMissing(relevant, lhs);
-		// FInally, execute reflected operators									
-		default:
-			return progress + ParseReflected(op, relevant, lhs, optimize);
+			return progress + ParseReflected(operation, relevant, lhs, optimize);
 		}
 	}
 
@@ -467,7 +526,7 @@ namespace Langulus::Flow
 
 	/// String/character/code scope															
 	///	@param op - the starting operator												
-	///	@param input - the code to parse													
+	///	@param input - the code to parse													 
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParseString(const Code::Operator op, const Code& input, Any& lhs) {
@@ -487,7 +546,7 @@ namespace Langulus::Flow
 				if (relevant.StartsWithOperator(closer)) {
 					const auto tokenSize = mOperators[closer].mToken.size();
 					lhs = Text {input.LeftOf(progress)};
-					VERBOSE("Constructed string " << Logger::Cyan << lhs);
+					VERBOSE("String parsed: " << Logger::Cyan << lhs);
 					return tokenSize + progress;
 				}
 				break;
@@ -498,7 +557,7 @@ namespace Langulus::Flow
 				if (relevant.StartsWithOperator(CloseCharacter)) {
 					const auto tokenSize = mOperators[CloseCharacter].mToken.size();
 					lhs = input[0];
-					VERBOSE("Constructed character " << Logger::Cyan << lhs);
+					VERBOSE("Character parsed: " << Logger::Cyan << lhs);
 					return tokenSize + progress;
 				}
 				break;
@@ -513,7 +572,7 @@ namespace Langulus::Flow
 					if (0 == depth) {
 						const auto tokenSize = mOperators[CloseCode].mToken.size();
 						lhs = input.LeftOf(progress);
-						VERBOSE("Constructed code " << Logger::Cyan << lhs);
+						VERBOSE("Code parsed: " << Logger::Cyan << lhs);
 						return tokenSize + progress;
 					}
 				}
@@ -527,6 +586,55 @@ namespace Langulus::Flow
 		}
 
 		PRETTY_ERROR("Unexpected EOF when parsing string/character/code");
+	}
+
+	/// Byte scope parser																		
+	///	@param input - the code to parse													
+	///	@param lhs - [in/out] here goes the byte sequence							
+	///	@return number of parsed characters												
+	Offset Code::OperatorParser::ParseBytes(const Code& input, Any& lhs) {
+		Offset progress = 0;
+		while (progress < input.GetCount()) {
+			const auto c = input[progress];
+			if (::std::isdigit(c)) {
+				++progress;
+				continue;
+			}
+
+			const auto lc = ::std::tolower(c);
+			if (lc >= 'a' && lc <= 'f') {
+				++progress;
+				continue;
+			}
+
+			break;
+		}
+
+		// Parse all bytes																
+		Bytes result;
+		auto i = input.GetRaw();
+		const auto iEnd = i + progress;
+		uint8_t stager {};
+		uint8_t shifter {4};
+		while (i != iEnd) {
+			stager |= uint8_t(*i - (::std::isdigit(*i) ? '0' : 'a')) << shifter;
+
+			if (shifter == 0) {
+				result << Byte {stager};
+				stager = {};
+				shifter = 4;
+			}
+			else shifter = 0;
+
+			++i;
+		}
+
+		// There might be a leftover byte											
+		if (shifter == 0)
+			result << Byte {stager};
+
+		lhs = Abandon(result);
+		return progress;
 	}
 
 	/// Polarize contents																		
@@ -592,265 +700,38 @@ namespace Langulus::Flow
 		return 0;
 	}
 
-	/// Separator operators (and, or)														
-	///	@param op - the starting operator												
-	///	@param input - the code to parse													
-	///	@param lhs - [in/out] parsed content goes here								
-	///	@return number of parsed characters												
-	/*Offset OperatorSeparator::Parse(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
-		// Output is LHS, new content is RHS, just do a smart push to LHS	
-		Any rhs;
-		const auto progress = Expression::Parse(input, rhs, Code::Token[op].mPriority, optimize);
-		lhs.SmartPush(rhs, (op == Code::Or ? DataState::Or : DataState::Default));
-		VERBOSE("Pushing (" 
-			<< Code::Token[op].mToken << ") " << rhs << " -> " << Logger::Cyan << lhs);
-		return progress;
-	}
-
-	/// Select operator (.)																		
-	///	@param input - the code to parse													
-	///	@param lhs - [in/out] parsed content goes here								
-	///	@return number of parsed characters												
-	Offset OperatorSelect::Parse(const Code& input, Any& lhs, bool optimize) {
-		Offset progress = 0;
-		if (input.StartsWithOperator(Code::OpenScope)) {
-			// Selection arguments provided as content on RHS					
-			const auto scopeOffset = Code::Token[Code::OpenScope].mToken.size();
-			lhs = Verbs::Select(Move(lhs));
-			progress = OperatorContent::Parse(input.RightOf(scopeOffset), lhs, optimize);
-			VERBOSE("Select operator: " << lhs);
-			return scopeOffset + progress;
-		}
-
-		// Search for anything on the right side									
-		// LHS is the context, RHS is what we select in it						
-		// If no LHS exists, we select in current environment					
-		// We wrap both RHS, and LHS into a Verbs::Select						
-		Any rhs;
-		progress = Expression::Parse(input, rhs, Code::Token[Code::Select].mPriority, optimize);
-		if (rhs.IsEmpty()) {
-			PRETTY_ERROR("Empty RHS for selection operator");
-		}
-		else if (rhs.GetCount() > 1) {
-			PRETTY_ERROR("RHS(" << rhs << ") is too big");
-		}
-
-		if (rhs.Is<VMeta>())
-			lhs = Verb(rhs.Get<VMeta>()).SetSource(Move(lhs));
-		else if (rhs.Is<Verb>())
-			lhs = Move(rhs.Get<Verb>().SetSource(Move(lhs)));
-		else
-			lhs = Verbs::Select(Move(lhs), Move(rhs));
-
-		VERBOSE("Select operator: " << lhs);
-		return progress;
-	}
-
-	/// Copy operator (=)																		
-	///	@param input - the code to parse													
-	///	@param lhs - [in/out] parsed content goes here								
-	///	@return number of parsed characters												
-	Offset OperatorCopy::Parse(const Code& input, Any& lhs, bool optimize) {
-		Offset progress = 0;
-		if (input.StartsWithOperator(Code::OpenScope)) {
-			// Copy specification provided as content on RHS					
-			const auto scopeOffset = Code::Token[Code::OpenScope].mToken.size();
-			lhs = Verbs::Associate(Move(lhs)).SetPriority(2);
-			progress = OperatorContent::Parse(input.RightOf(scopeOffset), lhs, optimize);
-			VERBOSE("Copy operator: " << lhs);
-			return scopeOffset + progress;
-		}
-
-		// LHS is the context, RHS is what we associate with					
-		// If no LHS exists, we simply copy in current environment			
-		// We wrap both RHS, and LHS into a Verbs::Associate					
-		Any rhs;
-		progress = Expression::Parse(input, rhs, Code::Token[Code::Associate].mPriority, optimize);
-		if (rhs.IsInvalid())
-			PRETTY_ERROR("Invalid RHS for copy operator");
-
-		// Invoke the verb in the context (slower)								
-		Verbs::Associate copier({}, rhs);
-		if (!DispatchDeep(lhs, copier)) {
-			// If execution failed, just push the verb							
-			lhs = Move(copier.SetSource(Move(lhs)).SetPriority(2));
-			VERBOSE("Copy operator: " << lhs);
-			return progress;
-		}
-
-		VERBOSE("Copied: " << copier);
-		return progress;
-	}*/
-
 	/// Execute a reflected verb operator													
 	///	@param op - the operator to execute												
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] result of the operator goes here					
+	///	@param optimize - whether or not to attempt executing at compile-time
 	///	@return number of parsed characters												
-	Offset Code::OperatorParser::ParseReflected(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
+	Offset Code::OperatorParser::ParseReflected(Verb& op, const Code& input, Any& lhs, bool optimize) {
 		// Parse RHS for the operator													
-		Any rhs;
-		const auto progress = UnknownParser::Parse(input, rhs, mOperators[op].mPriority, false);
-		/*if (optimize) {
-			if (op == Code::Subtract && lhs.IsEmpty() && rhs.Is<Real>() && !rhs.IsEmpty()) {
-				// Quick optimization for inverting number in RHS				
-				VERBOSE("Built-in inversion (-): " << rhs << " "
-					<< Code::Token[op].mToken << " = " << -rhs.Get<Real>());
-				lhs = -rhs.Get<Real>();
-				return progress;
-			}
-			else if (lhs.Is<Real>() && rhs.Is<Real>() && !lhs.IsEmpty() && !rhs.IsEmpty()) {
-				// LHS + RHS and LHS - RHS if both reals (optimization)		
-				if (op == Code::Subtract) {
-					VERBOSE("Built-in subtract: " << lhs << " " << Code::Token[op].mToken
-						<< " " << rhs << " = " << (lhs.Get<Real>() - rhs.Get<Real>()));
-					lhs = lhs.Get<Real>() - rhs.Get<Real>();
-				}
-				else {
-					VERBOSE("Built-in add: " << lhs << " " << Code::Token[op].mToken
-						<< " " << rhs << " = " << (lhs.Get<Real>() + rhs.Get<Real>()));
-					lhs = lhs.Get<Real>() + rhs.Get<Real>();
-				}
-				return progress;
-			}
-		}*/
-		TODO();
-		if (lhs.IsEmpty() && op == Code::Subtract) {
-			// No LHS, so we execute in RHS to invert								
-			auto inverter = Verbs::Add().Invert();
-			if (!optimize || !DispatchDeep(rhs, inverter)) {
-				// If execution failed, just push the verb						
-				lhs = Move(inverter.SetSource(Move(rhs)));
-				VERBOSE("Invert (-) operator: " << lhs);
-				return progress;
-			}
+		const auto progress = 
+			UnknownParser::Parse(input, op.GetArgument(), op.GetPriority(), false);
 
-			VERBOSE("Inverted (-): " << rhs << " " << Code::Token[op].mToken
-				<< " = " << inverter.GetOutput());
-			lhs = Move(inverter.GetOutput());
-			return progress;
+		// Then dispatch the operation in lhs, with the given arguments	
+		if (optimize && DispatchDeep(lhs, op)) {
+			// The verb was executed at compile-time, so directly				
+			// substitute LHS with the result										
+			lhs = Abandon(op.GetOutput());
+		}
+		else {
+			// Either compile-time execution is impossible, or we don't		
+			// want it, so directly substitute LHS with the verb				
+			lhs = Abandon(op);
 		}
 
-		// Invoke the verb in the context (slower)								
-		auto adder = Verbs::Add({}, rhs);
-		if (op == Code::Subtract)
-			adder.Invert();
-
-		if (!optimize || !DispatchDeep(lhs, adder)) {
-			// If execution failed, just push the verb							
-			lhs = Move(adder.SetSource(Move(lhs)));
-			VERBOSE("Add/subtract operator: " << lhs);
-			return progress;
-		}
-		
-		VERBOSE("Added/subtracted: " << lhs << " " << Code::Token[op].mToken
-			<< " " << rhs << " = " << adder.GetOutput());
-		lhs = Move(adder.GetOutput());
 		return progress;
 	}
 
-	/// Multiply/divide operator (*, /)														
-	///	@param op - the starting operator												
-	///	@param input - the code to parse													
-	///	@param lhs - [in/out] parsed content goes here								
-	///	@return number of parsed characters												
-	/*Offset OperatorMultiply::Parse(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
-		// Perform multiplication or division on LHS and RHS					
-		// Naturally, LHS is output; RHS is the newly parsed content		
-		Any rhs;
-		const auto progress = Expression::Parse(input, rhs, Code::Token[op].mPriority, optimize);
-		if (optimize) {
-			if (op == Code::Divide && lhs.IsEmpty() && rhs.Is<Real>() && !rhs.IsEmpty()) {
-				// Quick optimization for inverting number in RHS				
-				VERBOSE("Built-in inversion (/): " << rhs << " "
-					<< Code::Token[op].mToken << " = " << (Real(1) / rhs.Get<Real>()));
-				lhs = Real(1) / rhs.Get<Real>();
-				return progress;
-			}
-			else if (lhs.Is<Real>() && rhs.Is<Real>() && !lhs.IsEmpty() && !rhs.IsEmpty()) {
-				// LHS * RHS and LHS / RHS if both reals (optimization)		
-				if (op == Code::Multiply) {
-					VERBOSE("Built-in multiply: " << lhs << " " << Code::Token[op].mToken
-						<< " " << rhs << " = " << (lhs.Get<Real>() * rhs.Get<Real>()));
-					lhs = lhs.Get<Real>() * rhs.Get<Real>();
-				}
-				else {
-					VERBOSE("Built-in divide: " << lhs << " " << Code::Token[op].mToken
-						<< " " << rhs << " = " << (lhs.Get<Real>() / rhs.Get<Real>()));
-					lhs = lhs.Get<Real>() / rhs.Get<Real>();
-				}
-				return progress;
-			}
-		}
-
-		if (lhs.IsEmpty() && op == Code::Divide) {
-			// No LHS, so we execute in RHS to invert (1/x)						
-			auto inverter = Verbs::Multiply().Invert();
-			if (!optimize || !DispatchDeep(rhs, inverter)) {
-				// If execution failed, just push the verb						
-				lhs = Move(inverter.SetSource(Move(rhs)));
-				VERBOSE("Invert (/) operator: " << lhs);
-				return progress;
-			}
-
-			VERBOSE("Inverted (/): " << rhs << " " << Code::Token[op].mToken
-				<< " = " << inverter.GetOutput());
-			lhs = Move(inverter.GetOutput());
-			return progress;
-		}
-
-		// Invoke the verb in the context (slower)								
-		auto multiplier = Verbs::Multiply({}, rhs);
-		if (op == Code::Divide)
-			multiplier.Invert();
-
-		if (!optimize || !DispatchDeep(lhs, multiplier)) {
-			// If execution failed, just push the verb							
-			lhs = Move(multiplier.SetSource(Move(lhs)));
-			VERBOSE("Multiply/divide operator: " << lhs);
-			return progress;
-		}
-		
-		VERBOSE("Multiplied/divided: " << lhs << " " << Code::Token[op].mToken
-			<< " " << rhs << " = " << multiplier.GetOutput());
-		lhs = Move(multiplier.GetOutput());
-		return progress;
+	/// Check if last element inside container is chargable							
+	///	@param data - the data to test													
+	///	@return true if data is chargable												
+	bool Code::ChargeParser::IsChargable(const Any& output) noexcept {
+		return /*!output.IsMissing() &&*/ output.Is<MetaData, MetaVerb, Verb, Construct>();
 	}
-
-	/// Power operator (^, ^(1/...))															
-	///	@param input - the code to parse													
-	///	@param lhs - [in/out] parsed content goes here								
-	///	@return number of parsed characters												
-	Offset OperatorPower::Parse(const Code& input, Any& lhs, bool optimize) {
-		// Perform power on LHS and RHS												
-		// Naturally, LHS is output; RHS is the newly parsed content		
-		Any rhs;
-		const auto progress = Expression::Parse(input, rhs, Code::Token[Code::Power].mPriority, optimize);
-		if (optimize) {
-			if (lhs.Is<Real>() && rhs.Is<Real>() && !lhs.IsEmpty() && !rhs.IsEmpty()) {
-				// LHS ^ RHS when both reals (optimization)						
-				Real result = std::pow(lhs.Get<Real>(), rhs.Get<Real>());
-				VERBOSE("Built-in exponentiation: " << lhs << " " << Code::Token[Code::Power].mToken
-					<< " " << rhs << " = " << result);
-				lhs = result;
-				return progress;
-			}
-		}
-
-		// Try invoking the verb in the context (slower)						
-		auto exponentiator = Verbs::Exponent({}, rhs);
-		if (!optimize || !DispatchDeep(lhs, exponentiator)) {
-			// If execution failed, just push the verb							
-			lhs = Move(exponentiator.SetSource(Move(lhs)));
-			VERBOSE("Power operator: " << lhs);
-			return progress;
-		}
-		
-		VERBOSE("Exponentiated: " << lhs << " " << Code::Token[Code::Power].mToken
-			<< " " << rhs << " = " << exponentiator.GetOutput());
-		lhs = Move(exponentiator.GetOutput());
-		return progress;
-	}*/
 
 	/// Peek inside input, and return true if it begins with one of the			
 	/// builtin operators for charging														
@@ -868,7 +749,7 @@ namespace Langulus::Flow
 	/// Mass/time/frequency/priority operators (+, -, *, /, @, ^, !)				
 	/// Can be applied to things with charge, like verbs and constructs			
 	///	@param input - the code to parse													
-	///	@param lhs - [in/out] parsed content goes here								
+	///	@param charge - [out] parsed charge goes here								
 	///	@return number of parsed characters												
 	Offset Code::ChargeParser::Parse(const Code& input, Charge& charge) {
 		Offset progress = 0;

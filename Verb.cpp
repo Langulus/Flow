@@ -238,7 +238,7 @@ namespace Langulus::Flow
 		if (!mVerb) {
 			// An invalid verb is always written as token						
 			if (mSource.IsValid())
-				result += Code::Select;
+				result += Verbs::Select::CTTI_PositiveOperator;
 			result += MetaVerb::DefaultToken;
 		}
 		else {
@@ -252,7 +252,7 @@ namespace Langulus::Flow
 				else {
 					// Write as token														
 					if (mSource.IsValid())
-						result += Code::Select;
+						result += Verbs::Select::CTTI_PositiveOperator;
 					result += mVerb->mTokenReverse;
 					result += Verbs::Interpret::To<Code>(GetCharge() * -1);
 				}
@@ -266,7 +266,7 @@ namespace Langulus::Flow
 				else {
 					// Write as token														
 					if (mSource.IsValid())
-						result += Code::Select;
+						result += Verbs::Select::CTTI_PositiveOperator;
 					result += mVerb->mToken;
 					result += Verbs::Interpret::To<Code>(GetCharge());
 				}
@@ -306,7 +306,7 @@ namespace Langulus::Flow
 		if (!mVerb) {
 			// An invalid verb is always written as token						
 			if (mSource.IsValid())
-				result += Code::Select;
+				result += Verbs::Select::CTTI_PositiveOperator;
 			result += MetaVerb::DefaultToken;
 		}
 		else {
@@ -320,7 +320,7 @@ namespace Langulus::Flow
 				else {
 					// Write as token														
 					if (mSource.IsValid())
-						result += Code::Select;
+						result += Verbs::Select::CTTI_PositiveOperator;
 					result += mVerb->mTokenReverse;
 					result += Verbs::Interpret::To<Debug>(GetCharge() * -1);
 				}
@@ -334,7 +334,7 @@ namespace Langulus::Flow
 				else {
 					// Write as token														
 					if (mSource.IsValid())
-						result += Code::Select;
+						result += Verbs::Select::CTTI_PositiveOperator;
 					result += mVerb->mToken;
 					result += Verbs::Interpret::To<Debug>(GetCharge());
 				}
@@ -352,7 +352,6 @@ namespace Langulus::Flow
 
 		return Debug {result};
 	}
-
 
 } // namespace Langulus::Flow
 

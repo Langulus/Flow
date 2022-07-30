@@ -289,6 +289,8 @@ namespace Langulus::Verbs
 	struct Select : public Verb {
 		LANGULUS(POSITIVE_VERB) "Select";
 		LANGULUS(NEGATIVE_VERB) "Deselect";
+		LANGULUS(POSITIVE_OPERATOR) ".";
+		LANGULUS(NEGATIVE_OPERATOR) "..";
 		LANGULUS(INFO)
 			"Used to focus on a part of a container, or access members";
 
@@ -321,6 +323,8 @@ namespace Langulus::Verbs
 	struct Associate : public Verb {
 		LANGULUS(POSITIVE_VERB) "Associate";
 		LANGULUS(NEGATIVE_VERB) "Disassocate";
+		LANGULUS(POSITIVE_OPERATOR) " = ";
+		LANGULUS(NEGATIVE_OPERATOR) " ~ ";
 		LANGULUS(INFO)
 			"Either performs a shallow copy, or aggregates associations, "
 			"depending on the context's complexity";
@@ -343,6 +347,8 @@ namespace Langulus::Verbs
 	struct Add : public Verb {
 		LANGULUS(POSITIVE_VERB) "Add";
 		LANGULUS(NEGATIVE_VERB) "Subtract";
+		LANGULUS(POSITIVE_OPERATOR) " + ";
+		LANGULUS(NEGATIVE_OPERATOR) " - ";
 		LANGULUS(INFO)
 			"Performs arithmetic addition or subtraction";
 
@@ -365,6 +371,8 @@ namespace Langulus::Verbs
 	struct Multiply : public Verb {
 		LANGULUS(POSITIVE_VERB) "Multiply";
 		LANGULUS(NEGATIVE_VERB) "Divide";
+		LANGULUS(POSITIVE_OPERATOR) " * ";
+		LANGULUS(NEGATIVE_OPERATOR) " / ";
 		LANGULUS(INFO)
 			"Performs arithmetic multiplication or division. "
 			"If context is no specified, it is always 1";
@@ -387,6 +395,8 @@ namespace Langulus::Verbs
 	struct Exponent : public Verb {
 		LANGULUS(POSITIVE_VERB) "Exponent";
 		LANGULUS(NEGATIVE_VERB) "Logarithm";
+		LANGULUS(POSITIVE_OPERATOR) " ^ ";
+		LANGULUS(NEGATIVE_OPERATOR) " log ";
 		LANGULUS(INFO)
 			"Performs exponentiation or logarithm";
 
@@ -406,6 +416,8 @@ namespace Langulus::Verbs
 	struct Catenate : public Verb {
 		LANGULUS(POSITIVE_VERB) "Catenate";
 		LANGULUS(NEGATIVE_VERB) "Split";
+		LANGULUS(POSITIVE_OPERATOR) " & ";
+		LANGULUS(NEGATIVE_OPERATOR) " | ";
 		LANGULUS(INFO)
 			"Catenates anything catenable, or splits stuff apart using a mask";
 
@@ -430,6 +442,8 @@ namespace Langulus::Verbs
 	struct Conjunct : public Verb {
 		LANGULUS(POSITIVE_VERB) "Conjunct";
 		LANGULUS(NEGATIVE_VERB) "Disjunct";
+		LANGULUS(POSITIVE_OPERATOR) ", ";
+		LANGULUS(NEGATIVE_OPERATOR) " or ";
 		LANGULUS(INFO)
 			"Either combines LHS and RHS as one AND container, or separates them "
 			"as one OR container - does only shallow copying";
@@ -453,6 +467,7 @@ namespace Langulus::Verbs
 	/// Performs conversion																		
 	struct Interpret : public Verb {
 		LANGULUS(NAME) "Interpret";
+		LANGULUS(OPERATOR) " => ";
 		LANGULUS(INFO) "Performs conversion";
 
 		Interpret(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);

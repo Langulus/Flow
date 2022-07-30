@@ -140,7 +140,9 @@ namespace Langulus::Flow
 	///	@param isOr - OR separator or not												
 	///	@return the text equivalent of the separator									
 	inline Code Detail::Separator(bool isOr) {
-		return isOr ? Code::Or : Code::And;
+		return isOr 
+			? Verbs::Conjunct::CTTI_NegativeOperator 
+			: Verbs::Conjunct::CTTI_PositiveOperator;
 	}
 	
 	/// Serialize a data state																	
@@ -239,12 +241,10 @@ namespace Langulus::Flow
 				to += Code {Code::OpenByte};
 				for (Offset i = 0; i < from.GetCount(); ++i)
 					ToHex(raw_bytes[i], to);
-				to += Code {Code::CloseByte};
 			}
 			else for (Offset i = 0; i < from.GetCount(); ++i) {
 				to += Code {Code::OpenByte};
 				ToHex(raw_bytes[i], to);
-				to += Code {Code::CloseByte};
 				if (i < from.GetCount() - 1)
 					to += Separator(from.IsOr());
 			}

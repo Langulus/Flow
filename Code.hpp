@@ -25,25 +25,26 @@ namespace Langulus::Flow
 			OpenCharacter,
 			CloseCharacter,
 			OpenByte,
-
 			Past,
 			Future,
-
 			Missing,
-
 			Mass,
 			Frequency,
 			Time,
 			Priority,
-
 			OpCounter,
 			NoOperator = OpCounter,
-
 			Reflected
 		};
 
 		using Text::Text;
+		
 		explicit Code(Operator);
+
+		Code(Disowned<Code>&& o) noexcept
+			: Text {o.Forward<Text>()} {}
+		Code(Abandoned<Code>&& o) noexcept
+			: Text {o.Forward<Text>()} {}
 
 		NOD() Any Parse(bool optimize = true) const;
 		NOD() Code Clone() const;
@@ -125,7 +126,6 @@ namespace Langulus::Flow
 
 		struct OperatorProperties {
 			Token mToken;
-			Token mTokenWithSpacing;
 			int mPriority;
 			bool mCharge;
 		};

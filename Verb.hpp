@@ -96,7 +96,10 @@ namespace Langulus::Flow
 	/// in a code flow. Langulus is based around natural language processing	
 	/// theory based around verbs, so this is the natural name for such thing	
 	///																								
-	class Verb : public Charge {
+	class Verb : public Any, public Charge {
+		LANGULUS(DEEP) false;
+		LANGULUS_CONVERSIONS(Code, Debug);
+		LANGULUS_BASES(Any, Charge);
 	friend class Scope;
 	private:
 		// Verb meta, mass, frequency, time and priority						
@@ -105,8 +108,6 @@ namespace Langulus::Flow
 		Count mSuccesses {};
 		// Verb context																	
 		Any mSource;
-		// Argument for the call														
-		Any mArgument;
 		// The container where output goes											
 		Any mOutput;
 		// Verb short-circuiting														
@@ -123,7 +124,7 @@ namespace Langulus::Flow
 
 		~Verb() = default;
 
-		Verb(VMeta, const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		Verb(VMeta, const Any& = {}, const Charge& = {}, bool = true);
 
 		Verb& operator = (const Verb&) = default;
 		Verb& operator = (Verb&&) noexcept = default;
@@ -160,9 +161,9 @@ namespace Langulus::Flow
 		NOD() Verb Clone() const;
 		void Reset();
 
-		NOD() bool Is(VMeta) const noexcept;
+		NOD() bool IsVerb(VMeta) const noexcept;
 		template<CT::Data... T>
-		NOD() bool Is() const noexcept;
+		NOD() bool IsVerb() const noexcept;
 
 		NOD() const Charge& GetCharge() const noexcept;
 		NOD() VMeta GetVerb() const noexcept;
@@ -177,8 +178,6 @@ namespace Langulus::Flow
 		NOD() const Any& GetArgument() const noexcept;
 		NOD() Any& GetOutput() noexcept;
 		NOD() const Any& GetOutput() const noexcept;
-		template<CT::Trait T>
-		NOD() bool OutputsTo() const noexcept;
 
 		NOD() bool Validate(const Index&) const noexcept;
 		NOD() Verb& ShortCircuit(bool) noexcept;
@@ -203,7 +202,6 @@ namespace Langulus::Flow
 		Verb& SetArgument(Any&&) noexcept;
 		Verb& SetOutput(const Any&);
 		Verb& SetOutput(Any&&) noexcept;
-		Verb& SetAll(const Any&, const Any&, const Any&);
 
 		NOD() bool operator == (const Verb&) const noexcept;
 		NOD() bool operator == (VMeta) const noexcept;
@@ -268,8 +266,9 @@ namespace Langulus::Verbs
 			"If the type you're creating has	a producer, "
 			"you need to execute the verb in a matching producer, "
 			"or that producer will be created automatically for you, if possible";
+		LANGULUS_BASES(Verb);
 
-		Create(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		Create(const Any& = {}, const Charge& = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -295,8 +294,9 @@ namespace Langulus::Verbs
 		LANGULUS(NEGATIVE_OPERATOR) "..";
 		LANGULUS(INFO)
 			"Used to focus on a part of a container, or access members";
+		LANGULUS_BASES(Verb);
 
-		Select(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		Select(const Any& = {}, const Charge& = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -330,8 +330,9 @@ namespace Langulus::Verbs
 		LANGULUS(INFO)
 			"Either performs a shallow copy, or aggregates associations, "
 			"depending on the context's complexity";
+		LANGULUS_BASES(Verb);
 
-		Associate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		Associate(const Any& = {}, const Charge& = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -353,8 +354,9 @@ namespace Langulus::Verbs
 		LANGULUS(NEGATIVE_OPERATOR) " - ";
 		LANGULUS(INFO)
 			"Performs arithmetic addition or subtraction";
+		LANGULUS_BASES(Verb);
 
-		Add(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		Add(const Any& = {}, const Charge& = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -378,8 +380,9 @@ namespace Langulus::Verbs
 		LANGULUS(INFO)
 			"Performs arithmetic multiplication or division. "
 			"If context is no specified, it is always 1";
+		LANGULUS_BASES(Verb);
 
-		Multiply(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		Multiply(const Any& = {}, const Charge& = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -401,8 +404,9 @@ namespace Langulus::Verbs
 		LANGULUS(NEGATIVE_OPERATOR) " log ";
 		LANGULUS(INFO)
 			"Performs exponentiation or logarithm";
+		LANGULUS_BASES(Verb);
 
-		Exponent(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		Exponent(const Any& = {}, const Charge& = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -422,8 +426,9 @@ namespace Langulus::Verbs
 		LANGULUS(NEGATIVE_OPERATOR) " | ";
 		LANGULUS(INFO)
 			"Catenates anything catenable, or splits stuff apart using a mask";
+		LANGULUS_BASES(Verb);
 
-		Catenate(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		Catenate(const Any& = {}, const Charge& = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -449,8 +454,9 @@ namespace Langulus::Verbs
 		LANGULUS(INFO)
 			"Either combines LHS and RHS as one AND container, or separates them "
 			"as one OR container - does only shallow copying";
+		LANGULUS_BASES(Verb);
 
-		Conjunct(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		Conjunct(const Any& = {}, const Charge& = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -471,8 +477,9 @@ namespace Langulus::Verbs
 		LANGULUS(NAME) "Interpret";
 		LANGULUS(OPERATOR) " => ";
 		LANGULUS(INFO) "Performs conversion";
+		LANGULUS_BASES(Verb);
 
-		Interpret(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		Interpret(const Any& = {}, const Charge& = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -488,14 +495,24 @@ namespace Langulus::Verbs
 		static bool ExecuteDefault(const Block&, Verb&);
 	};
 
+	/// Statically optimized interpret verb												
+	///	@tparam TO - what are we converting to?										
+	template<class TO>
+	struct InterpretTo : public Interpret {
+		LANGULUS_BASES(Interpret);
+		using Interpret::Interpret;
+		using To = TO;
+	};
+
 	/// Do/Undo verb																				
 	/// Used as a runtime dispatcher of composite types								
 	struct Do : public Verb {
 		LANGULUS(POSITIVE_VERB) "Do";
 		LANGULUS(NEGATIVE_VERB) "Undo";
 		LANGULUS(INFO) "Used as a runtime dispatcher of composite types";
+		LANGULUS_BASES(Verb);
 
-		Do(const Any& = {}, const Any& = {}, const Any& = {}, const Charge& = {}, bool = true);
+		Do(const Any& = {}, const Charge& = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;

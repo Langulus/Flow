@@ -5,13 +5,11 @@ namespace Langulus::Verbs
 {
 
 	/// Do/Undo verb construction																
-	///	@param s - context to execute in													
 	///	@param a - what to execute															
-	///	@param o - result mask (optional)												
 	///	@param c - the charge of the do/undo											
 	///	@param sc - is the do/undo short-circuited									
-	inline Do::Do(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Do>(), s, a, o, c, sc} {}
+	inline Do::Do(const Any& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Do>(), a, c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												
@@ -176,14 +174,17 @@ namespace Langulus::Flow
 	///	@param context - the context in which to dispatch the verb				
 	///	@param verb - the verb to send over												
 	///	@return the number of successful executions									
-	template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Data T, CT::Verb V>
+	template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::Verb V>
 	Count DispatchFlat(T& context, V& verb) {
 		if (context.IsEmpty()) {
+			// Context is empty, and execution happens only if DEFAULT		
+			// verbs are allowed, as a stateless verb execution				
 			if constexpr (DEFAULT)
-				Execute<DISPATCH, true, true>(context, verb);
+				return V::ExecuteStateless(verb);
 			return 0;
 		}
 
+		// Copy the context's state into the output container					
 		auto output = Any::FromState(context);
 
 		// Iterate elements in the current context								
@@ -248,8 +249,16 @@ namespace Langulus::Flow
 	///	@param context - the context in which scope will be dispatched to		
 	///	@param verb - the verb to execute												
 	///	@return the number of successful executions									
-	template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Data T, CT::Verb V>
+	template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::Verb V>
 	Count DispatchDeep(T& context, V& verb) {
+		if (context.IsEmpty()) {
+			// Context is empty, and execution happens only if DEFAULT		
+			// verbs are allowed, as a stateless verb execution				
+			if constexpr (DEFAULT)
+				return V::ExecuteStateless(verb);
+			return 0;
+		}
+
 		if (context.IsDeep() || context.template Is<Trait>()) {
 			// Nest if context is deep, or a trait									
 			// Traits are considered deep only when executing in them		

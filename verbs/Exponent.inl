@@ -8,13 +8,11 @@ namespace Langulus::Verbs
 {
 
 	/// Exponentiate/Logarithm verb construction											
-	///	@param s - the base number															
 	///	@param a - the power																	
-	///	@param o - result mask (optional)												
 	///	@param c - the charge of the exponentiation/logarithm						
 	///	@param sc - is the exponentiation/logarithm short-circuited				
-	inline Exponent::Exponent(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Exponent>(), s, a, o, c, sc} {}
+	inline Exponent::Exponent(const Any& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Exponent>(), a, c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

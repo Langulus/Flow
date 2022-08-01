@@ -12,7 +12,7 @@
 SCENARIO("Parsing Code", "[gasm]") {
 	GIVEN("The script: `plural`.associate(many)") {
 		const auto code = "`plural`.associate(many)"_code;
-		const Any required = Verbs::Associate("plural"_text, Index::Many);
+		const Any required = Verbs::Associate(Index::Many).SetSource("plural"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -25,7 +25,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 
 	GIVEN("The script: `plural` = many") {
 		const auto code = "`plural` = many"_code;
-		const Any required = Verbs::Associate("plural"_text, Index::Many);
+		const Any required = Verbs::Associate(Index::Many).SetSource("plural"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -38,7 +38,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 
 	GIVEN("The script: `thing`.associate([Entity(? > ?)])") { //TODO previously used Scope!-1 verb, check if works like that
 		const auto code = "`thing`.associate([Entity(? > ?)])"_code;
-		const Any required = Verbs::Associate("thing"_text, "Entity(? > ?)"_code);
+		const Any required = Verbs::Associate("Entity(? > ?)"_code).SetSource("thing"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -51,7 +51,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 
 	GIVEN("The script: `things`.associate(\"thing\", `plural`)") {
 		const auto code = "`things`.associate(\"thing\", `plural`)"_code;
-		const Any required = Verbs::Associate("things"_text, Any::WrapCommon("thing"_text, "plural"_text));
+		const Any required = Verbs::Associate(Any::WrapCommon("thing"_text, "plural"_text)).SetSource("things"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -68,7 +68,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 		package[0].MakePast();
 		package[1].MakeFuture();
 		package[1].MakeOr();
-		const Any required = Verbs::Associate({}, package);
+		const Any required = Verbs::Associate(package);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -89,7 +89,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 		package[0].MakeMissing();
 		package[1].MakeFuture();
 		package[1].MakeMissing();
-		const Any required = Verbs::Catenate(package[0], package[1]);
+		const Any required = Verbs::Catenate(package[1]).SetSource(package[0]);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -133,12 +133,12 @@ SCENARIO("Parsing Code", "[gasm]") {
 		const Code code = "associate(`is` > (<? = ?>))";
 		TAny<Any> package = Any::Wrap(
 			Text("is"),
-			Verbs::Associate(pastMissing, futureMissing).SetPriority(2)
+			Verbs::Associate(futureMissing).SetPriority(2).SetSource(pastMissing)
 		);
 
 		package[0].MakePast();
 		package[1].MakeFuture();
-		const Any required = Verbs::Associate({}, package);
+		const Any required = Verbs::Associate(package);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -154,12 +154,10 @@ SCENARIO("Parsing Code", "[gasm]") {
 		futureMissing.MakeFuture();
 		futureMissing.MakeMissing();
 
-		const Code code = ".Verb.(>? as Context)";
-		Any required = Verbs::Select(
-			Verbs::Select({}, MetaData::Of<Verb>()),
-			futureMissing,
-			Traits::Context()
-		);
+		const Code code = ".Context = .Verb.(>?)";
+		Any required = Verbs::Associate(
+			Verbs::Select(futureMissing).SetSource(Verbs::Select(MetaData::Of<Verb>()))
+		).SetSource(Verbs::Select(MetaTrait::Of<Traits::Context>()));
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -204,9 +202,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 	GIVEN("10) The Code script: Create^1(Count(1)).Add^3(2)") {
 		const Code code = "Create^1(Count(1)).Add^3(2)";
 		Any required = Verbs::Add(
-			Verbs::Create(
-				{}, Traits::Count(Real(1))
-			).SetFrequency(1),
+			Verbs::Create(Traits::Count(Real(1))).SetFrequency(1),
 			Real(2)
 		).SetFrequency(3);
 
@@ -222,11 +218,7 @@ SCENARIO("Parsing Code", "[gasm]") {
 	GIVEN("11) The Code script: Create^1(Count(1)).Add^2(2).Multiply^3(4)") {
 		const Code code = "Create^1(Count(1)).Add^2(2).Multiply^3(4)";
 		Any required = Verbs::Multiply(
-			Verbs::Add(
-				Verbs::Create(
-					{}, Traits::Count(Real(1))).SetFrequency(1),
-				Real(2)
-			).SetFrequency(2),
+			Verbs::Add(Real(2)).SetFrequency(2).SetSource(Verbs::Create(Traits::Count(Real(1))).SetFrequency(1)),
 			Real(4)
 		).SetFrequency(3);
 
@@ -245,9 +237,8 @@ SCENARIO("Parsing Code", "[gasm]") {
 		WHEN("Parsed without optimization") {
 			Any required = Verbs::Add(
 				Verbs::Add(
-					Verbs::Multiply(Real(2), Real(8.75)),
-					Verbs::Exponent(Real(14), Real(2))
-				).SetMass(-1)
+					Verbs::Exponent(Real(2)).SetSource(Real(14))
+				).SetMass(-1).SetSource(Verbs::Multiply(Real(8.75)).SetSource(Real(2)))
 			).SetMass(-1);
 
 			const auto parsed = code.Parse(false);

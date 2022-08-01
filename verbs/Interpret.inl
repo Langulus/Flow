@@ -9,13 +9,11 @@ namespace Langulus::Verbs
 {
 	
 	/// Interpretation verb construction													
-	///	@param s - what are we converting?												
 	///	@param a - what are we converting to?											
-	///	@param o - result mask (optional)												
 	///	@param c - the charge of the conversion										
 	///	@param sc - is the conversion short-circuited								
-	inline Interpret::Interpret(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Interpret>(), s, a, o, c, sc} {}
+	inline Interpret::Interpret(const Any& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Interpret>(), a, c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												
@@ -161,7 +159,7 @@ namespace Langulus::Anyness
 		// If this is reached, we attempt runtime conversion by				
 		// dispatching Verbs::Interpret to the first element					
 		const auto meta = MetaData::Of<T>();
-		Verbs::Interpret interpreter {{}, meta};
+		Verbs::Interpret interpreter {/*{}, */meta};
 		if (!Flow::DispatchDeep(GetElementResolved(0), interpreter)) {
 			// Failure																		
 			if constexpr (FATAL_FAILURE)

@@ -7,13 +7,11 @@ namespace Langulus::Verbs
 {
 
 	/// Select/Deselect verb construction													
-	///	@param s - where are we selecting?												
 	///	@param a - what are we searching for?											
-	///	@param o - result mask (optional)												
 	///	@param c - the charge of the selection											
 	///	@param sc - is the selection short-circuited									
-	inline Select::Select(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Select>(), s, a, o, c, sc} {}
+	inline Select::Select(const Any& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Select>(), a, c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

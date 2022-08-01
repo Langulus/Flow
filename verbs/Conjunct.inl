@@ -5,13 +5,11 @@ namespace Langulus::Verbs
 {
 
 	/// Conjunct/Disjunct verb construction												
-	///	@param s - LHS																			
 	///	@param a - RHS																			
-	///	@param o - result mask (optional)												
 	///	@param c - the charge of the conjunction										
 	///	@param sc - is the conjunction/disjunction short-circuited				
-	inline Conjunct::Conjunct(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Conjunct>(), s, a, o, c, sc} {}
+	inline Conjunct::Conjunct(const Any& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Conjunct>(), a, c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												
@@ -61,7 +59,7 @@ namespace Langulus::Verbs
 	///	@param context - the block to execute in										
 	///	@param verb - conjunction/disjunction verb									
 	inline bool Conjunct::ExecuteDefault(const Block& context, Verb& verb) {
-		if (verb.GetArgument().IsEmpty()) {
+		if (verb.IsEmpty()) {
 			verb << context;
 			return true;
 		}
@@ -80,7 +78,7 @@ namespace Langulus::Verbs
 	///	@param context - the block to execute in										
 	///	@param verb - conjunction/disjunction verb									
 	inline bool Conjunct::ExecuteDefault(Block& context, Verb& verb) {
-		if (verb.GetArgument().IsEmpty()) {
+		if (verb.IsEmpty()) {
 			verb << context;
 			return true;
 		}

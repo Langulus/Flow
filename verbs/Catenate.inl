@@ -5,13 +5,11 @@ namespace Langulus::Verbs
 {
 
 	/// Catenate/Split verb construction													
-	///	@param s - what are we catenating with/splitting?							
 	///	@param a - what are we catenating to/where are we splitting at?		
-	///	@param o - result mask (optional)												
 	///	@param c - the charge of the catenation/split								
 	///	@param sc - is the catenating/split short-circuited						
-	inline Catenate::Catenate(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Catenate>(), s, a, o, c, sc} {}
+	inline Catenate::Catenate(const Any& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Catenate>(), a, c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												
@@ -61,7 +59,7 @@ namespace Langulus::Verbs
 	///	@param context - the block to execute in										
 	///	@param verb - catenation/splitting verb										
 	inline bool Catenate::ExecuteDefault(const Block& context, Verb& verb) {
-		if (verb.GetArgument().IsEmpty()) {
+		if (verb.IsEmpty()) {
 			verb << context;
 			return true;
 		}
@@ -79,7 +77,7 @@ namespace Langulus::Verbs
 	///	@param context - the block to execute in										
 	///	@param verb - catenation/splitting verb										
 	inline bool Catenate::ExecuteDefault(Block& context, Verb& verb) {
-		if (verb.GetArgument().IsEmpty()) {
+		if (verb.IsEmpty()) {
 			verb << context;
 			return true;
 		}

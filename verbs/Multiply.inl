@@ -8,13 +8,11 @@ namespace Langulus::Verbs
 {
 
 	/// Multiply/Divide verb construction													
-	///	@param s - left hand side															
 	///	@param a - right hand side															
-	///	@param o - result mask (optional)												
 	///	@param c - the charge of the multiplication									
 	///	@param sc - is the multiplication short-circuited							
-	inline Multiply::Multiply(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Multiply>(), s, a, o, c, sc} {}
+	inline Multiply::Multiply(const Any& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Multiply>(), a, c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

@@ -156,8 +156,9 @@ namespace Langulus::Flow
 				// Also resets its output												
 				Verb verb {
 					constVerb.mVerb,
-					constVerb.mSource,
-					constVerb.mArgument, {},
+					//constVerb.mSource,
+					constVerb.GetArgument(),
+					//{},
 					constVerb,
 					constVerb.mShortCircuited
 				};
@@ -232,8 +233,9 @@ namespace Langulus::Flow
 				// Also resets its output												
 				Verb verb {
 					constVerb.mVerb,
-					constVerb.mSource,
-					constVerb.mArgument, {},
+					//constVerb.mSource,
+					constVerb.GetArgument(),
+					//{},
 					constVerb,
 					constVerb.mShortCircuited
 				};
@@ -282,13 +284,13 @@ namespace Langulus::Flow
 
 		// Integrate the verb argument to the source								
 		Any localArgument;
-		if (!ReinterpretCast<Scope>(verb.mArgument).Execute(localSource, localArgument)) {
-			Logger::Error() << "Error at argument: " << verb.mArgument;
+		if (!ReinterpretCast<Scope>(verb.GetArgument()).Execute(localSource, localArgument)) {
+			Logger::Error() << "Error at argument: " << verb.GetArgument();
 			return false;
 		}
 
-		verb.mSource = Abandon(localSource);
-		verb.mArgument = Abandon(localArgument);
+		verb.GetSource() = Abandon(localSource);
+		verb.GetArgument() = Abandon(localArgument);
 		return true;
 	}
 
@@ -311,10 +313,10 @@ namespace Langulus::Flow
 			// Just making sure that the integrated argument & source are	
 			// propagated to the verb's output										
 			if (verb.mOutput.IsEmpty()) {
-				if (!verb.mArgument.IsEmpty())
-					verb << Move(verb.mArgument); //TODO wasn't a move, can it be?
+				if (!verb.IsEmpty())
+					verb << Move(verb.GetArgument()); //TODO wasn't a move, can it be?
 				else
-					verb << Move(verb.mSource); //TODO wasn't a move, can it be?
+					verb << Move(verb.GetSource()); //TODO wasn't a move, can it be?
 			}
 
 			return true;

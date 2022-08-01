@@ -10,13 +10,11 @@ namespace Langulus::Verbs
 {
 
 	/// Associate/Dissociate verb construction											
-	///	@param s - what are we associating/dissociating?							
 	///	@param a - what are we associating/dissociating with?						
-	///	@param o - result mask (optional)												
 	///	@param c - the charge of the association/dissociation						
 	///	@param sc - is the association/dissociation short-circuited				
-	inline Associate::Associate(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Associate>(), s, a, o, c, sc} {}
+	inline Associate::Associate(const Any& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Associate>(), a, c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												
@@ -69,7 +67,7 @@ namespace Langulus::Verbs
 		// Collect all viably typed or interpreted stuff from argument		
 		Any result;
 		bool atLeastOneSuccess {};
-		verb.GetArgument().ForEachDeep([&](const Block& group) {
+		verb.ForEachDeep([&](const Block& group) {
 			const auto done = group.ForEach(
 				// Nest inside traits manually here, because traits			
 				// aren't considered deep containers otherwise					
@@ -106,7 +104,7 @@ namespace Langulus::Verbs
 					VERBOSE_ASSOCIATE("Attempting interpretation of "
 						<< group << " to " << context.GetMeta());
 
-					Verbs::Interpret interpreter({}, context.GetType());
+					Verbs::Interpret interpreter(/*{}, */context.GetType());
 					if (DispatchFlat<true, true, false>(group, interpreter)) {
 						VERBOSE_ASSOCIATE("Interpreted " << group << " as " << Logger::Cyan
 							<< interpreter.GetOutput() << " -- from "
@@ -128,7 +126,7 @@ namespace Langulus::Verbs
 			}
 			catch (const Except::Copy&) {
 				// Catenate results into one element, and then copy			
-				Verbs::Catenate catenater({}, result);
+				Verbs::Catenate catenater(/*{}, */result);
 				auto catenated = Any::FromBlock(context, DataState::Typed);
 				catenated.Allocate<true>(1);
 

@@ -4,21 +4,6 @@
 namespace Langulus::Flow
 {
 
-	/// Define a constant for the parser, subtituting its token  with the		
-	/// provided value when parsed															
-	///	@param token - the token for the constant										
-	///	@param value - the value of the constant										
-	/*template<CT::Data T>
-	void Code::DefineConstant(const Token& token, const T& value) {
-		if (!IsValidKeyword(token))
-			Throw<Except::Flow>("Constant definition's token is invalid");
-		if (IsReserved(token))
-			Throw<Except::Flow>("Constant definition's token is already reserved");
-
-		// Add to definitions															
-		mConstants.Insert({Text {token}.Lowercase(), {token, value}});
-	}*/
-
 	/// Remove elements from the left side of Code code								
 	///	@param offset - the number of elements to discard from the front		
 	///	@return a shallow-copied container with the correct offset				

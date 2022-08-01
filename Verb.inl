@@ -50,10 +50,10 @@ namespace Langulus::Flow
 	///	@tparam T - the verb to compare against										
 	///	@return true if verbs match														
 	template<CT::Data... T>
-	bool Verb::Is() const noexcept {
+	bool Verb::IsVerb() const noexcept {
 		static_assert((CT::Verb<T> && ...),
 			"Provided types must be verb definitions");
-		return (Is(MetaVerb::Of<T>()) || ...);
+		return (IsVerb(MetaVerb::Of<T>()) || ...);
 	}
 
 	/// Check if verb has been satisfied at least once									
@@ -165,7 +165,7 @@ namespace Langulus::Flow
 	///	@param argument - the argument to set											
 	///	@return a reference to self														
 	inline Verb& Verb::SetArgument(const Any& argument) {
-		mArgument = argument;
+		Any::operator = (argument);
 		return *this;
 	}
 
@@ -173,7 +173,7 @@ namespace Langulus::Flow
 	///	@param argument - the argument to set											
 	///	@return a reference to self														
 	inline Verb& Verb::SetArgument(Any&& argument) noexcept {
-		mArgument = Forward<Any>(argument);
+		Any::operator = (Forward<Any>(argument));
 		return *this;
 	}
 
@@ -198,12 +198,12 @@ namespace Langulus::Flow
 	///	@param a - argument																	
 	///	@param o - output																		
 	///	@return a reference to self														
-	inline Verb& Verb::SetAll(const Any& s, const Any& a, const Any& o) {
+	/*inline Verb& Verb::SetAll(const Any& s, const Any& a, const Any& o) {
 		mSource = s;
-		mArgument = a;
+		Any::operator = (a);
 		mOutput = o;
 		return *this;
-	}
+	}*/
 
 	/// Compare verbs																				
 	///	@param rhs - the verb to compare against										
@@ -211,7 +211,7 @@ namespace Langulus::Flow
 	inline bool Verb::operator == (const Verb& rhs) const noexcept {
 		return (mVerb == rhs.mVerb || (mVerb && mVerb->Is(rhs.mVerb)))
 			&& mSource == rhs.mSource
-			&& mArgument == rhs.mArgument
+			&& Any::operator == (rhs)
 			&& mOutput == rhs.mOutput
 			&& mShortCircuited == rhs.mShortCircuited;
 	}
@@ -220,7 +220,7 @@ namespace Langulus::Flow
 	///	@param rhs - the verb to compare against										
 	///	@return true if verbs match														
 	inline bool Verb::operator == (VMeta rhs) const noexcept {
-		return Is(rhs); 
+		return IsVerb(rhs); 
 	}
 
 	/// Check if verb is satisfied at least once											
@@ -309,13 +309,13 @@ namespace Langulus::Flow
 	/// Get verb argument																		
 	///	@return the verb argument															
 	inline Any& Verb::GetArgument() noexcept {
-		return mArgument;
+		return static_cast<Any&>(*this);
 	}
 
 	/// Get verb argument (constant)															
 	///	@return the verb argument															
 	inline const Any& Verb::GetArgument() const noexcept {
-		return mArgument;
+		return static_cast<const Any&>(*this);
 	}
 
 	/// Get verb output																			
@@ -328,16 +328,6 @@ namespace Langulus::Flow
 	///	@return the verb output																
 	inline const Any& Verb::GetOutput() const noexcept {
 		return mOutput;
-	}
-
-	/// Check if verb outputs to a register trait										
-	///	@tparam T - the trait to check for												
-	///	@return true if verb outputs to the selected trait							
-	template<CT::Trait T>
-	bool Verb::OutputsTo() const noexcept {//TODO remove this?
-		return mOutput.GetCount() == 1 
-			&& mOutput.Is<TMeta>() 
-			&& mOutput.Get<TMeta>()->Is<T>();
 	}
 
 	/// Push anything to output via shallow copy, satisfying the verb once		
@@ -536,10 +526,10 @@ namespace Langulus::Flow
 	template<CT::Data T>
 	bool Verb::AvailableFor() const noexcept {
 		const auto meta = MetaData::Of<Decay<T>>();
-		return meta && meta->template GetAbility<CT::Mutable<T>>(mVerb, mArgument.GetType());
+		return meta && meta->template GetAbility<CT::Mutable<T>>(mVerb, GetType());
 	}
 
-	/// Execute an unknown verb in a given context										
+	/// Execute a known/unknown verb in an unknown context							
 	/// This is a slow runtime procedure, use statically optimized variants		
 	/// inside specific verbs if you know them at compile time						
 	///	@param context - the context to execute in									
@@ -549,11 +539,42 @@ namespace Langulus::Flow
 	bool Verb::ExecuteIn(T& context, V& verb) {
 		static_assert(CT::Verb<V>, "V must be a verb");
 		const auto meta = MetaData::Of<Decay<T>>();
-		const auto found = meta->template GetAbility<CT::Mutable<T>>(verb.mVerb, verb.mArgument.GetType());
-		if (!found)
-			return false;
+		if constexpr (CT::DerivedFrom<V, Verbs::Interpret> && requires { typename V::To; }) {
+			// Scan for a reflected converter as statically as possible		
+			using TO = typename V::To;
+			const auto found = meta->template GetConverter<TO>();
+			if (!found)
+				return false;
 
-		found(SparseCast(context), verb);
+			TAny<TO> result;
+			result.template Allocate<false, true>(1);
+			found(result.GetRaw(), context.GetRaw());
+			verb << Abandon(result);
+		}
+		else {
+			// Find ability at runtime													
+			if (verb.template IsVerb<Verbs::Interpret>()) {
+				// Scan for a reflected converter by scanning argument		
+				const auto to = verb.template As<DMeta>();
+				const auto found = meta->GetConverter(to);
+				if (!found)
+					return false;
+
+				Any result = Any::FromMeta(to);
+				result.Allocate<false, true>(1);
+				found(result.GetRaw(), context.GetRaw());
+				verb << Abandon(result);
+			}
+			else {
+				// Scan for any another ability										
+				const auto found = meta->template GetAbility<CT::Mutable<T>>(verb.mVerb, verb.GetType());
+				if (!found)
+					return false;
+
+				found(SparseCast(context), verb);
+			}
+		}
+
 		return verb.IsDone();
 	}
 

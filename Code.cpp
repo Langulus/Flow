@@ -31,13 +31,12 @@ namespace Langulus::Flow
 	/// Generate code from operator															
 	///	@param op - the operator to stringify											
 	Code::Code(Operator op)
-		: Text {Disowned(mOperators[op].mTokenWithSpacing.data())} { }
+		: Text {Disowned(mOperators[op].mToken.data())} { }
 
 	/// Parse code																					
 	///	@param optimize - whether or not to precompile 								
 	///	@returned the parsed flow															
 	Any Code::Parse(bool optimize) const {
-		//InitializeParser();
 		Any output;
 		const auto parsed = UnknownParser::Parse(*this, output, 0, optimize);
 		if (parsed != GetCount()) {
@@ -132,26 +131,26 @@ namespace Langulus::Flow
 	}
 
 	constexpr Code::OperatorProperties Code::mOperators[OpCounter] = {
-		{ "(", "(", 0, false },		// OpenScope
-		{ ")", ")", 0, false },		// CloseScope
-		{ "[", "[", 0, false },		// OpenCode
-		{ "]", "]", 0, false },		// CloseCode
-		{ "|", "|", 0, false },		// OpenComment
-		{ "|", "|", 0, false },		// CloseComment
-		{ "\"", "\"", 0, false },	// OpenString
-		{ "\"", "\"", 0, false },	// CloseString
-		{ "`", "`", 0, false },		// OpenStringAlt
-		{ "`", "`", 0, false },		// CloseStringAlt
-		{ "'", "'", 0, false },		// OpenCharacter
-		{ "'", "'", 0, false },		// CloseCharacter
-		{ "0x", "0x", 0, false },	// OpenByte
-		{ "<-", "<-", 12, false },	// PolarizeLeft
-		{ "->", "->", 12, false },	// PolarizeRight
-		{ "?", "?", 13, false },	// Missing
-		{ "*", "*", 20, true },		// Mass
-		{ "^", "^", 20, true },		// Frequency
-		{ "@", "@", 20, true },		// Time
-		{ "!", "!", 20, true }		// Priority
+		{ "(", 0, false },	// OpenScope
+		{ ")", 0, false },	// CloseScope
+		{ "[", 0, false },	// OpenCode
+		{ "]", 0, false },	// CloseCode
+		{ "|", 0, false },	// OpenComment
+		{ "|", 0, false },	// CloseComment
+		{ "\"", 0, false },	// OpenString
+		{ "\"", 0, false },	// CloseString
+		{ "`", 0, false },	// OpenStringAlt
+		{ "`", 0, false },	// CloseStringAlt
+		{ "'", 0, false },	// OpenCharacter
+		{ "'", 0, false },	// CloseCharacter
+		{ "0x", 0, false },	// OpenByte
+		{ "<-", 12, false },	// PolarizeLeft
+		{ "->", 12, false },	// PolarizeRight
+		{ "?", 13, false },	// Missing
+		{ "*", 20, true },	// Mass
+		{ "^", 20, true },	// Frequency
+		{ "@", 20, true },	// Time
+		{ "!", 20, true }		// Priority
 	};
 
 	/// Parse any Code expression																
@@ -328,7 +327,7 @@ namespace Langulus::Flow
 					progress += ChargeParser::Parse(relevant, charge);
 					if (reversed)
 						charge.mMass *= -1;
-					lhs = Verb {vmeta, {}, {}, {}, charge};
+					lhs = Verb {vmeta, /*{}, {},*/ {}, charge};
 				}
 				else if (reversed)
 					lhs = Verb {vmeta}.SetMass(-1);
@@ -407,7 +406,7 @@ namespace Langulus::Flow
 							progress += ChargeParser::Parse(relevant, charge);
 							if (reversed)
 								charge.mMass *= -1;
-							lhs = Verb {metaVerb, {}, {}, {}, charge};
+							lhs = Verb {metaVerb, /*{}, {},*/ {}, charge};
 						}
 						else if (reversed)
 							lhs = Verb {metaVerb}.SetMass(-1);
@@ -653,7 +652,7 @@ namespace Langulus::Flow
 		}
 		else if (lhs.Is<VMeta>()) {
 			// The content is for an uninstantiated verb scope					
-			Verb verb {lhs.As<VMeta>(-1), {}, Move(rhs)};
+			Verb verb {lhs.As<VMeta>(-1), /*{}, */Move(rhs)};
 			if (lhs.GetCount() > 1) {
 				lhs.RemoveIndex(-1);
 				lhs << Abandon(verb);
@@ -694,7 +693,7 @@ namespace Langulus::Flow
 
 	/// String/character/code scope															
 	///	@param op - the starting operator												
-	///	@param input - the code to parse													 
+	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParseString(const Code::Operator op, const Code& input, Any& lhs) {

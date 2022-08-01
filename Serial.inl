@@ -251,20 +251,18 @@ namespace Langulus::Flow
 		}
 		else {
 			// Serialize all elements one by one using RTTI						
-			for (Offset i = 0; i < from.GetCount(); ++i) {
-				Verbs::Interpret interpreter({}, MetaData::Of<TO>());
-				auto element = from.GetElementResolved(i);
-
-				// Element is already resolved, so don't resolve it			
-				if (DispatchFlat<false>(element, interpreter))
-					to += interpreter.GetOutput().As<Text>();
-				else Throw<Except::Convert>(
-					"Can't serialize resolved element to text");
-
-				// Separate each element												
-				if (i < from.GetCount() - 1)
-					to += Separator(from.IsOr());
+			Verbs::InterpretTo<TO> interpreter;
+			if (DispatchFlat(from, interpreter)) {
+				bool separate = false;
+				interpreter.GetOutput().ForEach([&](const Text& r) {
+					if (separate)
+						to += Separator(from.IsOr());
+					separate = true;
+					to += r;
+				});
 			}
+			else Throw<Except::Convert>(
+				"Can't serialize resolved element to text");
 		}
 
 		// Close scope																		

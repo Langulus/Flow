@@ -35,13 +35,16 @@ namespace Langulus::Flow
 	///	Useful to describe complex (non-pod) content construction. This		
 	/// applies to any domain - units, data, sound, geometry, materials,			
 	/// textures, entity hierarchies, etc.													
-	/// It is essentially the instructions required to generate this				
-	/// content - usually arguments to a Create verb. First the required			
+	///	It is essentially the instructions required to generate the				
+	/// content - usually arguments to a creation verb. First the required		
 	/// components from the required modules, then the traits that determine	
 	/// various characteristics, to finally the additional raw data in case		
-	/// of specific custom content.															
+	/// of very specific custom contents.													
 	///																								
 	class Construct : public Any, public Charge {
+		LANGULUS(DEEP) false;
+		LANGULUS_CONVERSIONS(Code, Debug);
+		LANGULUS_BASES(Any, Charge);
 	private:
 		DMeta mType {};
 		Hash mHash;

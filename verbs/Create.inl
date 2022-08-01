@@ -8,13 +8,11 @@ namespace Langulus::Verbs
 {
 
 	/// Create/destroy verb construction													
-	///	@param s - the producer of the stuff											
 	///	@param a - the stuff to produce													
-	///	@param o - result mask (optional)												
 	///	@param c - the charge of the creation											
 	///	@param sc - is the creation short-circuited									
-	inline Create::Create(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Create>(), s, a, o, c, sc} {}
+	inline Create::Create(const Any& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Create>(), a, c, sc} {}
 
 	/// Check if the verb is available in a type, and with given arguments		
 	///	@return true if verb is available in T with arguments A...				
@@ -65,7 +63,7 @@ namespace Langulus::Verbs
 	///	@return true if verb was satisfied												
 	inline bool Create::ExecuteDefault(Anyness::Block& context, Verb& verb) {
 		// Attempt creating/destroying constructs									
-		verb.GetArgument().ForEachDeep([&](const Construct& construct) {
+		verb.ForEachDeep([&](const Construct& construct) {
 			SAFETY(if (construct.GetProducer())
 				Throw<Except::Construct>(Logger::Error()
 					<< "Creation of customly produced type " << construct.GetToken()
@@ -93,7 +91,7 @@ namespace Langulus::Verbs
 						VERBOSE_CREATION(Logger::Yellow<<
 							"Delegating: " << arguments << " to " << element);
 
-						Verbs::Create creator({}, arguments);
+						Verbs::Create creator(/*{}, */arguments);
 						if (Scope::ExecuteVerb(element, creator)) {
 							VERBOSE_CREATION(Logger::Yellow << "Sideproduct: " << creator.GetOutput());
 							created.MergeBlock(Abandon(creator.GetOutput()));
@@ -120,7 +118,7 @@ namespace Langulus::Verbs
 	///	@param verb - the creation verb													
 	///	@return true if verb was satisfied												
 	inline bool Create::ExecuteStateless(Verb& verb) {
-		if (verb.GetArgument().IsEmpty() || verb.GetMass() < 0)
+		if (verb.IsEmpty() || verb.GetMass() < 0)
 			return false;
 
 		//TODO create only
@@ -154,13 +152,13 @@ namespace Langulus::Verbs
 					VERBOSE_CREATION("Searching trait " << meta
 						<< "... " << " (" << index << ")");
 
-					Verbs::Select selector({}, Any::Wrap(meta, index));
+					Verbs::Select selector(/*{}, */Any::Wrap(meta, index));
 					Verb::ExecuteIn(context, selector);
 					if (!selector.GetOutput().IsEmpty()) {
 						VERBOSE_CREATION("Initializing trait " << selector.GetOutput()
 							<< " with " << Logger::Cyan << element << " (" << index << ")");
 
-						Verbs::Associate associator({}, element);
+						Verbs::Associate associator(/*{}, */element);
 						if (Verb::ExecuteIn(selector.GetOutput(), associator)) {
 							// Trait was found and overwritten						
 							if (sati)
@@ -197,13 +195,13 @@ namespace Langulus::Verbs
 				VERBOSE_CREATION("Searching for data " << meta
 					<< "... " << " (" << index << ")");
 
-				Verbs::Select selector({}, Any::Wrap(meta, index));
+				Verbs::Select selector(/*{}, */Any::Wrap(meta, index));
 				Verb::ExecuteIn(context, selector);
 				if (!selector.GetOutput().IsEmpty()) {
 					VERBOSE_CREATION("Initializing data " << selector.GetOutput()
 						<< " with " << Logger::Cyan << element << " (" << index << ")");
 
-					Verbs::Associate associator({}, Move(element));
+					Verbs::Associate associator(/*{}, */Move(element));
 					if (Verb::ExecuteIn(selector.GetOutput(), associator)) {
 						// Data was found and was overwritten						
 						if (sati)

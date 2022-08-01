@@ -8,13 +8,11 @@ namespace Langulus::Verbs
 {
 
 	/// Add/Subtract verb construction														
-	///	@param s - left hand side															
 	///	@param a - right hand side															
-	///	@param o - result mask (optional)												
 	///	@param c - the charge of the addition											
 	///	@param sc - is the addition short-circuited									
-	inline Add::Add(const Any& s, const Any& a, const Any& o, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Add>(), s, a, o, c, sc} {}
+	inline Add::Add(const Any& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Add>(), a, c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

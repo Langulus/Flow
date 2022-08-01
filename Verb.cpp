@@ -59,20 +59,20 @@ namespace Langulus::Flow
 	/// Disown-construct a verb																
 	///	@param other - the verb to disown and copy									
 	Verb::Verb(Disowned<Verb>&& other) noexcept
-		: Charge {other.mValue}
+		: Any {other.Forward<Any>()}
+		, Charge {other.mValue}
 		, mVerb {other.mValue.mVerb}
 		, mSource {Disown(other.mValue.mSource)}
-		, mArgument {Disown(other.mValue.mArgument)}
 		, mOutput {Disown(other.mValue.mOutput)}
 		, mShortCircuited {other.mValue.mShortCircuited} { }
 
 	/// Abandon-construct a verb																
 	///	@param other - the verb to abandon and move									
 	Verb::Verb(Abandoned<Verb>&& other) noexcept
-		: Charge {other.mValue}
+		: Any {other.Forward<Any>()}
+		, Charge {other.mValue}
 		, mVerb {other.mValue.mVerb}
 		, mSource {Abandon(other.mValue.mSource)}
-		, mArgument {Abandon(other.mValue.mArgument)}
 		, mOutput {Abandon(other.mValue.mOutput)}
 		, mShortCircuited {other.mValue.mShortCircuited} { }
 
@@ -83,22 +83,22 @@ namespace Langulus::Flow
 	///	@param a - the argument																
 	///	@param o - the output																
 	///	@param shortCircuit - short circuit												
-	Verb::Verb(VMeta call, const Any& s, const Any& a, const Any& o, const Charge& charge, bool shortCircuit)
-		: Charge {charge}
+	Verb::Verb(VMeta call, /*const Any& s, const Any& a, */const Any& o, const Charge& charge, bool shortCircuit)
+		: Any {o}
+		, Charge {charge}
 		, mVerb {call}
-		, mSource {s}
-		, mArgument {a}
-		, mOutput {o}
+		//, mSource {s}
+		//, mOutput {o}
 		, mShortCircuited {shortCircuit} { }
 
 	/// Disown-assign a verb																	
 	///	@param other - the verb to disown and copy									
 	///	@return a reference to this verb													
 	Verb& Verb::operator = (Disowned<Verb>&& other) {
+		Any::operator = (other.Forward<Any>());
 		Charge::operator = (other.mValue);
 		mVerb = other.mValue.mVerb;
 		mSource = Disown(other.mValue.mSource);
-		mArgument = Disown(other.mValue.mArgument);
 		mOutput = Disown(other.mValue.mOutput);
 		mShortCircuited = other.mValue.mShortCircuited;
 		return *this;
@@ -108,10 +108,10 @@ namespace Langulus::Flow
 	///	@param other - the verb to abandon and move									
 	///	@return a reference to this verb													
 	Verb& Verb::operator = (Abandoned<Verb>&& other) {
+		Any::operator = (other.Forward<Any>());
 		Charge::operator = (other.mValue);
 		mVerb = other.mValue.mVerb;
 		mSource = Abandon(other.mValue.mSource);
-		mArgument = Abandon(other.mValue.mArgument);
 		mOutput = Abandon(other.mValue.mOutput);
 		mShortCircuited = other.mValue.mShortCircuited;
 		return *this;
@@ -120,7 +120,7 @@ namespace Langulus::Flow
 	/// Hash the verb																				
 	///	@return the hash of the content													
 	Hash Verb::GetHash() const {
-		return HashData(mVerb->mHash, mSource, mArgument, mOutput);
+		return HashData(mVerb->mHash, mSource, GetArgument(), mOutput);
 	}
 
 	/// Multiply verb mass																		
@@ -161,15 +161,15 @@ namespace Langulus::Flow
 	///	@param other - the verb to use as base											
 	///	@return the partially copied verb												
 	Verb Verb::PartialCopy() const noexcept {
-		return {mVerb, {}, {}, {}, GetCharge()};
+		return {mVerb, /*{}, {}, */{}, GetCharge()};
 	}
 
 	/// Clone the verb																			
 	///	@return the cloned verb																
 	Verb Verb::Clone() const {
-		Verb clone {mVerb, {}, {}, {}, GetCharge()};
+		Verb clone {mVerb, {}/*, {}, {}*/, GetCharge()};
+		clone.GetArgument() = GetArgument().Clone();
 		clone.mSource = mSource.Clone();
-		clone.mArgument = mArgument.Clone();
 		clone.mOutput = mOutput.Clone();
 		clone.mSuccesses = mSuccesses;
 		clone.mShortCircuited = mShortCircuited;
@@ -179,9 +179,9 @@ namespace Langulus::Flow
 	/// Reset all verb members and energy													
 	void Verb::Reset() {
 		mVerb = {};
+		Any::Reset();
 		Charge::Reset();
 		mSource.Reset();
-		mArgument.Reset();
 		mOutput.Reset();
 		mSuccesses = {};
 	};
@@ -189,7 +189,7 @@ namespace Langulus::Flow
 	/// Check if verb id matches																
 	///	@param id - the verb id to check													
 	///	@return true if verb id matches													
-	bool Verb::Is(VMeta id) const noexcept {
+	bool Verb::IsVerb(VMeta id) const noexcept {
 		return !mVerb ? !id : mVerb->Is(id);
 	}
 
@@ -276,8 +276,8 @@ namespace Langulus::Flow
 		if (enscope)
 			result += Code::OpenScope;
 
-		if (mArgument.IsValid())
-			result += Verbs::Interpret::To<Code>(mArgument);
+		if (IsValid())
+			result += Verbs::Interpret::To<Code>(GetArgument());
 
 		if (enscope)
 			result += Code::CloseScope;
@@ -344,8 +344,8 @@ namespace Langulus::Flow
 		if (enscope)
 			result += Code::OpenScope;
 
-		if (mArgument.IsValid())
-			result += Verbs::Interpret::To<Debug>(mArgument);
+		if (IsValid())
+			result += Verbs::Interpret::To<Debug>(GetArgument());
 
 		if (enscope)
 			result += Code::CloseScope;

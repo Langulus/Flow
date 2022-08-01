@@ -27,6 +27,33 @@
 
 namespace Langulus::Flow
 {
+	
+	/// Generate code from operator															
+	///	@param op - the operator to stringify											
+	Code::Code(Operator op)
+		: Text {Disowned(mOperators[op].mTokenWithSpacing.data())} { }
+
+	/// Parse code																					
+	///	@param optimize - whether or not to precompile 								
+	///	@returned the parsed flow															
+	Any Code::Parse(bool optimize) const {
+		//InitializeParser();
+		Any output;
+		const auto parsed = UnknownParser::Parse(*this, output, 0, optimize);
+		if (parsed != GetCount()) {
+			Logger::Warning() << "Some characters were left out at the end, while parsing code:";
+			Logger::Warning() << " -- " 
+				<< Logger::Green << LeftOf(parsed) 
+				<< Logger::Red << RightOf(parsed);
+		}
+		return output;
+	}
+
+	/// Clone the Code container retaining type											
+	///	@return the cloned code																
+	Code Code::Clone() const {
+		return Text::Clone();
+	}
 
 	/// Compare two tokens, ignoring case													
 	///	@param lhs - the left token														
@@ -34,11 +61,11 @@ namespace Langulus::Flow
 	///	@return true if both loosely match												
 	constexpr bool CompareTokens(const Token& lhs, const Token& rhs) noexcept {
 		return (lhs.size() == rhs.size() && (
-			lhs.size() == 0 || ::std::equal(lhs.begin(), lhs.end(), rhs.begin(), 
-			[](const char& c1, const char& c2) noexcept {
-				return c1 == c2 || (::std::toupper(c1) == ::std::toupper(c2));
-			})
-		));
+			lhs.size() == 0 || ::std::equal(lhs.begin(), lhs.end(), rhs.begin(),
+				[](const char& c1, const char& c2) noexcept {
+					return c1 == c2 || (::std::toupper(c1) == ::std::toupper(c2));
+				})
+			));
 	}
 
 	/// Isolate an operator token																
@@ -50,10 +77,8 @@ namespace Langulus::Flow
 		auto r = token.data() + token.size();
 		while (l < r && *l <= 32)
 			++l;
-
-		while (r > l && *(r-1) <= 32)
+		while (r > l && *(r - 1) <= 32)
 			--r;
-
 		return token.substr(l - token.data(), r - l);
 	}
 
@@ -64,6 +89,46 @@ namespace Langulus::Flow
 	constexpr bool CompareOperators(const Token& lhs, const Token& rhs) noexcept {
 		// Compare isolated operators													
 		return CompareTokens(IsolateOperator(lhs), IsolateOperator(rhs));
+	}
+
+	/// Check if a string is reserved as a keyword/operator							
+	///	@param text - the text to check													
+	///	@return true if text is reserved													
+	bool Code::IsReserved(const Text& text) {
+		for (auto& a : mOperators) {
+			if (CompareOperators(text, a.mToken))
+				return true;
+		}
+
+		if (!RTTI::Database.GetAmbiguousMeta(text).empty())
+			return true;
+
+		return false;
+	}
+
+	/// A keyword must be made of only letters and numbers, namespace operator	
+	/// and/or underscores																		
+	///	@param text - the text to check													
+	///	@return true if text is a valid Code keyword									
+	bool IsKeywordSymbol(char a) {
+		return ::std::isdigit(a) || ::std::isalpha(a) || a == ':' || a == '_';
+	}
+
+	/// A keyword must be made of only letters and numbers, namespace operator	
+	/// and/or underscores																		
+	///	@param text - the text to check													
+	///	@return true if text is a valid Code keyword									
+	bool Code::IsValidKeyword(const Text& text) {
+		if (text.IsEmpty() || !::std::isalpha(text[0]))
+			return false;
+
+		for (auto a : text) {
+			if (IsKeywordSymbol(a))
+				continue;
+			return false;
+		}
+
+		return true;
 	}
 
 	constexpr Code::OperatorProperties Code::mOperators[OpCounter] = {
@@ -192,11 +257,11 @@ namespace Langulus::Flow
 	/// Gather all symbols of a keyword														
 	///	@param input - the code to peek into											
 	///	@return the isolated keyword token												
-	Token Code::KeywordParser::IsolateKeyword(const Code& input) noexcept {
+	Token Code::KeywordParser::Isolate(const Code& input) noexcept {
 		Offset progress = 0;
 		while (progress < input.GetCount()) {
-			const auto relevant = input.RightOf(progress);
-			if (!KeywordParser::Peek(relevant) && !NumberParser::Peek(relevant))
+			const auto c = input[progress];
+			if (!IsKeywordSymbol(c))
 				break;
 			++progress;
 		}
@@ -217,54 +282,157 @@ namespace Langulus::Flow
 		VERBOSE("Parsing keyword...");
 
 		// Isolate the keyword															
-		const auto keyword = IsolateKeyword(input);
+		const auto keyword = Isolate(input);
 		if (keyword.empty())
 			PRETTY_ERROR("No keyword parsed");
 
 		progress += keyword.size();
 		VERBOSE("Keyword collected: " << keyword);
 
-		// Search for token in meta definitions									
-		Any rhs;
-		const auto metaData = RTTI::Database.GetMetaData(keyword);
-		if (metaData) {
-			//TODO parse charge and materialize if needed to
-			rhs << metaData;
+		// Search for an exact token in meta definitions						
+		const auto dmeta = RTTI::Database.GetMetaData(keyword);
+		const auto tmeta = RTTI::Database.GetMetaTrait(keyword);
+		const auto vmeta = RTTI::Database.GetMetaVerb(keyword);
+		const auto cmeta = RTTI::Database.GetMetaConstant(keyword);
+		if (dmeta && !tmeta && !vmeta && !cmeta) {
+			// Exact non-ambiguous data definition found							
+			if (allowCharge) {
+				const auto relevant = input.RightOf(progress);
+				if (ChargeParser::Peek(relevant) != NoOperator) {
+					// Parse charge for the keyword									
+					Charge charge;
+					progress += ChargeParser::Parse(relevant, charge);
+					lhs = Construct {dmeta, {}, charge};
+				}
+				else lhs = dmeta;
+			}
+			else lhs = dmeta;
 		}
-
-		const auto metaTrait = RTTI::Database.GetMetaTrait(keyword);
-		if (metaTrait) {
-			//TODO parse charge and materialize if needed to
-			rhs << metaTrait;
+		else if (!dmeta && tmeta && !vmeta && !cmeta) {
+			// Exact non-ambiguous trait definition found						
+			lhs = tmeta;
 		}
-
-		const auto metaVerb = RTTI::Database.GetMetaVerb(keyword);
-		if (metaVerb) {
-			// Check if the keyword is for a reverse verb						
-			// Some verbs might have same tokens, so make sure they differ	
+		else if (!dmeta && !tmeta && vmeta && !cmeta) {
+			// Exact non-ambiguous verb definition found							
+			// Check if the keyword is for a reverse verb - some				
+			// verbs might have same tokens, make sure they differ			
 			const bool reversed =
-				!CompareTokens(keyword, metaVerb->mToken) &&
-				 CompareTokens(keyword, metaVerb->mTokenReverse);
+				!CompareTokens(keyword, vmeta->mToken) &&
+				 CompareTokens(keyword, vmeta->mTokenReverse);
 
-			//TODO parse charge and materialize if needed to
-			if (reversed) {
-				// The keyword resulted in a negatively charged verb			
-				rhs << Verb(metaVerb) * -1;
+			if (allowCharge) {
+				const auto relevant = input.RightOf(progress);
+				if (ChargeParser::Peek(relevant) != NoOperator) {
+					// Parse charge for the keyword									
+					Charge charge;
+					progress += ChargeParser::Parse(relevant, charge);
+					if (reversed)
+						charge.mMass *= -1;
+					lhs = Verb {vmeta, {}, {}, {}, charge};
+				}
+				else if (reversed)
+					lhs = Verb {vmeta}.SetMass(-1);
+				else
+					lhs = vmeta;
 			}
-			else {
-				// The keyword resulted in a metaverb								
-				rhs << metaVerb;
+			else if (reversed)
+				lhs = Verb {vmeta}.SetMass(-1);
+			else
+				lhs = vmeta;
+		}
+		else if (!dmeta && !tmeta && !vmeta && cmeta) {
+			lhs = Any {Block {{}, cmeta->mValueType, 1, cmeta->mPtrToValue}}.Clone();
+		}
+		else {
+			// Search for ambiguous token in meta definitions					
+			auto& symbols = RTTI::Database.GetAmbiguousMeta(keyword);
+			if (symbols.size() > 1) {
+				Logger::Error() << "Ambiguous symbol: " << keyword << "; Could be one of: " << Logger::Tab;
+				for (auto& meta : symbols) {
+					Logger::Verbose() << Logger::Red << meta->mToken << " (";
+					switch (meta->GetMetaType()) {
+					case RTTI::Meta::Data:
+						Logger::Append() << "meta data)";
+						break;
+					case RTTI::Meta::Trait:
+						Logger::Append() << "meta trait)";
+						break;
+					case RTTI::Meta::Verb:
+						Logger::Append() << "meta verb)";
+						break;
+					case RTTI::Meta::Constant:
+						Logger::Append() << "meta constant)";
+						break;
+					}
+				}
+				Logger::Append() << Logger::Untab;
+				PRETTY_ERROR("Ambiguous symbol");
+			}
+
+			// Push found meta data, if any											
+			for (auto& meta : symbols) {
+				switch (meta->GetMetaType()) {
+				case RTTI::Meta::Data:
+					if (allowCharge) {
+						const auto relevant = input.RightOf(progress);
+						if (ChargeParser::Peek(relevant) != NoOperator) {
+							// Parse charge for the keyword							
+							Charge charge;
+							progress += ChargeParser::Parse(relevant, charge);
+							lhs = Construct {static_cast<DMeta>(meta), {}, charge};
+						}
+						else lhs = static_cast<DMeta>(meta);
+					}
+					else lhs = static_cast<DMeta>(meta);
+					break;
+
+				case RTTI::Meta::Trait:
+					lhs = static_cast<TMeta>(meta);
+					break;
+
+				case RTTI::Meta::Verb: {
+					const auto metaVerb = static_cast<VMeta>(meta);
+
+					// Check if the keyword is for a reverse verb - some		
+					// verbs might have same tokens, make sure they differ	
+					const bool reversed =
+						!CompareTokens(keyword, metaVerb->mToken) &&
+						 CompareTokens(keyword, metaVerb->mTokenReverse);
+
+					if (allowCharge) {
+						const auto relevant = input.RightOf(progress);
+						if (ChargeParser::Peek(relevant) != NoOperator) {
+							// Parse charge for the keyword							
+							Charge charge;
+							progress += ChargeParser::Parse(relevant, charge);
+							if (reversed)
+								charge.mMass *= -1;
+							lhs = Verb {metaVerb, {}, {}, {}, charge};
+						}
+						else if (reversed)
+							lhs = Verb {metaVerb}.SetMass(-1);
+						else
+							lhs = metaVerb;
+					}
+					else if (reversed)
+						lhs = Verb {metaVerb}.SetMass(-1);
+					else
+						lhs = metaVerb;
+					break;
+				}
+				
+				case RTTI::Meta::Constant: {
+					const auto metaConst = static_cast<CMeta>(meta);
+					lhs = Any {Block {{}, metaConst->mValueType, 1, metaConst->mPtrToValue}}.Clone();
+					break;
+				}}
 			}
 		}
-
-		if (rhs.IsEmpty())
-			PRETTY_ERROR("Missing meta");
 
 		VERBOSE("Keyword parsed: "
 			<< Logger::Push << Logger::Cyan << keyword << Logger::Pop << " -> " 
-			<< Logger::Cyan << rhs << " (" << rhs.GetToken() << ")");
+			<< Logger::Cyan << lhs << " (" << lhs.GetToken() << ")");
 
-		lhs = Move(rhs);
 		return progress;
 	}
 
@@ -328,7 +496,7 @@ namespace Langulus::Flow
 		// operators separated by spaces/numbers/chatacters					
 		if (input.StartsWithLetter()) {
 			// Isolate a keyword separated by spaces/operators					
-			return KeywordParser::IsolateKeyword(input);
+			return KeywordParser::Isolate(input);
 		}
 
 		// Isolate an operator separated by spaces/letters/digits			
@@ -821,59 +989,6 @@ namespace Langulus::Flow
 
 		VERBOSE("Charge parsed" << Logger::Untab);
 		return progress;
-	}
-
-	/// Generate code from operator															
-	///	@param op - the operator to stringify											
-	Code::Code(Operator op)
-		: Text {Disowned(mOperators[op].mTokenWithSpacing.data())} { }
-
-	/// Parse code																					
-	///	@param optimize - whether or not to precalculate constexpr				
-	///	@returned the parsed data															
-	Any Code::Parse(bool optimize) const {
-		Any output;
-		const auto parsed = UnknownParser::Parse(*this, output, 0, optimize);
-		if (parsed != GetCount()) {
-			Logger::Warning() << "Some characters were left out at the end, while parsing Code code:";
-			Logger::Warning() << " -- " 
-				<< Logger::Green << LeftOf(parsed) 
-				<< Logger::Red << RightOf(parsed);
-		}
-		return output;
-	}
-
-	/// Clone the Code container retaining type											
-	///	@return the cloned Code container												
-	Code Code::Clone() const {
-		return Text::Clone();
-	}
-
-	/// Check if a string is reserved as a Code keyword/operator					
-	///	@param text - the text to check													
-	///	@return true if text is reserved													
-	bool Code::IsReserved(const Text& text) {
-		for (auto& a : mOperators) {
-			if (CompareTokens(text, a.mToken))
-				return true;
-		}
-		return false;
-	}
-
-	/// A Code keyword must be made of only letters and numbers						
-	///	@param text - the text to check													
-	///	@return true if text is a valid Code keyword									
-	bool Code::IsValidKeyword(const Text& text) {
-		if (text.IsEmpty() || !::std::isalpha(text[0]))
-			return false;
-
-		for (auto a : text) {
-			if (::std::isdigit(a) || ::std::isalpha(a))
-				continue;
-			return false;
-		}
-
-		return true;
 	}
 
 } // namespace Langulus::Flow

@@ -9,6 +9,7 @@ namespace Langulus::Flow
 	///	Langulus code container and parser, as well as keyword database		
 	///																								
 	class Code : public Text {
+		LANGULUS_BASES(Text);
 	public:
 		enum Operator {
 			OpenScope = 0,
@@ -76,7 +77,7 @@ namespace Langulus::Flow
 		struct KeywordParser {
 			NOD() static Offset Parse(const Code&, Any&, bool allowCharge = true);
 			NOD() static bool Peek(const Code&) noexcept;
-			NOD() static Token IsolateKeyword(const Code&) noexcept;
+			NOD() static Token Isolate(const Code&) noexcept;
 		};
 
 		/// Parser for skipping expressions													
@@ -121,14 +122,6 @@ namespace Langulus::Flow
 
 			NOD() static bool IsChargable(const Any&) noexcept;
 		};
-
-		struct MetaConstant {
-			Token mToken;
-			Any mValue;
-		};
-
-		/// Constants database																	
-		static THashMap<Text, MetaConstant> mConstants;
 
 		struct OperatorProperties {
 			Token mToken;

@@ -256,13 +256,8 @@ namespace Langulus::Flow
 				auto element = from.GetElementResolved(i);
 
 				// Element is already resolved, so don't resolve it			
-				if (DispatchFlat<false>(element, interpreter)) {
-					if (!interpreter.GetOutput().template Is<TO>())
-						Throw<Except::Convert>(
-							"Can't serialize resolved element to text");
-
-					to += interpreter.GetOutput().template Get<TO>();
-				}
+				if (DispatchFlat<false>(element, interpreter))
+					to += interpreter.GetOutput().As<Text>();
 				else Throw<Except::Convert>(
 					"Can't serialize resolved element to text");
 
@@ -309,7 +304,7 @@ namespace Langulus::Flow
 		for (auto& base : from.GetType()->mBases) {
 			if (base.mType->mSize > 0) {
 				if (separate) {
-					to += Code {Code::And};
+					to += Verbs::Conjunct::CTTI_PositiveOperator;
 					separate = false;
 				}
 
@@ -323,7 +318,7 @@ namespace Langulus::Flow
 		// Iterate members for each object											
 		for (auto& member : from.GetType()->mMembers) {
 			if (separate)
-				to += Code {Code::And};
+				to += Verbs::Conjunct::CTTI_PositiveOperator;
 
 			if (member.mType->Is<DMeta>())
 				SerializeMeta<DMeta>(from, to, &member);

@@ -4,6 +4,21 @@
 namespace Langulus::Flow
 {
 
+	/// Define a constant for the parser, subtituting its token  with the		
+	/// provided value when parsed															
+	///	@param token - the token for the constant										
+	///	@param value - the value of the constant										
+	/*template<CT::Data T>
+	void Code::DefineConstant(const Token& token, const T& value) {
+		if (!IsValidKeyword(token))
+			Throw<Except::Flow>("Constant definition's token is invalid");
+		if (IsReserved(token))
+			Throw<Except::Flow>("Constant definition's token is already reserved");
+
+		// Add to definitions															
+		mConstants.Insert({Text {token}.Lowercase(), {token, value}});
+	}*/
+
 	/// Remove elements from the left side of Code code								
 	///	@param offset - the number of elements to discard from the front		
 	///	@return a shallow-copied container with the correct offset				
@@ -23,7 +38,7 @@ namespace Langulus::Flow
 	///	@return true if the first symbol is special									
 	inline bool Code::StartsWithSpecial() const noexcept {
 		const auto& letter = (*this)[0];
-		return GetCount() > 0 && letter > 0 && letter < 32;
+		return !IsEmpty() && letter > 0 && letter < 32;
 	}
 
 	/// Check if the Code container begins with skippable elements, such as		
@@ -31,37 +46,39 @@ namespace Langulus::Flow
 	///	@return true if the first symbol is a spacer									
 	inline bool Code::StartsWithSkippable() const noexcept {
 		const auto& letter = (*this)[0];
-		return GetCount() > 0 && letter > 0 && letter <= 32;
+		return !IsEmpty() && letter > 0 && letter <= 32;
 	}
 
 	/// Check if the Code code container begins with skippable elements			
 	///	@return true if the first symbol is a spacer									
 	inline bool Code::EndsWithSkippable() const noexcept {
-		return GetCount() > 0 && last() > 0 && last() <= 32;
+		return !IsEmpty() && last() > 0 && last() <= 32;
 	}
 
 	/// Check if the Code code container begins with a letter or underscore		
 	///	@return true if the first symbol is a letter/underscore					
 	inline bool Code::StartsWithLetter() const noexcept {
-		return GetCount() > 0 && (::std::isalpha((*this)[0]) || (*this)[0] == '_');
+		const auto c = (*this)[0];
+		return !IsEmpty() && (::std::isalpha(c) || c == '_');
 	}
 
 	/// Check if the Code code container ends with a letter or underscore		
 	///	@return true if the last symbol is a letter/underscore					
 	inline bool Code::EndsWithLetter() const noexcept {
-		return GetCount() > 0 && (::std::isalpha(last()) || last() == '_');
+		const auto c = last();
+		return !IsEmpty() && (::std::isalpha(c) || c == '_');
 	}
 
 	/// Check if the Code code container begins with a number						
 	///	@return true if the first symbol is a number									
 	inline bool Code::StartsWithDigit() const noexcept {
-		return GetCount() > 0 && ::std::isdigit((*this)[0]);
+		return !IsEmpty() && ::std::isdigit((*this)[0]);
 	}
 
 	/// Check if the Code code container ends with a number							
 	///	@return true if the last symbol is a number									
 	inline bool Code::EndsWithDigit() const noexcept {
-		return GetCount() > 0 && ::std::isdigit(last());
+		return !IsEmpty() && ::std::isdigit(last());
 	}
 
 	/// Check if the Code code container begins with an operator					

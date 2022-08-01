@@ -10,7 +10,7 @@
 
 
 SCENARIO("Parsing Code", "[gasm]") {
-	GIVEN("The script: `plural` associate many") {
+	GIVEN("The script: `plural`.associate(many)") {
 		const auto code = "`plural`.associate(many)"_code;
 		const Any required = Verbs::Associate("plural"_text, Index::Many);
 

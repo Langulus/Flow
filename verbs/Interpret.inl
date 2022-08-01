@@ -65,8 +65,21 @@ namespace Langulus::Verbs
 	///	@param verb - the verb instance to execute									
 	///	@return true if execution was a success										
 	inline bool Interpret::ExecuteDefault(const Block& context, Verb& verb) {
-		//TODO
-		return false;
+		const auto from = context.GetType();
+		verb.GetArgument().ForEach([&](DMeta to) {
+			if (to->CastsTo<A::Text>()) {
+				// Stringify context, if it matches any of its named values	
+				for (auto& named : from->mNamedValues) {
+					if (from->mComparer(named->mPtrToValue, context.GetRaw())) {
+						verb << Text {named->mToken};
+						return false;
+					}
+				}
+			}
+			return true;
+		});
+
+		return verb.IsDone();
 	}
 
 	/// Statically optimized interpret verb												

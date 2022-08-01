@@ -5,6 +5,9 @@
 
 int main(int argc, char* argv[]) {
 	// For reflection of all verbs													
+	(void)MetaData::Of<Index>();
+
+	// For reflection of all verbs													
 	(void)MetaVerb::Of<Verbs::Add>();
 	(void)MetaVerb::Of<Verbs::Associate>();
 	(void)MetaVerb::Of<Verbs::Catenate>();

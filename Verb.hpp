@@ -31,9 +31,11 @@ namespace Langulus::Flow
 	using RTTI::VMeta;
 	using RTTI::TMeta;
 	using RTTI::DMeta;
+	using RTTI::CMeta;
 	using RTTI::MetaData;
 	using RTTI::MetaVerb;
 	using RTTI::MetaTrait;
+	using RTTI::MetaConst;
 
 	class Charge;
 	class Construct;

@@ -99,14 +99,15 @@ namespace Langulus::Flow
 	}
 
 	/// Invoke a single verb on a single context											
+	///	@attention assumes that if T is deep, then it contains exactly one	
+	///		element																				
 	///	@tparam DISPATCH - whether or not to use context's dispatcher, if		
-	///							 any is statically available or reflected				
+	///		any is statically available or reflected									
 	///	@tparam DEFAULT - whether or not to attempt default verb execution	
-	///							if such is statically available or reflected			
-	///							this is done only if direct or dispatched execution
-	///							fails																
+	///		if such is statically available or reflected this is done only		
+	///		if direct or dispatched execution fails									
 	///	@tparam FALLBACK - for internal use by the function - used to nest	
-	///							 with default functionality, if DEFAULT is enabled	
+	///		with default functionality, if DEFAULT is enabled						
 	///	@param context - the context in which to execute in						
 	///	@param verb - the verb to execute												
 	///	@return the number of successful executions									
@@ -115,7 +116,7 @@ namespace Langulus::Flow
 		// Always reset verb progress prior to execution						
 		verb.Undo();
 
-		if constexpr (!FALLBACK && DISPATCH && (CT::DispatcherMutable<T> || (CT::Constant<T> && CT::DispatcherConstant<T>))) {
+		if constexpr (!FALLBACK && DISPATCH && CT::Dispatcher<T>) {
 			// Custom reflected dispatcher is available							
 			// It's your responsibility to implement it adequately			
 			// Keep in mind, that once you declare a custom Do for your		
@@ -126,18 +127,10 @@ namespace Langulus::Flow
 		}
 		else {
 			// Execute verb inside the context directly							
-			if constexpr (FALLBACK) {
-				V::ExecuteDefault(context, verb);
-			}
-			else if constexpr (!CT::Same<V, Verb>) {
-				if constexpr (V::template AvailableFor<T>())
-					V::ExecuteIn(context, verb);
-				else
-					Verb::ExecuteIn(context, verb);
-			}
-			else {
-				Verb::ExecuteIn(context, verb);
-			}
+			if constexpr (FALLBACK)
+				Verb::GenericExecuteDefault(context, verb);
+			else
+				Verb::GenericExecuteIn(context, verb);
 
 			// If that fails, attempt in all reflected bases					
 			if constexpr (requires { typename T::CTTI_Bases; }) {
@@ -180,7 +173,7 @@ namespace Langulus::Flow
 			// Context is empty, and execution happens only if DEFAULT		
 			// verbs are allowed, as a stateless verb execution				
 			if constexpr (DEFAULT)
-				return V::ExecuteStateless(verb);
+				return Verb::GenericExecuteStateless(verb);
 			return 0;
 		}
 
@@ -255,7 +248,7 @@ namespace Langulus::Flow
 			// Context is empty, and execution happens only if DEFAULT		
 			// verbs are allowed, as a stateless verb execution				
 			if constexpr (DEFAULT)
-				return V::ExecuteStateless(verb);
+				return Verb::GenericExecuteStateless(verb);
 			return 0;
 		}
 

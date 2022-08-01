@@ -91,7 +91,7 @@ namespace Langulus::Verbs
 						VERBOSE_CREATION(Logger::Yellow<<
 							"Delegating: " << arguments << " to " << element);
 
-						Verbs::Create creator(/*{}, */arguments);
+						Verbs::Create creator(arguments);
 						if (Scope::ExecuteVerb(element, creator)) {
 							VERBOSE_CREATION(Logger::Yellow << "Sideproduct: " << creator.GetOutput());
 							created.MergeBlock(Abandon(creator.GetOutput()));
@@ -152,14 +152,14 @@ namespace Langulus::Verbs
 					VERBOSE_CREATION("Searching trait " << meta
 						<< "... " << " (" << index << ")");
 
-					Verbs::Select selector(/*{}, */Any::Wrap(meta, index));
-					Verb::ExecuteIn(context, selector);
+					Verbs::Select selector(Any::Wrap(meta, index));
+					Verb::GenericExecuteIn(context, selector);
 					if (!selector.GetOutput().IsEmpty()) {
 						VERBOSE_CREATION("Initializing trait " << selector.GetOutput()
 							<< " with " << Logger::Cyan << element << " (" << index << ")");
 
-						Verbs::Associate associator(/*{}, */element);
-						if (Verb::ExecuteIn(selector.GetOutput(), associator)) {
+						Verbs::Associate associator(element);
+						if (Verb::GenericExecuteIn(selector.GetOutput(), associator)) {
 							// Trait was found and overwritten						
 							if (sati)
 								++satisfiedTraits.GetValue(sati);
@@ -195,14 +195,14 @@ namespace Langulus::Verbs
 				VERBOSE_CREATION("Searching for data " << meta
 					<< "... " << " (" << index << ")");
 
-				Verbs::Select selector(/*{}, */Any::Wrap(meta, index));
-				Verb::ExecuteIn(context, selector);
+				Verbs::Select selector(Any::Wrap(meta, index));
+				Verb::GenericExecuteIn(context, selector);
 				if (!selector.GetOutput().IsEmpty()) {
 					VERBOSE_CREATION("Initializing data " << selector.GetOutput()
 						<< " with " << Logger::Cyan << element << " (" << index << ")");
 
-					Verbs::Associate associator(/*{}, */Move(element));
-					if (Verb::ExecuteIn(selector.GetOutput(), associator)) {
+					Verbs::Associate associator(Move(element));
+					if (Verb::GenericExecuteIn(selector.GetOutput(), associator)) {
 						// Data was found and was overwritten						
 						if (sati)
 							++satisfiedData.GetValue(sati);

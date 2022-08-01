@@ -64,7 +64,7 @@ namespace Langulus::Verbs
 	///	@return true if execution was a success										
 	inline bool Interpret::ExecuteDefault(const Block& context, Verb& verb) {
 		const auto from = context.GetType();
-		verb.GetArgument().ForEach([&](DMeta to) {
+		verb.ForEach([&](DMeta to) {
 			if (to->CastsTo<A::Text>()) {
 				// Stringify context, if it matches any of its named values	
 				for (auto& named : from->mNamedValues) {

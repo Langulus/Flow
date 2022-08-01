@@ -524,7 +524,7 @@ namespace Langulus::Flow
 	/// specific verbs if you know them at compile time								
 	///	@return true if the ability exists												
 	template<CT::Data T>
-	bool Verb::AvailableFor() const noexcept {
+	bool Verb::GenericAvailableFor() const noexcept {
 		const auto meta = MetaData::Of<Decay<T>>();
 		return meta && meta->template GetAbility<CT::Mutable<T>>(mVerb, GetType());
 	}
@@ -532,46 +532,58 @@ namespace Langulus::Flow
 	/// Execute a known/unknown verb in an unknown context							
 	/// This is a slow runtime procedure, use statically optimized variants		
 	/// inside specific verbs if you know them at compile time						
+	///	@attention assumes that if T is deep, it contains exactly one item	
 	///	@param context - the context to execute in									
 	///	@param verb - the verb to execute												
 	///	@return true if verb was executed												
 	template<CT::Data T, CT::Data V>
-	bool Verb::ExecuteIn(T& context, V& verb) {
+	bool Verb::GenericExecuteIn(T& context, V& verb) {
 		static_assert(CT::Verb<V>, "V must be a verb");
-		const auto meta = MetaData::Of<Decay<T>>();
-		if constexpr (CT::DerivedFrom<V, Verbs::Interpret> && requires { typename V::To; }) {
-			// Scan for a reflected converter as statically as possible		
-			using TO = typename V::To;
-			const auto found = meta->template GetConverter<TO>();
-			if (!found)
-				return false;
 
-			TAny<TO> result;
-			result.template Allocate<false, true>(1);
-			found(result.GetRaw(), context.GetRaw());
-			verb << Abandon(result);
+		if constexpr (!CT::Deep<T> && !CT::Same<V, Verb>) {
+			// Always prefer statically optimized routine when available	
+			// Literally zero ability searching overhead!						
+			if constexpr (V::template AvailableFor<T>())
+				return V::ExecuteIn(context, verb);
+			return false;
 		}
 		else {
-			// Find ability at runtime													
-			if (verb.template IsVerb<Verbs::Interpret>()) {
-				// Scan for a reflected converter by scanning argument		
-				const auto to = verb.template As<DMeta>();
-				const auto found = meta->GetConverter(to);
+			// Search for the ability via RTTI										
+			const auto meta = context.GetType();
+			if constexpr (CT::DerivedFrom<V, Verbs::Interpret> && requires { typename V::To; }) {
+				// Scan for a reflected converter as statically as possible	
+				using TO = typename V::To;
+				const auto found = meta->template GetConverter<TO>();
 				if (!found)
 					return false;
 
-				Any result = Any::FromMeta(to);
-				result.Allocate<false, true>(1);
+				TAny<TO> result;
+				result.template Allocate<false, true>(1);
 				found(result.GetRaw(), context.GetRaw());
 				verb << Abandon(result);
 			}
 			else {
-				// Scan for any another ability										
-				const auto found = meta->template GetAbility<CT::Mutable<T>>(verb.mVerb, verb.GetType());
-				if (!found)
-					return false;
+				// Find ability at runtime												
+				if (verb.template IsVerb<Verbs::Interpret>()) {
+					// Scan for a reflected converter by scanning argument	
+					const auto to = verb.template As<DMeta>();
+					const auto found = meta->GetConverter(to);
+					if (!found)
+						return false;
 
-				found(SparseCast(context), verb);
+					Any result = Any::FromMeta(to);
+					result.Allocate<false, true>(1);
+					found(result.GetRaw(), context.GetRaw());
+					verb << Abandon(result);
+				}
+				else {
+					// Scan for any another ability									
+					const auto found = meta->template GetAbility<CT::Mutable<T>>(verb.mVerb, verb.GetType());
+					if (!found)
+						return false;
+
+					found(SparseCast(context), verb);
+				}
 			}
 		}
 
@@ -581,19 +593,30 @@ namespace Langulus::Flow
 	/// Execute an unknown verb with its default behavior inside a mutable		
 	/// context - this is a slow runtime procedure, use statically optimized	
 	/// variants inside specific verbs if you know them at compile time			
+	///	@attention assumes that if T is deep, it contains exactly one item	
 	///	@param context - the context to execute in									
 	///	@param verb - the verb instance to execute									
 	///	@return true if verb was executed												
-	template<CT::Data V>
-	bool Verb::ExecuteDefault(Block& context, V& verb) {
+	template<CT::Data T, CT::Data V>
+	bool Verb::GenericExecuteDefault(T& context, V& verb) {
 		static_assert(CT::Verb<V>, "V must be a verb");
-		if (verb.mVerb->mDefaultInvocationMutable) {
-			verb.mVerb->mDefaultInvocationMutable(context, verb);
-			return verb.IsDone();
+
+		if constexpr (!CT::Deep<T> && !CT::Same<V, Verb>) {
+			// Always prefer statically optimized routine when available	
+			// Literally zero ability searching overhead!						
+			if constexpr (CT::DefaultableVerbMutable<V>)
+				return V::ExecuteDefault(context, verb);
 		}
-		else if (verb.mVerb->mDefaultInvocationConstant) {
-			verb.mVerb->mDefaultInvocationConstant(context, verb);
-			return verb.IsDone();
+		else {
+			// Execute appropriate default routine by RTTI						
+			if (verb.mVerb->mDefaultInvocationMutable) {
+				verb.mVerb->mDefaultInvocationMutable(context, verb);
+				return verb.IsDone();
+			}
+			else if (verb.mVerb->mDefaultInvocationConstant) {
+				verb.mVerb->mDefaultInvocationConstant(context, verb);
+				return verb.IsDone();
+			}
 		}
 
 		return false;
@@ -602,15 +625,26 @@ namespace Langulus::Flow
 	/// Execute an unknown verb with its default behavior inside a constant		
 	/// context - this is a slow runtime procedure, use statically optimized	
 	/// variants inside specific verbs if you know them at compile time			
+	///	@attention assumes that if T is deep, it contains exactly one item	
 	///	@param context - the context to execute in									
 	///	@param verb - the verb instance to execute									
 	///	@return true if verb was executed												
-	template<CT::Data V>
-	bool Verb::ExecuteDefault(const Block& context, V& verb) {
+	template<CT::Data T, CT::Data V>
+	bool Verb::GenericExecuteDefault(const T& context, V& verb) {
 		static_assert(CT::Verb<V>, "V must be a verb");
-		if (verb.mVerb->mDefaultInvocationConstant) {
-			verb.mVerb->mDefaultInvocationConstant(context, verb);
-			return verb.IsDone();
+
+		if constexpr (!CT::Deep<T> && !CT::Same<V, Verb>) {
+			// Always prefer statically optimized routine when available	
+			// Literally zero ability searching overhead!						
+			if constexpr (CT::DefaultableVerbConstant<V>)
+				return V::ExecuteDefault(context, verb);
+		}
+		else {
+			// Execute appropriate default routine by RTTI						
+			if (verb.mVerb->mDefaultInvocationConstant) {
+				verb.mVerb->mDefaultInvocationConstant(context, verb);
+				return verb.IsDone();
+			}
 		}
 
 		return false;
@@ -622,11 +656,21 @@ namespace Langulus::Flow
 	///	@param verb - the verb instance to execute									
 	///	@return true if verb was executed												
 	template<CT::Data V>
-	bool Verb::ExecuteStateless(V& verb) {
+	bool Verb::GenericExecuteStateless(V& verb) {
 		static_assert(CT::Verb<V>, "V must be a verb");
-		if (verb.mVerb->mStatelessInvocation) {
-			verb.mVerb->mStatelessInvocation(verb);
-			return verb.IsDone();
+
+		if constexpr (!CT::Same<V, Verb>) {
+			// Always prefer statically optimized routine when available	
+			// Literally zero ability searching overhead!						
+			if constexpr (CT::StatelessVerb<V>)
+				return V::ExecuteStateless(verb);
+		}
+		else {
+			// Execute appropriate stateless routine by RTTI					
+			if (verb.mVerb->mStatelessInvocation) {
+				verb.mVerb->mStatelessInvocation(verb);
+				return verb.IsDone();
+			}
 		}
 
 		return false;

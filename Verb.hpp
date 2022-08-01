@@ -141,18 +141,16 @@ namespace Langulus::Flow
 		NOD() explicit operator Code() const;
 		NOD() explicit operator Debug() const;
 
-		/// Replace these in your verbs, to specify their behavior statically	
-		/// Otherwise, these functions fallback and perform slow RTTI checks		
 		template<CT::Data T>
-		bool AvailableFor() const noexcept;
+		bool GenericAvailableFor() const noexcept;
 		template<CT::Data T, CT::Data V>
-		static bool ExecuteIn(T&, V&);
+		static bool GenericExecuteIn(T&, V&);
+		template<CT::Data T, CT::Data V>
+		static bool GenericExecuteDefault(const T&, V&);
+		template<CT::Data T, CT::Data V>
+		static bool GenericExecuteDefault(T&, V&);
 		template<CT::Data V>
-		static bool ExecuteDefault(const Block&, V&);
-		template<CT::Data V>
-		static bool ExecuteDefault(Block&, V&);
-		template<CT::Data V>
-		static bool ExecuteStateless(V&);
+		static bool GenericExecuteStateless(V&);
 
 	public:
 		NOD() Hash GetHash() const;

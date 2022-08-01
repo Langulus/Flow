@@ -104,7 +104,7 @@ namespace Langulus::Verbs
 					VERBOSE_ASSOCIATE("Attempting interpretation of "
 						<< group << " to " << context.GetMeta());
 
-					Verbs::Interpret interpreter(/*{}, */context.GetType());
+					Verbs::Interpret interpreter(context.GetType());
 					if (DispatchFlat<true, true, false>(group, interpreter)) {
 						VERBOSE_ASSOCIATE("Interpreted " << group << " as " << Logger::Cyan
 							<< interpreter.GetOutput() << " -- from "
@@ -126,7 +126,7 @@ namespace Langulus::Verbs
 			}
 			catch (const Except::Copy&) {
 				// Catenate results into one element, and then copy			
-				Verbs::Catenate catenater(/*{}, */result);
+				Verbs::Catenate catenater(result);
 				auto catenated = Any::FromBlock(context, DataState::Typed);
 				catenated.Allocate<true>(1);
 

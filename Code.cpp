@@ -327,7 +327,7 @@ namespace Langulus::Flow
 					progress += ChargeParser::Parse(relevant, charge);
 					if (reversed)
 						charge.mMass *= -1;
-					lhs = Verb {vmeta, /*{}, {},*/ {}, charge};
+					lhs = Verb {vmeta, {}, charge};
 				}
 				else if (reversed)
 					lhs = Verb {vmeta}.SetMass(-1);
@@ -406,7 +406,7 @@ namespace Langulus::Flow
 							progress += ChargeParser::Parse(relevant, charge);
 							if (reversed)
 								charge.mMass *= -1;
-							lhs = Verb {metaVerb, /*{}, {},*/ {}, charge};
+							lhs = Verb {metaVerb, {}, charge};
 						}
 						else if (reversed)
 							lhs = Verb {metaVerb}.SetMass(-1);
@@ -652,7 +652,7 @@ namespace Langulus::Flow
 		}
 		else if (lhs.Is<VMeta>()) {
 			// The content is for an uninstantiated verb scope					
-			Verb verb {lhs.As<VMeta>(-1), /*{}, */Move(rhs)};
+			Verb verb {lhs.As<VMeta>(-1), Move(rhs)};
 			if (lhs.GetCount() > 1) {
 				lhs.RemoveIndex(-1);
 				lhs << Abandon(verb);
@@ -882,12 +882,12 @@ namespace Langulus::Flow
 		if (optimize && DispatchDeep(lhs, op)) {
 			// The verb was executed at compile-time, so directly				
 			// substitute LHS with the result										
-			lhs = Abandon(op.GetOutput());
+			lhs = Move(op.GetOutput());
 		}
 		else {
 			// Either compile-time execution is impossible, or we don't		
 			// want it, so directly substitute LHS with the verb				
-			lhs = Abandon(op);
+			lhs = Move(op);
 		}
 
 		return progress;

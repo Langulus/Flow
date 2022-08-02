@@ -83,12 +83,10 @@ namespace Langulus::Flow
 	///	@param a - the argument																
 	///	@param o - the output																
 	///	@param shortCircuit - short circuit												
-	Verb::Verb(VMeta call, /*const Any& s, const Any& a, */const Any& o, const Charge& charge, bool shortCircuit)
+	Verb::Verb(VMeta call, const Any& o, const Charge& charge, bool shortCircuit)
 		: Any {o}
 		, Charge {charge}
 		, mVerb {call}
-		//, mSource {s}
-		//, mOutput {o}
 		, mShortCircuited {shortCircuit} { }
 
 	/// Disown-assign a verb																	
@@ -161,13 +159,13 @@ namespace Langulus::Flow
 	///	@param other - the verb to use as base											
 	///	@return the partially copied verb												
 	Verb Verb::PartialCopy() const noexcept {
-		return {mVerb, /*{}, {}, */{}, GetCharge()};
+		return {mVerb, {}, GetCharge()};
 	}
 
 	/// Clone the verb																			
 	///	@return the cloned verb																
 	Verb Verb::Clone() const {
-		Verb clone {mVerb, {}/*, {}, {}*/, GetCharge()};
+		Verb clone {mVerb, {}, GetCharge()};
 		clone.GetArgument() = GetArgument().Clone();
 		clone.mSource = mSource.Clone();
 		clone.mOutput = mOutput.Clone();

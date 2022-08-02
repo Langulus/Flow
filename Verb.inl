@@ -550,9 +550,9 @@ namespace Langulus::Flow
 		else {
 			// Search for the ability via RTTI										
 			const auto meta = context.GetType();
-			if constexpr (CT::DerivedFrom<V, Verbs::Interpret> && requires { typename V::To; }) {
+			if constexpr (CT::DerivedFrom<V, Verbs::Interpret> && requires { typename V::Type; }) {
 				// Scan for a reflected converter as statically as possible	
-				using TO = typename V::To;
+				using TO = typename V::Type;
 				const auto found = meta->template GetConverter<TO>();
 				if (!found)
 					return false;
@@ -593,18 +593,19 @@ namespace Langulus::Flow
 	/// Execute an unknown verb with its default behavior inside a mutable		
 	/// context - this is a slow runtime procedure, use statically optimized	
 	/// variants inside specific verbs if you know them at compile time			
-	///	@attention assumes that if T is deep, it contains exactly one item	
+	///	@attention assumes that context contains exactly one item				
+	///	@tparam V - the verb type (deducible)											
 	///	@param context - the context to execute in									
 	///	@param verb - the verb instance to execute									
 	///	@return true if verb was executed												
-	template<CT::Data T, CT::Data V>
-	bool Verb::GenericExecuteDefault(T& context, V& verb) {
+	template<CT::Data V>
+	bool Verb::GenericExecuteDefault(Block& context, V& verb) {
 		static_assert(CT::Verb<V>, "V must be a verb");
 
-		if constexpr (!CT::Deep<T> && !CT::Same<V, Verb>) {
+		if constexpr (!CT::Same<V, Verb>) {
 			// Always prefer statically optimized routine when available	
 			// Literally zero ability searching overhead!						
-			if constexpr (CT::DefaultableVerbMutable<V>)
+			if constexpr (CT::DefaultableVerb<V>)
 				return V::ExecuteDefault(context, verb);
 		}
 		else {
@@ -625,15 +626,16 @@ namespace Langulus::Flow
 	/// Execute an unknown verb with its default behavior inside a constant		
 	/// context - this is a slow runtime procedure, use statically optimized	
 	/// variants inside specific verbs if you know them at compile time			
-	///	@attention assumes that if T is deep, it contains exactly one item	
+	///	@attention assumes that context contains exactly one item				
+	///	@tparam V - the verb type (deducible)											
 	///	@param context - the context to execute in									
 	///	@param verb - the verb instance to execute									
 	///	@return true if verb was executed												
-	template<CT::Data T, CT::Data V>
-	bool Verb::GenericExecuteDefault(const T& context, V& verb) {
+	template<CT::Data V>
+	bool Verb::GenericExecuteDefault(const Block& context, V& verb) {
 		static_assert(CT::Verb<V>, "V must be a verb");
 
-		if constexpr (!CT::Deep<T> && !CT::Same<V, Verb>) {
+		if constexpr (!CT::Same<V, Verb>) {
 			// Always prefer statically optimized routine when available	
 			// Literally zero ability searching overhead!						
 			if constexpr (CT::DefaultableVerbConstant<V>)
@@ -653,6 +655,7 @@ namespace Langulus::Flow
 	/// Execute an unknown verb without context											
 	/// This is a slow runtime procedure, use statically optimized variants		
 	/// inside specific verbs if you know them at compile time						
+	///	@tparam V - the verb type (deducible)											
 	///	@param verb - the verb instance to execute									
 	///	@return true if verb was executed												
 	template<CT::Data V>

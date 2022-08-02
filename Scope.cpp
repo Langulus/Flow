@@ -156,9 +156,7 @@ namespace Langulus::Flow
 				// Also resets its output												
 				Verb verb {
 					constVerb.mVerb,
-					//constVerb.mSource,
 					constVerb.GetArgument(),
-					//{},
 					constVerb,
 					constVerb.mShortCircuited
 				};
@@ -233,9 +231,7 @@ namespace Langulus::Flow
 				// Also resets its output												
 				Verb verb {
 					constVerb.mVerb,
-					//constVerb.mSource,
 					constVerb.GetArgument(),
-					//{},
 					constVerb,
 					constVerb.mShortCircuited
 				};

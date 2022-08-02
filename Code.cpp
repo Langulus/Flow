@@ -628,7 +628,8 @@ namespace Langulus::Flow
 			}
 			catch (const Exception& e) {
 				// Failed to precompile, so just propagate request				
-				VERBOSE_ALT(Logger::Red << "Can't statically construct " << outputConstruct
+				VERBOSE_ALT(Logger::Red 
+					<< "Can't statically construct " << outputConstruct
 					<< "; Reason: " << e.what());
 
 				if (lhs.GetCount() > 1) {

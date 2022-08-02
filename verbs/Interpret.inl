@@ -63,21 +63,35 @@ namespace Langulus::Verbs
 	///	@param verb - the verb instance to execute									
 	///	@return true if execution was a success										
 	inline bool Interpret::ExecuteDefault(const Block& context, Verb& verb) {
-		const auto from = context.GetType();
 		verb.ForEach([&](DMeta to) {
-			if (to->CastsTo<A::Text>()) {
-				// Stringify context, if it matches any of its named values	
-				for (auto& named : from->mNamedValues) {
-					if (from->mComparer(named->mPtrToValue, context.GetRaw())) {
-						verb << Text {named->mToken};
-						return false;
-					}
-				}
-			}
+			if (to->CastsTo<A::Text>())
+				return !InterpretTo<Text>::ExecuteDefault(context, verb);
 			return true;
 		});
 
 		return verb.IsDone();
+	}
+
+	/// Execute the default verb in an immutable context								
+	/// Statically optimized to avoid passing an argument								
+	///	@param context - the context to execute in									
+	///	@param verb - the verb instance to execute									
+	///	@return true if execution was a success										
+	template<class TO>
+	bool InterpretTo<TO>::ExecuteDefault(const Block& context, Verb& verb) {
+		if constexpr (CT::Text<TO>) {
+			const auto from = context.GetType();
+
+			// Stringify context, if it matches any of its named values		
+			for (auto& named : from->mNamedValues) {
+				if (from->mComparer(named->mPtrToValue, context.GetRaw())) {
+					verb << Text {named->mToken};
+					return true;
+				}
+			}
+			return false;
+		}
+		else return false;
 	}
 
 	/// Statically optimized interpret verb												

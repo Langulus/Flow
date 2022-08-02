@@ -145,10 +145,10 @@ namespace Langulus::Flow
 		bool GenericAvailableFor() const noexcept;
 		template<CT::Data T, CT::Data V>
 		static bool GenericExecuteIn(T&, V&);
-		template<CT::Data T, CT::Data V>
-		static bool GenericExecuteDefault(const T&, V&);
-		template<CT::Data T, CT::Data V>
-		static bool GenericExecuteDefault(T&, V&);
+		template<CT::Data V>
+		static bool GenericExecuteDefault(const Block&, V&);
+		template<CT::Data V>
+		static bool GenericExecuteDefault(Block&, V&);
 		template<CT::Data V>
 		static bool GenericExecuteStateless(V&);
 
@@ -499,7 +499,9 @@ namespace Langulus::Verbs
 	struct InterpretTo : public Interpret {
 		LANGULUS_BASES(Interpret);
 		using Interpret::Interpret;
-		using To = TO;
+		using Type = TO;
+
+		static bool ExecuteDefault(const Block&, Verb&);
 	};
 
 	/// Do/Undo verb																				

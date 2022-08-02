@@ -261,8 +261,12 @@ namespace Langulus::Flow
 					to += r;
 				});
 			}
-			else Throw<Except::Convert>(
-				"Can't serialize resolved element to text");
+			else {
+				Logger::Error() << "Can't serialize block of type "
+					<< from.GetToken() << " to " << MetaData::Of<TO>()->mToken;
+				Throw<Except::Convert>(
+					"Can't serialize block to text");
+			}
 		}
 
 		// Close scope																		

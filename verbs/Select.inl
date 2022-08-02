@@ -194,7 +194,7 @@ namespace Langulus::Verbs
 	inline bool Select::SelectByMeta(const TAny<Index>& indices, DMeta id, Block& context, TAny<Trait>& selectedTraits, TAny<const RTTI::Ability*>& selectedVerbs) {
 		const auto type = context.GetType();
 		if (id->Is<VMeta>()) {
-			if (indices.IsEmpty() || indices == Index::All) { //TODO make sure the == operator is optimal
+			if (indices.IsEmpty() || indices == IndexAll) { //TODO make sure the == operator is optimal
 				// Retrieve each ability corresponding to verbs in rhs		
 				for (auto& ability : type->mAbilities)
 					selectedVerbs << &ability.second;

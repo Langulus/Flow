@@ -3,16 +3,17 @@
 
 #define DUMP_STUFF \
 	Logger::Special() << "-------------"; \
-	Logger::Special() << "Script: " << code; \
-	Logger::Special() << "Parsed: " << parsed; \
-	Logger::Special() << "Requir: " << required; \
+	Logger::Special() << "Script:   " << code; \
+	Logger::Special() << "Parsed:   " << parsed; \
+	Logger::Special() << "Required: " << required; \
 	Logger::Special() << "-------------";
 
 
-SCENARIO("Parsing Code", "[gasm]") {
+SCENARIO("Parsing scripts with corner cases", "[code]") {
 	GIVEN("The script: `plural`.associate(many)") {
 		const auto code = "`plural`.associate(many)"_code;
-		const Any required = Verbs::Associate(Index::Many).SetSource("plural"_text);
+		const Any required = Verbs::Associate(IndexMany)
+			.SetSource("plural"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -25,7 +26,8 @@ SCENARIO("Parsing Code", "[gasm]") {
 
 	GIVEN("The script: `plural` = many") {
 		const auto code = "`plural` = many"_code;
-		const Any required = Verbs::Associate(Index::Many).SetSource("plural"_text);
+		const Any required = Verbs::Associate(IndexMany)
+			.SetSource("plural"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -36,9 +38,24 @@ SCENARIO("Parsing Code", "[gasm]") {
 		}
 	}
 
-	GIVEN("The script: `thing`.associate([Entity(? > ?)])") { //TODO previously used Scope!-1 verb, check if works like that
-		const auto code = "`thing`.associate([Entity(? > ?)])"_code;
-		const Any required = Verbs::Associate("Entity(? > ?)"_code).SetSource("thing"_text);
+	GIVEN("The script: `thing`.associate([Entity(past?, future?)])") {
+		const auto code = "`thing`.associate([Entity(past?, future?)])"_code;
+		const Any required = Verbs::Associate("Entity(past?, future?)"_code)
+			.SetSource("thing"_text);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DUMP_STUFF;
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: `thing` = [Entity(past?, future?)]") {
+		const auto code = "`thing` = [Entity(past?, future?)]"_code;
+		const Any required = Verbs::Associate("Entity(past?, future?)"_code)
+			.SetSource("thing"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -51,7 +68,8 @@ SCENARIO("Parsing Code", "[gasm]") {
 
 	GIVEN("The script: `things`.associate(\"thing\", `plural`)") {
 		const auto code = "`things`.associate(\"thing\", `plural`)"_code;
-		const Any required = Verbs::Associate(Any::WrapCommon("thing"_text, "plural"_text)).SetSource("things"_text);
+		const Any required = Verbs::Associate(Any::WrapCommon("thing"_text, "plural"_text))
+			.SetSource("things"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -62,13 +80,10 @@ SCENARIO("Parsing Code", "[gasm]") {
 		}
 	}
 
-	GIVEN("4) The Code script: associate(',' > ([Catenate(<ANumber?: >ANumber?)] or iSingle or \"and\"))") {
-		const Code code = "associate(',' > ([Catenate(<ANumber?: >ANumber?)] or iSingle or \"and\"))";
-		TAny<Any> package = Any::Wrap(',', Any::Wrap(Code("Catenate(<ANumber?: >ANumber?)"), Index::Single, Text("and")));
-		package[0].MakePast();
-		package[1].MakeFuture();
-		package[1].MakeOr();
-		const Any required = Verbs::Associate(package);
+	GIVEN("The script: `things` = (\"thing\", `plural`)") {
+		const auto code = "`things` = (\"thing\", `plural`)"_code;
+		const Any required = Verbs::Associate(Any::WrapCommon("thing"_text, "plural"_text))
+			.SetSource("things"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -79,17 +94,32 @@ SCENARIO("Parsing Code", "[gasm]") {
 		}
 	}
 
-	GIVEN("5) The Code script: Catenate   (   <ANumber?	:	>ANumber?	)   ") {
-		const Code code = "Catenate   (   <ANumber?	:	>ANumber?	)   ";
-		TAny<Any> package = Any::Wrap(
-			MetaData::Of<A::Number>(), 
-			MetaData::Of<A::Number>()
-		);
-		package[0].MakePast();
-		package[0].MakeMissing();
-		package[1].MakeFuture();
-		package[1].MakeMissing();
-		const Any required = Verbs::Catenate(package[1]).SetSource(package[0]);
+	GIVEN("The script: ',' = ([past number? & future number?] or single or \"and\")") {
+		const Code code = "',' = ([past number? & future number?] or single or \"and\")";
+		auto argument = Any::Wrap("past number? & future number?"_code, IndexSingle, "and"_text);
+		argument.MakeOr();
+		const Any required = Verbs::Associate(argument)
+			.SetSource(","_text);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DUMP_STUFF;
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: past number    ?       &   future     number ? ") {
+		const Code code = "past number    ?       &   future     number ? ";
+		Any source = MetaData::Of<A::Number>();
+		source.MakePast();
+		source.MakeMissing();
+		Any argument = MetaData::Of<A::Number>();
+		argument.MakeFuture();
+		argument.MakeMissing();
+		const Any required = Verbs::Catenate(argument)
+			.SetSource(source);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();

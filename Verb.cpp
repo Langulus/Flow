@@ -195,7 +195,7 @@ namespace Langulus::Flow
 	///	@param priority - the priority to check										
 	///	@return true if this verb's priority matches the provided one			
 	bool Verb::Validate(const Index& priority) const noexcept {
-		return int(mPriority) == priority.mIndex || priority == Index::All;
+		return int(mPriority) == priority.mIndex || priority == IndexAll;
 	}
 	
 	/// Change the verb's circuitry															
@@ -310,7 +310,7 @@ namespace Langulus::Flow
 		else {
 			// A valid verb is written either as token, or as operator		
 			if (mMass < 0) {
-				if (!mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault()) {
+				if (mSource.IsValid() && !mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault()) {
 					// Write as operator													
 					result += mVerb->mOperatorReverse;
 					enscope = false;
@@ -324,7 +324,7 @@ namespace Langulus::Flow
 				}
 			}
 			else {
-				if (!mVerb->mOperator.empty() && GetCharge().IsDefault()) {
+				if (mSource.IsValid() && !mVerb->mOperator.empty() && GetCharge().IsDefault()) {
 					// Write as operator													
 					result += mVerb->mOperator;
 					enscope = false;

@@ -27,6 +27,30 @@
 
 namespace Langulus::Flow
 {
+
+	/// Built-in operator properties															
+	constexpr Code::OperatorProperties Code::mOperators[OpCounter] = {
+		{ "(", 0, false },	// OpenScope
+		{ ")", 0, false },	// CloseScope
+		{ "[", 0, false },	// OpenCode
+		{ "]", 0, false },	// CloseCode
+		{ "|", 0, false },	// OpenComment
+		{ "|", 0, false },	// CloseComment
+		{ "\"", 0, false },	// OpenString
+		{ "\"", 0, false },	// CloseString
+		{ "`", 0, false },	// OpenStringAlt
+		{ "`", 0, false },	// CloseStringAlt
+		{ "'", 0, false },	// OpenCharacter
+		{ "'", 0, false },	// CloseCharacter
+		{ "0x", 0, false },	// OpenByte
+		{ "past ", 12, false },		// Past
+		{ "future ", 12, false },	// Future
+		{ "?", 13, false },	// Missing
+		{ "*", 20, true },	// Mass
+		{ "^", 20, true },	// Frequency
+		{ "@", 20, true },	// Time
+		{ "!", 20, true }		// Priority
+	};
 	
 	/// Generate code from operator															
 	///	@param op - the operator to stringify											
@@ -129,29 +153,6 @@ namespace Langulus::Flow
 
 		return true;
 	}
-
-	constexpr Code::OperatorProperties Code::mOperators[OpCounter] = {
-		{ "(", 0, false },	// OpenScope
-		{ ")", 0, false },	// CloseScope
-		{ "[", 0, false },	// OpenCode
-		{ "]", 0, false },	// CloseCode
-		{ "|", 0, false },	// OpenComment
-		{ "|", 0, false },	// CloseComment
-		{ "\"", 0, false },	// OpenString
-		{ "\"", 0, false },	// CloseString
-		{ "`", 0, false },	// OpenStringAlt
-		{ "`", 0, false },	// CloseStringAlt
-		{ "'", 0, false },	// OpenCharacter
-		{ "'", 0, false },	// CloseCharacter
-		{ "0x", 0, false },	// OpenByte
-		{ "<-", 12, false },	// PolarizeLeft
-		{ "->", 12, false },	// PolarizeRight
-		{ "?", 13, false },	// Missing
-		{ "*", 20, true },	// Mass
-		{ "^", 20, true },	// Frequency
-		{ "@", 20, true },	// Time
-		{ "!", 20, true }		// Priority
-	};
 
 	/// Parse any Code expression																
 	///	@param input - the code to parse													
@@ -888,6 +889,7 @@ namespace Langulus::Flow
 		else {
 			// Either compile-time execution is impossible, or we don't		
 			// want it, so directly substitute LHS with the verb				
+			op.SetSource(Move(lhs));
 			lhs = Move(op);
 		}
 

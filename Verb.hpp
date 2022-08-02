@@ -15,19 +15,9 @@ LANGULUS_EXCEPTION(Flow);
 namespace Langulus::Flow
 {
 
-	using Anyness::DataState;
-	using Anyness::Index;
-	using Anyness::Block;
-	using Anyness::Any;
-	using Anyness::Text;
-	using Anyness::Debug;
-	using Anyness::Bytes;
-	using Anyness::Trait;
-	using Anyness::Map;
-	using Anyness::TAny;
-	using Anyness::TMap;
-	using Anyness::THashMap;
+	using namespace Anyness;
 	using Anyness::Inner::Allocator;
+
 	using RTTI::VMeta;
 	using RTTI::TMeta;
 	using RTTI::DMeta;

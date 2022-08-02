@@ -60,6 +60,9 @@ namespace Langulus::Flow
 		NOD() bool EndsWithDigit() const noexcept;
 		NOD() bool StartsWithOperator(Offset) const noexcept;
 
+		using Text::operator +=;
+		Code& operator += (Operator);
+
 		template<class T>
 		Code& TypeSuffix();
 

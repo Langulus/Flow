@@ -147,7 +147,7 @@ namespace Langulus::Verbs
 					const auto sati = satisfiedTraits.FindKeyIndex(meta);
 					const auto index = sati
 						? satisfiedTraits.GetValue(sati)
-						: Index::First;
+						: IndexFirst;
 
 					VERBOSE_CREATION("Searching trait " << meta
 						<< "... " << " (" << index << ")");
@@ -190,7 +190,7 @@ namespace Langulus::Verbs
 				const auto sati = satisfiedData.FindKeyIndex(meta);
 				const auto index = sati
 					? satisfiedData.GetValue(sati)
-					: Index::First;
+					: IndexFirst;
 
 				VERBOSE_CREATION("Searching for data " << meta
 					<< "... " << " (" << index << ")");

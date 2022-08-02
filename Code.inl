@@ -84,6 +84,14 @@ namespace Langulus::Flow
 			);
 	}
 
+	/// Append a built-in operator to the code											
+	///	@param o - the built-in operator enumerator									
+	///	@return a reference to this code for chaining								
+	inline Code& Code::operator += (Operator o) {
+		Text::operator += (mOperators[o].mToken);
+		return *this;
+	}
+
 	/// A type naming convention for standard number types							
 	///	@return the suffix depending on the template argument						
 	template<class T>

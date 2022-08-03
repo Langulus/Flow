@@ -1,23 +1,67 @@
 #include "Main.hpp"
 #include <catch2/catch.hpp>
 
-#define DUMP_STUFF \
-	Logger::Special() << "-------------"; \
-	Logger::Special() << "Script:   " << code; \
-	Logger::Special() << "Parsed:   " << parsed; \
-	Logger::Special() << "Required: " << required; \
-	Logger::Special() << "-------------";
 
+template<class INPUT, class OUTPUT, class REQUIRED>
+void DumpResults(const INPUT& in, const OUTPUT& out, const REQUIRED& required) {
+	Logger::Special() << "-------------";
+	Logger::Special() << "Script:   " << in;
+	Logger::Special() << "Parsed:   " << out;
+	Logger::Special() << "Required: " << required;
+	Logger::Special() << "-------------";
+}
 
 SCENARIO("Parsing scripts with corner cases", "[code]") {
-	GIVEN("The script: `plural`.associate(many)") {
-		const auto code = "`plural`.associate(many)"_code;
+	GIVEN("The script: `plural` associate many") {
+		const auto code = "`plural` associate many"_code;
 		const Any required = Verbs::Associate(IndexMany)
 			.SetSource("plural"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: `plural` associate(many)") {
+		const auto code = "`plural` associate(many)"_code;
+		const Any required = Verbs::Associate(IndexMany)
+			.SetSource("plural"_text);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: (`plural`) associate (many)") {
+		const auto code = "(`plural`) associate (many)"_code;
+		const Any required = Verbs::Associate(IndexMany)
+			.SetSource("plural"_text);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: (`plural`) associate (many)") {
+		const auto code = "(`plural`) associate many"_code;
+		const Any required = Verbs::Associate(IndexMany)
+			.SetSource("plural"_text);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
@@ -31,49 +75,77 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
 		}
 	}
 
-	GIVEN("The script: `thing`.associate([Entity(past?, future?)])") {
-		const auto code = "`thing`.associate([Entity(past?, future?)])"_code;
+	GIVEN("The script: `plural` = (many)") {
+		const auto code = "`plural` = (many)"_code;
+		const Any required = Verbs::Associate(IndexMany)
+			.SetSource("plural"_text);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: (`plural`) = (many)") {
+		const auto code = "(`plural`) = (many)"_code;
+		const Any required = Verbs::Associate(IndexMany)
+			.SetSource("plural"_text);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: (`plural`) = many") {
+		const auto code = "(`plural`) = many"_code;
+		const Any required = Verbs::Associate(IndexMany)
+			.SetSource("plural"_text);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: `thing` associate [Entity(past?, future?)]") {
+		const auto code = "`thing` associate [Entity(past?, future?)]"_code;
 		const Any required = Verbs::Associate("Entity(past?, future?)"_code)
 			.SetSource("thing"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
 		}
 	}
 
-	GIVEN("The script: `thing` = [Entity(past?, future?)]") {
-		const auto code = "`thing` = [Entity(past?, future?)]"_code;
-		const Any required = Verbs::Associate("Entity(past?, future?)"_code)
-			.SetSource("thing"_text);
-
-		WHEN("Parsed") {
-			const auto parsed = code.Parse();
-			DUMP_STUFF;
-			THEN("The parsed contents must match the requirements") {
-				REQUIRE(parsed == required);
-			}
-		}
-	}
-
-	GIVEN("The script: `things`.associate(\"thing\", `plural`)") {
-		const auto code = "`things`.associate(\"thing\", `plural`)"_code;
+	GIVEN("The script: `things` associate(\"thing\", `plural`)") {
+		const auto code = "`things` associate(\"thing\", `plural`)"_code;
 		const Any required = Verbs::Associate(Any::WrapCommon("thing"_text, "plural"_text))
 			.SetSource("things"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
@@ -87,7 +159,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
@@ -103,7 +175,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
@@ -123,7 +195,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
@@ -144,7 +216,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
@@ -172,7 +244,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
@@ -191,7 +263,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
@@ -222,7 +294,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
@@ -238,7 +310,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
@@ -254,7 +326,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
@@ -272,15 +344,16 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 			).SetMass(-1);
 
 			const auto parsed = code.Parse(false);
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}
 		}
+
 		WHEN("Parsed with optimization") {
 			Any required = Real(178.5);
 			const auto parsed = code.Parse();
-			DUMP_STUFF;
+			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
 				REQUIRE(parsed == required);
 			}

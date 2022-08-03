@@ -7,12 +7,25 @@
 namespace Langulus::Verbs
 {
 
-	/// Exponentiate/Logarithm verb construction											
+	/// Default Exponentiate/Logarithm verb construction								
+	inline Exponent::Exponent()
+		: Verb {RTTI::MetaVerb::Of<Exponent>()} {}
+
+	/// Exponentiate/Logarithm verb construction by shallow-copy					
 	///	@param a - the power																	
 	///	@param c - the charge of the exponentiation/logarithm						
 	///	@param sc - is the exponentiation/logarithm short-circuited				
-	inline Exponent::Exponent(const Any& a, const Charge& c, bool sc)
+	template<CT::Data T>
+	Exponent::Exponent(const T& a, const Charge& c, bool sc)
 		: Verb {RTTI::MetaVerb::Of<Exponent>(), a, c, sc} {}
+
+	/// Exponentiate/Logarithm verb construction by move								
+	///	@param a - the power																	
+	///	@param c - the charge of the exponentiation/logarithm						
+	///	@param sc - is the exponentiation/logarithm short-circuited				
+	template<CT::Data T>
+	Exponent::Exponent(T&& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Exponent>(), Forward<T>(a), c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

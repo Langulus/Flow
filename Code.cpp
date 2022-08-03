@@ -43,9 +43,11 @@ namespace Langulus::Flow
 		{ "'", 0, false },	// OpenCharacter
 		{ "'", 0, false },	// CloseCharacter
 		{ "0x", 0, false },	// OpenByte
-		{ "past ", 12, false },		// Past
-		{ "future ", 12, false },	// Future
-		{ "?", 13, false },	// Missing
+		{ "past", 13, false },		// Past
+		{ "future", 13, false },	// Future
+		{ "?", 13, false },			// Missing
+		{ "const", 13, false },		// Constant
+		{ "sparse", 13, false },	// Sparse
 		{ "*", 20, true },	// Mass
 		{ "^", 20, true },	// Frequency
 		{ "@", 20, true },	// Time
@@ -272,7 +274,8 @@ namespace Langulus::Flow
 		return input.LeftOf(progress);
 	}
 	
-	/// Parse keyword																				
+	/// Parse keyword for a constant, data, or trait									
+	/// Verbs are considered operators, not keywords									
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
 	///	@param allowCharge - whether to parse charge (internal use)				
@@ -292,9 +295,9 @@ namespace Langulus::Flow
 		// Search for an exact token in meta definitions						
 		const auto dmeta = RTTI::Database.GetMetaData(keyword);
 		const auto tmeta = RTTI::Database.GetMetaTrait(keyword);
-		const auto vmeta = RTTI::Database.GetMetaVerb(keyword);
+		//const auto vmeta = RTTI::Database.GetMetaVerb(keyword);
 		const auto cmeta = RTTI::Database.GetMetaConstant(keyword);
-		if (dmeta && !tmeta && !vmeta && !cmeta) {
+		if (dmeta && !tmeta && /*!vmeta &&*/ !cmeta) {
 			// Exact non-ambiguous data definition found							
 			if (allowCharge) {
 				const auto relevant = input.RightOf(progress);
@@ -308,11 +311,11 @@ namespace Langulus::Flow
 			}
 			else lhs = dmeta;
 		}
-		else if (!dmeta && tmeta && !vmeta && !cmeta) {
+		else if (!dmeta && tmeta && /*!vmeta &&*/ !cmeta) {
 			// Exact non-ambiguous trait definition found						
 			lhs = tmeta;
 		}
-		else if (!dmeta && !tmeta && vmeta && !cmeta) {
+		/*else if (!dmeta && !tmeta && vmeta && !cmeta) {
 			// Exact non-ambiguous verb definition found							
 			// Check if the keyword is for a reverse verb - some				
 			// verbs might have same tokens, make sure they differ			
@@ -339,8 +342,8 @@ namespace Langulus::Flow
 				lhs = Verb {vmeta}.SetMass(-1);
 			else
 				lhs = vmeta;
-		}
-		else if (!dmeta && !tmeta && !vmeta && cmeta) {
+		}*/
+		else if (!dmeta && !tmeta && /*!vmeta && */cmeta) {
 			lhs = Any {Block {{}, cmeta->mValueType, 1, cmeta->mPtrToValue}}.Clone();
 		}
 		else {
@@ -357,9 +360,9 @@ namespace Langulus::Flow
 					case RTTI::Meta::Trait:
 						Logger::Append() << "meta trait)";
 						break;
-					case RTTI::Meta::Verb:
+					/*case RTTI::Meta::Verb:
 						Logger::Append() << "meta verb)";
-						break;
+						break;*/
 					case RTTI::Meta::Constant:
 						Logger::Append() << "meta constant)";
 						break;
@@ -390,7 +393,7 @@ namespace Langulus::Flow
 					lhs = static_cast<TMeta>(meta);
 					break;
 
-				case RTTI::Meta::Verb: {
+				/*case RTTI::Meta::Verb: {
 					const auto metaVerb = static_cast<VMeta>(meta);
 
 					// Check if the keyword is for a reverse verb - some		
@@ -419,7 +422,7 @@ namespace Langulus::Flow
 					else
 						lhs = metaVerb;
 					break;
-				}
+				}*/
 				
 				case RTTI::Meta::Constant: {
 					const auto metaConst = static_cast<CMeta>(meta);
@@ -484,8 +487,15 @@ namespace Langulus::Flow
 
 		// Compare against reflected operators										
 		const auto word = Isolate(input);
-		const auto found = RTTI::Database.GetOperator(word);
-		return found ? Reflected : NoOperator;
+		auto found = RTTI::Database.GetOperator(word);
+		if (found)
+			return ReflectedOperator;
+
+		found = RTTI::Database.GetMetaVerb(word);
+		if (found)
+			return ReflectedVerb;
+
+		return NoOperator;
 	}
 
 	/// Isolate an operator																		
@@ -524,7 +534,7 @@ namespace Langulus::Flow
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::Parse(Operator op, const Code& input, Any& lhs, int priority, bool optimize) {
 		Offset progress = 0;
-		if (op != Reflected) {
+		if (op < NoOperator) {
 			// Handle a built-in operator												
 			// Operators have priority, we can't execute a higher priority	
 			// operator, before all lower priority operators have been		
@@ -555,14 +565,18 @@ namespace Langulus::Flow
 				return progress + ParseBytes(relevant, lhs);
 			case Past:
 			case Future:
-				return progress + ParsePolarize(op, relevant, lhs, optimize);
+				return progress + ParsePhase(op, relevant, lhs, optimize);
+			case Constant:
+				return progress + ParseConst(relevant, lhs, optimize);
+			case Sparse:
+				return progress + ParseSparse(relevant, lhs, optimize);
 			case Missing:
 				return progress + ParseMissing(relevant, lhs);
 			default:
 				PRETTY_ERROR("Unhandled built-in operator");
 			}
 		}
-		else {
+		else if (op == ReflectedOperator) {
 			// Handle a reflected operator											
 			const auto word = Isolate(input);
 			const auto found = RTTI::Database.GetOperator(word);
@@ -572,6 +586,20 @@ namespace Langulus::Flow
 			const Code relevant = input.RightOf(progress);
 			Verb operation {found};
 			if (CompareOperators(word, found->mOperatorReverse))
+				operation.SetMass(-1);
+
+			return progress + ParseReflected(operation, relevant, lhs, optimize);
+		}
+		else {
+			// Handle a reflected verb													
+			const auto word = Isolate(input);
+			const auto found = RTTI::Database.GetMetaVerb(word);
+
+			VERBOSE("Parsing reflected verb: " << word << " (" << found->mToken << ")");
+			progress += word.size();
+			const Code relevant = input.RightOf(progress);
+			Verb operation {found};
+			if (CompareOperators(word, found->mTokenReverse))
 				operation.SetMass(-1);
 
 			return progress + ParseReflected(operation, relevant, lhs, optimize);
@@ -806,66 +834,67 @@ namespace Langulus::Flow
 		return progress;
 	}
 
-	/// Polarize contents																		
-	///	@param op - the starting operator												
+	/// Phase contents																			
+	///	@param op - the phase operator													
 	///	@param input - the code to parse													
-	///	@param lhs - [in/out] parsed content goes here								
+	///	@param lhs - [in/out] phased content goes here								
+	///	@param optimize - whether or not to attempt precompile RHS				
 	///	@return number of parsed characters												
-	Offset Code::OperatorParser::ParsePolarize(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
+	Offset Code::OperatorParser::ParsePhase(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
 		Any rhs;
-		auto progress = UnknownParser::Parse(input, rhs, mOperators[op].mPriority, optimize);
-		
-		if (lhs.IsValid() && rhs.IsValid()) {
-			// If both LHS and RHS are available, the polarizer acts as		
-			// AND separator and concatenates LHS << RHS, polarizing both	
-			// Example: do(left > right), do(right < left)						
-			Any deeper;
-			if (op == Code::Future) {
-				lhs.MakePast();
-				rhs.MakeFuture();
-				deeper << Move(lhs) << Move(rhs);
-			}
-			else {
-				lhs.MakeFuture();
-				rhs.MakePast();
-				deeper << Move(lhs) << Move(rhs);
-			}
-
-			lhs = Move(deeper);
+		auto progress = UnknownParser::Parse(input, rhs, 0, optimize);
+	
+		if (op == Code::Past) {
+			rhs.MakeFuture();
+			lhs = Abandon(rhs);
 		}
-		else if (lhs.IsValid()) {
-			// Only LHS is available, so polarize it								
-			// Example: do(left>), do(right<)										
-			if (op == Code::Future)
-				lhs.MakeFuture();
-			else
-				lhs.MakePast();
-		}
-		else if (rhs.IsValid()) {
-			// Only RHS is available, so polarize it								
-			// Example: do(>right), do(<left)										
-			if (op == Code::Past) {
-				rhs.MakeFuture();
-				lhs = Move(rhs);
-			}
-			else {
-				rhs.MakePast();
-				lhs = Move(rhs);
-			}
+		else {
+			rhs.MakePast();
+			lhs = Abandon(rhs);
 		}
 
-		VERBOSE("Polarize ("
-			<< mOperators[op].mToken << ") " << rhs << " -> " << Logger::Cyan << lhs);
+		VERBOSE_ALT("Parsed phased: " << Logger::Cyan << lhs);
 		return progress;
 	}
 
-	/// Missing operator '?'																	
+	/// Const contents																			
+	///	@param input - the code to parse													
+	///	@param lhs - [in/out] constant content goes here							
+	///	@param optimize - whether or not to attempt precompile RHS				
+	///	@return number of parsed characters												
+	Offset Code::OperatorParser::ParseConst(const Code& input, Any& lhs, bool optimize) {
+		Any rhs;
+		auto progress = UnknownParser::Parse(input, rhs, 0, optimize);
+
+		rhs.MakeConst();
+		lhs = Abandon(rhs);
+
+		VERBOSE_ALT("Parsed constant: " << Logger::Cyan << lhs);
+		return progress;
+	}
+
+	/// Sparse contents																			
+	///	@param input - the code to parse													
+	///	@param lhs - [in/out] sparse content goes here								
+	///	@param optimize - whether or not to attempt precompile RHS				
+	///	@return number of parsed characters												
+	Offset Code::OperatorParser::ParseSparse(const Code& input, Any& lhs, bool optimize) {
+		Any rhs;
+		rhs.MakeSparse();
+		auto progress = UnknownParser::Parse(input, rhs, 0, optimize);
+		lhs = Abandon(rhs);
+
+		VERBOSE_ALT("Parsed sparse: " << Logger::Cyan << lhs);
+		return progress;
+	}
+
+	/// Missing contents																			
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here								
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParseMissing(const Code&, Any& lhs) {
 		lhs.MakeMissing();
-		VERBOSE_ALT("Missing -> " << Logger::Cyan << lhs);
+		VERBOSE_ALT("Parsed missing: " << Logger::Cyan << lhs);
 		return 0;
 	}
 

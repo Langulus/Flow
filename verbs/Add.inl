@@ -7,12 +7,25 @@
 namespace Langulus::Verbs
 {
 
-	/// Add/Subtract verb construction														
+	/// Default Add/Subtract verb construction											
+	inline Add::Add()
+		: Verb {RTTI::MetaVerb::Of<Add>()} {}
+
+	/// Add/Subtract verb construction by shallow-copy									
 	///	@param a - right hand side															
 	///	@param c - the charge of the addition											
 	///	@param sc - is the addition short-circuited									
-	inline Add::Add(const Any& a, const Charge& c, bool sc)
+	template<CT::Data T>
+	Add::Add(const T& a, const Charge& c, bool sc)
 		: Verb {RTTI::MetaVerb::Of<Add>(), a, c, sc} {}
+
+	/// Add/Subtract verb construction by move											
+	///	@param a - right hand side															
+	///	@param c - the charge of the addition											
+	///	@param sc - is the addition short-circuited									
+	template<CT::Data T>
+	Add::Add(T&& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Add>(), Forward<T>(a), c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

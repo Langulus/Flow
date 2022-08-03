@@ -114,7 +114,11 @@ namespace Langulus::Flow
 
 		~Verb() = default;
 
-		Verb(VMeta, const Any& = {}, const Charge& = {}, bool = true);
+		Verb(VMeta);
+		template<CT::Data T>
+		Verb(VMeta, const T& = {}, const Charge& = {}, bool = true);
+		template<CT::Data T>
+		Verb(VMeta, T&& = {}, const Charge& = {}, bool = true);
 
 		Verb& operator = (const Verb&) = default;
 		Verb& operator = (Verb&&) noexcept = default;
@@ -149,9 +153,9 @@ namespace Langulus::Flow
 		NOD() Verb Clone() const;
 		void Reset();
 
-		NOD() bool IsVerb(VMeta) const noexcept;
+		NOD() bool VerbIs(VMeta) const noexcept;
 		template<CT::Data... T>
-		NOD() bool IsVerb() const noexcept;
+		NOD() bool VerbIs() const noexcept;
 
 		NOD() const Charge& GetCharge() const noexcept;
 		NOD() VMeta GetVerb() const noexcept;
@@ -184,12 +188,21 @@ namespace Langulus::Flow
 		Verb& SetTime(Real) noexcept;
 		Verb& SetPriority(Real) noexcept;
 		Verb& SetCharge(const Charge&) noexcept;
-		Verb& SetSource(const Any&);
-		Verb& SetSource(Any&&) noexcept;
-		Verb& SetArgument(const Any&);
-		Verb& SetArgument(Any&&) noexcept;
-		Verb& SetOutput(const Any&);
-		Verb& SetOutput(Any&&) noexcept;
+
+		template<CT::Data T>
+		Verb& SetSource(const T&);
+		template<CT::Data T>
+		Verb& SetSource(T&&);
+
+		template<CT::Data T>
+		Verb& SetArgument(const T&);
+		template<CT::Data T>
+		Verb& SetArgument(T&&);
+
+		template<CT::Data T>
+		Verb& SetOutput(const T&);
+		template<CT::Data T>
+		Verb& SetOutput(T&&);
 
 		NOD() bool operator == (const Verb&) const noexcept;
 		NOD() bool operator == (VMeta) const noexcept;
@@ -256,7 +269,11 @@ namespace Langulus::Verbs
 			"or that producer will be created automatically for you, if possible";
 		LANGULUS_BASES(Verb);
 
-		Create(const Any& = {}, const Charge& = {}, bool = true);
+		Create();
+		template<CT::Data T>
+		Create(const T&, const Charge& = {}, bool = true);
+		template<CT::Data T>
+		Create(T&&, const Charge& = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -284,7 +301,11 @@ namespace Langulus::Verbs
 			"Used to focus on a part of a container, or access members";
 		LANGULUS_BASES(Verb);
 
-		Select(const Any& = {}, const Charge& = {}, bool = true);
+		Select();
+		template<CT::Data T>
+		Select(const T&, const Charge & = {}, bool = true);
+		template<CT::Data T>
+		Select(T&&, const Charge & = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -320,7 +341,11 @@ namespace Langulus::Verbs
 			"depending on the context's complexity";
 		LANGULUS_BASES(Verb);
 
-		Associate(const Any& = {}, const Charge& = {}, bool = true);
+		Associate();
+		template<CT::Data T>
+		Associate(const T&, const Charge & = {}, bool = true);
+		template<CT::Data T>
+		Associate(T&&, const Charge & = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -344,7 +369,11 @@ namespace Langulus::Verbs
 			"Performs arithmetic addition or subtraction";
 		LANGULUS_BASES(Verb);
 
-		Add(const Any& = {}, const Charge& = {}, bool = true);
+		Add();
+		template<CT::Data T>
+		Add(const T&, const Charge & = {}, bool = true);
+		template<CT::Data T>
+		Add(T&&, const Charge & = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -363,14 +392,18 @@ namespace Langulus::Verbs
 	struct Multiply : public Verb {
 		LANGULUS(POSITIVE_VERB) "Multiply";
 		LANGULUS(NEGATIVE_VERB) "Divide";
-		LANGULUS(POSITIVE_OPERATOR) " * ";
-		LANGULUS(NEGATIVE_OPERATOR) " / ";
+		LANGULUS(POSITIVE_OPERATOR) "*";
+		LANGULUS(NEGATIVE_OPERATOR) "/";
 		LANGULUS(INFO)
 			"Performs arithmetic multiplication or division. "
 			"If context is no specified, it is always 1";
 		LANGULUS_BASES(Verb);
 
-		Multiply(const Any& = {}, const Charge& = {}, bool = true);
+		Multiply();
+		template<CT::Data T>
+		Multiply(const T&, const Charge & = {}, bool = true);
+		template<CT::Data T>
+		Multiply(T&&, const Charge & = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -388,13 +421,17 @@ namespace Langulus::Verbs
 	struct Exponent : public Verb {
 		LANGULUS(POSITIVE_VERB) "Exponent";
 		LANGULUS(NEGATIVE_VERB) "Logarithm";
-		LANGULUS(POSITIVE_OPERATOR) " ^ ";
+		LANGULUS(POSITIVE_OPERATOR) "^";
 		LANGULUS(NEGATIVE_OPERATOR) " log ";
 		LANGULUS(INFO)
 			"Performs exponentiation or logarithm";
 		LANGULUS_BASES(Verb);
 
-		Exponent(const Any& = {}, const Charge& = {}, bool = true);
+		Exponent();
+		template<CT::Data T>
+		Exponent(const T&, const Charge & = {}, bool = true);
+		template<CT::Data T>
+		Exponent(T&&, const Charge & = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -410,13 +447,16 @@ namespace Langulus::Verbs
 	struct Catenate : public Verb {
 		LANGULUS(POSITIVE_VERB) "Catenate";
 		LANGULUS(NEGATIVE_VERB) "Split";
-		LANGULUS(POSITIVE_OPERATOR) " & ";
-		LANGULUS(NEGATIVE_OPERATOR) " | ";
-		LANGULUS(INFO)
-			"Catenates anything catenable, or splits stuff apart using a mask";
+		LANGULUS(POSITIVE_OPERATOR) " >< ";
+		LANGULUS(NEGATIVE_OPERATOR) " <> ";
+		LANGULUS(INFO) "Catenates, or splits stuff apart";
 		LANGULUS_BASES(Verb);
 
-		Catenate(const Any& = {}, const Charge& = {}, bool = true);
+		Catenate();
+		template<CT::Data T>
+		Catenate(const T&, const Charge & = {}, bool = true);
+		template<CT::Data T>
+		Catenate(T&&, const Charge & = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -441,10 +481,14 @@ namespace Langulus::Verbs
 		LANGULUS(NEGATIVE_OPERATOR) " or ";
 		LANGULUS(INFO)
 			"Either combines LHS and RHS as one AND container, or separates them "
-			"as one OR container - does only shallow copying";
+			"as one OR container (does only shallow copying)";
 		LANGULUS_BASES(Verb);
 
-		Conjunct(const Any& = {}, const Charge& = {}, bool = true);
+		Conjunct();
+		template<CT::Data T>
+		Conjunct(const T&, const Charge & = {}, bool = true);
+		template<CT::Data T>
+		Conjunct(T&&, const Charge & = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -467,7 +511,11 @@ namespace Langulus::Verbs
 		LANGULUS(INFO) "Performs conversion";
 		LANGULUS_BASES(Verb);
 
-		Interpret(const Any& = {}, const Charge& = {}, bool = true);
+		Interpret();
+		template<CT::Data T>
+		Interpret(const T&, const Charge & = {}, bool = true);
+		template<CT::Data T>
+		Interpret(T&&, const Charge & = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -502,7 +550,11 @@ namespace Langulus::Verbs
 		LANGULUS(INFO) "Used as a runtime dispatcher of composite types";
 		LANGULUS_BASES(Verb);
 
-		Do(const Any& = {}, const Charge& = {}, bool = true);
+		Do();
+		template<CT::Data T>
+		Do(const T&, const Charge & = {}, bool = true);
+		template<CT::Data T>
+		Do(T&&, const Charge & = {}, bool = true);
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;

@@ -28,13 +28,16 @@ namespace Langulus::Flow
 			Past,
 			Future,
 			Missing,
+			Constant,
+			Sparse,
 			Mass,
 			Frequency,
 			Time,
 			Priority,
 			OpCounter,
 			NoOperator = OpCounter,
-			Reflected
+			ReflectedOperator,
+			ReflectedVerb
 		};
 
 		using Text::Text;
@@ -111,7 +114,9 @@ namespace Langulus::Flow
 			NOD() static Offset ParseContent(const Code&, Any&, bool optimize);
 			NOD() static Offset ParseString(Code::Operator, const Code&, Any&);
 			NOD() static Offset ParseBytes(const Code&, Any&);
-			NOD() static Offset ParsePolarize(Code::Operator, const Code&, Any&, bool optimize);
+			NOD() static Offset ParsePhase(Code::Operator, const Code&, Any&, bool optimize);
+			NOD() static Offset ParseConst(const Code&, Any&, bool optimize);
+			NOD() static Offset ParseSparse(const Code&, Any&, bool optimize);
 			NOD() static Offset ParseMissing(const Code&, Any&);
 			NOD() static Offset ParseReflected(Verb&, const Code&, Any&, bool optimize);
 

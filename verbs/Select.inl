@@ -6,12 +6,25 @@
 namespace Langulus::Verbs
 {
 
-	/// Select/Deselect verb construction													
+	/// Default Select/Deselect verb construction										
+	inline Select::Select()
+		: Verb {RTTI::MetaVerb::Of<Select>()} {}
+
+	/// Select/Deselect verb construction by shallow-copy								
 	///	@param a - what are we searching for?											
 	///	@param c - the charge of the selection											
 	///	@param sc - is the selection short-circuited									
-	inline Select::Select(const Any& a, const Charge& c, bool sc)
+	template<CT::Data T>
+	Select::Select(const T& a, const Charge& c, bool sc)
 		: Verb {RTTI::MetaVerb::Of<Select>(), a, c, sc} {}
+
+	/// Select/Deselect verb construction by move										
+	///	@param a - what are we searching for?											
+	///	@param c - the charge of the selection											
+	///	@param sc - is the selection short-circuited									
+	template<CT::Data T>
+	Select::Select(T&& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Select>(), Forward<T>(a), c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

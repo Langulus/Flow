@@ -45,15 +45,40 @@ namespace Langulus::Flow
 		mPriority = DefaultPriority;
 	}
 
+	/// Manual constructor by shallow-copy													
+	///	@tparam T - type of the argument (deducible)									
+	///	@param verb - the verb type														
+	///	@param argument - the argument													
+	///	@param charge - the charge															
+	///	@param shortCircuit - short circuit												
+	template<CT::Data T>
+	Verb::Verb(VMeta verb, const T& argument, const Charge& charge, bool shortCircuit)
+		: Any {argument}
+		, Charge {charge}
+		, mVerb {verb}
+		, mShortCircuited {shortCircuit} { }
+
+	/// Manual constructor by move															
+	///	@tparam T - type of the argument (deducible)									
+	///	@param verb - the verb type														
+	///	@param argument - the argument to move in										
+	///	@param charge - the charge															
+	///	@param shortCircuit - short circuit												
+	template<CT::Data T>
+	Verb::Verb(VMeta verb, T&& argument, const Charge& charge, bool shortCircuit)
+		: Any {Forward<T>(argument)}
+		, Charge {charge}
+		, mVerb {verb}
+		, mShortCircuited {shortCircuit} { }
 
 	/// Check if verb is of a specific type												
 	///	@tparam T - the verb to compare against										
 	///	@return true if verbs match														
 	template<CT::Data... T>
-	bool Verb::IsVerb() const noexcept {
+	bool Verb::VerbIs() const noexcept {
 		static_assert((CT::Verb<T> && ...),
 			"Provided types must be verb definitions");
-		return (IsVerb(MetaVerb::Of<T>()) || ...);
+		return (VerbIs(MetaVerb::Of<T>()) || ...);
 	}
 
 	/// Check if verb has been satisfied at least once									
@@ -145,65 +170,59 @@ namespace Langulus::Flow
 		return *this;
 	}
 
-	/// Set the verb source by shallow copy												
-	///	@param source - the source to set												
+	/// Set the verb's source by shallow-copy												
+	///	@param value  - the value to set													
 	///	@return a reference to self														
-	inline Verb& Verb::SetSource(const Any& source) {
-		mSource = source;
+	template<CT::Data T>
+	Verb& Verb::SetSource(const T& value) {
+		mSource = value;
 		return *this;
 	}
 
-	/// Set the verb source by moving														
-	///	@param source - the source to set												
+	/// Set the verb's source by move														
+	///	@param value  - the value to set													
 	///	@return a reference to self														
-	inline Verb& Verb::SetSource(Any&& source) noexcept {
-		mSource = Forward<Any>(source);
+	template<CT::Data T>
+	Verb& Verb::SetSource(T&& value) {
+		mSource = Forward<T>(value);
 		return *this;
 	}
 
-	/// Set the verb argument by shallow copy												
-	///	@param argument - the argument to set											
+	/// Set the verb's argument by shallow-copy											
+	///	@param value  - the value to set													
 	///	@return a reference to self														
-	inline Verb& Verb::SetArgument(const Any& argument) {
-		Any::operator = (argument);
+	template<CT::Data T>
+	Verb& Verb::SetArgument(const T& value) {
+		static_cast<Any&>(*this).operator = (value);
 		return *this;
 	}
 
-	/// Set the verb argument by moving														
-	///	@param argument - the argument to set											
+	/// Set the verb's argument by move														
+	///	@param value  - the value to set													
 	///	@return a reference to self														
-	inline Verb& Verb::SetArgument(Any&& argument) noexcept {
-		Any::operator = (Forward<Any>(argument));
+	template<CT::Data T>
+	Verb& Verb::SetArgument(T&& value) {
+		static_cast<Any&>(*this).operator = (Forward<T>(value));
 		return *this;
 	}
 
-	/// Set the verb output by shallow copy												
-	///	@param output - the output to set												
+	/// Set the verb's output by shallow-copy												
+	///	@param value  - the value to set													
 	///	@return a reference to self														
-	inline Verb& Verb::SetOutput(const Any& output) {
-		mOutput = output;
+	template<CT::Data T>
+	Verb& Verb::SetOutput(const T& value) {
+		mOutput = value;
 		return *this;
 	}
 
-	/// Set the verb output by moving														
-	///	@param output - the output to set												
+	/// Set the verb's output by move														
+	///	@param value  - the value to set													
 	///	@return a reference to self														
-	inline Verb& Verb::SetOutput(Any&& output) noexcept {
-		mOutput = Forward<Any>(output);
+	template<CT::Data T>
+	Verb& Verb::SetOutput(T&& value) {
+		mOutput = Forward<T>(value);
 		return *this;
 	}
-
-	/// Set source, argument, and output													
-	///	@param s - source																		
-	///	@param a - argument																	
-	///	@param o - output																		
-	///	@return a reference to self														
-	/*inline Verb& Verb::SetAll(const Any& s, const Any& a, const Any& o) {
-		mSource = s;
-		Any::operator = (a);
-		mOutput = o;
-		return *this;
-	}*/
 
 	/// Compare verbs																				
 	///	@param rhs - the verb to compare against										
@@ -220,7 +239,7 @@ namespace Langulus::Flow
 	///	@param rhs - the verb to compare against										
 	///	@return true if verbs match														
 	inline bool Verb::operator == (VMeta rhs) const noexcept {
-		return IsVerb(rhs); 
+		return VerbIs(rhs); 
 	}
 
 	/// Check if verb is satisfied at least once											
@@ -564,7 +583,7 @@ namespace Langulus::Flow
 			}
 			else {
 				// Find ability at runtime												
-				if (verb.template IsVerb<Verbs::Interpret>()) {
+				if (verb.template VerbIs<Verbs::Interpret>()) {
 					// Scan for a reflected converter by scanning argument	
 					const auto to = verb.template As<DMeta>();
 					const auto found = meta->GetConverter(to);

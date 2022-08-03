@@ -77,17 +77,10 @@ namespace Langulus::Flow
 		, mShortCircuited {other.mValue.mShortCircuited} { }
 
 	/// Manual constructor with verb meta 													
-	///	@param call - the verb ID															
-	///	@param charge - the charge															
-	///	@param s - the source																
-	///	@param a - the argument																
-	///	@param o - the output																
-	///	@param shortCircuit - short circuit												
-	Verb::Verb(VMeta call, const Any& o, const Charge& charge, bool shortCircuit)
-		: Any {o}
-		, Charge {charge}
-		, mVerb {call}
-		, mShortCircuited {shortCircuit} { }
+	///	@param verb - the verb type														
+	Verb::Verb(VMeta verb)
+		: Any {}
+		, mVerb {verb} { }
 
 	/// Disown-assign a verb																	
 	///	@param other - the verb to disown and copy									
@@ -155,22 +148,20 @@ namespace Langulus::Flow
 		return *this;
 	}
 
-	/// Partial copy (doesn't copy source, argument, and output)					
+	/// Partial copy, copies only charge, verb, and short-circuitness				
 	///	@param other - the verb to use as base											
 	///	@return the partially copied verb												
 	Verb Verb::PartialCopy() const noexcept {
-		return {mVerb, {}, GetCharge()};
+		return {mVerb, Any{}, GetCharge(), mShortCircuited};
 	}
 
 	/// Clone the verb																			
 	///	@return the cloned verb																
 	Verb Verb::Clone() const {
-		Verb clone {mVerb, {}, GetCharge()};
-		clone.GetArgument() = GetArgument().Clone();
+		Verb clone {mVerb, Any::Clone(), GetCharge(), mShortCircuited};
 		clone.mSource = mSource.Clone();
 		clone.mOutput = mOutput.Clone();
 		clone.mSuccesses = mSuccesses;
-		clone.mShortCircuited = mShortCircuited;
 		return clone;
 	}
 
@@ -187,7 +178,7 @@ namespace Langulus::Flow
 	/// Check if verb id matches																
 	///	@param id - the verb id to check													
 	///	@return true if verb id matches													
-	bool Verb::IsVerb(VMeta id) const noexcept {
+	bool Verb::VerbIs(VMeta id) const noexcept {
 		return !mVerb ? !id : mVerb->Is(id);
 	}
 

@@ -130,9 +130,9 @@ namespace Langulus::Flow
 	///	@param block - the memory block to check										
 	///	@return true if a scope is required around the block						
 	inline bool Detail::NeedsScope(const Block& block) noexcept {
-		return block.GetCount() > 1
-			|| block.IsMissing()
-			|| block.IsPhased()
+		return block.GetCount() > 1 || block.IsDeep()
+			/*|| block.IsMissing()
+			|| block.IsPhased()*/
 			|| block.IsEmpty();
 	}
 
@@ -148,7 +148,7 @@ namespace Langulus::Flow
 	/// Serialize a data state																	
 	///	@param from - the block to scan for state										
 	///	@param to - the serialized state													
-	template<CT::Text TO>
+	/*template<CT::Text TO>
 	void Detail::SerializeState(const Block& from, TO& to) {
 		if (from.IsPast())
 			to += Code {Code::Past};
@@ -157,7 +157,7 @@ namespace Langulus::Flow
 
 		if (from.IsMissing())
 			to += Code {Code::Missing};
-	}
+	}*/
 
 	/// Serialize any block to any string format											
 	///	@param from - the block to serialize											
@@ -166,7 +166,24 @@ namespace Langulus::Flow
 	template<CT::Text TO>
 	Count Detail::SerializeBlock(const Block& from, TO& to) {
 		const auto initial = to.GetCount();
-		SerializeState(from, to);
+		if (from.IsConstant()) {
+			to += Code {Code::Constant};
+			to += ' ';
+		}
+
+		/*if (from.IsSparse()) {
+			to += Code {Code::Sparse};
+			to += ' ';
+		}*/
+
+		if (from.IsPast()) {
+			to += Code {Code::Past};
+			to += ' ';
+		}
+		else if (from.IsFuture()) {
+			to += Code {Code::Future};
+			to += ' ';
+		}
 
 		const bool scoped = NeedsScope(from);
 		if (scoped)
@@ -272,6 +289,10 @@ namespace Langulus::Flow
 		// Close scope																		
 		if (scoped)
 			to += Code {Code::CloseScope};
+
+		if (from.IsMissing())
+			to += Code {Code::Missing};
+
 		return to.GetCount() - initial;
 	}
 

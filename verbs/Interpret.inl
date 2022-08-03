@@ -8,12 +8,25 @@
 namespace Langulus::Verbs
 {
 	
-	/// Interpretation verb construction													
+	/// Default interpretation verb construction											
+	inline Interpret::Interpret()
+		: Verb {RTTI::MetaVerb::Of<Interpret>()} {}
+
+	/// Interpretation verb construction by shallow-copy								
 	///	@param a - what are we converting to?											
 	///	@param c - the charge of the conversion										
 	///	@param sc - is the conversion short-circuited								
-	inline Interpret::Interpret(const Any& a, const Charge& c, bool sc)
+	template<CT::Data T>
+	Interpret::Interpret(const T& a, const Charge& c, bool sc)
 		: Verb {RTTI::MetaVerb::Of<Interpret>(), a, c, sc} {}
+
+	/// Interpretation verb construction by move											
+	///	@param a - what are we converting to?											
+	///	@param c - the charge of the conversion										
+	///	@param sc - is the conversion short-circuited								
+	template<CT::Data T>
+	Interpret::Interpret(T&& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Interpret>(), Forward<T>(a), c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

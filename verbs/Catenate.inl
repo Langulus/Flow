@@ -4,12 +4,25 @@
 namespace Langulus::Verbs
 {
 
-	/// Catenate/Split verb construction													
+	/// Default Catenate/Split verb construction											
+	inline Catenate::Catenate()
+		: Verb {RTTI::MetaVerb::Of<Catenate>()} {}
+
+	/// Catenate/Split verb construction by shallow-copy								
 	///	@param a - what are we catenating to/where are we splitting at?		
 	///	@param c - the charge of the catenation/split								
 	///	@param sc - is the catenating/split short-circuited						
-	inline Catenate::Catenate(const Any& a, const Charge& c, bool sc)
+	template<CT::Data T>
+	Catenate::Catenate(const T& a, const Charge& c, bool sc)
 		: Verb {RTTI::MetaVerb::Of<Catenate>(), a, c, sc} {}
+
+	/// Catenate/Split verb construction by move											
+	///	@param a - what are we catenating to/where are we splitting at?		
+	///	@param c - the charge of the catenation/split								
+	///	@param sc - is the catenating/split short-circuited						
+	template<CT::Data T>
+	Catenate::Catenate(T&& a, const Charge& c, bool sc)
+		: Verb {RTTI::MetaVerb::Of<Catenate>(), Forward<T>(a), c, sc} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

@@ -906,8 +906,8 @@ namespace Langulus::Flow
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParseReflected(Verb& op, const Code& input, Any& lhs, bool optimize) {
 		// Parse RHS for the operator													
-		const auto progress = 
-			UnknownParser::Parse(input, op.GetArgument(), op.GetPriority(), false);
+		const auto progress = UnknownParser::Parse(
+			input, op.GetArgument(), op.GetPriority(), optimize);
 
 		// Then dispatch the operation in lhs, with the given arguments	
 		if (optimize && DispatchDeep(lhs, op)) {

@@ -499,7 +499,7 @@ namespace Langulus::Verbs
 		static bool ExecuteIn(T&, Verb&);
 
 		static bool ExecuteDefault(const Block&, Verb&);
-		static bool ExecuteDefault(Block&, Verb&);
+		//static bool ExecuteDefault(Block&, Verb&);
 		static bool ExecuteStateless(Verb&);
 	};
 

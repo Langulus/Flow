@@ -77,12 +77,12 @@ namespace Langulus::Verbs
 			return true;
 		}
 
-		TAny<Any> shallow;
+		Any joined;
 		if (verb.GetMass() < 0)
-			shallow.MakeOr();
-		shallow << Any {context};
-		shallow << verb.GetArgument();
-		verb << Abandon(shallow);
+			joined.MakeOr();
+		joined.InsertBlock(context);
+		joined.InsertBlock(verb.GetArgument());
+		verb << Abandon(joined);
 		return true;
 	}
 
@@ -90,7 +90,7 @@ namespace Langulus::Verbs
 	/// Reuses the context																		
 	///	@param context - the block to execute in										
 	///	@param verb - conjunction/disjunction verb									
-	inline bool Conjunct::ExecuteDefault(Block& context, Verb& verb) {
+	/*inline bool Conjunct::ExecuteDefault(Block& context, Verb& verb) {
 		if (verb.IsEmpty()) {
 			verb << context;
 			return true;
@@ -101,7 +101,7 @@ namespace Langulus::Verbs
 		context.SmartPush(Move(verb.GetArgument()));
 		verb << context;
 		return true;
-	}
+	}*/
 
 	/// Stateless conjunction/disjunction													
 	/// Essentially forwards the arguments to the output								

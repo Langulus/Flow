@@ -77,8 +77,25 @@ namespace Langulus::Verbs
 	///	@param verb - the verb instance to execute									
 	///	@return true if execution was a success										
 	inline bool Associate::ExecuteDefault(Block& context, Verb& verb) {
+		if (context.IsConstant())
+			return false;
+
+		try {
+			// Attempt directly copying, if possible								
+			// This will happen only if types are compatible					
+			verb.Copy(context);
+		}
+		catch (const Except::Copy&) {
+			return false;
+		}
+
+		// At this point, context has a copy of verb's argument				
+		// Just make sure it goes to output											
+		verb << context;
+		return true;
+
 		// Collect all viably typed or interpreted stuff from argument		
-		Any result;
+		/*Any result;
 		bool atLeastOneSuccess {};
 		verb.ForEachDeep([&](const Block& group) {
 			const auto done = group.ForEach(
@@ -161,7 +178,7 @@ namespace Langulus::Verbs
 			return true;
 		}
 
-		return false;
+		return false;*/
 	}
 
 } // namespace Langulus::Verbs

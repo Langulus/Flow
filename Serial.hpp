@@ -24,9 +24,6 @@ namespace Langulus::Flow
 		template<CT::Text TO>
 		NOD() Count SerializeBlock(const Block&, TO&);
 
-		/*template<CT::Text TO>
-		void SerializeState(const Block&, TO&);*/
-
 		template<class META, CT::Text TO>
 		void SerializeMeta(const Block&, TO&, const RTTI::Member*);
 

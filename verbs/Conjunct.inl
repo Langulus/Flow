@@ -67,7 +67,7 @@ namespace Langulus::Verbs
 		return verb.IsDone();
 	}
 
-	/// Default conjunction/disjunction in an immutable context						
+	/// Default conjunction/disjunction 													
 	/// Produces a shallow copy of the provided context and arguments				
 	///	@param context - the block to execute in										
 	///	@param verb - conjunction/disjunction verb									
@@ -80,35 +80,29 @@ namespace Langulus::Verbs
 		Any joined;
 		if (verb.GetMass() < 0)
 			joined.MakeOr();
-		joined.InsertBlock(context);
-		joined.InsertBlock(verb.GetArgument());
+
+		if (context.Is(verb.GetType()) && joined.IsOr() == verb.IsOr()) {
+			joined.InsertBlock(context);
+			joined.InsertBlock(verb.GetArgument());
+		}
+		else {
+			joined << Any {context};
+			if (verb.IsDeep() && joined.IsOr() == verb.IsOr())
+				joined.InsertBlock(verb.GetArgument());
+			else
+				joined << verb.GetArgument();
+		}
+
 		verb << Abandon(joined);
 		return true;
 	}
-
-	/// Default conjunction/disjunction in a mutable context							
-	/// Reuses the context																		
-	///	@param context - the block to execute in										
-	///	@param verb - conjunction/disjunction verb									
-	/*inline bool Conjunct::ExecuteDefault(Block& context, Verb& verb) {
-		if (verb.IsEmpty()) {
-			verb << context;
-			return true;
-		}
-
-		if (verb.GetMass() < 0)
-			context.MakeOr();
-		context.SmartPush(Move(verb.GetArgument()));
-		verb << context;
-		return true;
-	}*/
 
 	/// Stateless conjunction/disjunction													
 	/// Essentially forwards the arguments to the output								
 	///	@param verb - the conjunction/disjunction verb								
 	///	@return true if verb was satisfied												
 	inline bool Conjunct::ExecuteStateless(Verb& verb) {
-		verb << Move(verb.GetArgument());
+		verb << verb.GetArgument();
 		return true;
 	}
 

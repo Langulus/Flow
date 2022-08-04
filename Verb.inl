@@ -355,24 +355,8 @@ namespace Langulus::Flow
 	///	@return a reference to this verb for chaining								
 	template<CT::Data T>
 	Verb& Verb::operator << (const T& data) {
-		if constexpr (CT::Deep<T>) {
-			// Avoid pushing empty blocks												
-			if (DenseCast(data).IsEmpty())
-				return *this;
-
-			mOutput.SmartPush<IndexBack, true, true, T>(data);
+		if (mOutput.SmartPush<IndexBack, true, true>(data))
 			Done();
-			return *this;
-		}
-
-		if constexpr (CT::Sparse<T>) {
-			if (!Allocator::CheckAuthority(MetaData::Of<T>(), data))
-				Throw<Except::Reference>(
-					"Pushing unowned pointer to verb is a baaaaad idea");
-		}
-
-		mOutput << data;
-		Done();
 		return *this;
 	}
 
@@ -382,26 +366,8 @@ namespace Langulus::Flow
 	///	@return a reference to this verb for chaining								
 	template<CT::Data T>
 	Verb& Verb::operator << (T&& data) {
-		if constexpr (CT::Deep<T>) {
-			auto& denseData = DenseCast(data);
-
-			// Avoid pushing empty blocks												
-			if (denseData.IsEmpty())
-				return *this;
-
-			mOutput.SmartPush<IndexBack, true, true>(Move(denseData));
+		if (mOutput.SmartPush<IndexBack, true, true>(Forward<T>(data)))
 			Done();
-			return *this;
-		}
-
-		if constexpr (CT::Sparse<T>) {
-			if (!Allocator::CheckAuthority(MetaData::Of<Decay<T>>(), data))
-				Throw<Except::Reference>(
-					"Pushing unowned pointer to verb is a baaaaad idea");
-		}
-
-		mOutput << Forward<T>(data);
-		Done();
 		return *this;
 	}
 
@@ -411,24 +377,8 @@ namespace Langulus::Flow
 	///	@return a reference to this verb for chaining								
 	template<CT::Data T>
 	Verb& Verb::operator >> (const T& data) {
-		if constexpr (CT::Deep<T>) {
-			// Avoid pushing empty blocks												
-			if (DenseCast(data).IsEmpty())
-				return *this;
-
-			mOutput.SmartPush<IndexFront, true, true, T>(data);
+		if (mOutput.SmartPush<IndexFront, true, true>(data))
 			Done();
-			return *this;
-		}
-
-		if constexpr (CT::Sparse<T>) {
-			if (!Allocator::CheckAuthority(MetaData::Of<Decay<T>>(), data))
-				Throw<Except::Reference>(
-					"Pushing unowned pointer to verb is a baaaaad idea");
-		}
-
-		mOutput >> data;
-		Done();
 		return *this;
 	}
 
@@ -438,26 +388,8 @@ namespace Langulus::Flow
 	///	@return a reference to this verb for chaining								
 	template<CT::Data T>
 	Verb& Verb::operator >> (T&& data) {
-		if constexpr (CT::Deep<T>) {
-			auto& denseData = DenseCast(data);
-
-			// Avoid pushing empty blocks												
-			if (denseData.IsEmpty())
-				return *this;
-
-			mOutput.SmartPush<IndexFront, true, true>(Move(denseData));
+		if (mOutput.SmartPush<IndexFront, true, true>(Forward<T>(data)))
 			Done();
-			return *this;
-		}
-
-		if constexpr (CT::Sparse<T>) {
-			if (!Allocator::CheckAuthority(MetaData::Of<Decay<T>>(), data))
-				Throw<Except::Reference>(
-					"Pushing unowned pointer to verb is a baaaaad idea");
-		}
-
-		mOutput >> Forward<T>(data);
-		Done();
 		return *this;
 	}
 
@@ -467,20 +399,7 @@ namespace Langulus::Flow
 	///	@return a reference to this verb for chaining								
 	template<CT::Data T>
 	Verb& Verb::operator <<= (const T& data) {
-		if constexpr (CT::Deep<T>) {
-			// Avoid pushing empty blocks												
-			if (DenseCast(data).IsEmpty())
-				return *this;
-		}
-
-		if constexpr (CT::Sparse<T>) {
-			if (!Allocator::CheckAuthority(MetaData::Of<Decay<T>>(), data))
-				Throw<Except::Reference>(
-					"Pushing unowned pointer to verb is a baaaaad idea");
-		}
-
-		mOutput <<= data;
-		Done();
+		//TODO
 		return *this;
 	}
 
@@ -490,20 +409,7 @@ namespace Langulus::Flow
 	///	@return a reference to this verb for chaining								
 	template<CT::Data T>
 	Verb& Verb::operator >>= (const T& data) {
-		if constexpr (CT::Deep<T>) {
-			// Avoid pushing empty blocks												
-			if (DenseCast(data).IsEmpty())
-				return *this;
-		}
-
-		if constexpr (CT::Sparse<T>) {
-			if (!Allocator::CheckAuthority(MetaData::Of<Decay<T>>(), data))
-				Throw<Except::Reference>(
-					"Pushing unowned pointer to verb is a baaaaad idea");
-		}
-
-		mOutput >>= data;
-		Done();
+		//TODO
 		return *this;
 	}
 

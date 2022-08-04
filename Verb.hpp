@@ -220,6 +220,7 @@ namespace Langulus::Flow
 		Verb& operator >> (const T&);
 		template<CT::Data T>
 		Verb& operator >> (T&&);
+
 		template<CT::Data T>
 		Verb& operator <<= (const T&);
 		template<CT::Data T>
@@ -499,7 +500,6 @@ namespace Langulus::Verbs
 		static bool ExecuteIn(T&, Verb&);
 
 		static bool ExecuteDefault(const Block&, Verb&);
-		//static bool ExecuteDefault(Block&, Verb&);
 		static bool ExecuteStateless(Verb&);
 	};
 

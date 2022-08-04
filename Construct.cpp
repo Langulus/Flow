@@ -167,7 +167,7 @@ namespace Langulus::Flow
 		});
 
 		if (!done)
-			*this << Any(trait);
+			*this << Any {trait};
 		return *this;
 	}
 

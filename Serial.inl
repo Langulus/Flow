@@ -130,10 +130,7 @@ namespace Langulus::Flow
 	///	@param block - the memory block to check										
 	///	@return true if a scope is required around the block						
 	inline bool Detail::NeedsScope(const Block& block) noexcept {
-		return block.GetCount() > 1 || block.IsDeep()
-			/*|| block.IsMissing()
-			|| block.IsPhased()*/
-			|| block.IsEmpty();
+		return block.GetCount() > 1 || block.IsEmpty();
 	}
 
 	/// Add a separator																			
@@ -144,20 +141,6 @@ namespace Langulus::Flow
 			? Verbs::Conjunct::CTTI_NegativeOperator 
 			: Verbs::Conjunct::CTTI_PositiveOperator;
 	}
-	
-	/// Serialize a data state																	
-	///	@param from - the block to scan for state										
-	///	@param to - the serialized state													
-	/*template<CT::Text TO>
-	void Detail::SerializeState(const Block& from, TO& to) {
-		if (from.IsPast())
-			to += Code {Code::Past};
-		else if (from.IsFuture())
-			to += Code {Code::Future};
-
-		if (from.IsMissing())
-			to += Code {Code::Missing};
-	}*/
 
 	/// Serialize any block to any string format											
 	///	@param from - the block to serialize											
@@ -170,11 +153,6 @@ namespace Langulus::Flow
 			to += Code {Code::Constant};
 			to += ' ';
 		}
-
-		/*if (from.IsSparse()) {
-			to += Code {Code::Sparse};
-			to += ' ';
-		}*/
 
 		if (from.IsPast()) {
 			to += Code {Code::Past};

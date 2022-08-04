@@ -166,9 +166,9 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("The script: ',' = ([past number? & future number?] or single or \"and\")") {
-		const Code code = "',' = ([past number? & future number?] or single or \"and\")";
-		auto argument = Any::Wrap("past number? & future number?"_code, IndexSingle, "and"_text);
+	GIVEN("The script: ',' = ([past number? >< future number?] or single or \"and\")") {
+		const Code code = "',' = ([past number? >< future number?] or single or \"and\")";
+		auto argument = Any::Wrap("past number? >< future number?"_code, IndexSingle, "and"_text);
 		argument.MakeOr();
 		const Any required = Verbs::Associate(argument)
 			.SetSource(","_text);

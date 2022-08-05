@@ -187,6 +187,16 @@ namespace Langulus::Flow
 					to += Separator(from.IsOr());
 			}
 		}
+		else if (from.CastsTo<Letter>()) {
+			// Contained type is a character											
+			for (Offset i = 0; i < from.GetCount(); ++i) {
+				to += Code {Code::OpenCharacter};
+				to += from.As<Letter>(i);
+				to += Code {Code::CloseCharacter};
+				if (i < from.GetCount() - 1)
+					to += Separator(from.IsOr());
+			}
+		}
 		else if (from.CastsTo<Code>()) {
 			// Contained type is code, wrap it in code scope					
 			for (Offset i = 0; i < from.GetCount(); ++i) {
@@ -401,9 +411,9 @@ namespace Langulus::Flow
 			else if (source.CastsTo<RTTI::Meta>()) {
 				// Serialize meta															
 				source.ForEach(
-					[&result](DMeta meta) { result += meta->mToken; },
-					[&result](VMeta meta) { result += meta->mToken; },
-					[&result](TMeta meta) { result += meta->mToken; }
+					[&result](DMeta meta) { result += meta; },
+					[&result](VMeta meta) { result += meta; },
+					[&result](TMeta meta) { result += meta; }
 				);
 
 				return;

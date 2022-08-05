@@ -117,29 +117,18 @@ namespace Langulus::Verbs
 			return from;
 		}
 		else if constexpr (CT::Convertible<FROM, TO>) {
-			// Directly convert if constructs/conversion operators			
-			// exist. These might throw! For example, converting Any to		
-			// Text may	fail, because Text is type-constrained, and Any		
-			// might not be of the same type											
-			try {
-				return static_cast<TO>(from);
-			}
-			catch (const Langulus::Exception&) {
-				// Conversion failed, but not fatal - we can attempt to		
-				// serialize to one of the supported types						
-				if constexpr (CT::SameAsOneOf<TO, Code, Text, Debug, Bytes>)
-					return Serialize<TO>(from);
-			}
-
-			Throw<Except::Convert>("Interpret::To failed");
+			// Directly convert if constructs/conversion operators exist	
+			return static_cast<TO>(from);
 		}
 		else if constexpr (CT::SameAsOneOf<TO, Code, Text, Debug, Bytes>) {
 			// No constructor/conversion operator exists, that would do		
-			// the conversion, but we can rely on the serializer, if TO is	
-			// supported																	
+			// the conversion, but we can rely on the serializer,				
+			// if TO is	supported														
 			return Serialize<TO>(from);
 		}
-		else LANGULUS_ASSERT("No static conversion routine exists between these types");
+		else LANGULUS_ASSERT(
+			"No static conversion routine, or dynamic serializer "
+			"exists between these types");
 	}
 
 } // namespace Langulus::Verbs

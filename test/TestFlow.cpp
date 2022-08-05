@@ -171,7 +171,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		auto argument = Any::Wrap("past number? >< future number?"_code, IndexSingle, "and"_text);
 		argument.MakeOr();
 		const Any required = Verbs::Associate(argument)
-			.SetSource(","_text);
+			.SetSource(',');
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -182,8 +182,8 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("The script: past number    ?       &   future     number ? ") {
-		const Code code = "past number    ?       &   future     number ? ";
+	GIVEN("The script: past number    ?       ><  future     number ? ") {
+		const Code code = "past number    ?       ><   future     number ? ";
 		Any source = MetaData::Of<A::Number>();
 		source.MakePast();
 		source.MakeMissing();

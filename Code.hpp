@@ -128,8 +128,6 @@ namespace Langulus::Flow
 		struct ChargeParser {
 			NOD() static Offset Parse(const Code&, Charge&);
 			NOD() static Operator Peek(const Code&) noexcept;
-
-			NOD() static bool IsChargable(const Any&) noexcept;
 		};
 
 		struct OperatorProperties {

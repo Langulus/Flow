@@ -149,21 +149,26 @@ namespace Langulus::Flow
 	template<CT::Text TO>
 	Count Detail::SerializeBlock(const Block& from, TO& to) {
 		const auto initial = to.GetCount();
+		bool enscopeVerb = false;
 		if (from.IsConstant()) {
 			to += Code {Code::Constant};
 			to += ' ';
+			enscopeVerb = true;
 		}
 
 		if (from.IsPast()) {
 			to += Code {Code::Past};
 			to += ' ';
+			enscopeVerb = true;
 		}
 		else if (from.IsFuture()) {
 			to += Code {Code::Future};
 			to += ' ';
+			enscopeVerb = true;
 		}
 
-		const bool scoped = NeedsScope(from);
+		const bool scoped = NeedsScope(from) 
+			|| (enscopeVerb && from.CastsTo<Verb>() && !from.IsEmpty());
 		if (scoped)
 			to += Code {Code::OpenScope};
 

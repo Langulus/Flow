@@ -99,6 +99,22 @@ namespace Langulus::Flow
 		return mSuccesses;
 	}
 
+	/// Check if anything inside the verb is missing on the surface level		
+	///	@return true if anything is missing												
+	inline bool Verb::IsMissing() const noexcept {
+		return mSource.IsMissing()
+			|| Any::IsMissing()
+			|| mOutput.IsMissing();
+	}
+
+	/// Check if anything inside the verb is missing deeply							
+	///	@return true if anything is missing												
+	inline bool Verb::IsMissingDeep() const noexcept {
+		return mSource.IsMissingDeep()
+			|| Any::IsMissingDeep()
+			|| mOutput.IsMissingDeep();
+	}
+
 	/// Satisfy verb a number of times														
 	inline void Verb::Done(Count c) noexcept {
 		mSuccesses = c;

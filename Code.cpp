@@ -182,7 +182,7 @@ namespace Langulus::Flow
 					localProgress = SkippedParser::Parse(relevant);
 				else if ((op = OperatorParser::Peek(relevant)) != Operator::NoOperator)
 					localProgress = OperatorParser::Parse(op, relevant, rhs, priority, optimize);
-				else if (!rhs.IsValid()) {
+				else //if (!rhs.IsValid()) {
 					// RHS is empty, so we can parse a keyword or a number	
 					// in it																	
 					if (KeywordParser::Peek(relevant))
@@ -191,7 +191,7 @@ namespace Langulus::Flow
 						localProgress = NumberParser::Parse(relevant, rhs);
 					else
 						PRETTY_ERROR("Unexpected symbol");
-				}
+				/*}
 				else {
 					// There's already something in RHS, so nest					
 					// Make sure we parse in a fresh container and then push	
@@ -204,7 +204,7 @@ namespace Langulus::Flow
 					VERBOSE(Logger::Green << "Unknown parsed: " << rhs << Logger::Untab);
 					lhs = Abandon(rhs);
 					return progress;
-				}
+				}*/
 
 				if (0 == localProgress) {
 					// This occurs often, when a higher priority operator is	
@@ -223,7 +223,7 @@ namespace Langulus::Flow
 
 		// Input was parsed, relay content to output								
 		VERBOSE(Logger::Green << "Unknown parsed: " << rhs << Logger::Untab);
-		lhs = Abandon(rhs);
+		lhs.SmartPush(Abandon(rhs));
 		return progress;
 	}
 
@@ -295,9 +295,8 @@ namespace Langulus::Flow
 		// Search for an exact token in meta definitions						
 		const auto dmeta = RTTI::Database.GetMetaData(keyword);
 		const auto tmeta = RTTI::Database.GetMetaTrait(keyword);
-		//const auto vmeta = RTTI::Database.GetMetaVerb(keyword);
 		const auto cmeta = RTTI::Database.GetMetaConstant(keyword);
-		if (dmeta && !tmeta && /*!vmeta &&*/ !cmeta) {
+		if (dmeta && !tmeta && !cmeta) {
 			// Exact non-ambiguous data definition found							
 			if (allowCharge) {
 				const auto relevant = input.RightOf(progress);
@@ -305,46 +304,20 @@ namespace Langulus::Flow
 					// Parse charge for the keyword									
 					Charge charge;
 					progress += ChargeParser::Parse(relevant, charge);
-					lhs = Construct {dmeta, {}, charge};
+					lhs << Construct {dmeta, {}, charge};
 				}
-				else lhs = dmeta;
+				else lhs << dmeta;
 			}
-			else lhs = dmeta;
+			else lhs << dmeta;
 		}
-		else if (!dmeta && tmeta && /*!vmeta &&*/ !cmeta) {
+		else if (!dmeta && tmeta && !cmeta) {
 			// Exact non-ambiguous trait definition found						
-			lhs = tmeta;
+			lhs << tmeta;
 		}
-		/*else if (!dmeta && !tmeta && vmeta && !cmeta) {
-			// Exact non-ambiguous verb definition found							
-			// Check if the keyword is for a reverse verb - some				
-			// verbs might have same tokens, make sure they differ			
-			const bool reversed =
-				!CompareTokens(keyword, vmeta->mToken) &&
-				 CompareTokens(keyword, vmeta->mTokenReverse);
-
-			if (allowCharge) {
-				const auto relevant = input.RightOf(progress);
-				if (ChargeParser::Peek(relevant) != NoOperator) {
-					// Parse charge for the keyword									
-					Charge charge;
-					progress += ChargeParser::Parse(relevant, charge);
-					if (reversed)
-						charge.mMass *= -1;
-					lhs = Verb {vmeta, {}, charge};
-				}
-				else if (reversed)
-					lhs = Verb {vmeta}.SetMass(-1);
-				else
-					lhs = vmeta;
-			}
-			else if (reversed)
-				lhs = Verb {vmeta}.SetMass(-1);
-			else
-				lhs = vmeta;
-		}*/
-		else if (!dmeta && !tmeta && /*!vmeta && */cmeta) {
-			lhs = Any {Block {{}, cmeta->mValueType, 1, cmeta->mPtrToValue}}.Clone();
+		else if (!dmeta && !tmeta && cmeta) {
+			lhs.SmartPush(Any {
+				Block {{}, cmeta->mValueType, 1, cmeta->mPtrToValue}
+			}.Clone());
 		}
 		else {
 			// Search for ambiguous token in meta definitions					
@@ -360,9 +333,6 @@ namespace Langulus::Flow
 					case RTTI::Meta::Trait:
 						Logger::Append() << "meta trait)";
 						break;
-					/*case RTTI::Meta::Verb:
-						Logger::Append() << "meta verb)";
-						break;*/
 					case RTTI::Meta::Constant:
 						Logger::Append() << "meta constant)";
 						break;
@@ -382,51 +352,22 @@ namespace Langulus::Flow
 							// Parse charge for the keyword							
 							Charge charge;
 							progress += ChargeParser::Parse(relevant, charge);
-							lhs = Construct {static_cast<DMeta>(meta), {}, charge};
+							lhs << Construct {static_cast<DMeta>(meta), {}, charge};
 						}
-						else lhs = static_cast<DMeta>(meta);
+						else lhs << static_cast<DMeta>(meta);
 					}
-					else lhs = static_cast<DMeta>(meta);
+					else lhs << static_cast<DMeta>(meta);
 					break;
 
 				case RTTI::Meta::Trait:
-					lhs = static_cast<TMeta>(meta);
+					lhs << static_cast<TMeta>(meta);
 					break;
-
-				/*case RTTI::Meta::Verb: {
-					const auto metaVerb = static_cast<VMeta>(meta);
-
-					// Check if the keyword is for a reverse verb - some		
-					// verbs might have same tokens, make sure they differ	
-					const bool reversed =
-						!CompareTokens(keyword, metaVerb->mToken) &&
-						 CompareTokens(keyword, metaVerb->mTokenReverse);
-
-					if (allowCharge) {
-						const auto relevant = input.RightOf(progress);
-						if (ChargeParser::Peek(relevant) != NoOperator) {
-							// Parse charge for the keyword							
-							Charge charge;
-							progress += ChargeParser::Parse(relevant, charge);
-							if (reversed)
-								charge.mMass *= -1;
-							lhs = Verb {metaVerb, {}, charge};
-						}
-						else if (reversed)
-							lhs = Verb {metaVerb}.SetMass(-1);
-						else
-							lhs = metaVerb;
-					}
-					else if (reversed)
-						lhs = Verb {metaVerb}.SetMass(-1);
-					else
-						lhs = metaVerb;
-					break;
-				}*/
 				
 				case RTTI::Meta::Constant: {
 					const auto metaConst = static_cast<CMeta>(meta);
-					lhs = Any {Block {{}, metaConst->mValueType, 1, metaConst->mPtrToValue}}.Clone();
+					lhs.SmartPush(Any {
+						Block {{}, metaConst->mValueType, 1, metaConst->mPtrToValue}
+					}.Clone());
 					break;
 				}}
 			}
@@ -642,9 +583,9 @@ namespace Langulus::Flow
 			// If output is untyped, we directly push content, regardless	
 			// if it's filled with something or not - a scope is a scope	
 			// Also, don't forget to combine states!								
-			const auto stateBackup = lhs.GetState();
-			lhs = Move(rhs);
-			lhs.AddState(stateBackup);
+			//const auto stateBackup = lhs.GetState();
+			lhs.SmartPush(Move(rhs));
+			//lhs.AddState(stateBackup);
 			VERBOSE_ALT("Untyped content: " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<DMeta>()) {
@@ -665,7 +606,7 @@ namespace Langulus::Flow
 					lhs.RemoveIndex(-1);
 					lhs << Abandon(outputConstruct);
 				}
-				else lhs = Abandon(outputConstruct);
+				else lhs << Abandon(outputConstruct);
 
 				VERBOSE_ALT("Constructed from DMeta: " << Logger::Cyan << lhs);
 				return;
@@ -676,7 +617,7 @@ namespace Langulus::Flow
 				lhs.RemoveIndex(-1);
 				lhs << Abandon(precompiled);
 			}
-			else lhs = Abandon(precompiled);
+			else lhs << Abandon(precompiled);
 
 			VERBOSE_ALT("Constructed from DMeta: " << Logger::Cyan << lhs);
 		}
@@ -687,7 +628,7 @@ namespace Langulus::Flow
 				lhs.RemoveIndex(-1);
 				lhs << Abandon(verb);
 			}
-			else lhs = Abandon(verb);
+			else lhs << Abandon(verb);
 
 			VERBOSE_ALT("Constructed from VMeta: " << Logger::Cyan << lhs);
 		}
@@ -698,7 +639,7 @@ namespace Langulus::Flow
 				lhs.RemoveIndex(-1);
 				lhs << Abandon(trait);
 			}
-			else lhs = Abandon(trait);
+			else lhs << Abandon(trait);
 
 			VERBOSE_ALT("Constructed from TMeta: " << Logger::Cyan << lhs);
 		}
@@ -742,7 +683,7 @@ namespace Langulus::Flow
 				const auto closer = op == OpenString ? CloseString : CloseStringAlt;
 				if (relevant.StartsWithOperator(closer)) {
 					const auto tokenSize = mOperators[closer].mToken.size();
-					lhs = Text {input.LeftOf(progress)};
+					lhs << Text {input.LeftOf(progress)};
 					VERBOSE("String parsed: " << Logger::Cyan << lhs);
 					return tokenSize + progress;
 				}
@@ -753,7 +694,7 @@ namespace Langulus::Flow
 				//TODO handle escapes!
 				if (relevant.StartsWithOperator(CloseCharacter)) {
 					const auto tokenSize = mOperators[CloseCharacter].mToken.size();
-					lhs = input[0];
+					lhs << input[0];
 					VERBOSE("Character parsed: " << Logger::Cyan << lhs);
 					return tokenSize + progress;
 				}
@@ -768,7 +709,7 @@ namespace Langulus::Flow
 					--depth;
 					if (0 == depth) {
 						const auto tokenSize = mOperators[CloseCode].mToken.size();
-						lhs = input.LeftOf(progress);
+						lhs << input.LeftOf(progress);
 						VERBOSE("Code parsed: " << Logger::Cyan << lhs);
 						return tokenSize + progress;
 					}
@@ -830,7 +771,7 @@ namespace Langulus::Flow
 		if (shifter == 0)
 			result << Byte {stager};
 
-		lhs = Abandon(result);
+		lhs << Abandon(result);
 		return progress;
 	}
 
@@ -841,20 +782,20 @@ namespace Langulus::Flow
 	///	@param optimize - whether or not to attempt precompile RHS				
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParsePhase(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
-		Any rhs;
-		auto progress = UnknownParser::Parse(input, rhs, 0, optimize);
+		//Any rhs;
+		//auto progress = UnknownParser::Parse(input, rhs, -1, optimize);
 	
 		if (op == Code::Past) {
-			rhs.MakeFuture();
-			lhs = Abandon(rhs);
+			//rhs.MakeFuture();
+			lhs.MakePast();// = Abandon(rhs);
 		}
 		else {
-			rhs.MakePast();
-			lhs = Abandon(rhs);
+			//rhs.MakePast();
+			lhs.MakeFuture();// = Abandon(rhs);
 		}
 
 		VERBOSE_ALT("Parsed phased: " << Logger::Cyan << lhs);
-		return progress;
+		return 0;
 	}
 
 	/// Const contents																			
@@ -863,14 +804,15 @@ namespace Langulus::Flow
 	///	@param optimize - whether or not to attempt precompile RHS				
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParseConst(const Code& input, Any& lhs, bool optimize) {
-		Any rhs;
-		auto progress = UnknownParser::Parse(input, rhs, 0, optimize);
+		//Any rhs;
+		//auto progress = UnknownParser::Parse(input, rhs, -1, optimize);
 
-		rhs.MakeConst();
-		lhs = Abandon(rhs);
+		//rhs.MakeConst();
+		//lhs = Abandon(rhs);
+		lhs.MakeConst();
 
 		VERBOSE_ALT("Parsed constant: " << Logger::Cyan << lhs);
-		return progress;
+		return 0;
 	}
 
 	/// Sparse contents																			
@@ -879,13 +821,14 @@ namespace Langulus::Flow
 	///	@param optimize - whether or not to attempt precompile RHS				
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParseSparse(const Code& input, Any& lhs, bool optimize) {
-		Any rhs;
+		/*Any rhs;
 		rhs.MakeSparse();
-		auto progress = UnknownParser::Parse(input, rhs, 0, optimize);
-		lhs = Abandon(rhs);
+		auto progress = UnknownParser::Parse(input, rhs, -1, optimize);
+		lhs = Abandon(rhs);*/
+		lhs.MakeSparse();
 
 		VERBOSE_ALT("Parsed sparse: " << Logger::Cyan << lhs);
-		return progress;
+		return 0;
 	}
 
 	/// Missing contents																			
@@ -909,8 +852,10 @@ namespace Langulus::Flow
 		const auto progress = UnknownParser::Parse(
 			input, op.GetArgument(), op.GetPriority(), optimize);
 
-		// Then dispatch the operation in lhs, with the given arguments	
-		if (optimize && DispatchDeep(lhs, op)) {
+		// Then dispatch the operation in lhs, with the given arguments,	
+		// trying to execute it at compile-time. This is allowed only if	
+		// lhs and rhs do not have anything missing inside						
+		if (optimize && !op.IsMissingDeep() && DispatchDeep(lhs, op)) {
 			// The verb was executed at compile-time, so directly				
 			// substitute LHS with the result										
 			lhs = Move(op.GetOutput());
@@ -923,13 +868,6 @@ namespace Langulus::Flow
 		}
 
 		return progress;
-	}
-
-	/// Check if last element inside container is chargable							
-	///	@param data - the data to test													
-	///	@return true if data is chargable												
-	bool Code::ChargeParser::IsChargable(const Any& output) noexcept {
-		return /*!output.IsMissing() &&*/ output.Is<MetaData, MetaVerb, Verb, Construct>();
 	}
 
 	/// Peek inside input, and return true if it begins with one of the			

@@ -177,6 +177,9 @@ namespace Langulus::Flow
 		NOD() bool IsDone() const noexcept;
 		NOD() bool IsShortCircuited() const noexcept;
 		NOD() Count GetSuccesses() const noexcept;
+		NOD() bool IsMissing() const noexcept;
+		NOD() bool IsMissingDeep() const noexcept;
+
 		void Done(Count) noexcept;
 		void Done() noexcept;
 		void Undo() noexcept;

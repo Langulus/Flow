@@ -693,7 +693,7 @@ namespace Langulus::Flow
 		}
 		else if (lhs.Is<TMeta>()) {
 			// The content is for an uninstantiated trait scope				
-			auto trait = Trait::From(lhs.As<TMeta>(-1), Move(rhs));
+			auto trait = Trait {lhs.As<TMeta>(-1), Move(rhs)};
 			if (lhs.GetCount() > 1) {
 				lhs.RemoveIndex(-1);
 				lhs << Abandon(trait);

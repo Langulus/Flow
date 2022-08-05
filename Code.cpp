@@ -182,29 +182,12 @@ namespace Langulus::Flow
 					localProgress = SkippedParser::Parse(relevant);
 				else if ((op = OperatorParser::Peek(relevant)) != Operator::NoOperator)
 					localProgress = OperatorParser::Parse(op, relevant, rhs, priority, optimize);
-				else //if (!rhs.IsValid()) {
-					// RHS is empty, so we can parse a keyword or a number	
-					// in it																	
-					if (KeywordParser::Peek(relevant))
-						localProgress = KeywordParser::Parse(relevant, rhs);
-					else if (NumberParser::Peek(relevant))
-						localProgress = NumberParser::Parse(relevant, rhs);
-					else
-						PRETTY_ERROR("Unexpected symbol");
-				/*}
-				else {
-					// There's already something in RHS, so nest					
-					// Make sure we parse in a fresh container and then push	
-					Any subrhs;
-					localProgress = UnknownParser::Parse(relevant, subrhs, priority, optimize);
-					rhs.SmartPush(subrhs);
-
-					// ... and do an early exit to avoid endless loops			
-					progress += localProgress;
-					VERBOSE(Logger::Green << "Unknown parsed: " << rhs << Logger::Untab);
-					lhs = Abandon(rhs);
-					return progress;
-				}*/
+				else if (KeywordParser::Peek(relevant))
+					localProgress = KeywordParser::Parse(relevant, rhs);
+				else if (NumberParser::Peek(relevant))
+					localProgress = NumberParser::Parse(relevant, rhs);
+				else
+					PRETTY_ERROR("Unexpected symbol");
 
 				if (0 == localProgress) {
 					// This occurs often, when a higher priority operator is	
@@ -582,10 +565,7 @@ namespace Langulus::Flow
 		if (lhs.IsUntyped()) {
 			// If output is untyped, we directly push content, regardless	
 			// if it's filled with something or not - a scope is a scope	
-			// Also, don't forget to combine states!								
-			//const auto stateBackup = lhs.GetState();
 			lhs.SmartPush(Move(rhs));
-			//lhs.AddState(stateBackup);
 			VERBOSE_ALT("Untyped content: " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<DMeta>()) {
@@ -602,57 +582,41 @@ namespace Langulus::Flow
 					<< "Can't statically construct " << outputConstruct
 					<< "; Reason: " << e.what());
 
-				if (lhs.GetCount() > 1) {
-					lhs.RemoveIndex(-1);
-					lhs << Abandon(outputConstruct);
-				}
-				else lhs << Abandon(outputConstruct);
-
+				lhs.RemoveIndex(-1);
+				lhs.SmartPush(Abandon(outputConstruct));
 				VERBOSE_ALT("Constructed from DMeta: " << Logger::Cyan << lhs);
 				return;
 			}
 
 			// Precompiled successfully, append it to LHS						
-			if (lhs.GetCount() > 1) {
-				lhs.RemoveIndex(-1);
-				lhs << Abandon(precompiled);
-			}
-			else lhs << Abandon(precompiled);
-
+			lhs.RemoveIndex(-1);
+			lhs.SmartPush(Abandon(precompiled));
 			VERBOSE_ALT("Constructed from DMeta: " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<VMeta>()) {
 			// The content is for an uninstantiated verb scope					
 			Verb verb {lhs.As<VMeta>(-1), Move(rhs)};
-			if (lhs.GetCount() > 1) {
-				lhs.RemoveIndex(-1);
-				lhs << Abandon(verb);
-			}
-			else lhs << Abandon(verb);
-
+			lhs.RemoveIndex(-1);
+			lhs.SmartPush(Abandon(verb));
 			VERBOSE_ALT("Constructed from VMeta: " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<TMeta>()) {
 			// The content is for an uninstantiated trait scope				
 			auto trait = Trait {lhs.As<TMeta>(-1), Move(rhs)};
-			if (lhs.GetCount() > 1) {
-				lhs.RemoveIndex(-1);
-				lhs << Abandon(trait);
-			}
-			else lhs << Abandon(trait);
-
+			lhs.RemoveIndex(-1);
+			lhs.SmartPush(Abandon(trait));
 			VERBOSE_ALT("Constructed from TMeta: " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<Verb>()) {
 			// The content is for an instantiated verb scope					
 			auto& verb = lhs.As<Verb>(-1);
-			verb.GetArgument() = Move(rhs);
+			verb.GetArgument().SmartPush(Move(rhs));
 			VERBOSE_ALT("Constructed from Verb " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<Construct>()) {
 			// The content is for an instantiated data scope					
 			auto& construct = lhs.As<Construct>(-1);
-			construct.GetAll() = Move(rhs);
+			construct.GetAll().SmartPush(Move(rhs));
 			VERBOSE_ALT("Constructed from Construct " << Logger::Cyan << lhs);
 		}
 		else {
@@ -782,17 +746,10 @@ namespace Langulus::Flow
 	///	@param optimize - whether or not to attempt precompile RHS				
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParsePhase(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
-		//Any rhs;
-		//auto progress = UnknownParser::Parse(input, rhs, -1, optimize);
-	
-		if (op == Code::Past) {
-			//rhs.MakeFuture();
-			lhs.MakePast();// = Abandon(rhs);
-		}
-		else {
-			//rhs.MakePast();
-			lhs.MakeFuture();// = Abandon(rhs);
-		}
+		if (op == Code::Past)
+			lhs.MakePast();
+		else
+			lhs.MakeFuture();
 
 		VERBOSE_ALT("Parsed phased: " << Logger::Cyan << lhs);
 		return 0;
@@ -804,11 +761,6 @@ namespace Langulus::Flow
 	///	@param optimize - whether or not to attempt precompile RHS				
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParseConst(const Code& input, Any& lhs, bool optimize) {
-		//Any rhs;
-		//auto progress = UnknownParser::Parse(input, rhs, -1, optimize);
-
-		//rhs.MakeConst();
-		//lhs = Abandon(rhs);
 		lhs.MakeConst();
 
 		VERBOSE_ALT("Parsed constant: " << Logger::Cyan << lhs);
@@ -821,10 +773,6 @@ namespace Langulus::Flow
 	///	@param optimize - whether or not to attempt precompile RHS				
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParseSparse(const Code& input, Any& lhs, bool optimize) {
-		/*Any rhs;
-		rhs.MakeSparse();
-		auto progress = UnknownParser::Parse(input, rhs, -1, optimize);
-		lhs = Abandon(rhs);*/
 		lhs.MakeSparse();
 
 		VERBOSE_ALT("Parsed sparse: " << Logger::Cyan << lhs);
@@ -848,9 +796,15 @@ namespace Langulus::Flow
 	///	@param optimize - whether or not to attempt executing at compile-time
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParseReflected(Verb& op, const Code& input, Any& lhs, bool optimize) {
+		Offset progress = 0;
+
+		// Parse charge if any															
+		if (ChargeParser::Peek(input) != NoOperator)
+			progress += ChargeParser::Parse(input, op);
+		
 		// Parse RHS for the operator													
-		const auto progress = UnknownParser::Parse(
-			input, op.GetArgument(), op.GetPriority(), optimize);
+		progress += UnknownParser::Parse(
+			input.RightOf(progress), op.GetArgument(), op.GetPriority(), optimize);
 
 		// Then dispatch the operation in lhs, with the given arguments,	
 		// trying to execute it at compile-time. This is allowed only if	
@@ -895,38 +849,35 @@ namespace Langulus::Flow
 		try {
 			while (progress < input.GetCount()) {
 				// Scan input until end of charge operators/code				
-				const auto relevant = input.RightOf(progress);
+				auto relevant = input.RightOf(progress);
 				if (relevant[0] == '\0')
 					break;
 
-				const auto op = ChargeParser::Peek(input);
+				const auto op = ChargeParser::Peek(relevant);
 				if (op == Operator::NoOperator)
 					return progress;
 
+				progress += mOperators[op].mToken.size();
+				relevant = input.RightOf(progress);
+
 				// For each charge operator encountered - parse a RHS			
-				Offset localProgress = 0;
 				Any rhs;
 				if (SkippedParser::Peek(relevant))
 					// Skip empty space and escape symbols							
-					localProgress = SkippedParser::Parse(relevant);
+					progress += SkippedParser::Parse(relevant);
 				else if (KeywordParser::Peek(relevant))
 					// Charge parameter can be a keyword, like a constant, 	
 					// but is not allowed to have charge on its own, to		
 					// avoid endless nesting - you must wrap it in a scope	
-					localProgress = KeywordParser::Parse(relevant, rhs, false);
+					progress += KeywordParser::Parse(relevant, rhs, false);
 				else if (NumberParser::Peek(relevant))
 					// Can be a literal number											
-					localProgress = NumberParser::Parse(relevant, rhs);
+					progress += NumberParser::Parse(relevant, rhs);
 				else if (OperatorParser::Peek(relevant) == Operator::OpenScope)
 					// Can be anything wrapped in a scope							
-					localProgress = OperatorParser::Parse(Operator::OpenScope, relevant, rhs, 0, true);
+					progress += OperatorParser::Parse(Operator::OpenScope, relevant, rhs, 0, true);
 				else
 					PRETTY_ERROR("Unexpected symbol");
-
-				if (0 == localProgress)
-					break;
-
-				progress += localProgress;
 
 				// Save changes															
 				// AsCast may throw here, if RHS did not evaluate or convert

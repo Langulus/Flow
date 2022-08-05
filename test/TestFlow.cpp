@@ -202,8 +202,8 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("6) The Code script: Create!-1(Verb(? > ?))") {
-		const Code code = "Create!-1(Verb(? > ?))";
+	GIVEN("The script: Create!-1(Verb(past?, future?))") {
+		const Code code = "Create!-1(Verb(past?, future?))";
 		TAny<Any> package = Any::Wrap(Any(), Any());
 		package[0].MakePast();
 		package[0].MakeMissing();

@@ -136,12 +136,9 @@ namespace Langulus::Flow
 				}
 
 				Construct newc {construct.GetType(), Move(local), construct};
-				try {
-					// Attempt constructing the construct here if possible	
-					newc.StaticCreation(local);
+				if (newc.StaticCreation(local))
 					output << Abandon(local);
-				}
-				catch (const Except::Construct&) {
+				else {
 					// Construction failed, so just propagate construct		
 					// A new attempt will be made at runtime						
 					output << Abandon(newc);

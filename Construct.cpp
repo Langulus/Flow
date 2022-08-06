@@ -92,42 +92,23 @@ namespace Langulus::Flow
 	/// Attempt to create construct statically if possible							
 	/// If not possible, simply propagate the construct								
 	///	@param output - [out] results go here											
-	void Construct::StaticCreation(Any& output) const {
-		if (mType->mProducer) {
-			// If the construct requires a producer, just propagate it		
-			// without changing anything - static creation is impossibru	
-			output << *this;
-			return;
-		}
+	bool Construct::StaticCreation(Any& output) const {
+		if (mType->mProducer)
+			return false;
 
 		// If reached, data doesn't rely on a producer							
 		// Make sure we're creating something concrete							
 		const auto meta = mType->GetMostConcrete();
-		if (GetCountElementsDeep() == 1) {
-			// Convert single argument to requested type							
-			// If a direct copy is available it will be utilized				
-			Verbs::Interpret interpreter(/*{}, */meta);
-			if (DispatchDeep(GetAll(), interpreter)) {
-				// Success																	
-				VERBOSE_CONSTRUCT("Constructed from meta data: "
-					<< Logger::Cyan << interpreter.GetOutput());
-				output << Move(interpreter.GetOutput());
-				return;
-			}
-		}
-		
-		// Either Interpret verb didn't do the trick, or multiple items	
-		// were provided, so we need to inspect members, and satisfy them	
-		// one by one																		
 		const auto concreteConstruct = Construct::From(meta, *this);
-		Verbs::Create creator(/*{}, */&concreteConstruct);
+		Verbs::Create creator(&concreteConstruct);
 		if (Verbs::Create::ExecuteStateless(creator)) {
 			VERBOSE_CONSTRUCT("Constructed from initializer-list: "
 				<< Logger::Cyan << creator.GetOutput());
 			output << Move(creator.GetOutput());
+			return true;
 		}
 
-		Throw<Except::Construct>("StaticCreation failed");
+		return false;
 	}
 
 	/// Check if constructor header can be interpreted as another type			
@@ -219,7 +200,7 @@ namespace Langulus::Flow
 			result += Code::CloseScope;
 		}
 
-		return Debug {static_cast<Text&>(result)};
+		return result;
 	}
 
 } // namespace Langulus::Flow

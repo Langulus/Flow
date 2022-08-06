@@ -88,7 +88,7 @@ namespace Langulus::Flow
 
 		NOD() bool operator == (const Construct&) const noexcept;
 
-		void StaticCreation(Any&) const;
+		NOD() bool StaticCreation(Any&) const;
 
 		NOD() bool InterpretsAs(DMeta type) const;
 

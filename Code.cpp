@@ -571,26 +571,21 @@ namespace Langulus::Flow
 		else if (lhs.Is<DMeta>()) {
 			// The content is for an uninstantiated data scope					
 			const auto meta = lhs.As<DMeta>(-1);
-			Any precompiled;
 			Construct outputConstruct {meta, Move(rhs)};
-			try {
-				outputConstruct.StaticCreation(precompiled);
-			}
-			catch (const Exception& e) {
-				// Failed to precompile, so just propagate request				
-				VERBOSE_ALT(Logger::Red 
-					<< "Can't statically construct " << outputConstruct
-					<< "; Reason: " << e.what());
 
-				lhs.RemoveIndex(-1);
-				lhs.SmartPush(Abandon(outputConstruct));
-				VERBOSE_ALT("Constructed from DMeta: " << Logger::Cyan << lhs);
-				return;
+			if (!outputConstruct.IsMissingDeep()) {
+				Any precompiled;
+				if (outputConstruct.StaticCreation(precompiled)) {
+					// Precompiled successfully, append it to LHS				
+					lhs.RemoveIndex(-1);
+					lhs.SmartPush(Abandon(precompiled));
+					VERBOSE_ALT("Statically constructed from DMeta: "
+						<< Logger::Cyan << lhs);
+				}
 			}
 
-			// Precompiled successfully, append it to LHS						
 			lhs.RemoveIndex(-1);
-			lhs.SmartPush(Abandon(precompiled));
+			lhs.SmartPush(Abandon(outputConstruct));
 			VERBOSE_ALT("Constructed from DMeta: " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<VMeta>()) {

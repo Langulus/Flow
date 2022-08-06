@@ -131,11 +131,12 @@ namespace Langulus::Verbs
 	///	@param verb - the creation verb													
 	///	@return true if verb was satisfied												
 	inline bool Create::ExecuteStateless(Verb& verb) {
-		if (verb.IsEmpty() || verb.GetMass() < 0)
+		/*if (verb.IsEmpty() || verb.GetMass() < 0)
 			return false;
 
 		//TODO create only
-		return true;
+		return true;*/
+		return false;
 	}
 
 	/// Set members in all elements inside context to the provided data			

@@ -115,9 +115,9 @@ namespace Langulus::Flow
 		~Verb() = default;
 
 		Verb(VMeta);
-		template<CT::Data T>
+		template<CT::Data T = Any>
 		Verb(VMeta, const T& = {}, const Charge& = {}, bool = true);
-		template<CT::Data T>
+		template<CT::Data T = Any>
 		Verb(VMeta, T&& = {}, const Charge& = {}, bool = true);
 
 		Verb& operator = (const Verb&) = default;

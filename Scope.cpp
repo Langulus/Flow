@@ -28,7 +28,7 @@ namespace Langulus::Flow
 			// Scan deeper into constructs, because they're not marked deep
 			// They are deep only in respect to execution						
 			[&result](const Construct& construct) noexcept {
-				const auto& scope = ReinterpretCast<Scope>(construct.GetAll());
+				const auto& scope = ReinterpretCast<Scope>(construct.GetArgument());
 				result = scope.IsExecutable();
 				return !result;
 			}
@@ -128,7 +128,7 @@ namespace Langulus::Flow
 			},
 			// Nest if constructs, but retain each construct					
 			[&](const Construct& construct) {
-				const auto& scope = ReinterpretCast<Scope>(construct.GetAll());
+				const auto& scope = ReinterpretCast<Scope>(construct.GetArgument());
 				Any local;
 				if (!scope.Execute(environment, local, skipVerbs)) {
 					Throw<Except::Flow>(VERBOSE_FLOW(Logger::Red
@@ -212,7 +212,7 @@ namespace Langulus::Flow
 			},
 			// Nest if constructs, but retain each construct					
 			[&](const Construct& construct) {
-				const auto& scope = ReinterpretCast<Scope>(construct.GetAll());
+				const auto& scope = ReinterpretCast<Scope>(construct.GetArgument());
 				Any local;
 				if (scope.Execute(environment, local)) {
 					executed = true;

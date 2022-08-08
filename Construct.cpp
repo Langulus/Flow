@@ -5,7 +5,7 @@
 #include "verbs/Create.inl"
 #include "verbs/Select.inl"
 
-#define VERBOSE_CONSTRUCT(a) //pcLogFuncVerbose << a
+#define VERBOSE_CONSTRUCT(a) //Logger::Verbose() << a
 
 namespace Langulus::Flow
 {
@@ -30,24 +30,6 @@ namespace Langulus::Flow
 	///	@param type - the type of the content											
 	Construct::Construct(DMeta type)
 		: mType {type} {}
-
-	/// Construct from a header and movable arguments									
-	///	@param type - the type of the content											
-	///	@param arguments - the argument container to move							
-	///	@param charge - the charge for the construction								
-	Construct::Construct(DMeta type, Any&& arguments, const Charge& charge)
-		: Any {Forward<Any>(arguments)}
-		, Charge {charge}
-		, mType {type} { }
-
-	/// Construct from a header and shallow-copied arguments							
-	///	@param type - the type of the content											
-	///	@param arguments - the argument container to copy							
-	///	@param charge - the charge for the construction								
-	Construct::Construct(DMeta type, const Any& arguments, const Charge& charge)
-		: Any {arguments}
-		, Charge {charge}
-		, mType {type} { }
 
 	/// Hash the construct																		
 	///	@return the hash of the content													
@@ -86,7 +68,7 @@ namespace Langulus::Flow
 	bool Construct::operator == (const Construct& rhs) const noexcept {
 		return GetHash() == rhs.GetHash()
 			&& mType == rhs.mType
-			&& Any::operator == (rhs.GetAll());
+			&& Any::operator == (rhs.GetArgument());
 	}
 
 	/// Attempt to create construct statically if possible							
@@ -98,9 +80,7 @@ namespace Langulus::Flow
 
 		// If reached, data doesn't rely on a producer							
 		// Make sure we're creating something concrete							
-		const auto meta = mType->GetMostConcrete();
-		const auto concreteConstruct = Construct::From(meta, *this);
-		Verbs::Create creator(&concreteConstruct);
+		Verbs::Create creator(this);
 		if (Verbs::Create::ExecuteStateless(creator)) {
 			VERBOSE_CONSTRUCT("Constructed from initializer-list: "
 				<< Logger::Cyan << creator.GetOutput());
@@ -111,10 +91,10 @@ namespace Langulus::Flow
 		return false;
 	}
 
-	/// Check if constructor header can be interpreted as another type			
+	/// Check if construct type can be interpreted as another type					
 	///	@param type - the type check if current type interprets to				
 	///	@return true if able to interpret current header to 'type'				
-	bool Construct::InterpretsAs(DMeta type) const {
+	bool Construct::CastsTo(DMeta type) const {
 		return !type || (mType == type || mType->CastsTo(type));
 	}
 
@@ -182,7 +162,7 @@ namespace Langulus::Flow
 		if (!Charge::IsDefault() || !IsEmpty()) {
 			result += Verbs::Interpret::To<Code>(GetCharge());
 			result += Code::OpenScope;
-			result += Verbs::Interpret::To<Code>(GetAll());
+			result += Verbs::Interpret::To<Code>(GetArgument());
 			result += Code::CloseScope;
 		}
 
@@ -196,7 +176,7 @@ namespace Langulus::Flow
 		if (!Charge::IsDefault() || !IsEmpty()) {
 			result += Verbs::Interpret::To<Debug>(GetCharge());
 			result += Code::OpenScope;
-			result += Verbs::Interpret::To<Debug>(GetAll());
+			result += Verbs::Interpret::To<Debug>(GetArgument());
 			result += Code::CloseScope;
 		}
 

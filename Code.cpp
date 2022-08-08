@@ -572,16 +572,14 @@ namespace Langulus::Flow
 			// The content is for an uninstantiated data scope					
 			const auto meta = lhs.As<DMeta>(-1);
 			Construct outputConstruct {meta, Move(rhs)};
-
-			if (!outputConstruct.IsMissingDeep()) {
-				Any precompiled;
-				if (outputConstruct.StaticCreation(precompiled)) {
-					// Precompiled successfully, append it to LHS				
-					lhs.RemoveIndex(-1);
-					lhs.SmartPush(Abandon(precompiled));
-					VERBOSE_ALT("Statically constructed from DMeta: "
-						<< Logger::Cyan << lhs);
-				}
+			Any precompiled;
+			if (outputConstruct.StaticCreation(precompiled)) {
+				// Precompiled successfully, append it to LHS					
+				lhs.RemoveIndex(-1);
+				lhs.SmartPush(Abandon(precompiled));
+				VERBOSE_ALT("Statically constructed from DMeta: "
+					<< Logger::Cyan << lhs);
+				return;
 			}
 
 			lhs.RemoveIndex(-1);
@@ -611,7 +609,7 @@ namespace Langulus::Flow
 		else if (lhs.Is<Construct>()) {
 			// The content is for an instantiated data scope					
 			auto& construct = lhs.As<Construct>(-1);
-			construct.GetAll().SmartPush(Move(rhs));
+			construct.GetArgument().SmartPush(Move(rhs));
 			VERBOSE_ALT("Constructed from Construct " << Logger::Cyan << lhs);
 		}
 		else {
@@ -802,9 +800,8 @@ namespace Langulus::Flow
 			input.RightOf(progress), op.GetArgument(), op.GetPriority(), optimize);
 
 		// Then dispatch the operation in lhs, with the given arguments,	
-		// trying to execute it at compile-time. This is allowed only if	
-		// lhs and rhs do not have anything missing inside						
-		if (optimize && !op.IsMissingDeep() && DispatchDeep(lhs, op)) {
+		// trying to execute it at compile-time									
+		if (optimize && DispatchDeep(lhs, op)) {
 			// The verb was executed at compile-time, so directly				
 			// substitute LHS with the result										
 			lhs = Move(op.GetOutput());

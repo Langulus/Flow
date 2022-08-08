@@ -58,14 +58,16 @@ namespace Langulus::Flow
 		Construct(Abandoned<Construct>&&) noexcept;
 
 		Construct(DMeta);
-		Construct(DMeta, const Any&, const Charge& = {});
-		Construct(DMeta, Any&&, const Charge& = {});
+		template<CT::Data T = Any>
+		Construct(DMeta, const T&, const Charge& = {});
+		template<CT::Data T = Any>
+		Construct(DMeta, T&&, const Charge& = {});
 
 		Construct& operator = (const Construct&) = default;
 		Construct& operator = (Construct&&) noexcept = default;
 
-		Construct& operator = (Abandoned<Construct>&&) noexcept;
 		Construct& operator = (Disowned<Construct>&&) noexcept;
+		Construct& operator = (Abandoned<Construct>&&) noexcept;
 
 		NOD() explicit operator Code() const;
 		NOD() explicit operator Debug() const;
@@ -73,15 +75,10 @@ namespace Langulus::Flow
 	public:
 		NOD() Hash GetHash() const;
 
-		template<CT::Data DATA>
-		NOD() static Construct From(DMeta, DATA&&);
-		template<CT::Data DATA>
-		NOD() static Construct From(DMeta, const DATA&);
-
-		template<CT::Data T, CT::Data DATA>
-		NOD() static Construct From(DATA&&);
 		template<CT::Data T, CT::Data DATA>
 		NOD() static Construct From(const DATA&);
+		template<CT::Data T, CT::Data DATA>
+		NOD() static Construct From(DATA&&);
 
 		template<CT::Data T>
 		NOD() static Construct From();
@@ -90,23 +87,22 @@ namespace Langulus::Flow
 
 		NOD() bool StaticCreation(Any&) const;
 
-		NOD() bool InterpretsAs(DMeta type) const;
-
+		NOD() bool CastsTo(DMeta type) const;
 		template<CT::Data T>
-		NOD() bool InterpretsAs() const;
+		NOD() bool CastsTo() const;
 
 		NOD() bool Is(DMeta) const;
-
 		template<CT::Data T>
 		NOD() bool Is() const;
 
-		NOD() const Any& GetAll() const noexcept;
-		NOD() Any& GetAll() noexcept;
+		NOD() const Any& GetArgument() const noexcept;
+		NOD() Any& GetArgument() noexcept;
 
 		NOD() const Charge& GetCharge() const noexcept;
-		//NOD() Charge& GetCharge() noexcept;
+		NOD() Charge& GetCharge() noexcept;
 
 		NOD() DMeta GetType() const noexcept;
+		NOD() DMeta GetProducer() const noexcept;
 
 		void Clear();
 		NOD() Construct Clone(DMeta = nullptr) const;
@@ -116,9 +112,21 @@ namespace Langulus::Flow
 
 		template<CT::Data T>
 		Construct& operator << (const T&);
+		template<CT::Data T>
+		Construct& operator << (T&&);
+		template<CT::Data T>
+		Construct& operator >> (const T&);
+		template<CT::Data T>
+		Construct& operator >> (T&&);
 
 		template<CT::Data T>
 		Construct& operator <<= (const T&);
+		template<CT::Data T>
+		Construct& operator <<= (T&&);
+		template<CT::Data T>
+		Construct& operator >>= (const T&);
+		template<CT::Data T>
+		Construct& operator >>= (T&&);
 
 		Construct& Set(const Trait&, const Offset& = 0);
 		const Trait* Get(TMeta, const Offset& = 0) const;

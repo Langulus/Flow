@@ -452,7 +452,7 @@ namespace Langulus::Flow
 
 		// Set output																		
 		if (mSuccesses) {
-			output.mValue.Optimize();
+			//output.mValue.Optimize();
 			mOutput = output.Forward<Any>();
 		}
 		else mOutput.Reset();

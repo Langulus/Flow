@@ -183,18 +183,26 @@ namespace Langulus::Flow
 	template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::Verb V>
 	Count DispatchFlat(T& context, V& verb) {
 		if (context.IsEmpty()) {
-			// Context is empty, and execution happens only if DEFAULT		
-			// verbs are allowed, as a stateless verb execution				
-			if constexpr (DEFAULT)
-				return Verb::GenericExecuteStateless(verb);
-			return 0;
+			if (context.IsInvalid()) {
+				// Context is empty and doesn't have any relevant states,	
+				// and execution happens only if DEFAULT verbs are allowed,	
+				// as a stateless verb execution										
+				if constexpr (DEFAULT)
+					return Verb::GenericExecuteStateless(verb);
+				return 0;
+			}
+			else {
+				// Context is empty, but has relevant states, so directly	
+				// forward it as context												
+				Execute<DISPATCH, DEFAULT, true>(context, verb);
+				return verb.GetSuccesses();
+			}
 		}
 
-		// Copy the context's state into the output container					
+		Count successCount {};
 		auto output = Any::FromState(context);
 
 		// Iterate elements in the current context								
-		Count successCount {};
 		for (Count i = 0; i < context.GetCount(); ++i) {
 			// Reset verb to initial state											
 			if constexpr (RESOLVE) {
@@ -258,11 +266,20 @@ namespace Langulus::Flow
 	template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::Verb V>
 	Count DispatchDeep(T& context, V& verb) {
 		if (context.IsEmpty()) {
-			// Context is empty, and execution happens only if DEFAULT		
-			// verbs are allowed, as a stateless verb execution				
-			if constexpr (DEFAULT)
-				return Verb::GenericExecuteStateless(verb);
-			return 0;
+			if (context.IsInvalid()) {
+				// Context is empty and doesn't have any relevant states,	
+				// and execution happens only if DEFAULT verbs are allowed,	
+				// as a stateless verb execution										
+				if constexpr (DEFAULT)
+					return Verb::GenericExecuteStateless(verb);
+				return 0;
+			}
+			else {
+				// Context is empty, but has relevant states, so directly	
+				// forward it as context												
+				Execute<DISPATCH, DEFAULT, true>(context, verb);
+				return verb.GetSuccesses();
+			}
 		}
 
 		if (context.IsDeep() || context.template Is<Trait>()) {

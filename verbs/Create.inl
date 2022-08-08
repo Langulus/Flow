@@ -77,13 +77,16 @@ namespace Langulus::Verbs
 	inline bool Create::ExecuteDefault(Anyness::Block& context, Verb& verb) {
 		// Attempt creating/destroying constructs									
 		verb.ForEachDeep([&](const Construct& construct) {
-			SAFETY(if (construct.GetProducer())
-				Throw<Except::Construct>(Logger::Error()
-					<< "Creation of customly produced type " << construct.GetToken()
-					<< " hit default creation, and that should not be allowed - "
-					<< "add and reflect the Create verb in the producer"
-				)
-			);
+			if (construct.GetProducer()) {
+				// Creation of customly produced type hit default creation,	
+				// and that should not be allowed - add and reflect the		
+				// Create verb in the producer										
+				return;
+			}
+			else if (construct.IsMissingDeep()) {
+				// Creation of missing stuff is not allowed						
+				return;
+			}
 
 			if (construct.GetCharge().mMass * verb.GetMass() < 0) {
 				//TODO destroy
@@ -93,7 +96,7 @@ namespace Langulus::Verbs
 				// First allocate and default-initialize the results			
 				auto created = Any::FromMeta(construct.GetType());
 				created.Allocate<true>(Count(construct.GetCharge().mMass));
-				auto& arguments = construct.GetAll();
+				auto& arguments = construct.GetArgument();
 
 				// Then forward the constructors to each element				
 				if (!arguments.IsEmpty()) {

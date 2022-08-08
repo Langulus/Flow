@@ -123,7 +123,7 @@ namespace Langulus::Verbs
 			group.ForEach(
 				[&](const Construct& construct) {
 					containsOnlyIndices = false;
-					auto nested = verb.PartialCopy().SetArgument(construct.GetAll());
+					auto nested = verb.PartialCopy().SetArgument(construct.GetArgument());
 					ExecuteDefault(context, nested);
 					verb << nested.GetOutput();
 				},

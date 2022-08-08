@@ -72,25 +72,14 @@ namespace Langulus::Verbs
 	///	@param context - the block to execute in										
 	///	@param verb - conjunction/disjunction verb									
 	inline bool Conjunct::ExecuteDefault(const Block& context, Verb& verb) {
-		if (verb.IsEmpty()) {
-			verb << context;
-			return true;
-		}
-
 		Any joined;
-		if (verb.GetMass() < 0)
-			joined.MakeOr();
-
-		if (context.Is(verb.GetType()) && joined.IsOr() == verb.IsOr()) {
-			joined.InsertBlock(context);
-			joined.InsertBlock(verb.GetArgument());
+		if (verb.GetMass() < 0) {
+			joined.SmartPush(Any {context}, DataState::Or);
+			joined.SmartPush(verb.GetArgument(), DataState::Or);
 		}
 		else {
-			joined << Any {context};
-			if (verb.IsDeep() && joined.IsOr() == verb.IsOr())
-				joined.InsertBlock(verb.GetArgument());
-			else
-				joined << verb.GetArgument();
+			joined.SmartPush(Any {context});
+			joined.SmartPush(verb.GetArgument());
 		}
 
 		verb << Abandon(joined);

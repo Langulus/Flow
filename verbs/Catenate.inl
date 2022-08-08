@@ -72,6 +72,9 @@ namespace Langulus::Verbs
 	///	@param context - the block to execute in										
 	///	@param verb - catenation/splitting verb										
 	inline bool Catenate::ExecuteDefault(const Block& context, Verb& verb) {
+		if (verb.IsMissingDeep())
+			return false;
+
 		if (verb.IsEmpty()) {
 			verb << context;
 			return true;
@@ -90,6 +93,9 @@ namespace Langulus::Verbs
 	///	@param context - the block to execute in										
 	///	@param verb - catenation/splitting verb										
 	inline bool Catenate::ExecuteDefault(Block& context, Verb& verb) {
+		if (verb.IsMissingDeep())
+			return false;
+
 		if (verb.IsEmpty()) {
 			verb << context;
 			return true;

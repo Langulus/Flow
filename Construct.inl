@@ -4,84 +4,114 @@
 namespace Langulus::Flow
 {
 
-	/// Create content descriptor from a type and include a constructor			
-	///	@param type - the type we're constructing										
-	///	@param arguments - the constructor arguments									
-	///	@return the request																	
-	template<CT::Data DATA>
-	Construct Construct::From(DMeta type, DATA&& arguments) {
-		return Construct(type) << Forward<DATA>(arguments);
-	}
+	/// Construct from a header and shallow-copied arguments							
+	///	@param type - the type of the content											
+	///	@param arguments - the arguments to copy										
+	///	@param charge - the charge for the construction								
+	template<CT::Data T>
+	Construct::Construct(DMeta type, const T& arguments, const Charge& charge)
+		: Any {arguments}
+		, Charge {charge}
+		, mType {type} { }
 
-	/// Create content descriptor from a type and include a constructor			
-	///	@param type - the type we're constructing										
-	///	@param arguments - the constructor arguments									
-	///	@return the request																	
-	template<CT::Data DATA>
-	Construct Construct::From(DMeta type, const DATA& arguments) {
-		return Construct(type) << arguments;
-	}
+	/// Construct from a header and moved arguments										
+	///	@param type - the type of the content											
+	///	@param arguments - the arguments to move										
+	///	@param charge - the charge for the construction								
+	template<CT::Data T>
+	Construct::Construct(DMeta type, T&& arguments, const Charge& charge)
+		: Any {Forward<T>(arguments)}
+		, Charge {charge}
+		, mType {type} { }
 
-	/// Create content descriptor from a type and include a constructor			
-	///	@param arguments - the constructor arguments									
-	///	@return the request																	
-	template<CT::Data T, CT::Data DATA>
-	Construct Construct::From(DATA&& arguments) {
-		return Construct::From<DATA>(MetaData::Of<T>(), Forward<DATA>(arguments));
-	}
-
-	/// Create content descriptor from a type and include a constructor			
+	/// Create content descriptor from a static type and arguments by copy		
+	///	@tparam T - type of the construct												
+	///	@tparam DATA - type of the arguments (deducible)							
 	///	@param arguments - the constructor arguments									
 	///	@return the request																	
 	template<CT::Data T, CT::Data DATA>
 	Construct Construct::From(const DATA& arguments) {
-		return Construct::From<DATA>(MetaData::Of<T>(), arguments);
+		return Construct {MetaData::Of<Decay<T>>(), arguments};
 	}
 
-	/// Create content descriptor from a type and include a constructor			
+	/// Create content descriptor from a static type and arguments by move		
+	///	@tparam T - type of the construct												
+	///	@tparam DATA - type of the arguments (deducible)							
 	///	@param arguments - the constructor arguments									
+	///	@return the request																	
+	template<CT::Data T, CT::Data DATA>
+	Construct Construct::From(DATA&& arguments) {
+		return Construct {MetaData::Of<Decay<T>>(), Forward<DATA>(arguments)};
+	}
+
+	/// Create content descriptor from a static type									
+	///	@tparam T - type of the construct												
 	///	@return the request																	
 	template<CT::Data T>
 	Construct Construct::From() {
 		return Construct(MetaData::Of<T>());
 	}
 
-	/// Check if contained data can be interpreted as a given type					
-	/// Interpreting means reading compatiblity											
+	/// Check if construct type can be interpreted as a given static type		
+	///	@tparam T - type of the construct to compare against						
 	template<CT::Data T>
-	bool Construct::InterpretsAs() const {
-		return InterpretsAs(MetaData::Of<T>());
+	bool Construct::CastsTo() const {
+		return CastsTo(MetaData::Of<T>());
 	}
 
-	/// Check if contained data fully matches a given type							
+	/// Check if construct type fully matches a given static type					
+	///	@tparam T - type of the construct to compare against						
 	template<CT::Data T>
 	bool Construct::Is() const {
 		return Is(MetaData::Of<T>());
 	}
 
-	inline const Any& Construct::GetAll() const noexcept {
+	/// Get the argument for the construct													
+	///	@return the constant arguments container										
+	inline const Any& Construct::GetArgument() const noexcept {
 		return static_cast<const Any&>(*this);
 	}
 
-	inline Any& Construct::GetAll() noexcept {
+	/// Get the argument for the construct													
+	///	@return the arguments container													
+	inline Any& Construct::GetArgument() noexcept {
 		return static_cast<Any&>(*this);
 	}
 
+	/// Get construct's charge																	
+	///	@return the charge																	
+	inline Charge& Construct::GetCharge() noexcept {
+		return static_cast<Charge&>(*this);
+	}
+
+	/// Get construct's charge (const)														
+	///	@return the charge																	
 	inline const Charge& Construct::GetCharge() const noexcept {
 		return static_cast<const Charge&>(*this);
 	}
 
+	/// Get the type of the construct														
+	///	@return the type																		
 	inline DMeta Construct::GetType() const noexcept {
 		return mType;
 	}
 
+	/// Get the producer of the construct													
+	///	@return the type of the producer													
+	inline DMeta Construct::GetProducer() const noexcept {
+		return mType ? mType->mProducer : nullptr;
+	}
+
+	/// Clone the construct, substituting the construct type with another		
+	///	@tparam T - the new type of the construct										
+	///	@return the new construct															
 	template<CT::Data T>
 	Construct Construct::CloneAs() const {
 		return Clone(MetaData::Of<T>());
 	}
 
-	/// Copy items to the construct															
-	///	@param whatever - the thing you wish to push									
+	/// Push arguments to the back by copy													
+	///	@param whatever - the thing you wish to copy and push						
 	template<CT::Data T>
 	Construct& Construct::operator << (const T& whatever) {
 		if (SmartPush<IndexBack, true, true>(whatever))
@@ -89,17 +119,85 @@ namespace Langulus::Flow
 		return *this;
 	}
 
-	/// Merge items to the construct's arguments											
-	///	@param whatever - the thing you wish to push									
+	/// Push arguments to the back by move													
+	///	@param whatever - the thing you wish to move and push						
+	template<CT::Data T>
+	Construct& Construct::operator << (T&& whatever) {
+		if (SmartPush<IndexBack, true, true>(Forward<T>(whatever)))
+			mHash = {};
+		return *this;
+	}
+
+	/// Push arguments to the front by copy												
+	///	@param whatever - the thing you wish to copy and push						
+	template<CT::Data T>
+	Construct& Construct::operator >> (const T& whatever) {
+		if (SmartPush<IndexFront, true, true>(whatever))
+			mHash = {};
+		return *this;
+	}
+
+	/// Push arguments to the front by move												
+	///	@param whatever - the thing you wish to move and push						
+	template<CT::Data T>
+	Construct& Construct::operator >> (T&& whatever) {
+		if (SmartPush<IndexFront, true, true>(Forward<T>(whatever)))
+			mHash = {};
+		return *this;
+	}
+
+	/// Merge items at the back of the arguments by copy								
+	///	@param whatever - the thing you wish to copy and push						
 	template<CT::Data T>
 	Construct& Construct::operator <<= (const T& whatever) {
 		if constexpr (CT::Same<T, Trait>)
 			return Set(DenseCast(whatever));
 		else {
-			if (!FindDeep(whatever))
-				*this << whatever;
+			if (!FindDeep(whatever) && SmartPush<IndexBack, true, true>(whatever))
+				mHash = {};
 			return *this;
 		}
+	}
+
+	/// Merge items at the back of the arguments by move								
+	///	@param whatever - the thing you wish to move and push						
+	template<CT::Data T>
+	Construct& Construct::operator <<= (T&& whatever) {
+		if constexpr (CT::Same<T, Trait>)
+			return Set(DenseCast(whatever));
+		else {
+			if (!FindDeep(whatever) && SmartPush<IndexBack, true, true>(Forward<T>(whatever)))
+				mHash = {};
+			return *this;
+		}
+	}
+
+	/// Merge items at the back of the arguments by copy								
+	///	@param whatever - the thing you wish to copy and push						
+	template<CT::Data T>
+	Construct& Construct::operator >>= (const T& whatever) {
+		if constexpr (CT::Same<T, Trait>)
+			Set(DenseCast(whatever));
+		else {
+			if (!FindDeep(whatever) && SmartPush<IndexFront, true, true>(whatever))
+				mHash = {};
+		}
+
+		return *this;
+	}
+
+	/// Merge items at the back of the arguments by move								
+	///	@param whatever - the thing you wish to move and push						
+	template<CT::Data T>
+	Construct& Construct::operator >>= (T&& whatever) {
+		if constexpr (CT::Same<T, Trait>)
+			Set(DenseCast(whatever));
+		else {
+			if (!FindDeep(whatever) && SmartPush<IndexFront, true, true>(Forward<T>(whatever)))
+				mHash = {};
+		}
+
+		return *this;
 	}
 
 	/// Get traits from constructor															

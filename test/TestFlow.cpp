@@ -11,7 +11,18 @@ void DumpResults(const INPUT& in, const OUTPUT& out, const REQUIRED& required) {
 	Logger::Special() << "-------------";
 }
 
+
+
 SCENARIO("Parsing scripts with corner cases", "[code]") {
+	Any pastMissing;
+	pastMissing.MakePast();
+	pastMissing.MakeMissing();
+
+	Any futureMissing;
+	futureMissing.MakeFuture();
+	futureMissing.MakeMissing();
+
+
 	GIVEN("The script: `plural` associate many") {
 		const auto code = "`plural` associate many"_code;
 		const Any required = Verbs::Associate(IndexMany)
@@ -182,34 +193,9 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("The script: past number    ?       ><  future     number ? ") {
-		const Code code = "past number    ?       ><   future     number ? ";
-		Any source = MetaData::Of<A::Number>();
-		source.MakePast();
-		source.MakeMissing();
-		Any argument = MetaData::Of<A::Number>();
-		argument.MakeFuture();
-		argument.MakeMissing();
-		const Any required = Verbs::Catenate(argument)
-			.SetSource(source);
-
-		WHEN("Parsed") {
-			const auto parsed = code.Parse();
-			DumpResults(code, parsed, required);
-			THEN("The parsed contents must match the requirements") {
-				REQUIRE(parsed == required);
-			}
-		}
-	}
-
 	GIVEN("The script: Create!-1(Verb(past?, future?))") {
 		const Code code = "Create!-1(Verb(past?, future?))";
-		TAny<Any> package = Any::Wrap(Any(), Any());
-		package[0].MakePast();
-		package[0].MakeMissing();
-		package[1].MakeFuture();
-		package[1].MakeMissing();
-
+		TAny<Any> package = Any::Wrap(pastMissing, futureMissing);
 		const Any required = Verbs::Create(
 			Construct::From<Verb>(package)
 		).SetPriority(-1);
@@ -223,24 +209,14 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("7) The Code script: associate(`is` > (<? = ?>))") {
-		Any pastMissing;
-		pastMissing.MakePast();
-		pastMissing.MakeMissing();
-
-		Any futureMissing;
-		futureMissing.MakeFuture();
-		futureMissing.MakeMissing();
-
-		const Code code = "associate(`is` > (<? = ?>))";
-		TAny<Any> package = Any::Wrap(
-			Text("is"),
-			Verbs::Associate(futureMissing).SetPriority(2).SetSource(pastMissing)
-		);
-
-		package[0].MakePast();
-		package[1].MakeFuture();
-		const Any required = Verbs::Associate(package);
+	GIVEN("The script: past number    ?       ><  future     number ? ") {
+		const Code code = "past number    ?       ><   future     number ? ";
+		Any source {pastMissing};
+		source << MetaData::Of<A::Number>();
+		Any argument {futureMissing};
+		argument << MetaData::Of<A::Number>();
+		const Any required = Verbs::Catenate(argument)
+			.SetSource(source);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -251,15 +227,12 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("8) The Code script: .Verb.(>? as Context)") {
-		Any futureMissing;
-		futureMissing.MakeFuture();
-		futureMissing.MakeMissing();
-
-		const Code code = ".Context = .Verb.(>?)";
-		Any required = Verbs::Associate(
-			Verbs::Select(futureMissing).SetSource(Verbs::Select(MetaData::Of<Verb>()))
-		).SetSource(Verbs::Select(MetaTrait::Of<Traits::Context>()));
+	GIVEN("The script: `is` = (past? = future?)") {
+		const Code code = "`is` = (past? = future?)";
+		const auto package = 
+			Verbs::Associate(futureMissing).SetSource(pastMissing);
+		const Any required = 
+			Verbs::Associate(package).SetSource("is"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -270,26 +243,41 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("9) The Code script: Create!-1(Verb(<?(ANumber,DataID,Construct), >?(ANumber,DataID,Construct)))") {
-		Any pastMissing = Any::WrapCommon(
-			MetaData::Of<A::Number>(),
-			MetaData::Of<MetaData>(),
-			MetaData::Of<Construct>()
+	GIVEN("The script: .Context = .Verb.Future?") {
+		const Code code = ".Context = .Verb.Future?";
+		const Any required = Verbs::Associate(
+			Verbs::Select(futureMissing).SetSource(
+				Verbs::Select(MetaData::Of<Verb>())
+			)
+		).SetSource(
+			Verbs::Select(MetaTrait::Of<Traits::Context>())
 		);
-		pastMissing.MakePast();
-		pastMissing.MakeMissing();
 
-		Any futureMissing = Any::WrapCommon(
-			MetaData::Of<A::Number>(), 
-			MetaData::Of<MetaData>(), 
-			MetaData::Of<Construct>()
-		);
-		futureMissing.MakeFuture();
-		futureMissing.MakeMissing();
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
 
-		const Code code = "Create!-1(Verb(<?(ANumber,DataID,Construct), >?(ANumber,DataID,Construct)))";
-		Any required = Verbs::Create(
-			Construct::From<Verb>(Any::WrapCommon(pastMissing, futureMissing))
+	GIVEN("The script: Create!-1(Verb(past?(Number,MetaData,Construct), future?(Number,MetaData,Construct)))") {
+		Any a1 {pastMissing};
+		a1
+			<< MetaData::Of<A::Number>()
+			<< MetaData::Of<MetaData>()
+			<< MetaData::Of<Construct>();
+
+		Any a2 {futureMissing};
+		a2
+			<< MetaData::Of<A::Number>()
+			<< MetaData::Of<MetaData>()
+			<< MetaData::Of<Construct>();
+
+		const Code code = "Create!-1(Verb(past?(Number,MetaData,Construct), future?(Number,MetaData,Construct)))";
+		const Any required = Verbs::Create(
+			Construct::From<Verb>(Any::WrapCommon(a1, a2))
 		).SetPriority(-1);
 
 		WHEN("Parsed") {

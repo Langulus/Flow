@@ -21,7 +21,7 @@ namespace Langulus::Flow
 		NOD() bool NeedsScope(const Block& block) noexcept;
 		NOD() Code Separator(bool isOr);
 
-		template<CT::Text TO>
+		template<bool ENSCOPE, CT::Text TO>
 		NOD() Count SerializeBlock(const Block&, TO&);
 
 		template<class META, CT::Text TO>

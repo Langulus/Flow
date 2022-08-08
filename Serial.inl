@@ -46,7 +46,7 @@ namespace Langulus::Flow
 			try {
 				// Attempt converting to debug via reflected converters		
 				Debug result;
-				(void)Detail::SerializeBlock(block, result);
+				(void)Detail::SerializeBlock<HEADER>(block, result);
 				return result;
 			}
 			catch (const Except::Convert&) {}
@@ -60,7 +60,7 @@ namespace Langulus::Flow
 				// of redundant and irrelevant data, but better something	
 				// than nothing...														
 				Code result;
-				(void)Detail::SerializeBlock(block, result);
+				(void)Detail::SerializeBlock<HEADER>(block, result);
 				return result;
 			}
 			catch (const Except::Convert&) {}
@@ -72,7 +72,7 @@ namespace Langulus::Flow
 
 			try {
 				Code result;
-				(void)Detail::SerializeBlock(block, result);
+				(void)Detail::SerializeBlock<HEADER>(block, result);
 				return result;
 			}
 			catch (const Except::Convert&) {}
@@ -130,7 +130,7 @@ namespace Langulus::Flow
 	///	@param block - the memory block to check										
 	///	@return true if a scope is required around the block						
 	inline bool Detail::NeedsScope(const Block& block) noexcept {
-		return block.GetCount() > 1 || block.IsEmpty();
+		return block.GetCount() > 1 || block.IsInvalid()/* || (block.CastsTo<Verb>())*/;
 	}
 
 	/// Add a separator																			
@@ -143,145 +143,155 @@ namespace Langulus::Flow
 	}
 
 	/// Serialize any block to any string format											
+	///	@tparam ENSCOPED - whether or not the block is already enscoped		
 	///	@param from - the block to serialize											
 	///	@param to - [out] the serialized block goes here							
 	///	@return the number of written characters										
-	template<CT::Text TO>
+	template<bool ENSCOPED, CT::Text TO>
 	Count Detail::SerializeBlock(const Block& from, TO& to) {
 		const auto initial = to.GetCount();
-		bool enscopeVerb = false;
+		bool stateWritten = false;
 		if (from.IsConstant()) {
 			to += Code {Code::Constant};
-			to += ' ';
-			enscopeVerb = true;
+			stateWritten = true;
 		}
 
 		if (from.IsPast()) {
+			if (stateWritten)
+				to += ' ';
 			to += Code {Code::Past};
-			to += ' ';
-			enscopeVerb = true;
+			stateWritten = true;
 		}
 		else if (from.IsFuture()) {
+			if (stateWritten)
+				to += ' ';
 			to += Code {Code::Future};
-			to += ' ';
-			enscopeVerb = true;
+			stateWritten = true;
 		}
 
-		const bool scoped = NeedsScope(from) 
-			|| (enscopeVerb && from.CastsTo<Verb>() && !from.IsEmpty());
-		if (scoped)
-			to += Code {Code::OpenScope};
+		UNUSED() bool scoped;
+		if constexpr (!ENSCOPED) {
+			scoped = NeedsScope(from);
+			if (scoped) {
+				to += Code {Code::OpenScope};
+				stateWritten = false;
+			}
+		}
 
-		// Serialize text																	
-		if (from.IsUntyped() || from.IsEmpty()) {
-			// Do nothing																	
-		}
-		else if (from.IsDeep()) {
-			// Nested serialization, wrap it in content scope					
-			for (Offset i = 0; i < from.GetCount(); ++i) {
-				(void) SerializeBlock(from.As<Block>(i), to);
-				if (i < from.GetCount() - 1)
-					to += Separator(from.IsOr());
-			}
-		}
-		else if (from.CastsTo<bool>()) {
-			// Contained type is boolean												
-			for (Offset i = 0; i < from.GetCount(); ++i) {
-				to += from.As<bool>(i) ? "yes" : "no";
-				if (i < from.GetCount() - 1)
-					to += Separator(from.IsOr());
-			}
-		}
-		else if (from.CastsTo<Letter>()) {
-			// Contained type is a character											
-			for (Offset i = 0; i < from.GetCount(); ++i) {
-				to += Code {Code::OpenCharacter};
-				to += from.As<Letter>(i);
-				to += Code {Code::CloseCharacter};
-				if (i < from.GetCount() - 1)
-					to += Separator(from.IsOr());
-			}
-		}
-		else if (from.CastsTo<Code>()) {
-			// Contained type is code, wrap it in code scope					
-			for (Offset i = 0; i < from.GetCount(); ++i) {
-				auto& text = from.As<Code>(i);
-				to += Code {Code::OpenCode};
-				to += text;
-				to += Code {Code::CloseCode};
-				if (i < from.GetCount() - 1)
-					to += Separator(from.IsOr());
-			}
-		}
-		else if (from.CastsTo<Text>()) {
-			// Contained type is text, wrap it in string scope					
-			for (Offset i = 0; i < from.GetCount(); ++i) {
-				auto& text = from.As<Text>(i);
-				to += Code {Code::OpenString};
-				to += text;
-				to += Code {Code::CloseString};
-				if (i < from.GetCount() - 1)
-					to += Separator(from.IsOr());
-			}
-		}
-		else if (from.CastsTo<Letter>()) {
-			// Contained type is characters, wrap it in char scope			
-			for (Offset i = 0; i < from.GetCount(); ++i) {
-				auto& text = from.As<Letter>(i);
-				to += Code {Code::OpenCharacter};
-				to += Token {&text, 1};
-				to += Code {Code::CloseCharacter};
-				if (i < from.GetCount() - 1)
-					to += Separator(from.IsOr());
-			}
-		}
-		else if (from.CastsTo<RTTI::Meta>()) {
-			// Contained type is meta definitions, write the token			
-			for (Offset i = 0; i < from.GetCount(); ++i) {
-				auto& meta = from.As<RTTI::Meta>(i);
-				to += meta.mToken;
-				if (i < from.GetCount() - 1)
-					to += Separator(from.IsOr());
-			}
-		}
-		else if (from.CastsTo<Byte>()) {
-			// Contained type is raw bytes, wrap it in byte scope				
-			auto raw_bytes = from.GetRaw();
-			if (!from.IsOr()) {
-				to += Code {Code::OpenByte};
-				for (Offset i = 0; i < from.GetCount(); ++i)
-					ToHex(raw_bytes[i], to);
-			}
-			else for (Offset i = 0; i < from.GetCount(); ++i) {
-				to += Code {Code::OpenByte};
-				ToHex(raw_bytes[i], to);
-				if (i < from.GetCount() - 1)
-					to += Separator(from.IsOr());
-			}
-		}
-		else {
-			// Serialize all elements one by one using RTTI						
-			Verbs::InterpretTo<TO> interpreter;
-			if (DispatchFlat(from, interpreter)) {
-				bool separate = false;
-				interpreter.GetOutput().ForEach([&](const Text& r) {
-					if (separate)
+		if (!from.IsEmpty()) {
+			// Add a bit of spacing														
+			if (stateWritten)
+				to += ' ';
+
+			if (from.IsDeep()) {
+				// Nested serialization, wrap it in content scope				
+				for (Offset i = 0; i < from.GetCount(); ++i) {
+					(void) SerializeBlock<false>(from.As<Block>(i), to);
+					if (i < from.GetCount() - 1)
 						to += Separator(from.IsOr());
-					separate = true;
-					to += r;
-				});
+				}
+			}
+			else if (from.CastsTo<bool>()) {
+				// Contained type is boolean											
+				for (Offset i = 0; i < from.GetCount(); ++i) {
+					to += from.As<bool>(i) ? "yes" : "no";
+					if (i < from.GetCount() - 1)
+						to += Separator(from.IsOr());
+				}
+			}
+			else if (from.CastsTo<Letter>()) {
+				// Contained type is a character										
+				for (Offset i = 0; i < from.GetCount(); ++i) {
+					to += Code {Code::OpenCharacter};
+					to += from.As<Letter>(i);
+					to += Code {Code::CloseCharacter};
+					if (i < from.GetCount() - 1)
+						to += Separator(from.IsOr());
+				}
+			}
+			else if (from.CastsTo<Code>()) {
+				// Contained type is code, wrap it in code scope				
+				for (Offset i = 0; i < from.GetCount(); ++i) {
+					auto& text = from.As<Code>(i);
+					to += Code {Code::OpenCode};
+					to += text;
+					to += Code {Code::CloseCode};
+					if (i < from.GetCount() - 1)
+						to += Separator(from.IsOr());
+				}
+			}
+			else if (from.CastsTo<Text>()) {
+				// Contained type is text, wrap it in string scope				
+				for (Offset i = 0; i < from.GetCount(); ++i) {
+					auto& text = from.As<Text>(i);
+					to += Code {Code::OpenString};
+					to += text;
+					to += Code {Code::CloseString};
+					if (i < from.GetCount() - 1)
+						to += Separator(from.IsOr());
+				}
+			}
+			else if (from.CastsTo<Letter>()) {
+				// Contained type is characters, wrap it in char scope		
+				for (Offset i = 0; i < from.GetCount(); ++i) {
+					auto& text = from.As<Letter>(i);
+					to += Code {Code::OpenCharacter};
+					to += Token {&text, 1};
+					to += Code {Code::CloseCharacter};
+					if (i < from.GetCount() - 1)
+						to += Separator(from.IsOr());
+				}
+			}
+			else if (from.CastsTo<RTTI::Meta>()) {
+				// Contained type is meta definitions, write the token		
+				for (Offset i = 0; i < from.GetCount(); ++i) {
+					auto& meta = from.As<RTTI::Meta>(i);
+					to += meta.mToken;
+					if (i < from.GetCount() - 1)
+						to += Separator(from.IsOr());
+				}
+			}
+			else if (from.CastsTo<Byte>()) {
+				// Contained type is raw bytes, wrap it in byte scope			
+				auto raw_bytes = from.GetRaw();
+				if (!from.IsOr()) {
+					to += Code {Code::OpenByte};
+					for (Offset i = 0; i < from.GetCount(); ++i)
+						ToHex(raw_bytes[i], to);
+				}
+				else for (Offset i = 0; i < from.GetCount(); ++i) {
+					to += Code {Code::OpenByte};
+					ToHex(raw_bytes[i], to);
+					if (i < from.GetCount() - 1)
+						to += Separator(from.IsOr());
+				}
 			}
 			else {
-				Logger::Error() << "Can't serialize block of type "
-					<< from.GetToken() << " to " << MetaData::Of<TO>()->mToken;
-				Throw<Except::Convert>(
-					"Can't serialize block to text");
+				// Serialize all elements one by one using RTTI					
+				Verbs::InterpretTo<TO> interpreter;
+				if (DispatchFlat(from, interpreter)) {
+					bool separate = false;
+					interpreter.GetOutput().ForEach([&](const Text& r) {
+						if (separate)
+							to += Separator(from.IsOr());
+						separate = true;
+						to += r;
+					});
+				}
+				else {
+					Logger::Error() << "Can't serialize block of type "
+						<< from.GetToken() << " to " << MetaData::Of<TO>()->mToken;
+					Throw<Except::Convert>(
+						"Can't serialize block to text");
+				}
 			}
 		}
 
 		// Close scope																		
-		if (scoped)
-			to += Code {Code::CloseScope};
+		if constexpr (!ENSCOPED) {
+			if (scoped)
+				to += Code {Code::CloseScope};
+		}
 
 		if (from.IsMissing())
 			to += Code {Code::Missing};

@@ -301,10 +301,10 @@ namespace Langulus::Flow
 		else {
 			// A valid verb is written either as token, or as operator		
 			if (mMass < 0) {
-				if (mSource.IsValid() && !mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault()) {
+				if (/*mSource.IsValid() &&*/ !mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault()) {
 					// Write as operator													
 					result += mVerb->mOperatorReverse;
-					enscope = false;
+					enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
 				}
 				else {
 					// Write as token														
@@ -315,10 +315,10 @@ namespace Langulus::Flow
 				}
 			}
 			else {
-				if (mSource.IsValid() && !mVerb->mOperator.empty() && GetCharge().IsDefault()) {
+				if (/*mSource.IsValid() &&*/ !mVerb->mOperator.empty() && GetCharge().IsDefault()) {
 					// Write as operator													
 					result += mVerb->mOperator;
-					enscope = false;
+					enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
 				}
 				else {
 					// Write as token														

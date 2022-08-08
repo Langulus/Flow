@@ -77,7 +77,7 @@ namespace Langulus::Verbs
 	///	@param verb - the verb instance to execute									
 	///	@return true if execution was a success										
 	inline bool Associate::ExecuteDefault(Block& context, Verb& verb) {
-		if (context.IsConstant())
+		if (context.IsConstant() || context.IsMissing() || verb.IsMissingDeep())
 			return false;
 
 		try {

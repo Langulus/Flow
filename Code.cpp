@@ -9,13 +9,13 @@
 
 #define VERBOSE_INNER(a) \
 		Logger::Verbose() << LANGULUS(FUNCTION_NAME) << ": " << a << " at " << progress << ": " << \
-		Logger::Verbose() << " -- " \
+		Logger::Verbose() << "+-- " \
 			<< Logger::Green << input.LeftOf(progress) \
 			<< Logger::Gray << input.RightOf(progress)
 
 #define PRETTY_ERROR(a) { \
 		Logger::Error() << LANGULUS(FUNCTION_NAME) << ": " << a << " at " << progress << ": " << \
-		Logger::Error() << " -- " \
+		Logger::Error() << "+-- " \
 			<< Logger::Green << input.LeftOf(progress) \
 			<< Logger::Red << input.RightOf(progress); \
 		Throw<Except::Flow>("Parse error"); \

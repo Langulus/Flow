@@ -30,34 +30,44 @@ namespace Langulus::Flow
 
 	/// Built-in operator properties															
 	constexpr Code::OperatorProperties Code::mOperators[OpCounter] = {
-		{ "(", 0, false },	// OpenScope
-		{ ")", 0, false },	// CloseScope
-		{ "[", 0, false },	// OpenCode
-		{ "]", 0, false },	// CloseCode
-		{ "|", 0, false },	// OpenComment
-		{ "|", 0, false },	// CloseComment
-		{ "\"", 0, false },	// OpenString
-		{ "\"", 0, false },	// CloseString
-		{ "`", 0, false },	// OpenStringAlt
-		{ "`", 0, false },	// CloseStringAlt
-		{ "'", 0, false },	// OpenCharacter
-		{ "'", 0, false },	// CloseCharacter
-		{ "0x", 0, false },	// OpenByte
-		{ "past", 13, false },		// Past
-		{ "future", 13, false },	// Future
-		{ "?", 13, false },			// Missing
-		{ "const", 13, false },		// Constant
-		{ "sparse", 13, false },	// Sparse
-		{ "*", 20, true },	// Mass
-		{ "^", 20, true },	// Frequency
-		{ "@", 20, true },	// Time
-		{ "!", 20, true }		// Priority
+		{ "(", 0, false },		// OpenScope
+		{ ")", 0, false },		// CloseScope
+		{ "[", 0, false },		// OpenCode
+		{ "]", 0, false },		// CloseCode
+		{ "|", 0, false },		// OpenComment
+		{ "|", 0, false },		// CloseComment
+		{ "\"", 0, false },		// OpenString
+		{ "\"", 0, false },		// CloseString
+		{ "`", 0, false },		// OpenStringAlt
+		{ "`", 0, false },		// CloseStringAlt
+		{ "'", 0, false },		// OpenCharacter
+		{ "'", 0, false },		// CloseCharacter
+		{ "0x", 0, false },		// OpenByte
+		{ "past", 0, false },	// Past
+		{ "future", 0, false },	// Future
+		{ "?", 0, false },		// Missing
+		{ "const", 0, false },	// Constant
+		{ "sparse", 0, false },	// Sparse
+		{ "*", 0, true },			// Mass
+		{ "^", 0, true },			// Frequency
+		{ "@", 0, true },			// Time
+		{ "!", 0, true }			// Priority
 	};
 	
 	/// Generate code from operator															
 	///	@param op - the operator to stringify											
 	Code::Code(Operator op)
 		: Text {Disowned(mOperators[op].mToken.data())} { }
+
+	/// Disown-construct a code container													
+	///	@param other - the container to shallow-copy									
+	Code::Code(Disowned<Code>&& other) noexcept
+		: Text {other.Forward<Text>()} {}
+
+	/// Abandon-construct a code container													
+	///	@param other - the container to move											
+	Code::Code(Abandoned<Code>&& other) noexcept
+		: Text {other.Forward<Text>()} {}
 
 	/// Parse code																					
 	///	@param optimize - whether or not to precompile 								
@@ -161,7 +171,7 @@ namespace Langulus::Flow
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
 	///	@param priority - the current lhs priority									
 	///	@return number of parsed characters												
-	Offset Code::UnknownParser::Parse(const Code& input, Any& lhs, int priority, bool optimize) {
+	Offset Code::UnknownParser::Parse(const Code& input, Any& lhs, Real priority, bool optimize) {
 		Any rhs;
 		Offset progress = 0;
 		if (!lhs.IsValid())
@@ -190,8 +200,8 @@ namespace Langulus::Flow
 					PRETTY_ERROR("Unexpected symbol");
 
 				if (0 == localProgress) {
-					// This occurs often, when a higher priority operator is	
-					// waiting for lower priority stuff to be parsed first	
+					// This occurs often, when a lower priority operator is	
+					// waiting for higher priority stuff to be parsed first	
 					break;
 				}
 
@@ -299,7 +309,7 @@ namespace Langulus::Flow
 		}
 		else if (!dmeta && !tmeta && cmeta) {
 			lhs.SmartPush(Any {
-				Block {{}, cmeta->mValueType, 1, cmeta->mPtrToValue}
+				Block {{}, cmeta->mValueType, 1, cmeta->mPtrToValue, nullptr}
 			}.Clone());
 		}
 		else {
@@ -349,7 +359,7 @@ namespace Langulus::Flow
 				case RTTI::Meta::Constant: {
 					const auto metaConst = static_cast<CMeta>(meta);
 					lhs.SmartPush(Any {
-						Block {{}, metaConst->mValueType, 1, metaConst->mPtrToValue}
+						Block {{}, metaConst->mValueType, 1, metaConst->mPtrToValue, nullptr}
 					}.Clone());
 					break;
 				}}
@@ -456,16 +466,14 @@ namespace Langulus::Flow
 	///	@param priority - the priority of the last parsed element				
 	///	@param optimize - the priority of the last parsed element				
 	///	@return number of parsed characters												
-	Offset Code::OperatorParser::Parse(Operator op, const Code& input, Any& lhs, int priority, bool optimize) {
+	Offset Code::OperatorParser::Parse(Operator op, const Code& input, Any& lhs, Real priority, bool optimize) {
 		Offset progress = 0;
 		if (op < NoOperator) {
 			// Handle a built-in operator												
-			// Operators have priority, we can't execute a higher priority	
-			// operator, before all lower priority operators have been		
-			// taken	care of																
 			if (mOperators[op].mPriority && priority >= mOperators[op].mPriority) {
-				VERBOSE(Logger::Yellow << "Delaying operator " << mOperators[op].mToken
-					<< " due to a prioritized operator");
+				VERBOSE(Logger::Yellow 
+					<< "Delaying built-in operator " << mOperators[op].mToken
+					<< " due to a prioritized operation");
 				return 0;
 			}
 
@@ -505,6 +513,13 @@ namespace Langulus::Flow
 			const auto word = Isolate(input);
 			const auto found = RTTI::Database.GetOperator(word);
 
+			if (found->mPriority && priority >= found->mPriority) {
+				VERBOSE(Logger::Yellow
+					<< "Delaying reflected operator " << found->mToken
+					<< " due to a prioritized operation");
+				return 0;
+			}
+
 			VERBOSE("Parsing reflected operator: " << word << " (" << found->mToken << ")");
 			progress += word.size();
 			const Code relevant = input.RightOf(progress);
@@ -518,6 +533,13 @@ namespace Langulus::Flow
 			// Handle a reflected verb													
 			const auto word = Isolate(input);
 			const auto found = RTTI::Database.GetMetaVerb(word);
+
+			if (found->mPriority && priority >= found->mPriority) {
+				VERBOSE(Logger::Yellow
+					<< "Delaying reflected operator " << found->mToken
+					<< " due to a prioritized operation");
+				return 0;
+			}
 
 			VERBOSE("Parsing reflected verb: " << word << " (" << found->mToken << ")");
 			progress += word.size();
@@ -797,7 +819,7 @@ namespace Langulus::Flow
 		
 		// Parse RHS for the operator													
 		progress += UnknownParser::Parse(
-			input.RightOf(progress), op.GetArgument(), op.GetPriority(), optimize);
+			input.RightOf(progress), op.GetArgument(), op.GetVerb()->mPriority, optimize);
 
 		// Then dispatch the operation in lhs, with the given arguments,	
 		// trying to execute it at compile-time									

@@ -8,20 +8,21 @@
 #include "verbs/Exponent.inl"
 
 #define VERBOSE_INNER(a) \
-		Logger::Verbose() << LANGULUS(FUNCTION_NAME) << ": " << a << " at " << progress << ": " << \
-		Logger::Verbose() << "+-- " \
-			<< Logger::Green << input.LeftOf(progress) \
-			<< Logger::Gray << input.RightOf(progress)
+		Logger::Verbose() << "Flow::Code: " << Logger::Push << a << Logger::Pop << " at " << progress << ": " << \
+		Logger::NewLine << "+-- [" \
+			<< Logger::Push << Logger::Underline << input.LeftOf(progress) << Logger::Pop \
+			<< input.RightOf(progress) << ']'
 
 #define PRETTY_ERROR(a) { \
-		Logger::Error() << LANGULUS(FUNCTION_NAME) << ": " << a << " at " << progress << ": " << \
-		Logger::Error() << "+-- " \
-			<< Logger::Green << input.LeftOf(progress) \
-			<< Logger::Red << input.RightOf(progress); \
+		Logger::Error() << "Flow::Code: " << Logger::Push << a << Logger::Pop << " at " << progress << ": " << \
+		Logger::NewLine << "+-- [" \
+			<< Logger::Push << Logger::Underline << input.LeftOf(progress) << Logger::Pop \
+			<< input.RightOf(progress) << ']'; \
 		Throw<Except::Flow>("Parse error"); \
 	}
 
 #define VERBOSE(a) VERBOSE_INNER(a)
+#define VERBOSE_TAB(a) auto tab = VERBOSE_INNER(a) << Logger::Tabs{}
 #define VERBOSE_ALT(a) Logger::Verbose() << a
 
 
@@ -77,7 +78,7 @@ namespace Langulus::Flow
 		const auto parsed = UnknownParser::Parse(*this, output, 0, optimize);
 		if (parsed != GetCount()) {
 			Logger::Warning() << "Some characters were left out at the end, while parsing code:";
-			Logger::Warning() << " -- " 
+			Logger::Warning() << "+-- " 
 				<< Logger::Green << LeftOf(parsed) 
 				<< Logger::Red << RightOf(parsed);
 		}
@@ -166,56 +167,49 @@ namespace Langulus::Flow
 		return true;
 	}
 
-	/// Parse any Code expression																
+	/// Parse any code expression, anticipate anything									
 	///	@param input - the code to parse													
 	///	@param lhs - [in/out] parsed content goes here (lhs)						
-	///	@param priority - the current lhs priority									
-	///	@return number of parsed characters												
-	Offset Code::UnknownParser::Parse(const Code& input, Any& lhs, Real priority, bool optimize) {
+	///	@param precedence - the last parsed operation precedence					
+	///	@param optimize - whether to attempt executing at compile-time			
+	///	@return number of parsed characters from input								
+	Offset Code::UnknownParser::Parse(const Code& input, Any& lhs, Real precedence, bool optimize) {
 		Any rhs;
 		Offset progress = 0;
-		if (!lhs.IsValid())
-			VERBOSE("Parsing unknown..." << Logger::Tab);
-		else
-			VERBOSE("Parsing unknown with LHS(" << lhs << ") " << Logger::Tab);
+		VERBOSE_TAB("Parsing unknown");
+		if (lhs.IsValid())
+			VERBOSE_ALT("LHS: " << lhs);
 
-		try {
-			while (progress < input.GetCount()) {
-				// Scan input until end													
-				Code relevant = input.RightOf(progress);
-				Offset localProgress = 0;
-				Operator op;
+		while (progress < input.GetCount()) {
+			// Scan input until end														
+			Code relevant = input.RightOf(progress);
+			Offset localProgress = 0;
+			Operator op;
 
-				if (relevant[0] == '\0')
-					break;
-				else if (SkippedParser::Peek(relevant))
-					localProgress = SkippedParser::Parse(relevant);
-				else if ((op = OperatorParser::Peek(relevant)) != Operator::NoOperator)
-					localProgress = OperatorParser::Parse(op, relevant, rhs, priority, optimize);
-				else if (KeywordParser::Peek(relevant))
-					localProgress = KeywordParser::Parse(relevant, rhs);
-				else if (NumberParser::Peek(relevant))
-					localProgress = NumberParser::Parse(relevant, rhs);
-				else
-					PRETTY_ERROR("Unexpected symbol");
+			if (relevant[0] == '\0')
+				break;
+			else if (SkippedParser::Peek(relevant))
+				localProgress = SkippedParser::Parse(relevant);
+			else if ((op = OperatorParser::Peek(relevant)) != Operator::NoOperator)
+				localProgress = OperatorParser::Parse(op, relevant, rhs, precedence, optimize);
+			else if (KeywordParser::Peek(relevant))
+				localProgress = KeywordParser::Parse(relevant, rhs);
+			else if (NumberParser::Peek(relevant))
+				localProgress = NumberParser::Parse(relevant, rhs);
+			else
+				PRETTY_ERROR("Unexpected symbol");
 
-				if (0 == localProgress) {
-					// This occurs often, when a lower priority operator is	
-					// waiting for higher priority stuff to be parsed first	
-					break;
-				}
-
-				progress += localProgress;
+			if (0 == localProgress) {
+				// This occurs often, when a lower priority operator is		
+				// waiting for higher priority stuff to be parsed first		
+				break;
 			}
-		}
-		catch (const Except::Flow& e) {
-			VERBOSE(Logger::Error() << "Failed to parse: " << input 
-				<< "; Reason: " << e.what() << Logger::Untab);
-			throw;
+
+			progress += localProgress;
 		}
 
 		// Input was parsed, relay content to output								
-		VERBOSE(Logger::Green << "Unknown parsed: " << rhs << Logger::Untab);
+		VERBOSE(Logger::Green << "Unknown parsed: " << rhs);
 		lhs.SmartPush(Abandon(rhs));
 		return progress;
 	}
@@ -239,6 +233,7 @@ namespace Langulus::Flow
 			else break;
 		}
 
+		VERBOSE("Skipped " << progress << " characters");
 		return progress;
 	}
 
@@ -275,7 +270,7 @@ namespace Langulus::Flow
 	///	@return number of parsed characters												
 	Offset Code::KeywordParser::Parse(const Code& input, Any& lhs, bool allowCharge) {
 		Offset progress = 0;
-		VERBOSE("Parsing keyword...");
+		VERBOSE_TAB("Parsing keyword");
 
 		// Isolate the keyword															
 		const auto keyword = Isolate(input);
@@ -283,7 +278,7 @@ namespace Langulus::Flow
 			PRETTY_ERROR("No keyword parsed");
 
 		progress += keyword.size();
-		VERBOSE("Keyword collected: " << keyword);
+		VERBOSE("Keyword isolated: " << keyword);
 
 		// Search for an exact token in meta definitions						
 		const auto dmeta = RTTI::Database.GetMetaData(keyword);
@@ -315,8 +310,16 @@ namespace Langulus::Flow
 		else {
 			// Search for ambiguous token in meta definitions					
 			auto& symbols = RTTI::Database.GetAmbiguousMeta(keyword);
-			if (symbols.size() > 1) {
-				Logger::Error() << "Ambiguous symbol: " << keyword << "; Could be one of: " << Logger::Tab;
+			if (symbols.empty()) {
+				PRETTY_ERROR("Unknown keyword: " << keyword);
+			}
+			else if (symbols.size() > 1) {
+				// Ambiguity, report error												
+				//TODO attempt disambiguating by partially comparing keyword with the provided variants
+				auto tab = Logger::Error()
+					<< "Ambiguous symbol: " << keyword
+					<< "; Could be one of: " << Logger::Tabs {};
+
 				for (auto& meta : symbols) {
 					Logger::Verbose() << Logger::Red << meta->mToken << " (";
 					switch (meta->GetMetaType()) {
@@ -329,12 +332,14 @@ namespace Langulus::Flow
 					case RTTI::Meta::Constant:
 						Logger::Append() << "meta constant)";
 						break;
+					SAFETY(default: PRETTY_ERROR("Unhandled meta type"));
 					}
 				}
-				Logger::Append() << Logger::Untab;
+
 				PRETTY_ERROR("Ambiguous symbol");
 			}
 
+			// If this is reached, then exactly one match in symbols			
 			// Push found meta data, if any											
 			for (auto& meta : symbols) {
 				switch (meta->GetMetaType()) {
@@ -362,14 +367,15 @@ namespace Langulus::Flow
 						Block {{}, metaConst->mValueType, 1, metaConst->mPtrToValue, nullptr}
 					}.Clone());
 					break;
-				}}
+				}
+				SAFETY(default: PRETTY_ERROR("Unhandled meta type"));
+				}
 			}
 		}
 
 		VERBOSE("Keyword parsed: "
 			<< Logger::Push << Logger::Cyan << keyword << Logger::Pop << " -> " 
 			<< Logger::Cyan << lhs << " (" << lhs.GetToken() << ")");
-
 		return progress;
 	}
 
@@ -396,7 +402,7 @@ namespace Langulus::Flow
 	Offset Code::NumberParser::Parse(const Code& input, Any& lhs) {
 		Real rhs = 0;
 		Offset progress = 0;
-		VERBOSE("Parsing number...");
+		VERBOSE_TAB("Parsing number");
 
 		if (auto [p, ec] = ::std::from_chars(input.GetRaw(), input.GetRaw() + input.GetCount(), rhs); 
 			ec == ::std::errc()) {
@@ -447,7 +453,9 @@ namespace Langulus::Flow
 		Offset progress = 0;
 		while (progress < input.GetCount()) {
 			const auto relevant = input.RightOf(progress);
-			if (KeywordParser::Peek(relevant) || NumberParser::Peek(relevant) || SkippedParser::Peek(relevant))
+			if (KeywordParser::Peek(relevant)
+				|| NumberParser::Peek(relevant)
+				|| SkippedParser::Peek(relevant))
 				break;
 			++progress;
 		}
@@ -470,7 +478,7 @@ namespace Langulus::Flow
 		Offset progress = 0;
 		if (op < NoOperator) {
 			// Handle a built-in operator												
-			if (mOperators[op].mPriority && priority >= mOperators[op].mPriority) {
+			if (mOperators[op].mPrecedence && priority >= mOperators[op].mPrecedence) {
 				VERBOSE(Logger::Yellow 
 					<< "Delaying built-in operator " << mOperators[op].mToken
 					<< " due to a prioritized operation");
@@ -478,7 +486,7 @@ namespace Langulus::Flow
 			}
 
 			// Skip the operator, we already know it								
-			VERBOSE("Parsing built-in operator: " << mOperators[op].mToken);
+			VERBOSE_TAB("Parsing built-in operator: " << mOperators[op].mToken);
 			progress += mOperators[op].mToken.size();
 			const Code relevant = input.RightOf(progress);
 
@@ -513,14 +521,14 @@ namespace Langulus::Flow
 			const auto word = Isolate(input);
 			const auto found = RTTI::Database.GetOperator(word);
 
-			if (found->mPriority && priority >= found->mPriority) {
+			if (found->mPrecedence && priority >= found->mPrecedence) {
 				VERBOSE(Logger::Yellow
 					<< "Delaying reflected operator " << found->mToken
 					<< " due to a prioritized operation");
 				return 0;
 			}
 
-			VERBOSE("Parsing reflected operator: " << word << " (" << found->mToken << ")");
+			VERBOSE_TAB("Parsing reflected operator: " << word << " (" << found->mToken << ")");
 			progress += word.size();
 			const Code relevant = input.RightOf(progress);
 			Verb operation {found};
@@ -534,14 +542,14 @@ namespace Langulus::Flow
 			const auto word = Isolate(input);
 			const auto found = RTTI::Database.GetMetaVerb(word);
 
-			if (found->mPriority && priority >= found->mPriority) {
+			if (found->mPrecedence && priority >= found->mPrecedence) {
 				VERBOSE(Logger::Yellow
 					<< "Delaying reflected operator " << found->mToken
 					<< " due to a prioritized operation");
 				return 0;
 			}
 
-			VERBOSE("Parsing reflected verb: " << word << " (" << found->mToken << ")");
+			VERBOSE_TAB("Parsing reflected verb: " << word << " (" << found->mToken << ")");
 			progress += word.size();
 			const Code relevant = input.RightOf(progress);
 			Verb operation {found};
@@ -565,7 +573,7 @@ namespace Langulus::Flow
 
 		// We don't know what to expect, so we attempt blind parse			
 		Any rhs;
-		progress = UnknownParser::Parse(input, rhs, mOperators[OpenScope].mPriority, optimize);
+		progress = UnknownParser::Parse(input, rhs, mOperators[OpenScope].mPrecedence, optimize);
 		if (!input.RightOf(progress).StartsWithOperator(CloseScope))
 			PRETTY_ERROR("Missing closing bracket");
 
@@ -819,27 +827,30 @@ namespace Langulus::Flow
 		
 		// Parse RHS for the operator													
 		progress += UnknownParser::Parse(
-			input.RightOf(progress), op.GetArgument(), op.GetVerb()->mPriority, optimize);
+			input.RightOf(progress), op.GetArgument(), op.GetVerb()->mPrecedence, optimize);
 
-		// Then dispatch the operation in lhs, with the given arguments,	
-		// trying to execute it at compile-time									
-		if (optimize && DispatchDeep(lhs, op)) {
-			// The verb was executed at compile-time, so directly				
-			// substitute LHS with the result										
-			lhs = Move(op.GetOutput());
-		}
-		else {
-			// Either compile-time execution is impossible, or we don't		
-			// want it, so directly substitute LHS with the verb				
-			op.SetSource(Move(lhs));
-			lhs = Move(op);
+		if (optimize) {
+			// Try executing operator at compile-time								
+			VERBOSE_TAB("Attempting precompilation... ");
+			Any output;
+			Scope scope {op};
+			if (scope.Execute(lhs, output)) {
+				// The verb was executed at compile-time, so directly			
+				// substitute LHS with the result									
+				lhs = Abandon(output);
+				return progress;
+			}
 		}
 
+		// Either compile-time execution is impossible, or we don't			
+		// want it, so directly substitute LHS with the verb					
+		op.SetSource(Move(lhs));
+		lhs = Move(op);
 		return progress;
 	}
 
 	/// Peek inside input, and return true if it begins with one of the			
-	/// builtin operators for charging														
+	/// built-in operators for charging														
 	///	@param input - the code to peek into											
 	///	@return true if input begins with an operator for charging				
 	Code::Operator Code::ChargeParser::Peek(const Code& input) noexcept {
@@ -851,77 +862,69 @@ namespace Langulus::Flow
 		return NoOperator;
 	}
 
-	/// Mass/time/frequency/priority operators (+, -, *, /, @, ^, !)				
-	/// Can be applied to things with charge, like verbs and constructs			
+	/// Parse mass/time/frequency/priority operators									
 	///	@param input - the code to parse													
 	///	@param charge - [out] parsed charge goes here								
 	///	@return number of parsed characters												
 	Offset Code::ChargeParser::Parse(const Code& input, Charge& charge) {
 		Offset progress = 0;
-		VERBOSE("Parsing charge... " << Logger::Tab);
+		VERBOSE_TAB("Parsing charge: " << input);
 
-		try {
-			while (progress < input.GetCount()) {
-				// Scan input until end of charge operators/code				
-				auto relevant = input.RightOf(progress);
-				if (relevant[0] == '\0')
-					break;
+		while (progress < input.GetCount()) {
+			// Scan input until end of charge operators/code					
+			auto relevant = input.RightOf(progress);
+			if (relevant[0] == '\0')
+				break;
 
-				const auto op = ChargeParser::Peek(relevant);
-				if (op == Operator::NoOperator)
-					return progress;
+			const auto op = ChargeParser::Peek(relevant);
+			if (op == Operator::NoOperator)
+				return progress;
 
-				progress += mOperators[op].mToken.size();
-				relevant = input.RightOf(progress);
+			progress += mOperators[op].mToken.size();
+			relevant = input.RightOf(progress);
 
-				// For each charge operator encountered - parse a RHS			
-				Any rhs;
-				if (SkippedParser::Peek(relevant))
-					// Skip empty space and escape symbols							
-					progress += SkippedParser::Parse(relevant);
-				else if (KeywordParser::Peek(relevant))
-					// Charge parameter can be a keyword, like a constant, 	
-					// but is not allowed to have charge on its own, to		
-					// avoid endless nesting - you must wrap it in a scope	
-					progress += KeywordParser::Parse(relevant, rhs, false);
-				else if (NumberParser::Peek(relevant))
-					// Can be a literal number											
-					progress += NumberParser::Parse(relevant, rhs);
-				else if (OperatorParser::Peek(relevant) == Operator::OpenScope)
-					// Can be anything wrapped in a scope							
-					progress += OperatorParser::Parse(Operator::OpenScope, relevant, rhs, 0, true);
-				else
-					PRETTY_ERROR("Unexpected symbol");
+			// For each charge operator encountered - parse a RHS				
+			Any rhs;
+			if (SkippedParser::Peek(relevant))
+				// Skip empty space and escape symbols								
+				progress += SkippedParser::Parse(relevant);
+			else if (KeywordParser::Peek(relevant))
+				// Charge parameter can be a keyword, like a constant, 		
+				// but is not allowed to have charge on its own, to			
+				// avoid endless nesting - you must wrap it in a scope		
+				progress += KeywordParser::Parse(relevant, rhs, false);
+			else if (NumberParser::Peek(relevant))
+				// Can be a literal number												
+				progress += NumberParser::Parse(relevant, rhs);
+			else if (OperatorParser::Peek(relevant) == Operator::OpenScope)
+				// Can be anything wrapped in a scope								
+				progress += OperatorParser::Parse(Operator::OpenScope, relevant, rhs, 0, true);
+			else
+				PRETTY_ERROR("Unexpected symbol");
 
-				// Save changes															
-				// AsCast may throw here, if RHS did not evaluate or convert
-				// to real - this is later caught and handled gracefully		
-				const auto asReal = rhs.AsCast<Real>();
-				switch (op) {
-				case Code::Mass:
-					charge.mMass = asReal;
-					break;
-				case Code::Frequency:
-					charge.mFrequency = asReal;
-					break;
-				case Code::Time:
-					charge.mTime = asReal;
-					break;
-				case Code::Priority:
-					charge.mPriority = asReal;
-					break;
-				default:
-					PRETTY_ERROR("Invalid charge operator: " << mOperators[op].mToken);
-				}
+			// Save changes																
+			// AsCast may throw here, if RHS did not evaluate or convert	
+			// to real - this is later caught and handled gracefully			
+			const auto asReal = rhs.AsCast<Real>();
+			switch (op) {
+			case Code::Mass:
+				charge.mMass = asReal;
+				break;
+			case Code::Frequency:
+				charge.mFrequency = asReal;
+				break;
+			case Code::Time:
+				charge.mTime = asReal;
+				break;
+			case Code::Priority:
+				charge.mPriority = asReal;
+				break;
+			default:
+				PRETTY_ERROR("Invalid charge operator: " << mOperators[op].mToken);
 			}
 		}
-		catch (const Except::Flow& e) {
-			VERBOSE(Logger::Error() << "Failed to parse charge: " << input 
-				<< "; Reason: " << e.what() << Logger::Untab);
-			throw;
-		}
 
-		VERBOSE("Charge parsed" << Logger::Untab);
+		VERBOSE("Charge parsed: " << charge);
 		return progress;
 	}
 

@@ -301,7 +301,7 @@ namespace Langulus::Verbs
 		LANGULUS(NEGATIVE_VERB) "Deselect";
 		LANGULUS(POSITIVE_OPERATOR) ".";
 		LANGULUS(NEGATIVE_OPERATOR) "..";
-		LANGULUS(PRIORITY) 2;
+		LANGULUS(PRECEDENCE) 2;
 		LANGULUS(INFO)
 			"Used to focus on a part of a container, or access members";
 		LANGULUS_BASES(Verb);
@@ -341,7 +341,7 @@ namespace Langulus::Verbs
 		LANGULUS(NEGATIVE_VERB) "Disassocate";
 		LANGULUS(POSITIVE_OPERATOR) " = ";
 		LANGULUS(NEGATIVE_OPERATOR) " ~ ";
-		LANGULUS(PRIORITY) 1;
+		LANGULUS(PRECEDENCE) 1;
 		LANGULUS(INFO)
 			"Either performs a shallow copy, or aggregates associations, "
 			"depending on the context's complexity";

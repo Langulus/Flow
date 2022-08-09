@@ -142,16 +142,20 @@ namespace Langulus
 	///	@param rhs - the block to stringify												
 	///	@return a reference to the logger for chaining								
 	template<CT::Deep T>
-	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs) {
-		return lhs << Verbs::Interpret::To<Flow::Debug>(rhs);
+	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
+		Logger::A::Interface& lhs, const T& rhs) {
+		return lhs.operator << (Token {Verbs::Interpret::To<Flow::Debug>(rhs)});
 	}
 
-	/// Extend the logger to be capable of logging verbs								
+	/// Extend the logger to be capable of logging anything statically			
+	/// convertible to Debug string															
 	///	@param lhs - the logger interface												
 	///	@param rhs - the verb to stringify												
 	///	@return a reference to the logger for chaining								
-	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (Logger::A::Interface& lhs, const Flow::Verb& rhs) {
-		return lhs << Verbs::Interpret::To<Flow::Debug>(rhs);
+	template<CT::Flat T>
+	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
+		Logger::A::Interface& lhs, const T& rhs) requires CT::Convertible<T, Flow::Debug> {
+		return lhs.operator << (Token {Verbs::Interpret::To<Flow::Debug>(rhs)});
 	}
 
 } // namespace Langulus

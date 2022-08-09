@@ -262,7 +262,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("The script: Create!-1(Verb(past?(Number,MetaData,Construct), future?(Number,MetaData,Construct)))") {
+	GIVEN("The script: Create!-1(Verb(past?(Number,DMeta,Construct), future?(Number,DMeta,Construct)))") {
 		Any a1 {pastMissing};
 		a1
 			<< MetaData::Of<A::Number>()
@@ -275,7 +275,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 			<< MetaData::Of<MetaData>()
 			<< MetaData::Of<Construct>();
 
-		const Code code = "Create!-1(Verb(past?(Number,MetaData,Construct), future?(Number,MetaData,Construct)))";
+		const Code code = "Create!-1(Verb(past?(Number,DMeta,Construct), future?(Number,DMeta,Construct)))";
 		const Any required = Verbs::Create(
 			Construct::From<Verb>(Any::WrapCommon(a1, a2))
 		).SetPriority(-1);

@@ -74,7 +74,7 @@ namespace Langulus::Flow
 		/// Parser for unknown expressions													
 		/// An unknown-expressions will be scanned to figure what it contains	
 		struct UnknownParser {
-			NOD() static Offset Parse(const Code&, Any&, Real priority, bool optimize);
+			NOD() static Offset Parse(const Code&, Any&, Real, bool optimize);
 		};
 
 		/// Parser for keyword expressions													
@@ -104,7 +104,7 @@ namespace Langulus::Flow
 		/// An op-expression is one matching the built-in ones, or one matching	
 		/// one in reflected verb database, where LHS is not DMeta or VMeta		
 		struct OperatorParser {
-			NOD() static Offset Parse(Operator, const Code&, Any&, Real priority, bool optimize);
+			NOD() static Offset Parse(Operator, const Code&, Any&, Real, bool optimize);
 			NOD() static Operator Peek(const Code&) noexcept;
 			NOD() static Token Isolate(const Code&) noexcept;
 
@@ -130,7 +130,7 @@ namespace Langulus::Flow
 
 		struct OperatorProperties {
 			Token mToken;
-			Real mPriority;
+			Real mPrecedence;
 			bool mCharge;
 		};
 

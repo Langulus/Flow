@@ -74,11 +74,11 @@ namespace Langulus::Verbs
 	inline bool Conjunct::ExecuteDefault(const Block& context, Verb& verb) {
 		Any joined;
 		if (verb.GetMass() < 0) {
-			joined.SmartPush(Any {context}, DataState::Or);
+			joined.SmartPush(verb.GetSource(), DataState::Or);
 			joined.SmartPush(verb.GetArgument(), DataState::Or);
 		}
 		else {
-			joined.SmartPush(Any {context});
+			joined.SmartPush(verb.GetSource());
 			joined.SmartPush(verb.GetArgument());
 		}
 

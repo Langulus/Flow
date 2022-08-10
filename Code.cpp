@@ -486,8 +486,8 @@ namespace Langulus::Flow
 			}
 
 			// Skip the operator, we already know it								
-			VERBOSE_TAB("Parsing built-in operator: " << mOperators[op].mToken);
 			progress += mOperators[op].mToken.size();
+			VERBOSE_TAB("Parsing built-in operator: " << mOperators[op].mToken);
 			const Code relevant = input.RightOf(progress);
 
 			switch (op) {
@@ -592,10 +592,14 @@ namespace Langulus::Flow
 	///	@param rhs - the content to insert												
 	///	@param lhs - the place where the content will be inserted				
 	void Code::OperatorParser::InsertContent(Any& rhs, Any& lhs) {
-		if (lhs.IsUntyped()) {
+		if (lhs.IsUntyped() || lhs.IsEmpty()) {
 			// If output is untyped, we directly push content, regardless	
 			// if it's filled with something or not - a scope is a scope	
+			// If empty, just merge states											
+			const auto stateBackup = lhs.GetState();
+			lhs.ResetState();
 			lhs.SmartPush(Move(rhs));
+			lhs.AddState(stateBackup);
 			VERBOSE_ALT("Untyped content: " << Logger::Cyan << lhs);
 		}
 		else if (lhs.Is<DMeta>()) {

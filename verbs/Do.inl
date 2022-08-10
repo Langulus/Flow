@@ -194,6 +194,7 @@ namespace Langulus::Flow
 			else {
 				// Context is empty, but has relevant states, so directly	
 				// forward it as context												
+				verb.SetSource(context);
 				Execute<DISPATCH, DEFAULT, true>(context, verb);
 				return verb.GetSuccesses();
 			}
@@ -204,13 +205,14 @@ namespace Langulus::Flow
 
 		// Iterate elements in the current context								
 		for (Count i = 0; i < context.GetCount(); ++i) {
-			// Reset verb to initial state											
+			verb.SetSource(context.GetElement(i));
+
 			if constexpr (RESOLVE) {
-				auto resolved = context.GetElementResolved(i);
+				auto resolved = verb.GetSource().GetResolved();
 				Execute<DISPATCH, DEFAULT, false>(resolved, verb);
 			}
 			else {
-				auto resolved = context.GetElementDense(i);
+				auto resolved = verb.GetSource().GetDense();
 				Execute<DISPATCH, DEFAULT, false>(resolved, verb);
 			}
 
@@ -277,6 +279,7 @@ namespace Langulus::Flow
 			else {
 				// Context is empty, but has relevant states, so directly	
 				// forward it as context												
+				verb.SetSource(context);
 				Execute<DISPATCH, DEFAULT, true>(context, verb);
 				return verb.GetSuccesses();
 			}
@@ -289,7 +292,8 @@ namespace Langulus::Flow
 			Count successCount {};
 			auto output = Any::FromState(context);
 			for (Count i = 0; i < context.GetCount(); ++i) {
-				const auto hits = DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(context.template As<Block>(i), verb);
+				const auto hits = DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(
+					context.template As<Block>(i), verb);
 				successCount += hits;
 
 				if (verb.IsShortCircuited()) {

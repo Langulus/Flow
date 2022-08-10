@@ -162,7 +162,7 @@ namespace Langulus::Flow
 						constVerb.mVerb,
 						constVerb.GetArgument(),
 						constVerb,
-						constVerb.mShortCircuited
+						constVerb.GetVerbState()
 					};
 
 					// Execute the verb													
@@ -245,7 +245,7 @@ namespace Langulus::Flow
 						constVerb.mVerb,
 						constVerb.GetArgument(),
 						constVerb,
-						constVerb.mShortCircuited
+						constVerb.GetVerbState()
 					};
 
 					if (!Scope::ExecuteVerb(environment, verb))

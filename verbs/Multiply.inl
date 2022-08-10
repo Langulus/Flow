@@ -14,18 +14,18 @@ namespace Langulus::Verbs
 	/// Multiply/Divide verb construction by shallow-copy								
 	///	@param a - right hand side															
 	///	@param c - the charge of the multiplication									
-	///	@param sc - is the multiplication short-circuited							
+	///	@param state - the verb state														
 	template<CT::Data T>
-	Multiply::Multiply(const T& a, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Multiply>(), a, c, sc} {}
+	Multiply::Multiply(const T& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<Multiply>(), a, c, state} {}
 
 	/// Multiply/Divide verb construction by move										
 	///	@param a - right hand side															
 	///	@param c - the charge of the multiplication									
-	///	@param sc - is the multiplication short-circuited							
+	///	@param state - the verb state														
 	template<CT::Data T>
-	Multiply::Multiply(T&& a, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Multiply>(), Forward<T>(a), c, sc} {}
+	Multiply::Multiply(T&& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<Multiply>(), Forward<T>(a), c, state} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

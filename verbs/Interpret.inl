@@ -15,18 +15,18 @@ namespace Langulus::Verbs
 	/// Interpretation verb construction by shallow-copy								
 	///	@param a - what are we converting to?											
 	///	@param c - the charge of the conversion										
-	///	@param sc - is the conversion short-circuited								
+	///	@param state - the verb state														
 	template<CT::Data T>
-	Interpret::Interpret(const T& a, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Interpret>(), a, c, sc} {}
+	Interpret::Interpret(const T& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<Interpret>(), a, c, state} {}
 
 	/// Interpretation verb construction by move											
 	///	@param a - what are we converting to?											
 	///	@param c - the charge of the conversion										
-	///	@param sc - is the conversion short-circuited								
+	///	@param state - the verb state														
 	template<CT::Data T>
-	Interpret::Interpret(T&& a, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Interpret>(), Forward<T>(a), c, sc} {}
+	Interpret::Interpret(T&& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<Interpret>(), Forward<T>(a), c, state} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

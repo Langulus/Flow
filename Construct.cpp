@@ -65,7 +65,7 @@ namespace Langulus::Flow
 	/// Compare constructs																		
 	///	@param rhs - descriptor to compare with										
 	///	@return true if both constructs are the same									
-	bool Construct::operator == (const Construct& rhs) const noexcept {
+	bool Construct::operator == (const Construct& rhs) const {
 		return GetHash() == rhs.GetHash()
 			&& mType == rhs.mType
 			&& Any::operator == (rhs.GetArgument());

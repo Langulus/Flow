@@ -11,18 +11,18 @@ namespace Langulus::Verbs
 	/// Do/Undo verb construction via shallow-copy										
 	///	@param a - what to execute															
 	///	@param c - the charge of the do/undo											
-	///	@param sc - is the do/undo short-circuited									
+	///	@param state - the verb state														
 	template<CT::Data T>
-	Do::Do(const T& a, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Do>(), a, c, sc} {}
+	Do::Do(const T& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<Do>(), a, c, state} {}
 
 	/// Do/Undo verb construction via move													
 	///	@param a - what to execute															
 	///	@param c - the charge of the do/undo											
-	///	@param sc - is the do/undo short-circuited									
+	///	@param state - the verb state														
 	template<CT::Data T>
-	Do::Do(T&& a, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Do>(), Forward<T>(a), c, sc} {}
+	Do::Do(T&& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<Do>(), Forward<T>(a), c, state} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												
@@ -136,7 +136,7 @@ namespace Langulus::Flow
 			// type, you no longer rely on reflected bases' verbs or			
 			// default verbs. You must invoke those by yourself in your		
 			// dispatcher - the custom dispatcher provides full control		
-			DenseCast(context).Do(verb);
+			context.Do(verb);
 		}
 		else {
 			// Execute verb inside the context directly							
@@ -182,7 +182,7 @@ namespace Langulus::Flow
 	///	@return the number of successful executions									
 	template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::Verb V>
 	Count DispatchFlat(T& context, V& verb) {
-		if (context.IsEmpty()) {
+		if (context.IsEmpty() || verb.IsMonocast()) {
 			if (context.IsInvalid()) {
 				// Context is empty and doesn't have any relevant states,	
 				// and execution happens only if DEFAULT verbs are allowed,	
@@ -193,7 +193,8 @@ namespace Langulus::Flow
 			}
 			else {
 				// Context is empty, but has relevant states, so directly	
-				// forward it as context												
+				// forward it as context. Alternatively, the verb is not a	
+				// multicast verb, and we're operating on context as one		
 				verb.SetSource(context);
 				Execute<DISPATCH, DEFAULT, true>(context, verb);
 				return verb.GetSuccesses();
@@ -267,7 +268,7 @@ namespace Langulus::Flow
 	///	@return the number of successful executions									
 	template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::Verb V>
 	Count DispatchDeep(T& context, V& verb) {
-		if (context.IsEmpty()) {
+		if (context.IsEmpty() || verb.IsMonocast()) {
 			if (context.IsInvalid()) {
 				// Context is empty and doesn't have any relevant states,	
 				// and execution happens only if DEFAULT verbs are allowed,	
@@ -278,7 +279,8 @@ namespace Langulus::Flow
 			}
 			else {
 				// Context is empty, but has relevant states, so directly	
-				// forward it as context												
+				// forward it as context. Alternatively, the verb is not a	
+				// multicast verb, and we're operating on context as one		
 				verb.SetSource(context);
 				Execute<DISPATCH, DEFAULT, true>(context, verb);
 				return verb.GetSuccesses();

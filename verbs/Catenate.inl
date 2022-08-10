@@ -11,18 +11,18 @@ namespace Langulus::Verbs
 	/// Catenate/Split verb construction by shallow-copy								
 	///	@param a - what are we catenating to/where are we splitting at?		
 	///	@param c - the charge of the catenation/split								
-	///	@param sc - is the catenating/split short-circuited						
+	///	@param state - the verb state														
 	template<CT::Data T>
-	Catenate::Catenate(const T& a, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Catenate>(), a, c, sc} {}
+	Catenate::Catenate(const T& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<Catenate>(), a, c, state} {}
 
 	/// Catenate/Split verb construction by move											
 	///	@param a - what are we catenating to/where are we splitting at?		
 	///	@param c - the charge of the catenation/split								
-	///	@param sc - is the catenating/split short-circuited						
+	///	@param state - the verb state														
 	template<CT::Data T>
-	Catenate::Catenate(T&& a, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Catenate>(), Forward<T>(a), c, sc} {}
+	Catenate::Catenate(T&& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<Catenate>(), Forward<T>(a), c, state} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

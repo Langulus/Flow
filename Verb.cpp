@@ -64,7 +64,7 @@ namespace Langulus::Flow
 		, mVerb {other.mValue.mVerb}
 		, mSource {Disown(other.mValue.mSource)}
 		, mOutput {Disown(other.mValue.mOutput)}
-		, mShortCircuited {other.mValue.mShortCircuited} { }
+		, mState {other.mValue.mState} { }
 
 	/// Abandon-construct a verb																
 	///	@param other - the verb to abandon and move									
@@ -74,7 +74,7 @@ namespace Langulus::Flow
 		, mVerb {other.mValue.mVerb}
 		, mSource {Abandon(other.mValue.mSource)}
 		, mOutput {Abandon(other.mValue.mOutput)}
-		, mShortCircuited {other.mValue.mShortCircuited} { }
+		, mState {other.mValue.mState} { }
 
 	/// Manual constructor with verb meta 													
 	///	@param verb - the verb type														
@@ -91,7 +91,7 @@ namespace Langulus::Flow
 		mVerb = other.mValue.mVerb;
 		mSource = Disown(other.mValue.mSource);
 		mOutput = Disown(other.mValue.mOutput);
-		mShortCircuited = other.mValue.mShortCircuited;
+		mState = other.mValue.mState;
 		return *this;
 	}
 
@@ -104,7 +104,7 @@ namespace Langulus::Flow
 		mVerb = other.mValue.mVerb;
 		mSource = Abandon(other.mValue.mSource);
 		mOutput = Abandon(other.mValue.mOutput);
-		mShortCircuited = other.mValue.mShortCircuited;
+		mState = other.mValue.mState;
 		return *this;
 	}
 
@@ -152,13 +152,13 @@ namespace Langulus::Flow
 	///	@param other - the verb to use as base											
 	///	@return the partially copied verb												
 	Verb Verb::PartialCopy() const noexcept {
-		return {mVerb, Any{}, GetCharge(), mShortCircuited};
+		return {mVerb, Any{}, GetCharge(), mState};
 	}
 
 	/// Clone the verb																			
 	///	@return the cloned verb																
 	Verb Verb::Clone() const {
-		Verb clone {mVerb, Any::Clone(), GetCharge(), mShortCircuited};
+		Verb clone {mVerb, Any::Clone(), GetCharge(), mState};
 		clone.mSource = mSource.Clone();
 		clone.mOutput = mOutput.Clone();
 		clone.mSuccesses = mSuccesses;
@@ -193,7 +193,21 @@ namespace Langulus::Flow
 	///	@param toggle - enable or disable short-circuit								
 	///	@return a reference to this verb for chaining								
 	Verb& Verb::ShortCircuit(bool toggle) noexcept {
-		mShortCircuited = toggle;
+		if (toggle)
+			mState -= VerbState::LongCircuited;
+		else
+			mState += VerbState::LongCircuited;
+		return *this;
+	}
+
+	/// Change the verb's castness															
+	///	@param toggle - enable or disable multicast									
+	///	@return a reference to this verb for chaining								
+	Verb& Verb::Multicast(bool toggle) noexcept {
+		if (toggle)
+			mState -= VerbState::Monocast;
+		else
+			mState += VerbState::Monocast;
 		return *this;
 	}
 

@@ -8,13 +8,13 @@
 #include "verbs/Exponent.inl"
 
 #define VERBOSE_INNER(a) \
-		Logger::Verbose() << "Flow::Code: " << Logger::Push << a << Logger::Pop << " at " << progress << ": " << \
+		Logger::Verbose() << "Flow::Code: " << Logger::Push << Logger::Cyan << a << Logger::Pop << " at " << progress << ": " << \
 		Logger::NewLine << "+-- [" \
 			<< Logger::Push << Logger::Underline << input.LeftOf(progress) << Logger::Pop \
 			<< input.RightOf(progress) << ']'
 
 #define PRETTY_ERROR(a) { \
-		Logger::Error() << "Flow::Code: " << Logger::Push << a << Logger::Pop << " at " << progress << ": " << \
+		Logger::Error() << "Flow::Code: " << Logger::Push << Logger::DarkYellow << a << Logger::Pop << " at " << progress << ": " << \
 		Logger::NewLine << "+-- [" \
 			<< Logger::Push << Logger::Underline << input.LeftOf(progress) << Logger::Pop \
 			<< input.RightOf(progress) << ']'; \
@@ -373,9 +373,7 @@ namespace Langulus::Flow
 			}
 		}
 
-		VERBOSE("Keyword parsed: "
-			<< Logger::Push << Logger::Cyan << keyword << Logger::Pop << " -> " 
-			<< Logger::Cyan << lhs << " (" << lhs.GetToken() << ")");
+		VERBOSE("Keyword parsed: " << keyword << lhs << " (" << lhs.GetToken() << ")");
 		return progress;
 	}
 
@@ -480,14 +478,14 @@ namespace Langulus::Flow
 			// Handle a built-in operator												
 			if (mOperators[op].mPrecedence && priority >= mOperators[op].mPrecedence) {
 				VERBOSE(Logger::Yellow 
-					<< "Delaying built-in operator " << mOperators[op].mToken
-					<< " due to a prioritized operation");
+					<< "Delaying built-in operator [" << mOperators[op].mToken
+					<< "] due to a prioritized operation");
 				return 0;
 			}
 
 			// Skip the operator, we already know it								
 			progress += mOperators[op].mToken.size();
-			VERBOSE_TAB("Parsing built-in operator: " << mOperators[op].mToken);
+			VERBOSE_TAB("Parsing built-in operator: [" << mOperators[op].mToken << ']');
 			const Code relevant = input.RightOf(progress);
 
 			switch (op) {
@@ -523,12 +521,12 @@ namespace Langulus::Flow
 
 			if (found->mPrecedence && priority >= found->mPrecedence) {
 				VERBOSE(Logger::Yellow
-					<< "Delaying reflected operator " << found->mToken
-					<< " due to a prioritized operation");
+					<< "Delaying reflected operator [" << found->mToken
+					<< "] due to a prioritized operation");
 				return 0;
 			}
 
-			VERBOSE_TAB("Parsing reflected operator: " << word << " (" << found->mToken << ")");
+			VERBOSE_TAB("Parsing reflected operator: [" << word << "] (" << found->mToken << ")");
 			progress += word.size();
 			const Code relevant = input.RightOf(progress);
 			Verb operation {found};
@@ -544,12 +542,12 @@ namespace Langulus::Flow
 
 			if (found->mPrecedence && priority >= found->mPrecedence) {
 				VERBOSE(Logger::Yellow
-					<< "Delaying reflected operator " << found->mToken
-					<< " due to a prioritized operation");
+					<< "Delaying reflected operator [" << found->mToken
+					<< "] due to a prioritized operation");
 				return 0;
 			}
 
-			VERBOSE_TAB("Parsing reflected verb: " << word << " (" << found->mToken << ")");
+			VERBOSE_TAB("Parsing reflected verb: [" << word << "] (" << found->mToken << ")");
 			progress += word.size();
 			const Code relevant = input.RightOf(progress);
 			Verb operation {found};
@@ -675,7 +673,7 @@ namespace Langulus::Flow
 				if (relevant.StartsWithOperator(closer)) {
 					const auto tokenSize = mOperators[closer].mToken.size();
 					lhs << Text {input.LeftOf(progress)};
-					VERBOSE("String parsed: " << Logger::Cyan << lhs);
+					VERBOSE("String parsed: " << lhs);
 					return tokenSize + progress;
 				}
 				break;
@@ -686,7 +684,7 @@ namespace Langulus::Flow
 				if (relevant.StartsWithOperator(CloseCharacter)) {
 					const auto tokenSize = mOperators[CloseCharacter].mToken.size();
 					lhs << input[0];
-					VERBOSE("Character parsed: " << Logger::Cyan << lhs);
+					VERBOSE("Character parsed: " << lhs);
 					return tokenSize + progress;
 				}
 				break;
@@ -701,7 +699,7 @@ namespace Langulus::Flow
 					if (0 == depth) {
 						const auto tokenSize = mOperators[CloseCode].mToken.size();
 						lhs << input.LeftOf(progress);
-						VERBOSE("Code parsed: " << Logger::Cyan << lhs);
+						VERBOSE("Code parsed: " << lhs);
 						return tokenSize + progress;
 					}
 				}
@@ -777,8 +775,6 @@ namespace Langulus::Flow
 			lhs.MakePast();
 		else
 			lhs.MakeFuture();
-
-		VERBOSE_ALT("Parsed phased: " << Logger::Cyan << lhs);
 		return 0;
 	}
 
@@ -789,8 +785,6 @@ namespace Langulus::Flow
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParseConst(const Code& input, Any& lhs, bool optimize) {
 		lhs.MakeConst();
-
-		VERBOSE_ALT("Parsed constant: " << Logger::Cyan << lhs);
 		return 0;
 	}
 
@@ -801,8 +795,6 @@ namespace Langulus::Flow
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParseSparse(const Code& input, Any& lhs, bool optimize) {
 		lhs.MakeSparse();
-
-		VERBOSE_ALT("Parsed sparse: " << Logger::Cyan << lhs);
 		return 0;
 	}
 
@@ -812,7 +804,6 @@ namespace Langulus::Flow
 	///	@return number of parsed characters												
 	Offset Code::OperatorParser::ParseMissing(const Code&, Any& lhs) {
 		lhs.MakeMissing();
-		VERBOSE_ALT("Parsed missing: " << Logger::Cyan << lhs);
 		return 0;
 	}
 
@@ -835,7 +826,10 @@ namespace Langulus::Flow
 
 		if (optimize) {
 			// Try executing operator at compile-time								
-			VERBOSE_TAB("Attempting precompilation... ");
+			// We must disable multicast for this									
+			VERBOSE_TAB("Attempting compile-time execution... ");
+			const auto opStateBackup = op.GetVerbState();
+			op.Multicast(false);
 			Any output;
 			Scope scope {op};
 			if (scope.Execute(lhs, output)) {
@@ -844,6 +838,7 @@ namespace Langulus::Flow
 				lhs = Abandon(output);
 				return progress;
 			}
+			else op.SetVerbState(opStateBackup);
 		}
 
 		// Either compile-time execution is impossible, or we don't			
@@ -872,7 +867,7 @@ namespace Langulus::Flow
 	///	@return number of parsed characters												
 	Offset Code::ChargeParser::Parse(const Code& input, Charge& charge) {
 		Offset progress = 0;
-		VERBOSE_TAB("Parsing charge: " << input);
+		VERBOSE_TAB("Parsing charge");
 
 		while (progress < input.GetCount()) {
 			// Scan input until end of charge operators/code					
@@ -885,6 +880,7 @@ namespace Langulus::Flow
 				return progress;
 
 			progress += mOperators[op].mToken.size();
+			VERBOSE("Parsing charge operator: [" << mOperators[op].mToken << ']');
 			relevant = input.RightOf(progress);
 
 			// For each charge operator encountered - parse a RHS				

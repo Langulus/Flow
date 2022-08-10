@@ -78,6 +78,60 @@ namespace Langulus::Flow
 		NOD() explicit operator Debug() const;
 	};
 
+	
+	///																								
+	///	Verb state flags																		
+	///																								
+	struct VerbState {
+		LANGULUS(POD) true;
+		LANGULUS(NULLIFIABLE) true;
+
+		enum Enum : ::std::uint8_t {
+			// Default verb state														
+			// Default state is short-circuited multicast						
+			Default = 0,
+
+			// When verb is long-circuited (as oposed to short-circuited),	
+			// it will not cease executing on success, and be executed for	
+			// each element in the context if multicasted. Used usually in	
+			// interpretation, when you want to guarantee all elements are	
+			// converted																	
+			LongCircuited = 1,
+
+			// When verb is monocast (as opposite to multicast), it will	
+			// not iterate deep items, but be executed on the context once	
+			// as a whole. Used extensively when executing at compile-time	
+			Monocast = 2
+		};
+
+		using Type = ::std::underlying_type_t<Enum>;
+
+		Type mState {Default};
+
+	public:
+		constexpr VerbState() noexcept = default;
+		constexpr VerbState(const Type&) noexcept;
+
+		explicit constexpr operator bool() const noexcept;
+		constexpr bool operator == (const VerbState&) const noexcept = default;
+		
+		NOD() constexpr VerbState operator + (const VerbState&) const noexcept;
+		NOD() constexpr VerbState operator - (const VerbState&) const noexcept;
+		constexpr VerbState& operator += (const VerbState&) noexcept;
+		constexpr VerbState& operator -= (const VerbState&) noexcept;
+		
+		NOD() constexpr bool operator & (const VerbState&) const noexcept;
+		NOD() constexpr bool operator % (const VerbState&) const noexcept;
+		
+		NOD() constexpr bool IsDefault() const noexcept;
+		NOD() constexpr bool IsMulticast() const noexcept;
+		NOD() constexpr bool IsMonocast() const noexcept;
+		NOD() constexpr bool IsShortCircuited() const noexcept;
+		NOD() constexpr bool IsLongCircuited() const noexcept;
+		
+		constexpr void Reset() noexcept;
+	};
+
 
 	///																								
 	///	THE UNIVERSAL VERB																	
@@ -96,12 +150,12 @@ namespace Langulus::Flow
 		VMeta mVerb {};
 		// The number of successful executions										
 		Count mSuccesses {};
+		// Verb short-circuiting														
+		VerbState mState {};
 		// Verb context																	
 		Any mSource;
 		// The container where output goes											
 		Any mOutput;
-		// Verb short-circuiting														
-		bool mShortCircuited {true};
 
 	public:
 		Verb() noexcept {}
@@ -116,9 +170,9 @@ namespace Langulus::Flow
 
 		Verb(VMeta);
 		template<CT::Data T = Any>
-		Verb(VMeta, const T& = {}, const Charge& = {}, bool = true);
+		Verb(VMeta, const T& = {}, const Charge& = {}, VerbState = {});
 		template<CT::Data T = Any>
-		Verb(VMeta, T&& = {}, const Charge& = {}, bool = true);
+		Verb(VMeta, T&& = {}, const Charge& = {}, VerbState = {});
 
 		Verb& operator = (const Verb&) = default;
 		Verb& operator = (Verb&&) noexcept = default;
@@ -172,10 +226,16 @@ namespace Langulus::Flow
 		NOD() const Any& GetOutput() const noexcept;
 
 		NOD() bool Validate(const Index&) const noexcept;
-		NOD() Verb& ShortCircuit(bool) noexcept;
+		Verb& ShortCircuit(bool) noexcept;
+		Verb& Multicast(bool) noexcept;
+		Verb& SetVerbState(const VerbState&) noexcept;
 		NOD() Token GetToken() const;
 		NOD() bool IsDone() const noexcept;
-		NOD() bool IsShortCircuited() const noexcept;
+		NOD() constexpr bool IsMulticast() const noexcept;
+		NOD() constexpr bool IsMonocast() const noexcept;
+		NOD() constexpr bool IsShortCircuited() const noexcept;
+		NOD() constexpr bool IsLongCircuited() const noexcept;
+		NOD() const VerbState& GetVerbState() const noexcept;
 		NOD() Count GetSuccesses() const noexcept;
 		NOD() bool IsMissing() const noexcept;
 		NOD() bool IsMissingDeep() const noexcept;
@@ -207,7 +267,7 @@ namespace Langulus::Flow
 		template<CT::Data T>
 		Verb& SetOutput(T&&);
 
-		NOD() bool operator == (const Verb&) const noexcept;
+		NOD() bool operator == (const Verb&) const;
 		NOD() bool operator == (VMeta) const noexcept;
 		NOD() bool operator == (bool) const noexcept;
 		NOD() bool operator <  (const Verb&) const noexcept;
@@ -275,9 +335,9 @@ namespace Langulus::Verbs
 
 		Create();
 		template<CT::Data T>
-		Create(const T&, const Charge& = {}, bool = true);
+		Create(const T&, const Charge& = {}, VerbState = {});
 		template<CT::Data T>
-		Create(T&&, const Charge& = {}, bool = true);
+		Create(T&&, const Charge& = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -308,9 +368,9 @@ namespace Langulus::Verbs
 
 		Select();
 		template<CT::Data T>
-		Select(const T&, const Charge & = {}, bool = true);
+		Select(const T&, const Charge & = {}, VerbState = {});
 		template<CT::Data T>
-		Select(T&&, const Charge & = {}, bool = true);
+		Select(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -349,9 +409,9 @@ namespace Langulus::Verbs
 
 		Associate();
 		template<CT::Data T>
-		Associate(const T&, const Charge & = {}, bool = true);
+		Associate(const T&, const Charge & = {}, VerbState = {});
 		template<CT::Data T>
-		Associate(T&&, const Charge & = {}, bool = true);
+		Associate(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -377,9 +437,9 @@ namespace Langulus::Verbs
 
 		Add();
 		template<CT::Data T>
-		Add(const T&, const Charge & = {}, bool = true);
+		Add(const T&, const Charge & = {}, VerbState = {});
 		template<CT::Data T>
-		Add(T&&, const Charge & = {}, bool = true);
+		Add(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -407,9 +467,9 @@ namespace Langulus::Verbs
 
 		Multiply();
 		template<CT::Data T>
-		Multiply(const T&, const Charge & = {}, bool = true);
+		Multiply(const T&, const Charge & = {}, VerbState = {});
 		template<CT::Data T>
-		Multiply(T&&, const Charge & = {}, bool = true);
+		Multiply(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -435,9 +495,9 @@ namespace Langulus::Verbs
 
 		Exponent();
 		template<CT::Data T>
-		Exponent(const T&, const Charge & = {}, bool = true);
+		Exponent(const T&, const Charge & = {}, VerbState = {});
 		template<CT::Data T>
-		Exponent(T&&, const Charge & = {}, bool = true);
+		Exponent(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -460,9 +520,9 @@ namespace Langulus::Verbs
 
 		Catenate();
 		template<CT::Data T>
-		Catenate(const T&, const Charge & = {}, bool = true);
+		Catenate(const T&, const Charge & = {}, VerbState = {});
 		template<CT::Data T>
-		Catenate(T&&, const Charge & = {}, bool = true);
+		Catenate(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -492,9 +552,9 @@ namespace Langulus::Verbs
 
 		Conjunct();
 		template<CT::Data T>
-		Conjunct(const T&, const Charge & = {}, bool = true);
+		Conjunct(const T&, const Charge & = {}, VerbState = {});
 		template<CT::Data T>
-		Conjunct(T&&, const Charge & = {}, bool = true);
+		Conjunct(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -518,9 +578,9 @@ namespace Langulus::Verbs
 
 		Interpret();
 		template<CT::Data T>
-		Interpret(const T&, const Charge & = {}, bool = true);
+		Interpret(const T&, const Charge & = {}, VerbState = {});
 		template<CT::Data T>
-		Interpret(T&&, const Charge & = {}, bool = true);
+		Interpret(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -557,9 +617,9 @@ namespace Langulus::Verbs
 
 		Do();
 		template<CT::Data T>
-		Do(const T&, const Charge & = {}, bool = true);
+		Do(const T&, const Charge & = {}, VerbState = {});
 		template<CT::Data T>
-		Do(T&&, const Charge & = {}, bool = true);
+		Do(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;

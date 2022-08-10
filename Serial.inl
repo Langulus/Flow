@@ -130,7 +130,7 @@ namespace Langulus::Flow
 	///	@param block - the memory block to check										
 	///	@return true if a scope is required around the block						
 	inline bool Detail::NeedsScope(const Block& block) noexcept {
-		return block.GetCount() > 1 || block.IsInvalid()/* || (block.CastsTo<Verb>())*/;
+		return block.GetCount() > 1 || block.IsInvalid();
 	}
 
 	/// Add a separator																			
@@ -199,6 +199,36 @@ namespace Langulus::Flow
 						to += Separator(from.IsOr());
 				}
 			}
+			else if (from.CastsTo<A::Number>()) {
+				// Contained type is some kind of a number						
+				if (from.CastsTo<RealSP, true>())
+					SerializeNumber<RealSP>(from, to);
+				else if (from.CastsTo<RealDP, true>())
+					SerializeNumber<RealDP>(from, to);
+				//else if (from.CastsTo<uint8_t, true>())
+				//	SerializeNumber<uint8_t>(from, to);
+				else if (from.CastsTo<uint16_t, true>())
+					SerializeNumber<uint16_t>(from, to);
+				else if (from.CastsTo<uint32_t, true>())
+					SerializeNumber<uint32_t>(from, to);
+				else if (from.CastsTo<uint64_t, true>())
+					SerializeNumber<uint64_t>(from, to);
+				else if (from.CastsTo<int8_t, true>())
+					SerializeNumber<int8_t>(from, to);
+				else if (from.CastsTo<int16_t, true>())
+					SerializeNumber<int16_t>(from, to);
+				else if (from.CastsTo<int32_t, true>())
+					SerializeNumber<int32_t>(from, to);
+				else if (from.CastsTo<int64_t, true>())
+					SerializeNumber<int64_t>(from, to);
+				else {
+					Logger::Error() << "Can't serialize block of "
+						<< from.GetToken() << " to " << MetaData::Of<TO>()->mToken
+						<< " - the number type is not implemented";
+					Throw<Except::Convert>(
+						"Can't serialize numbers to text");
+				}
+			}
 			else if (from.CastsTo<Letter>()) {
 				// Contained type is a character										
 				for (Offset i = 0; i < from.GetCount(); ++i) {
@@ -227,17 +257,6 @@ namespace Langulus::Flow
 					to += Code {Code::OpenString};
 					to += text;
 					to += Code {Code::CloseString};
-					if (i < from.GetCount() - 1)
-						to += Separator(from.IsOr());
-				}
-			}
-			else if (from.CastsTo<Letter>()) {
-				// Contained type is characters, wrap it in char scope		
-				for (Offset i = 0; i < from.GetCount(); ++i) {
-					auto& text = from.As<Letter>(i);
-					to += Code {Code::OpenCharacter};
-					to += Token {&text, 1};
-					to += Code {Code::CloseCharacter};
 					if (i < from.GetCount() - 1)
 						to += Separator(from.IsOr());
 				}
@@ -311,6 +330,33 @@ namespace Langulus::Flow
 		auto meta = member->As<META>(from.GetRaw());
 		if (meta)	to += meta->GetToken();
 		else			to += Decay<META>::DefaultToken;
+	}
+
+	/// A snippet for serializing a block of numbers									
+	///	@param from - the number block to serialize									
+	///	@param to - [out] the serialized data											
+	template<CT::Number T, CT::Text TO>
+	void Detail::SerializeNumber(const Block& from, TO& to) {
+		if (from.IsDense()) {
+			// Significantly faster routine if dense								
+			auto data = from.GetRawAs<T>();
+			const auto dataEnd = from.GetRawEndAs<T>();
+			while (data != dataEnd) {
+				to += *data;
+				to += from.GetType()->mSuffix;
+				if (data < dataEnd - 1)
+					to += Separator(from.IsOr());
+				++data;
+			}
+		}
+		else {
+			for (Offset i = 0; i < from.GetCount(); ++i) {
+				to += from.As<T>(i);
+				to += from.GetType()->mSuffix;
+				if (i < from.GetCount() - 1)
+					to += Separator(from.IsOr());
+			}
+		}
 	}
 
 	/// Serialize all reflected data members in all bases								

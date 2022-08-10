@@ -83,7 +83,7 @@ namespace Langulus::Flow
 		template<CT::Data T>
 		NOD() static Construct From();
 
-		NOD() bool operator == (const Construct&) const noexcept;
+		NOD() bool operator == (const Construct&) const;
 
 		NOD() bool StaticCreation(Any&) const;
 

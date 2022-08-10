@@ -11,18 +11,18 @@ namespace Langulus::Verbs
 	/// Conjunct/Disjunct verb construction by shallow copy							
 	///	@param a - RHS																			
 	///	@param c - the charge of the conjunction										
-	///	@param sc - is the conjunction/disjunction short-circuited				
+	///	@param state - the verb state														
 	template<CT::Data T>
-	Conjunct::Conjunct(const T& a, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Conjunct>(), a, c, sc} {}
+	Conjunct::Conjunct(const T& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<Conjunct>(), a, c, state} {}
 
 	/// Conjunct/Disjunct verb construction by move										
 	///	@param a - RHS																			
 	///	@param c - the charge of the conjunction										
-	///	@param sc - is the conjunction/disjunction short-circuited				
+	///	@param state - the verb state														
 	template<CT::Data T>
-	Conjunct::Conjunct(T&& a, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Conjunct>(), Forward<T>(a), c, sc} {}
+	Conjunct::Conjunct(T&& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<Conjunct>(), Forward<T>(a), c, state} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

@@ -24,6 +24,9 @@ namespace Langulus::Flow
 		template<bool ENSCOPE, CT::Text TO>
 		NOD() Count SerializeBlock(const Block&, TO&);
 
+		template<CT::Number T, CT::Text TO>
+		void SerializeNumber(const Block&, TO&);
+
 		template<class META, CT::Text TO>
 		void SerializeMeta(const Block&, TO&, const RTTI::Member*);
 

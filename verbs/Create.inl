@@ -14,18 +14,18 @@ namespace Langulus::Verbs
 	/// Create/destroy verb construction by shallow-copy								
 	///	@param a - the stuff to produce													
 	///	@param c - the charge of the creation											
-	///	@param sc - is the creation short-circuited									
+	///	@param state - the verb state														
 	template<CT::Data T>
-	Create::Create(const T& a, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Create>(), a, c, sc} {}
+	Create::Create(const T& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<Create>(), a, c, state} {}
 
 	/// Create/destroy verb construction by move											
 	///	@param a - the stuff to produce													
 	///	@param c - the charge of the creation											
-	///	@param sc - is the creation short-circuited									
+	///	@param state - the verb state														
 	template<CT::Data T>
-	Create::Create(T&& a, const Charge& c, bool sc)
-		: Verb {RTTI::MetaVerb::Of<Create>(), Forward<T>(a), c, sc} {}
+	Create::Create(T&& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<Create>(), Forward<T>(a), c, state} {}
 
 	/// Check if the verb is available in a type, and with given arguments		
 	///	@return true if verb is available in T with arguments A...				

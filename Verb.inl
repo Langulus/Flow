@@ -44,6 +44,83 @@ namespace Langulus::Flow
 		mTime = DefaultTime;
 		mPriority = DefaultPriority;
 	}
+	
+   /// Manual construction																		
+   ///   @param state - the state															
+   constexpr VerbState::VerbState(const Type& state) noexcept
+      : mState {state} {}
+
+   /// Explicit convertion to bool															
+   ///   @return true if state is not default											
+   constexpr VerbState::operator bool() const noexcept {
+      return !IsDefault();
+   }
+   
+   /// Combine two states																		
+   ///   @param rhs - the other state														
+   ///   @return a new combined state														
+   constexpr VerbState VerbState::operator + (const VerbState& rhs) const noexcept {
+      return mState | rhs.mState;
+   }
+   
+   /// Remove rhs state from this state													
+   ///   @param rhs - the other state														
+   ///   @return a new leftover state														
+   constexpr VerbState VerbState::operator - (const VerbState& rhs) const noexcept {
+      return mState & (~rhs.mState);
+   }
+   
+   /// Destructively add state																
+   ///   @param rhs - the other state														
+   ///   @return a reference to this state												
+   constexpr VerbState& VerbState::operator += (const VerbState& rhs) noexcept {
+      mState |= rhs.mState;
+      return *this;
+   }
+   
+   /// Destructively remove state															
+   ///   @param rhs - the other state														
+   ///   @return a reference to this state												
+   constexpr VerbState& VerbState::operator -= (const VerbState& rhs) noexcept {
+      mState &= ~rhs.mState;
+      return *this;
+   }
+   
+   constexpr bool VerbState::operator & (const VerbState& rhs) const noexcept {
+      return (mState & rhs.mState) == rhs.mState;
+   }
+   
+   constexpr bool VerbState::operator % (const VerbState& rhs) const noexcept {
+      return (mState & rhs.mState) == 0;
+   }
+   
+   /// Check if default data state															
+   /// Default state is inclusive, mutable, nonpolar, nonvacuum, nonstatic,	
+   /// nonencrypted, noncompressed, untyped, and dense								
+   constexpr bool VerbState::IsDefault() const noexcept {
+      return mState == VerbState::Default;
+   }
+   
+   /// Check if state is multicast															
+   constexpr bool VerbState::IsMulticast() const noexcept {
+		return (mState & VerbState::Monocast) == 0;
+	}
+   
+   /// Check if state is monocast															
+   constexpr bool VerbState::IsMonocast() const noexcept {
+      return mState & VerbState::Monocast;
+   }
+   
+   /// Check if state is long-circuited													
+   constexpr bool VerbState::IsLongCircuited() const noexcept {
+		return mState & VerbState::LongCircuited;
+	}
+   
+   /// Check if state is short-circuited													
+   constexpr bool VerbState::IsShortCircuited() const noexcept {
+      return (mState & VerbState::LongCircuited) == 0;
+   }
+   
 
 	/// Manual constructor by shallow-copy													
 	///	@tparam T - type of the argument (deducible)									
@@ -52,11 +129,11 @@ namespace Langulus::Flow
 	///	@param charge - the charge															
 	///	@param shortCircuit - short circuit												
 	template<CT::Data T>
-	Verb::Verb(VMeta verb, const T& argument, const Charge& charge, bool shortCircuit)
+	Verb::Verb(VMeta verb, const T& argument, const Charge& charge, const VerbState state)
 		: Any {argument}
 		, Charge {charge}
 		, mVerb {verb}
-		, mShortCircuited {shortCircuit} { }
+		, mState {state} { }
 
 	/// Manual constructor by move															
 	///	@tparam T - type of the argument (deducible)									
@@ -65,11 +142,11 @@ namespace Langulus::Flow
 	///	@param charge - the charge															
 	///	@param shortCircuit - short circuit												
 	template<CT::Data T>
-	Verb::Verb(VMeta verb, T&& argument, const Charge& charge, bool shortCircuit)
+	Verb::Verb(VMeta verb, T&& argument, const Charge& charge, const VerbState state)
 		: Any {Forward<T>(argument)}
 		, Charge {charge}
 		, mVerb {verb}
-		, mShortCircuited {shortCircuit} { }
+		, mState {state} { }
 
 	/// Check if verb is of a specific type												
 	///	@tparam T - the verb to compare against										
@@ -87,10 +164,42 @@ namespace Langulus::Flow
 		return mSuccesses > 0;
 	}
 
+	/// Check if verb is multicast															
+	///	@return true if verb is multicast												
+	constexpr bool Verb::IsMulticast() const noexcept {
+		return mState.IsMulticast();
+	}
+
+	/// Check if verb is monocast																
+	///	@return true if verb is monocast													
+	constexpr bool Verb::IsMonocast() const noexcept {
+		return mState.IsMonocast();
+	}
+
 	/// Check if verb is short-circuited													
 	///	@return true if verb is short-circuited										
-	inline bool Verb::IsShortCircuited() const noexcept {
-		return mShortCircuited;
+	constexpr bool Verb::IsShortCircuited() const noexcept {
+		return mState.IsShortCircuited();
+	}
+
+	/// Check if verb is long-circuited														
+	///	@return true if verb is long-circuited											
+	constexpr bool Verb::IsLongCircuited() const noexcept {
+		return mState.IsLongCircuited();
+	}
+
+	/// Get the verb state																		
+	///	@return the verb state																
+	inline const VerbState& Verb::GetVerbState() const noexcept {
+		return mState;
+	}
+
+	/// Set the verb state																		
+	///	@param state - the verb state														
+	///	@return a reference to this verb for chaining								
+	inline Verb& Verb::SetVerbState(const VerbState& state) noexcept {
+		mState = state;
+		return *this;
 	}
 
 	/// Get the number of successful execution of the verb							
@@ -243,12 +352,12 @@ namespace Langulus::Flow
 	/// Compare verbs																				
 	///	@param rhs - the verb to compare against										
 	///	@return true if verbs match														
-	inline bool Verb::operator == (const Verb& rhs) const noexcept {
+	inline bool Verb::operator == (const Verb& rhs) const {
 		return (mVerb == rhs.mVerb || (mVerb && mVerb->Is(rhs.mVerb)))
 			&& mSource == rhs.mSource
 			&& Any::operator == (rhs)
 			&& mOutput == rhs.mOutput
-			&& mShortCircuited == rhs.mShortCircuited;
+			&& mState == rhs.mState;
 	}
 
 	/// Compare verb types for equality														
@@ -436,7 +545,7 @@ namespace Langulus::Flow
 	///	@return the number of successes for the verb									
 	template<bool OR>
 	Count Verb::CompleteDispatch(const Count successes, Abandoned<Any>&& output) {
-		if (mShortCircuited) {
+		if (IsShortCircuited()) {
 			// If reached, this will result in failure in OR-context, or	
 			// success if AND, as long as the verb is short-circuited		
 			if constexpr (OR)
@@ -451,11 +560,10 @@ namespace Langulus::Flow
 		}
 
 		// Set output																		
-		if (mSuccesses) {
-			//output.mValue.Optimize();
+		if (mSuccesses)
 			mOutput = output.Forward<Any>();
-		}
-		else mOutput.Reset();
+		else
+			mOutput.Reset();
 
 		return mSuccesses;
 	}

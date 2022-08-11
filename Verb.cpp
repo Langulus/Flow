@@ -232,16 +232,16 @@ namespace Langulus::Flow
 
 		// If reached, then verb hasn't been executed yet						
 		// Let's check if there's a source in which verb is executed		
-		if (mSource.IsValid())
+		if (mSource.IsValid()) {
 			result += Verbs::Interpret::To<Code>(mSource);
+			result += ' ';
+		}
 
 		// After the source, we decide whether to write . and verb token,	
 		// or simply an operator, depending on the verb definition			
 		bool enscope = true;
 		if (!mVerb) {
 			// An invalid verb is always written as token						
-			if (mSource.IsValid())
-				result += Verbs::Select::CTTI_PositiveOperator;
 			result += MetaVerb::DefaultToken;
 		}
 		else {
@@ -254,8 +254,6 @@ namespace Langulus::Flow
 				}
 				else {
 					// Write as token														
-					if (mSource.IsValid())
-						result += Verbs::Select::CTTI_PositiveOperator;
 					result += mVerb->mTokenReverse;
 					result += Verbs::Interpret::To<Code>(GetCharge() * -1);
 				}
@@ -268,8 +266,6 @@ namespace Langulus::Flow
 				}
 				else {
 					// Write as token														
-					if (mSource.IsValid())
-						result += Verbs::Select::CTTI_PositiveOperator;
 					result += mVerb->mToken;
 					result += Verbs::Interpret::To<Code>(GetCharge());
 				}
@@ -300,16 +296,16 @@ namespace Langulus::Flow
 
 		// If reached, then verb hasn't been executed yet						
 		// Let's check if there's a source in which verb is executed		
-		if (mSource.IsValid())
+		if (mSource.IsValid()) {
 			result += Verbs::Interpret::To<Debug>(mSource);
+			result += ' ';
+		}
 
 		// After the source, we decide whether to write . and verb token,	
 		// or simply an operator, depending on the verb definition			
 		bool enscope = true;
 		if (!mVerb) {
 			// An invalid verb is always written as token						
-			if (mSource.IsValid())
-				result += Verbs::Select::CTTI_PositiveOperator;
 			result += MetaVerb::DefaultToken;
 		}
 		else {
@@ -322,8 +318,6 @@ namespace Langulus::Flow
 				}
 				else {
 					// Write as token														
-					if (mSource.IsValid())
-						result += Verbs::Select::CTTI_PositiveOperator;
 					result += mVerb->mTokenReverse;
 					result += Verbs::Interpret::To<Debug>(GetCharge() * -1);
 				}
@@ -336,8 +330,6 @@ namespace Langulus::Flow
 				}
 				else {
 					// Write as token														
-					if (mSource.IsValid())
-						result += Verbs::Select::CTTI_PositiveOperator;
 					result += mVerb->mToken;
 					result += Verbs::Interpret::To<Debug>(GetCharge());
 				}

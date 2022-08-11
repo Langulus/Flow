@@ -137,6 +137,19 @@ namespace Langulus::Verbs
 namespace Langulus
 {
 
+	/// Extend the logger to be capable of logging any meta							
+	///	@param lhs - the logger interface												
+	///	@param rhs - the meta to stringify												
+	///	@return a reference to the logger for chaining								
+	template<CT::Meta T>
+	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
+		Logger::A::Interface& lhs, const T& rhs) noexcept {
+		if constexpr (CT::Sparse<T>)
+			return lhs.operator << (rhs ? rhs->mToken : rhs->GetDefaultToken());
+		else
+			return lhs.operator << (rhs.mToken);
+	}
+
 	/// Extend the logger to be capable of logging anything considered deep		
 	///	@param lhs - the logger interface												
 	///	@param rhs - the block to stringify												

@@ -116,7 +116,7 @@ namespace Langulus::Flow
 			*this += "b";
 		else {
 			*this += "<";
-			*this += MetaData::Of<T>()->mToken;
+			*this += MetaData::Of<T>();
 			*this += ">";
 		}
 		return *this;

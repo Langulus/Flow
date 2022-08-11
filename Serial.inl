@@ -223,7 +223,7 @@ namespace Langulus::Flow
 					SerializeNumber<int64_t>(from, to);
 				else {
 					Logger::Error() << "Can't serialize block of "
-						<< from.GetToken() << " to " << MetaData::Of<TO>()->mToken
+						<< from.GetToken() << " to " << MetaData::Of<TO>()
 						<< " - the number type is not implemented";
 					Throw<Except::Convert>(
 						"Can't serialize numbers to text");
@@ -257,6 +257,20 @@ namespace Langulus::Flow
 					to += Code {Code::OpenString};
 					to += text;
 					to += Code {Code::CloseString};
+					if (i < from.GetCount() - 1)
+						to += Separator(from.IsOr());
+				}
+			}
+			else if (from.CastsTo<Trait>()) {
+				// Contained type is trait, serialize it							
+				for (Offset i = 0; i < from.GetCount(); ++i) {
+					auto& trait = from.As<Trait>(i);
+					to += trait.GetTrait()
+						? trait.GetTrait()->mToken
+						: MetaTrait::DefaultToken;
+					to += Code {Code::OpenScope};
+					(void) SerializeBlock<false>(trait, to);
+					to += Code {Code::CloseScope};
 					if (i < from.GetCount() - 1)
 						to += Separator(from.IsOr());
 				}
@@ -299,7 +313,7 @@ namespace Langulus::Flow
 				}
 				else {
 					Logger::Error() << "Can't serialize block of type "
-						<< from.GetToken() << " to " << MetaData::Of<TO>()->mToken;
+						<< from.GetToken() << " to " << MetaData::Of<TO>();
 					Throw<Except::Convert>(
 						"Can't serialize block to text");
 				}

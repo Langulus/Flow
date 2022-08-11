@@ -571,7 +571,7 @@ namespace Langulus::Verbs
 	/// Interpret																					
 	/// Performs conversion																		
 	struct Interpret : public Verb {
-		LANGULUS(NAME) "Interpret";
+		LANGULUS(VERB) "Interpret";
 		LANGULUS(OPERATOR) " => ";
 		LANGULUS(INFO) "Performs conversion";
 		LANGULUS_BASES(Verb);

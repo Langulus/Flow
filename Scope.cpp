@@ -313,7 +313,7 @@ namespace Langulus::Flow
 		// substituted with their results in the verb							
 		if (!Scope::IntegrateVerb(context, verb)) {
 			FLOW_ERRORS("Error integrating verb: " << verb
-				<< " (" << verb.GetVerb()->mToken << ")");
+				<< " (" << verb.GetVerb() << ')');
 			return false;
 		}
 
@@ -333,18 +333,18 @@ namespace Langulus::Flow
 		}
 
 		VERBOSE_TAB("Executing verb: " << Logger::Cyan << verb 
-			<< " (" << verb.GetVerb()->mToken << ")");
+			<< " (" << verb.GetVerb() << ')');
 
 		// Dispatch the verb to the context, executing it						
 		// Any results should be inside verb.mOutput afterwards				
 		if (!DispatchDeep(verb.mSource, verb)) {
 			FLOW_ERRORS("Error executing verb: " << verb
-				<< " (" << verb.GetVerb()->mToken << ")");
+				<< " (" << verb.GetVerb() << ')');
 			return false;
 		}
 
 		VERBOSE("Executed: " << Logger::Green << verb
-			<< " (" << verb.GetVerb()->mToken << ")");
+			<< " (" << verb.GetVerb() << ')');
 		return true;
 	}
 

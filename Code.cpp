@@ -321,7 +321,7 @@ namespace Langulus::Flow
 					<< "; Could be one of: " << Logger::Tabs {};
 
 				for (auto& meta : symbols) {
-					Logger::Verbose() << Logger::Red << meta->mToken << " (";
+					Logger::Verbose() << Logger::Red << meta << " (";
 					switch (meta->GetMetaType()) {
 					case RTTI::Meta::Data:
 						Logger::Append() << "meta data)";
@@ -521,12 +521,12 @@ namespace Langulus::Flow
 
 			if (found->mPrecedence && priority >= found->mPrecedence) {
 				VERBOSE(Logger::Yellow
-					<< "Delaying reflected operator [" << found->mToken
+					<< "Delaying reflected operator [" << found
 					<< "] due to a prioritized operation");
 				return 0;
 			}
 
-			VERBOSE_TAB("Parsing reflected operator: [" << word << "] (" << found->mToken << ")");
+			VERBOSE_TAB("Parsing reflected operator: [" << word << "] (" << found << ")");
 			progress += word.size();
 			const Code relevant = input.RightOf(progress);
 			Verb operation {found};
@@ -542,12 +542,12 @@ namespace Langulus::Flow
 
 			if (found->mPrecedence && priority >= found->mPrecedence) {
 				VERBOSE(Logger::Yellow
-					<< "Delaying reflected operator [" << found->mToken
+					<< "Delaying reflected operator [" << found
 					<< "] due to a prioritized operation");
 				return 0;
 			}
 
-			VERBOSE_TAB("Parsing reflected verb: [" << word << "] (" << found->mToken << ")");
+			VERBOSE_TAB("Parsing reflected verb: [" << word << "] (" << found << ")");
 			progress += word.size();
 			const Code relevant = input.RightOf(progress);
 			Verb operation {found};

@@ -291,10 +291,9 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 	GIVEN("The script: Create^1(Count(1)) Add^3 2") {
 		const Code code = "Create^1(Count(1)) Add^3 2";
-		Any required = Verbs::Add(
-			Verbs::Create(Traits::Count(Real(1))).SetFrequency(1),
-			Real(2)
-		).SetFrequency(3);
+		Any required = Verbs::Add(Real(2))
+			.SetSource(Verbs::Create(Traits::Count(Real(1))).SetFrequency(1))
+			.SetFrequency(3);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();

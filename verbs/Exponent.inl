@@ -7,26 +7,6 @@
 namespace Langulus::Verbs
 {
 
-	/// Default Exponentiate/Logarithm verb construction								
-	inline Exponent::Exponent()
-		: Verb {RTTI::MetaVerb::Of<Exponent>()} {}
-
-	/// Exponentiate/Logarithm verb construction by shallow-copy					
-	///	@param a - the power																	
-	///	@param c - the charge of the exponentiation/logarithm						
-	///	@param state - the verb state														
-	template<CT::Data T>
-	Exponent::Exponent(const T& a, const Charge& c, const VerbState state)
-		: Verb {RTTI::MetaVerb::Of<Exponent>(), a, c, state} {}
-
-	/// Exponentiate/Logarithm verb construction by move								
-	///	@param a - the power																	
-	///	@param c - the charge of the exponentiation/logarithm						
-	///	@param state - the verb state														
-	template<CT::Data T>
-	Exponent::Exponent(T&& a, const Charge& c, const VerbState state)
-		: Verb {RTTI::MetaVerb::Of<Exponent>(), Forward<T>(a), c, state} {}
-
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												
 	template<CT::Data T, CT::Data... A>

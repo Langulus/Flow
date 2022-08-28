@@ -105,6 +105,7 @@ namespace Langulus::Flow
 		/// one in reflected verb database, where LHS is not DMeta or VMeta		
 		struct OperatorParser {
 			NOD() static Offset Parse(Operator, const Code&, Any&, Real, bool optimize);
+			NOD() static Operator PeekBuiltin(const Code&) noexcept;
 			NOD() static Operator Peek(const Code&) noexcept;
 			NOD() static Token Isolate(const Code&) noexcept;
 

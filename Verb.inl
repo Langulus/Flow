@@ -1,5 +1,6 @@
 #pragma once
 #include "Verb.hpp"
+#include "Code.hpp"
 
 namespace Langulus::Flow
 {
@@ -727,5 +728,100 @@ namespace Langulus::Flow
 
 		return false;
 	}
+
+	/// Serialize verb to any form of text													
+	///	@tparam T - the type of text to serialize to									
+	template<CT::Text T>
+	T Verb::SerializeVerb() const {
+		Code result;
+		if (mSuccesses) {
+			// If verb has been executed, just dump the output					
+			result += Verbs::Interpret::To<T>(mOutput);
+			return result;
+		}
+
+		// If reached, then verb hasn't been executed yet						
+		// Let's check if there's a source in which verb is executed		
+		if (mSource.IsValid())
+			result += Verbs::Interpret::To<T>(mSource);
+
+		// After the source, we decide whether to write . and verb token,	
+		// or simply an operator, depending on the verb definition			
+		bool enscope = true;
+		if (!mVerb) {
+			// An invalid verb is always written as token						
+			result += MetaVerb::DefaultToken;
+		}
+		else {
+			// A valid verb is written either as token, or as operator		
+			if (mMass < 0) {
+				if (!mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault()) {
+					// Write as operator													
+					result += mVerb->mOperatorReverse;
+					enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
+				}
+				else {
+					// Write as token														
+					if (mSource.IsValid())
+						result += ' ';
+					result += mVerb->mTokenReverse;
+					result += Verbs::Interpret::To<T>(GetCharge() * -1);
+				}
+			}
+			else {
+				if (!mVerb->mOperator.empty() && GetCharge().IsDefault()) {
+					// Write as operator													
+					result += mVerb->mOperator;
+					enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
+				}
+				else {
+					// Write as token														
+					if (mSource.IsValid())
+						result += ' ';
+					result += mVerb->mToken;
+					result += Verbs::Interpret::To<T>(GetCharge());
+				}
+			}
+		}
+
+		if (enscope)
+			result += Code::OpenScope;
+
+		if (IsValid())
+			result += Verbs::Interpret::To<T>(GetArgument());
+
+		if (enscope)
+			result += Code::CloseScope;
+
+		return result;
+	}
+	
+	/// Default static verb construction													
+	template<class VERB>
+	StaticVerb<VERB>::StaticVerb()
+		: Verb {RTTI::MetaVerb::Of<VERB>()} {}
+
+	/// Do/Undo verb construction via shallow-copy										
+	///	@param a - what to execute															
+	///	@param c - the charge of the do/undo											
+	///	@param state - the verb state														
+	template<class VERB>
+	template<CT::Data T>
+	StaticVerb<VERB>::StaticVerb(const T& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<VERB>(), a, c, state} {}
+
+	template<class VERB>
+	template<CT::Data T>
+	StaticVerb<VERB>::StaticVerb(T& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<VERB>(), a, c, state} {}
+
+	/// Do/Undo verb construction via move													
+	///	@param a - what to execute															
+	///	@param c - the charge of the do/undo											
+	///	@param state - the verb state														
+	template<class VERB>
+	template<CT::Data T>
+	StaticVerb<VERB>::StaticVerb(T&& a, const Charge& c, const VerbState state)
+		: Verb {RTTI::MetaVerb::Of<VERB>(), Forward<T>(a), c, state} {}
 
 } // namespace Langulus::Flow

@@ -1,5 +1,5 @@
 #pragma once
-#include "Verb.hpp"
+#include "Common.hpp"
 
 namespace Langulus::Flow
 {
@@ -136,16 +136,5 @@ namespace Langulus::Flow
 	};
 
 } // namespace Langulus::Flow
-
-
-namespace Langulus
-{
-
-	/// Extend the logger to be capable of logging Construct							
-	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (Logger::A::Interface& lhs, const Flow::Construct& rhs) {
-		return lhs << Verbs::Interpret::To<Flow::Debug>(rhs);
-	}
-
-} // namespace Langulus
 
 #include "Construct.inl"

@@ -1,28 +1,9 @@
 #pragma once
+#include "../Code.hpp"
 #include "../Verb.hpp"
 
 namespace Langulus::Verbs
 {
-
-	/// Default Do/Undo verb construction													
-	inline Do::Do()
-		: Verb {RTTI::MetaVerb::Of<Do>()} {}
-
-	/// Do/Undo verb construction via shallow-copy										
-	///	@param a - what to execute															
-	///	@param c - the charge of the do/undo											
-	///	@param state - the verb state														
-	template<CT::Data T>
-	Do::Do(const T& a, const Charge& c, const VerbState state)
-		: Verb {RTTI::MetaVerb::Of<Do>(), a, c, state} {}
-
-	/// Do/Undo verb construction via move													
-	///	@param a - what to execute															
-	///	@param c - the charge of the do/undo											
-	///	@param state - the verb state														
-	template<CT::Data T>
-	Do::Do(T&& a, const Charge& c, const VerbState state)
-		: Verb {RTTI::MetaVerb::Of<Do>(), Forward<T>(a), c, state} {}
 
 	/// Compile-time check if a verb is implemented in the provided type			
 	///	@return true if verb is available												

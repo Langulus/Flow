@@ -292,7 +292,9 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 	GIVEN("The script: Create^1(Count(1)) Add^3 2") {
 		const Code code = "Create^1(Count(1)) Add^3 2";
 		Any required = Verbs::Add(Real(2))
-			.SetSource(Verbs::Create(Traits::Count(Real(1))).SetFrequency(1))
+			.SetSource(
+				Verbs::Create(Traits::Count(Real(1)))
+					.SetFrequency(1))
 			.SetFrequency(3);
 
 		WHEN("Parsed") {
@@ -304,12 +306,13 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("11) The Code script: Create^1(Count(1)).Add^2(2).Multiply^3(4)") {
-		const Code code = "Create^1(Count(1)).Add^2(2).Multiply^3(4)";
-		Any required = Verbs::Multiply(
-			Verbs::Add(Real(2)).SetFrequency(2).SetSource(Verbs::Create(Traits::Count(Real(1))).SetFrequency(1)),
-			Real(4)
-		).SetFrequency(3);
+	GIVEN("The script: Create^1(Count(1)) Add^3(2)") {
+		const Code code = "Create^1(Count(1)) Add^3(2)";
+		Any required = Verbs::Add(Real(2))
+			.SetSource(
+				Verbs::Create(Traits::Count(Real(1)))
+					.SetFrequency(1))
+			.SetFrequency(3);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -320,14 +323,56 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("12) The Code script: -(2 * 8.75 - 14 ^ 2)") {
+	GIVEN("The script: Create^1(Count(1)) Add^2(2) Multiply^3(4)") {
+		const Code code = "Create^1(Count(1)) Add^2(2) Multiply^3(4)";
+		Any required = Verbs::Add(
+			Verbs::Multiply(Real(4))
+				.SetFrequency(3)
+				.SetSource(Real(2)))
+			.SetFrequency(2)
+			.SetSource(
+				Verbs::Create(Traits::Count(Real(1)))
+				.SetFrequency(1)
+			);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: Create^1(Count(1)) + 2 * 4") {
+		const Code code = "Create^1(Count(1)) + 2 * 4";
+		Any required = Verbs::Add(
+				Verbs::Multiply(Real(4))
+				.SetSource(Real(2)))
+			.SetSource(
+				Verbs::Create(Traits::Count(Real(1)))
+				.SetFrequency(1)
+			);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: -(2 * 8.75 - 14 ^ 2)") {
 		const Code code = "-(2 * 8.75 - 14 ^ 2)";
 
 		WHEN("Parsed without optimization") {
 			Any required = Verbs::Add(
 				Verbs::Add(
 					Verbs::Exponent(Real(2)).SetSource(Real(14))
-				).SetMass(-1).SetSource(Verbs::Multiply(Real(8.75)).SetSource(Real(2)))
+				)
+				.SetMass(-1)
+				.SetSource(Verbs::Multiply(Real(8.75)).SetSource(Real(2)))
 			).SetMass(-1);
 
 			const auto parsed = code.Parse(false);

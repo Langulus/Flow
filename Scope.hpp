@@ -1,5 +1,5 @@
 #pragma once
-#include "Verb.hpp"
+#include "Common.hpp"
 
 namespace Langulus::Flow
 {

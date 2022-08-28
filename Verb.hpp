@@ -1,83 +1,8 @@
 #pragma once
-#include <Langulus.Logger.hpp>
-#include <Langulus.Anyness.hpp>
-
-#ifndef LANGULUS_ENABLE_FEATURE_MANAGED_MEMORY
-	#error Langulus::Flow can be compiled only with enabled LANGULUS_FEATURE_MANAGED_MEMORY
-#endif
-
-#ifndef LANGULUS_ENABLE_FEATURE_MANAGED_REFLECTION
-	#error Langulus::Flow can be compiled only with enabled LANGULUS_ENABLE_MANAGED_REFLECTION
-#endif
-
-LANGULUS_EXCEPTION(Flow);
+#include "Common.hpp"
 
 namespace Langulus::Flow
 {
-
-	using namespace Anyness;
-	using Anyness::Inner::Allocator;
-
-	using RTTI::VMeta;
-	using RTTI::TMeta;
-	using RTTI::DMeta;
-	using RTTI::CMeta;
-	using RTTI::MetaData;
-	using RTTI::MetaVerb;
-	using RTTI::MetaTrait;
-	using RTTI::MetaConst;
-
-	class Charge;
-	class Construct;
-	class Code;
-	class Verb;
-
-
-	///																								
-	/// Charge, carrying the four verb dimensions										
-	///																								
-	struct Charge {
-		// Mass of the verb																
-		Real mMass = DefaultMass;
-		// Frequency of the verb														
-		Real mFrequency = DefaultFrequency;
-		// Time of the verb																
-		Real mTime = DefaultTime;
-		// Priority of the verb															
-		Real mPriority = DefaultPriority;
-
-	public:
-		static constexpr Real DefaultMass {1};
-		static constexpr Real DefaultFrequency {0};
-		static constexpr Real DefaultTime {0};
-
-		static constexpr Real DefaultPriority {0};
-		static constexpr Real MinPriority {-10000};
-		static constexpr Real MaxPriority {+10000};
-
-		constexpr Charge(
-			Real = DefaultMass,
-			Real = DefaultFrequency,
-			Real = DefaultTime,
-			Real = DefaultPriority
-		) noexcept;
-
-		NOD() constexpr bool operator == (const Charge&) const noexcept;
-
-		NOD() constexpr Charge operator * (const Real&) const noexcept;
-		NOD() constexpr Charge operator ^ (const Real&) const noexcept;
-
-		NOD() constexpr Charge& operator *= (const Real&) noexcept;
-		NOD() constexpr Charge& operator ^= (const Real&) noexcept;
-
-		NOD() constexpr bool IsDefault() const noexcept;
-		NOD() Hash GetHash() const noexcept;
-		void Reset() noexcept;
-
-		NOD() explicit operator Code() const;
-		NOD() explicit operator Debug() const;
-	};
-
 	
 	///																								
 	///	Verb state flags																		
@@ -295,10 +220,29 @@ namespace Langulus::Flow
 
 		template<bool OR>
 		Count CompleteDispatch(const Count, Abandoned<Any>&&);
+
+	protected:
+		template<CT::Text T>
+		T SerializeVerb() const;
 	};
 
 	/// A handy container for verbs															
 	using Script = TAny<Verb>;
+
+
+	/// Statically typed verb, used as CRTP for all specific verbs					
+	template<class VERB>
+	struct StaticVerb : public Verb {
+		LANGULUS_BASES(Verb);
+
+		StaticVerb();
+		template<CT::Data T>
+		StaticVerb(const T&, const Charge& = {}, VerbState = {});
+		template<CT::Data T>
+		StaticVerb(T&, const Charge& = {}, VerbState = {});
+		template<CT::Data T>
+		StaticVerb(T&&, const Charge& = {}, VerbState = {});
+	};
 
 } // namespace Langulus::Flow
 
@@ -318,26 +262,20 @@ namespace Langulus::CT
 /// Namespace containing all built-in Langulus verbs									
 namespace Langulus::Verbs
 {
-	using namespace ::Langulus::Flow;
+	using namespace Flow;
 
 	/// Create/Destroy verb																		
 	/// Used for allocating new elements. If the type you're creating has		
 	/// a producer, you need to execute the verb in the correct context			
-	struct Create : public Verb {
+	struct Create : public StaticVerb<Create> {
 		LANGULUS(POSITIVE_VERB) "Create";
 		LANGULUS(NEGATIVE_VERB) "Destroy";
-		LANGULUS(INFO) 
+		LANGULUS(PRECEDENCE) 100;
+		LANGULUS(INFO)
 			"Used for allocating new elements. "
 			"If the type you're creating has	a producer, "
 			"you need to execute the verb in a matching producer, "
 			"or that producer will be created automatically for you, if possible";
-		LANGULUS_BASES(Verb);
-
-		Create();
-		template<CT::Data T>
-		Create(const T&, const Charge& = {}, VerbState = {});
-		template<CT::Data T>
-		Create(T&&, const Charge& = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -356,7 +294,7 @@ namespace Langulus::Verbs
 
 	/// Select/Deselect verb																	
 	/// Used to focus on a part of a container, or access members					
-	struct Select : public Verb {
+	struct Select : public StaticVerb<Select> {
 		LANGULUS(POSITIVE_VERB) "Select";
 		LANGULUS(NEGATIVE_VERB) "Deselect";
 		LANGULUS(POSITIVE_OPERATOR) ".";
@@ -364,13 +302,6 @@ namespace Langulus::Verbs
 		LANGULUS(PRECEDENCE) 2;
 		LANGULUS(INFO)
 			"Used to focus on a part of a container, or access members";
-		LANGULUS_BASES(Verb);
-
-		Select();
-		template<CT::Data T>
-		Select(const T&, const Charge & = {}, VerbState = {});
-		template<CT::Data T>
-		Select(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -396,7 +327,7 @@ namespace Langulus::Verbs
 	/// Associate/Disassociate verb															
 	/// Either performs a shallow copy, or aggregates associations,				
 	/// depending on the context's complexity												
-	struct Associate : public Verb {
+	struct Associate : public StaticVerb<Associate> {
 		LANGULUS(POSITIVE_VERB) "Associate";
 		LANGULUS(NEGATIVE_VERB) "Disassocate";
 		LANGULUS(POSITIVE_OPERATOR) " = ";
@@ -405,13 +336,6 @@ namespace Langulus::Verbs
 		LANGULUS(INFO)
 			"Either performs a shallow copy, or aggregates associations, "
 			"depending on the context's complexity";
-		LANGULUS_BASES(Verb);
-
-		Associate();
-		template<CT::Data T>
-		Associate(const T&, const Charge & = {}, VerbState = {});
-		template<CT::Data T>
-		Associate(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -426,20 +350,14 @@ namespace Langulus::Verbs
 
 	/// Add/Subtract verb																		
 	/// Performs arithmetic addition or subtraction										
-	struct Add : public Verb {
+	struct Add : public StaticVerb<Add> {
 		LANGULUS(POSITIVE_VERB) "Add";
 		LANGULUS(NEGATIVE_VERB) "Subtract";
 		LANGULUS(POSITIVE_OPERATOR) " + ";
 		LANGULUS(NEGATIVE_OPERATOR) " - ";
+		LANGULUS(PRECEDENCE) 3;
 		LANGULUS(INFO)
 			"Performs arithmetic addition or subtraction";
-		LANGULUS_BASES(Verb);
-
-		Add();
-		template<CT::Data T>
-		Add(const T&, const Charge & = {}, VerbState = {});
-		template<CT::Data T>
-		Add(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -455,21 +373,15 @@ namespace Langulus::Verbs
 	/// Multiply/Divide verb																	
 	/// Performs arithmetic multiplication or division									
 	/// If context is no specified, it is always 1										
-	struct Multiply : public Verb {
+	struct Multiply : public StaticVerb<Multiply> {
 		LANGULUS(POSITIVE_VERB) "Multiply";
 		LANGULUS(NEGATIVE_VERB) "Divide";
 		LANGULUS(POSITIVE_OPERATOR) "*";
 		LANGULUS(NEGATIVE_OPERATOR) "/";
+		LANGULUS(PRECEDENCE) 4;
 		LANGULUS(INFO)
 			"Performs arithmetic multiplication or division. "
 			"If context is no specified, it is always 1";
-		LANGULUS_BASES(Verb);
-
-		Multiply();
-		template<CT::Data T>
-		Multiply(const T&, const Charge & = {}, VerbState = {});
-		template<CT::Data T>
-		Multiply(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -484,20 +396,14 @@ namespace Langulus::Verbs
 
 	/// Exponent/Logarithm verb																
 	/// Performs exponentiation or logarithm												
-	struct Exponent : public Verb {
+	struct Exponent : public StaticVerb<Exponent> {
 		LANGULUS(POSITIVE_VERB) "Exponent";
 		LANGULUS(NEGATIVE_VERB) "Logarithm";
 		LANGULUS(POSITIVE_OPERATOR) "^";
 		LANGULUS(NEGATIVE_OPERATOR) " log ";
+		LANGULUS(PRECEDENCE) 5;
 		LANGULUS(INFO)
 			"Performs exponentiation or logarithm";
-		LANGULUS_BASES(Verb);
-
-		Exponent();
-		template<CT::Data T>
-		Exponent(const T&, const Charge & = {}, VerbState = {});
-		template<CT::Data T>
-		Exponent(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -510,19 +416,13 @@ namespace Langulus::Verbs
 
 	/// Catenate/Split verb																		
 	/// Catenates anything catenable, or split stuff apart using a mask			
-	struct Catenate : public Verb {
+	struct Catenate : public StaticVerb<Catenate> {
 		LANGULUS(POSITIVE_VERB) "Catenate";
 		LANGULUS(NEGATIVE_VERB) "Split";
 		LANGULUS(POSITIVE_OPERATOR) " >< ";
 		LANGULUS(NEGATIVE_OPERATOR) " <> ";
+		LANGULUS(PRECEDENCE) 6;
 		LANGULUS(INFO) "Catenates, or splits stuff apart";
-		LANGULUS_BASES(Verb);
-
-		Catenate();
-		template<CT::Data T>
-		Catenate(const T&, const Charge & = {}, VerbState = {});
-		template<CT::Data T>
-		Catenate(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -540,7 +440,7 @@ namespace Langulus::Verbs
 	/// Conjunct/Disjunct verb																	
 	/// Either combines LHS and RHS as one AND container, or separates them		
 	/// as one OR container - does only shallow copying								
-	struct Conjunct : public Verb {
+	struct Conjunct : public StaticVerb<Conjunct> {
 		LANGULUS(POSITIVE_VERB) "Conjunct";
 		LANGULUS(NEGATIVE_VERB) "Disjunct";
 		LANGULUS(POSITIVE_OPERATOR) ", ";
@@ -548,13 +448,6 @@ namespace Langulus::Verbs
 		LANGULUS(INFO)
 			"Either combines LHS and RHS as one AND container, or separates them "
 			"as one OR container (does only shallow copying)";
-		LANGULUS_BASES(Verb);
-
-		Conjunct();
-		template<CT::Data T>
-		Conjunct(const T&, const Charge & = {}, VerbState = {});
-		template<CT::Data T>
-		Conjunct(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -570,17 +463,10 @@ namespace Langulus::Verbs
 
 	/// Interpret																					
 	/// Performs conversion																		
-	struct Interpret : public Verb {
+	struct Interpret : public StaticVerb<Interpret> {
 		LANGULUS(VERB) "Interpret";
 		LANGULUS(OPERATOR) " => ";
 		LANGULUS(INFO) "Performs conversion";
-		LANGULUS_BASES(Verb);
-
-		Interpret();
-		template<CT::Data T>
-		Interpret(const T&, const Charge & = {}, VerbState = {});
-		template<CT::Data T>
-		Interpret(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -609,17 +495,10 @@ namespace Langulus::Verbs
 
 	/// Do/Undo verb																				
 	/// Used as a runtime dispatcher of composite types								
-	struct Do : public Verb {
+	struct Do : public StaticVerb<Do> {
 		LANGULUS(POSITIVE_VERB) "Do";
 		LANGULUS(NEGATIVE_VERB) "Undo";
 		LANGULUS(INFO) "Used as a runtime dispatcher of composite types";
-		LANGULUS_BASES(Verb);
-
-		Do();
-		template<CT::Data T>
-		Do(const T&, const Charge & = {}, VerbState = {});
-		template<CT::Data T>
-		Do(T&&, const Charge & = {}, VerbState = {});
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;

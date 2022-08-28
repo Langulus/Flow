@@ -1,6 +1,4 @@
 #include "Verb.hpp"
-#include "Code.hpp"
-#include "verbs/Interpret.inl"
 
 #define DELEGATION_VERBOSE(a) pcLogSelfVerbose << a
 
@@ -222,130 +220,12 @@ namespace Langulus::Flow
 
 	/// Serialize verb to code																	
 	Verb::operator Code() const {
-		Code result;
-
-		if (mSuccesses) {
-			// If verb has been executed, just dump the output					
-			result += Verbs::Interpret::To<Code>(mOutput);
-			return result;
-		}
-
-		// If reached, then verb hasn't been executed yet						
-		// Let's check if there's a source in which verb is executed		
-		if (mSource.IsValid()) {
-			result += Verbs::Interpret::To<Code>(mSource);
-			result += ' ';
-		}
-
-		// After the source, we decide whether to write . and verb token,	
-		// or simply an operator, depending on the verb definition			
-		bool enscope = true;
-		if (!mVerb) {
-			// An invalid verb is always written as token						
-			result += MetaVerb::DefaultToken;
-		}
-		else {
-			// A valid verb is written either as token, or as operator		
-			if (mMass < 0) {
-				if (!mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault()) {
-					// Write as operator													
-					result += mVerb->mOperatorReverse;
-					enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
-				}
-				else {
-					// Write as token														
-					result += mVerb->mTokenReverse;
-					result += Verbs::Interpret::To<Code>(GetCharge() * -1);
-				}
-			}
-			else {
-				if (!mVerb->mOperator.empty() && GetCharge().IsDefault()) {
-					// Write as operator													
-					result += mVerb->mOperator;
-					enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
-				}
-				else {
-					// Write as token														
-					result += mVerb->mToken;
-					result += Verbs::Interpret::To<Code>(GetCharge());
-				}
-			}
-		}
-
-		if (enscope)
-			result += Code::OpenScope;
-
-		if (IsValid())
-			result += Verbs::Interpret::To<Code>(GetArgument());
-
-		if (enscope)
-			result += Code::CloseScope;
-
-		return result;
+		return SerializeVerb<Code>();
 	}
 
 	/// Serialize verb for logger																
 	Verb::operator Debug() const {
-		Code result;
-
-		if (mSuccesses) {
-			// If verb has been executed, just dump the output					
-			result += Verbs::Interpret::To<Debug>(mOutput);
-			return Debug {result};
-		}
-
-		// If reached, then verb hasn't been executed yet						
-		// Let's check if there's a source in which verb is executed		
-		if (mSource.IsValid()) {
-			result += Verbs::Interpret::To<Debug>(mSource);
-			result += ' ';
-		}
-
-		// After the source, we decide whether to write . and verb token,	
-		// or simply an operator, depending on the verb definition			
-		bool enscope = true;
-		if (!mVerb) {
-			// An invalid verb is always written as token						
-			result += MetaVerb::DefaultToken;
-		}
-		else {
-			// A valid verb is written either as token, or as operator		
-			if (mMass < 0) {
-				if (!mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault()) {
-					// Write as operator													
-					result += mVerb->mOperatorReverse;
-					enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
-				}
-				else {
-					// Write as token														
-					result += mVerb->mTokenReverse;
-					result += Verbs::Interpret::To<Debug>(GetCharge() * -1);
-				}
-			}
-			else {
-				if (!mVerb->mOperator.empty() && GetCharge().IsDefault()) {
-					// Write as operator													
-					result += mVerb->mOperator;
-					enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
-				}
-				else {
-					// Write as token														
-					result += mVerb->mToken;
-					result += Verbs::Interpret::To<Debug>(GetCharge());
-				}
-			}
-		}
-
-		if (enscope)
-			result += Code::OpenScope;
-
-		if (IsValid())
-			result += Verbs::Interpret::To<Debug>(GetArgument());
-
-		if (enscope)
-			result += Code::CloseScope;
-
-		return Debug {result};
+		return SerializeVerb<Debug>();
 	}
 
 } // namespace Langulus::Flow

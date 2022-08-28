@@ -382,15 +382,7 @@ namespace Langulus::Flow
 	///	@param input - the code to peek into											
 	///	@return true if input begins with a number									
 	bool Code::NumberParser::Peek(const Code& input) noexcept {
-		if (input.StartsWithDigit())
-			return true;
-		else for (auto c : input) {
-			if (c == '-' || c <= 32)
-				continue;
-			else
-				return ::std::isdigit(c);
-		}
-		return false;
+		return input.StartsWithDigit();
 	}
 
 	/// Parse an integer or real number														
@@ -413,15 +405,27 @@ namespace Langulus::Flow
 	}
 
 	/// Peek inside input, and return true if it begins with one of the			
-	/// builtin or reflected operators														
+	/// builtin operators																		
 	///	@param input - the code to peek into											
 	///	@return true if input begins with an operators								
-	Code::Operator Code::OperatorParser::Peek(const Code& input) noexcept {
+	Code::Operator Code::OperatorParser::PeekBuiltin(const Code& input) noexcept {
 		// Compare against the built-in operators									
 		for (Offset i = 0; i < Code::OpCounter; ++i) {
 			if (!mOperators[i].mCharge && input.StartsWithOperator(i))
 				return Operator(i);
 		}
+
+		return NoOperator;
+	}
+
+	/// Peek inside input, and return true if it begins with one of the			
+	/// builtin or reflected operators														
+	///	@param input - the code to peek into											
+	///	@return true if input begins with an operators								
+	Code::Operator Code::OperatorParser::Peek(const Code& input) noexcept {
+		const auto builtin = PeekBuiltin(input);
+		if (builtin != NoOperator)
+			return builtin;
 
 		// Compare against reflected operators										
 		const auto word = Isolate(input);
@@ -447,13 +451,15 @@ namespace Langulus::Flow
 			return KeywordParser::Isolate(input);
 		}
 
-		// Isolate an operator separated by spaces/letters/digits			
+		// Isolate an operator separated by spaces/letters/digits, or		
+		// built-in operators, such as '(', '"', etc.							
 		Offset progress = 0;
 		while (progress < input.GetCount()) {
 			const auto relevant = input.RightOf(progress);
 			if (KeywordParser::Peek(relevant)
 				|| NumberParser::Peek(relevant)
-				|| SkippedParser::Peek(relevant))
+				|| SkippedParser::Peek(relevant)
+				|| PeekBuiltin(relevant) != NoOperator)
 				break;
 			++progress;
 		}
@@ -880,27 +886,30 @@ namespace Langulus::Flow
 				return progress;
 
 			progress += mOperators[op].mToken.size();
-			VERBOSE("Parsing charge operator: [" << mOperators[op].mToken << ']');
 			relevant = input.RightOf(progress);
+			VERBOSE("Parsing charge operator: [" << mOperators[op].mToken << ']');
 
 			// For each charge operator encountered - parse a RHS				
 			Any rhs;
-			if (SkippedParser::Peek(relevant))
+			if (SkippedParser::Peek(relevant)) {
 				// Skip empty space and escape symbols								
 				progress += SkippedParser::Parse(relevant);
-			else if (KeywordParser::Peek(relevant))
+			}
+			else if (KeywordParser::Peek(relevant)) {
 				// Charge parameter can be a keyword, like a constant, 		
 				// but is not allowed to have charge on its own, to			
 				// avoid endless nesting - you must wrap it in a scope		
 				progress += KeywordParser::Parse(relevant, rhs, false);
-			else if (NumberParser::Peek(relevant))
+			}
+			else if (NumberParser::Peek(relevant)) {
 				// Can be a literal number												
 				progress += NumberParser::Parse(relevant, rhs);
-			else if (OperatorParser::Peek(relevant) == Operator::OpenScope)
+			}
+			else if (OperatorParser::Peek(relevant) == Operator::OpenScope) {
 				// Can be anything wrapped in a scope								
 				progress += OperatorParser::Parse(Operator::OpenScope, relevant, rhs, 0, true);
-			else
-				PRETTY_ERROR("Unexpected symbol");
+			}
+			else PRETTY_ERROR("Unexpected symbol");
 
 			// Save changes																
 			// AsCast may throw here, if RHS did not evaluate or convert	

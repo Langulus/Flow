@@ -1,31 +1,12 @@
 #pragma once
 #include "../Code.hpp"
+#include "../Verb.hpp"
 
 #define VERBOSE_CREATION(a) //Logger::Verbose() << a
 #define VERBOSE_SCOPES(a) Logger::Verbose() << a
 
 namespace Langulus::Verbs
 {
-
-	/// Default Create/destroy verb construction											
-	inline Create::Create()
-		: Verb {RTTI::MetaVerb::Of<Create>()} {}
-
-	/// Create/destroy verb construction by shallow-copy								
-	///	@param a - the stuff to produce													
-	///	@param c - the charge of the creation											
-	///	@param state - the verb state														
-	template<CT::Data T>
-	Create::Create(const T& a, const Charge& c, const VerbState state)
-		: Verb {RTTI::MetaVerb::Of<Create>(), a, c, state} {}
-
-	/// Create/destroy verb construction by move											
-	///	@param a - the stuff to produce													
-	///	@param c - the charge of the creation											
-	///	@param state - the verb state														
-	template<CT::Data T>
-	Create::Create(T&& a, const Charge& c, const VerbState state)
-		: Verb {RTTI::MetaVerb::Of<Create>(), Forward<T>(a), c, state} {}
 
 	/// Check if the verb is available in a type, and with given arguments		
 	///	@return true if verb is available in T with arguments A...				
@@ -201,7 +182,7 @@ namespace Langulus::Verbs
 				if (meta->CastsTo<A::Number>(1)) {
 					// If number, keep it abstract									
 					//TODO this seems sketchy and i don't like it!
-					meta = MetaData::Of<A::Number>();
+					meta = RTTI::MetaData::Of<A::Number>();
 				}
 
 				const auto sati = satisfiedData.FindKeyIndex(meta);

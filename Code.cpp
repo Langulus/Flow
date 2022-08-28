@@ -108,7 +108,6 @@ namespace Langulus::Flow
 	///	@param token - the operator														
 	///	@return the isolated operator token												
 	constexpr Token IsolateOperator(const Token& token) noexcept {
-		// Skip skippable at the front and the back of token					
 		auto l = token.data();
 		auto r = token.data() + token.size();
 		while (l < r && *l <= 32)
@@ -123,7 +122,6 @@ namespace Langulus::Flow
 	///	@param rhs - the right operator													
 	///	@return true if both loosely match												
 	constexpr bool CompareOperators(const Token& lhs, const Token& rhs) noexcept {
-		// Compare isolated operators													
 		return CompareTokens(IsolateOperator(lhs), IsolateOperator(rhs));
 	}
 
@@ -332,7 +330,8 @@ namespace Langulus::Flow
 					case RTTI::Meta::Constant:
 						Logger::Append() << "meta constant)";
 						break;
-					SAFETY(default: PRETTY_ERROR("Unhandled meta type"));
+					default:
+						PRETTY_ERROR("Unhandled meta type");
 					}
 				}
 
@@ -368,7 +367,8 @@ namespace Langulus::Flow
 					}.Clone());
 					break;
 				}
-				SAFETY(default: PRETTY_ERROR("Unhandled meta type"));
+				default:
+					PRETTY_ERROR("Unhandled meta type");
 				}
 			}
 		}
@@ -409,7 +409,6 @@ namespace Langulus::Flow
 	///	@param input - the code to peek into											
 	///	@return true if input begins with an operators								
 	Code::Operator Code::OperatorParser::PeekBuiltin(const Code& input) noexcept {
-		// Compare against the built-in operators									
 		for (Offset i = 0; i < Code::OpCounter; ++i) {
 			if (!mOperators[i].mCharge && input.StartsWithOperator(i))
 				return Operator(i);
@@ -427,7 +426,6 @@ namespace Langulus::Flow
 		if (builtin != NoOperator)
 			return builtin;
 
-		// Compare against reflected operators										
 		const auto word = Isolate(input);
 		auto found = RTTI::Database.GetOperator(word);
 		if (found)
@@ -446,10 +444,8 @@ namespace Langulus::Flow
 	Token Code::OperatorParser::Isolate(const Code& input) noexcept {
 		// These can be either a word separated by operators/spaces, or	
 		// operators separated by spaces/numbers/chatacters					
-		if (input.StartsWithLetter()) {
-			// Isolate a keyword separated by spaces/operators					
+		if (input.StartsWithLetter())
 			return KeywordParser::Isolate(input);
-		}
 
 		// Isolate an operator separated by spaces/letters/digits, or		
 		// built-in operators, such as '(', '"', etc.							
@@ -878,7 +874,7 @@ namespace Langulus::Flow
 		while (progress < input.GetCount()) {
 			// Scan input until end of charge operators/code					
 			auto relevant = input.RightOf(progress);
-			if (relevant[0] == '\0')
+			if (relevant.IsEmpty() || relevant[0] == '\0')
 				break;
 
 			const auto op = ChargeParser::Peek(relevant);
@@ -889,13 +885,21 @@ namespace Langulus::Flow
 			relevant = input.RightOf(progress);
 			VERBOSE("Parsing charge operator: [" << mOperators[op].mToken << ']');
 
+			// Skip and spacing and consume '-' operators here					
+			bool reverse = false;
+			while (SkippedParser::Peek(relevant) || relevant[0] == '-') {
+				progress += SkippedParser::Parse(relevant);
+				relevant = input.RightOf(progress);
+				if (relevant[0] == '-') {
+					++progress;
+					reverse = !reverse;
+					relevant = input.RightOf(progress);
+				}
+			}
+
 			// For each charge operator encountered - parse a RHS				
 			Any rhs;
-			if (SkippedParser::Peek(relevant)) {
-				// Skip empty space and escape symbols								
-				progress += SkippedParser::Parse(relevant);
-			}
-			else if (KeywordParser::Peek(relevant)) {
+			if (KeywordParser::Peek(relevant)) {
 				// Charge parameter can be a keyword, like a constant, 		
 				// but is not allowed to have charge on its own, to			
 				// avoid endless nesting - you must wrap it in a scope		
@@ -914,7 +918,10 @@ namespace Langulus::Flow
 			// Save changes																
 			// AsCast may throw here, if RHS did not evaluate or convert	
 			// to real - this is later caught and handled gracefully			
-			const auto asReal = rhs.AsCast<Real>();
+			auto asReal = rhs.AsCast<Real>();
+			if (reverse)
+				asReal *= Real {-1};
+
 			switch (op) {
 			case Code::Mass:
 				charge.mMass = asReal;

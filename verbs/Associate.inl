@@ -57,14 +57,13 @@ namespace Langulus::Verbs
 	///	@param verb - the verb instance to execute									
 	///	@return true if execution was a success										
 	inline bool Associate::ExecuteDefault(Block& context, Verb& verb) {
-		if (context.IsConstant() || context.IsMissing() || verb.IsMissingDeep())
+		if (context.IsConstant() || context.IsMissing() || verb.IsMissingDeep() || !context.Is(verb.GetType()))
 			return false;
 
-		try {
-			// Attempt directly copying, if possible								
-			// This will happen only if types are compatible					
-			verb.Copy(context);
-		}
+		// Attempt directly copying, if possible									
+		// This will happen only if types are exactly the same				
+		// This is default, fallback routine, let's keep things simple		
+		try { verb.Copy(context); }
 		catch (const Except::Copy&) {
 			return false;
 		}

@@ -277,6 +277,8 @@ namespace Langulus::Verbs
 			"you need to execute the verb in a matching producer, "
 			"or that producer will be created automatically for you, if possible";
 
+		using StaticVerb::StaticVerb;
+
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
 		template<CT::Data T, CT::Data... A>
@@ -302,6 +304,8 @@ namespace Langulus::Verbs
 		LANGULUS(PRECEDENCE) 2;
 		LANGULUS(INFO)
 			"Used to focus on a part of a container, or access members";
+
+		using StaticVerb::StaticVerb;
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -337,6 +341,8 @@ namespace Langulus::Verbs
 			"Either performs a shallow copy, or aggregates associations, "
 			"depending on the context's complexity";
 
+		using StaticVerb::StaticVerb;
+
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
 		template<CT::Data T, CT::Data... A>
@@ -359,6 +365,8 @@ namespace Langulus::Verbs
 		LANGULUS(INFO)
 			"Performs arithmetic addition or subtraction";
 
+		using StaticVerb::StaticVerb;
+
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
 		template<CT::Data T, CT::Data... A>
@@ -367,7 +375,12 @@ namespace Langulus::Verbs
 		template<CT::Data T>
 		static bool ExecuteIn(T&, Verb&);
 
+		static bool ExecuteDefault(const Block&, Verb&);
+		static bool ExecuteDefault(Block&, Verb&);
 		static bool ExecuteStateless(Verb&);
+
+		template<CT::Data T>
+		static void BatchOperator(const Block&, Verb&);
 	};
 
 	/// Multiply/Divide verb																	
@@ -381,7 +394,9 @@ namespace Langulus::Verbs
 		LANGULUS(PRECEDENCE) 4;
 		LANGULUS(INFO)
 			"Performs arithmetic multiplication or division. "
-			"If context is no specified, it is always 1";
+			"If context is not specified, it is always 1";
+
+		using StaticVerb::StaticVerb;
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -391,19 +406,25 @@ namespace Langulus::Verbs
 		template<CT::Data T>
 		static bool ExecuteIn(T&, Verb&);
 
+		static bool ExecuteDefault(const Block&, Verb&);
+		static bool ExecuteDefault(Block&, Verb&);
 		static bool ExecuteStateless(Verb&);
+
+		template<CT::Data T>
+		static void BatchOperator(const Block&, Verb&);
 	};
 
-	/// Exponent/Logarithm verb																
-	/// Performs exponentiation or logarithm												
+	/// Exponent/Root verb																		
+	/// Performs exponentiation or root														
 	struct Exponent : public StaticVerb<Exponent> {
 		LANGULUS(POSITIVE_VERB) "Exponent";
-		LANGULUS(NEGATIVE_VERB) "Logarithm";
+		LANGULUS(NEGATIVE_VERB) "Root";
 		LANGULUS(POSITIVE_OPERATOR) "^";
-		LANGULUS(NEGATIVE_OPERATOR) " log ";
+		LANGULUS(NEGATIVE_OPERATOR) "^^";
 		LANGULUS(PRECEDENCE) 5;
-		LANGULUS(INFO)
-			"Performs exponentiation or logarithm";
+		LANGULUS(INFO) "Performs exponentiation or root";
+
+		using StaticVerb::StaticVerb;
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -412,6 +433,12 @@ namespace Langulus::Verbs
 
 		template<CT::Data T>
 		static bool ExecuteIn(T&, Verb&);
+
+		static bool ExecuteDefault(const Block&, Verb&);
+		static bool ExecuteDefault(Block&, Verb&);
+
+		template<CT::Data T>
+		static void BatchOperator(const Block&, Verb&);
 	};
 
 	/// Catenate/Split verb																		
@@ -423,6 +450,8 @@ namespace Langulus::Verbs
 		LANGULUS(NEGATIVE_OPERATOR) " <> ";
 		LANGULUS(PRECEDENCE) 6;
 		LANGULUS(INFO) "Catenates, or splits stuff apart";
+
+		using StaticVerb::StaticVerb;
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -449,6 +478,8 @@ namespace Langulus::Verbs
 			"Either combines LHS and RHS as one AND container, or separates them "
 			"as one OR container (does only shallow copying)";
 
+		using StaticVerb::StaticVerb;
+
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
 		template<CT::Data T, CT::Data... A>
@@ -467,6 +498,8 @@ namespace Langulus::Verbs
 		LANGULUS(VERB) "Interpret";
 		LANGULUS(OPERATOR) " => ";
 		LANGULUS(INFO) "Performs conversion";
+
+		using StaticVerb::StaticVerb;
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -499,6 +532,8 @@ namespace Langulus::Verbs
 		LANGULUS(POSITIVE_VERB) "Do";
 		LANGULUS(NEGATIVE_VERB) "Undo";
 		LANGULUS(INFO) "Used as a runtime dispatcher of composite types";
+
+		using StaticVerb::StaticVerb;
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;

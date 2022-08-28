@@ -38,7 +38,7 @@ namespace Langulus::Verbs
 		}
 	}
 
-	/// Execute the exponentiation/logarithm verb in a specific context			
+	/// Execute the exponentiation/root verb in a specific context					
 	///	@param context - the context to execute in									
 	///	@param verb - the verb to execute												
 	///	@return true if verb has been satisfied										
@@ -48,6 +48,73 @@ namespace Langulus::Verbs
 			"Verb is not available for this context, this shouldn't be reached by flow");
 		context.Exponent(verb);
 		return verb.IsDone();
+	}
+	
+	/// Directly reinterprets lhs and rhs as the provided T and raises to a		
+	/// power, or lowers to a root each of the elements								
+	///	@tparam T - type to interpret as													
+	///	@param lhs - left operand															
+	///	@param rhs - right operand															
+	template<CT::Data T>
+	LANGULUS(ALWAYSINLINE) void Exponent::BatchOperator(const Block& lhs, Verb& rhs) {
+		//TODO use TSIMD to batch compute
+		//TODO once vulkan module is available, lock and replace the ExecuteDefault in MVulkan to incorporate compute shader for even batcher batching!!1
+		//TODO detect underflows and overflows
+		TAny<T> result;
+		result.template Allocate<false, true>(lhs.GetCount());
+		const T* ilhs = lhs.GetRawAs<T>();
+		const T* const ilhsEnd = ilhs + lhs.GetCount();
+		const T* irhs = rhs.GetRawAs<T>();
+		T* ires = result.template GetRawAs<T>();
+		if (rhs.GetMass() < 0) {
+			while (ilhs != ilhsEnd)
+				*(ires++) = ::std::pow(*(ilhs++), *(irhs++));
+		}
+		else {
+			while (ilhs != ilhsEnd)
+				*(ires++) = ::std::pow(*(ilhs++), T {1} / *(irhs++));
+		}
+
+		rhs << Abandon(result);
+	}
+
+	/// Default power/root in an immutable context										
+	///	@param context - the block to execute in										
+	///	@param verb - power/root verb														
+	inline bool Exponent::ExecuteDefault(const Block& context, Verb& verb) {
+		const auto common = context.ReinterpretAs(verb);
+		if (common.CastsTo<A::Number>()) {
+			if (common.CastsTo<int8_t, true>()) UNLIKELY()
+				BatchOperator<int8_t>(common, verb);
+			else if (common.CastsTo<uint8_t, true>()) UNLIKELY()
+				BatchOperator<uint8_t>(common, verb);
+			else if (common.CastsTo<int16_t, true>()) UNLIKELY()
+				BatchOperator<int16_t>(common, verb);
+			else if (common.CastsTo<uint16_t, true>()) UNLIKELY()
+				BatchOperator<uint16_t>(common, verb);
+			else if (common.CastsTo<int32_t, true>())
+				BatchOperator<int32_t>(common, verb);
+			else if (common.CastsTo<uint32_t, true>())
+				BatchOperator<uint32_t>(common, verb);
+			else if (common.CastsTo<int64_t, true>())
+				BatchOperator<int64_t>(common, verb);
+			else if (common.CastsTo<uint64_t, true>())
+				BatchOperator<uint64_t>(common, verb);
+			else if (common.CastsTo<RealSP, true>()) LIKELY()
+				BatchOperator<RealSP>(common, verb);
+			else if (common.CastsTo<RealDP, true>()) LIKELY()
+				BatchOperator<RealDP>(common, verb);
+		}
+
+		return verb.IsDone();
+	}
+
+	/// Default power/root in mutable context												
+	///	@param context - the block to execute in										
+	///	@param verb - power/root verb														
+	inline bool Exponent::ExecuteDefault(Block& context, Verb& verb) {
+		//TODO
+		return true;
 	}
 
 } // namespace Langulus::Verbs

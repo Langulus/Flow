@@ -148,14 +148,8 @@ namespace Langulus
 	///	@return a reference to the logger for chaining								
 	template<CT::Flat T>
 	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
-		Logger::A::Interface& lhs, const T& rhs) requires CT::Convertible<T, Flow::Debug> {
+		Logger::A::Interface& lhs, const T& rhs) requires (CT::Convertible<T, Flow::Debug> && !Logger::Formattable<T>) {
 		return lhs.operator << (Token {Verbs::Interpret::To<Flow::Debug>(rhs)});
-	}
-
-	/// Extend the logger to be capable of logging Construct							
-	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
-		Logger::A::Interface& lhs, const Flow::Construct& rhs) {
-		return lhs << Verbs::Interpret::To<Flow::Debug>(rhs);
 	}
 
 } // namespace Langulus

@@ -42,6 +42,8 @@ namespace Langulus::Flow
 	/// of very specific custom contents.													
 	///																								
 	class Construct : public Any, public Charge {
+		LANGULUS(POD) false;
+		LANGULUS(NULLIFIABLE) false;
 		LANGULUS(DEEP) false;
 		LANGULUS_CONVERSIONS(Code, Debug);
 		LANGULUS_BASES(Any, Charge);

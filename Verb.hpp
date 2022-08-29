@@ -66,6 +66,8 @@ namespace Langulus::Flow
 	/// theory based around verbs, so this is the natural name for such thing	
 	///																								
 	class Verb : public Any, public Charge {
+		LANGULUS(POD) false;
+		LANGULUS(NULLIFIABLE) false;
 		LANGULUS(DEEP) false;
 		LANGULUS_CONVERSIONS(Code, Debug);
 		LANGULUS_BASES(Any, Charge);

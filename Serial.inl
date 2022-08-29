@@ -496,6 +496,18 @@ namespace Langulus::Flow
 
 				return;
 			}
+			else if (source.CastsTo<Verb>()) {
+				// Serialize verb															
+				source.ForEach([&result](const Verb& verb) {
+					result += verb.GetVerb();
+					result += verb.GetCharge();
+					result += verb.GetVerbState();
+					SerializeBlock<true>(verb.GetSource(), result);
+					SerializeBlock<true>(verb.GetArgument(), result);
+				});
+
+				return;
+			}
 		}
 		
 		if (source.IsDefaultable()) {
@@ -510,7 +522,7 @@ namespace Langulus::Flow
 				// Serialize all reflected bases										
 				for (auto& base : element.GetType()->mBases) {
 					// Imposed bases are never serialized							
-					if (base.mImposed)
+					if (base.mImposed || base.mType->mIsAbstract)
 						continue;
 
 					const auto baseBlock = element.GetBaseMemory(base);
@@ -726,6 +738,42 @@ namespace Langulus::Flow
 
 				return read;
 			}
+			else if (result.CastsTo<Verb>()) {
+				// If data is verb, deserialize it here							
+				if constexpr (HEADER)
+					result.Allocate<true>(deserializedCount);
+
+				result.ForEach([&](Verb& verb) {
+					// Deserialize verb type											
+					VMeta ptr;
+					read = DeserializeMeta(source, ptr, read, header, loader);
+					verb.SetVerb(ptr);
+
+					// Deserialize the charge											
+					Charge charge;
+					RequestMoreBytes(source, read, sizeof(Charge), loader);
+					::std::memcpy(&charge, source.At(read), sizeof(Charge));
+					read += sizeof(Charge);
+					verb.SetCharge(charge);
+
+					// Deserialize the verb state										
+					VerbState vstate;
+					RequestMoreBytes(source, read, sizeof(VerbState), loader);
+					::std::memcpy(&vstate, source.At(read), sizeof(VerbState));
+					read += sizeof(VerbState);
+					verb.SetVerbState(vstate);
+
+					// Deserialize source												
+					read = DeserializeBlock<true>(
+						source, verb.GetSource(), read, header, loader);
+
+					// Deserialize argument												
+					read = DeserializeBlock<true>(
+						source, verb.GetArgument(), read, header, loader);
+				});
+
+				return read;
+			}
 		}
 
 		if (result.IsDefaultable()) {
@@ -752,7 +800,7 @@ namespace Langulus::Flow
 
 				// Deserialize all reflected bases									
 				for (auto& base : element.GetType()->mBases) {
-					if (base.mImposed)
+					if (base.mImposed || base.mType->mIsAbstract)
 						continue;
 
 					auto baseBlock = element.GetBaseMemory(base);

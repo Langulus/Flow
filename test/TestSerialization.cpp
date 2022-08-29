@@ -75,4 +75,47 @@ SCENARIO("Serialization", "[serialization]") {
 			}
 		}
 	}
+
+	GIVEN("An Any instance containing a verb") {
+		Any pack = Verbs::Do(10).SetSource(5);
+
+		WHEN("Pack is serialized as binary") {
+			auto serialized = Verbs::Interpret::To<Bytes>(pack);
+			auto deserialized = Verbs::Interpret::To<Any>(serialized);
+			THEN("The deserialized binary pack must be completely identical with the original") {
+				REQUIRE(deserialized == pack);
+			}
+		}
+	}
+
+	GIVEN("An Any instance containing various kinds of numbers") {
+		auto pack = Any::Wrap(10, 5, 20.0f, 40.0);
+
+		WHEN("Pack is serialized as binary") {
+			auto serialized = Verbs::Interpret::To<Bytes>(pack);
+			auto deserialized = Verbs::Interpret::To<Any>(serialized);
+			THEN("The deserialized binary pack must be completely identical with the original") {
+				REQUIRE(deserialized == pack);
+			}
+		}
+	}
+
+	GIVEN("A complex pack with various kinds of data") {
+		auto pack = Any::Wrap(
+			"some text"_text,
+			10, 5, 20.0f, 40.0,
+			Verbs::Do(10).SetSource(5),
+			Verbs::Do(10).SetSource("some other text"_text),
+			Verbs::Do("even more text"_text).SetSource(Verbs::Do(10).SetSource(5))
+		);
+
+		WHEN("Serialize and then deserialize container in binary") {
+			auto serialized = Verbs::Interpret::To<Bytes>(pack);
+			auto deserialized = Verbs::Interpret::To<Any>(serialized);
+
+			THEN("Deserialized data must match original stuff completely") {
+				REQUIRE(deserialized == pack);
+			}
+		}
+	}
 }

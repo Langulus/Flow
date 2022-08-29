@@ -37,6 +37,9 @@ namespace Langulus::Flow
 	/// Charge, carrying the four verb dimensions										
 	///																								
 	struct Charge {
+		LANGULUS(POD) true;
+		LANGULUS(NULLIFIABLE) false;
+
 		// Mass of the verb																
 		Real mMass = DefaultMass;
 		// Frequency of the verb														

@@ -633,17 +633,37 @@ namespace Langulus::Flow
 		const bool resolvable = result.IsResolvable();
 		if (!resolvable) {
 			if (result.IsPOD()) {
-				if (result.IsSparse())
-					TODO();
-
 				// If data is POD, optimize by directly memcpying it			
 				if constexpr (HEADER)
 					result.Allocate<false, true>(deserializedCount);
 
 				const auto byteSize = result.GetByteSize();
 				RequestMoreBytes(source, read, byteSize, loader);
-				::std::memcpy(result.GetRaw(), source.At(read), byteSize);
-				read += byteSize;
+
+				if (result.IsSparse()) {
+					// Allocate a separate block for the elements				
+					const auto temporary = Allocator::Allocate(byteSize);
+					auto start = temporary->GetBlockStart();
+					::std::memcpy(start, source.At(read), byteSize);
+					read += byteSize;
+					temporary->Keep(deserializedCount - 1);
+
+					// Write a pointer to each element								
+					auto p = result.GetRawSparse();
+					const auto pEnd = p + result.GetCount();
+					const auto size = result.GetType()->mSize;
+					while (p != pEnd) {
+						p->mEntry = temporary;
+						(p++)->mPointer = start;
+						start += size;
+					}
+				}
+				else {
+					// Data is dense, parse it at once								
+					::std::memcpy(result.GetRaw(), source.At(read), byteSize);
+					read += byteSize;
+				}
+
 				return read;
 			}
 			else if (result.IsDeep()) {
@@ -651,7 +671,7 @@ namespace Langulus::Flow
 				if constexpr (HEADER)
 					result.Allocate<true>(deserializedCount);
 
-				result.ForEach<false>([&](Block& block) {
+				result.ForEach([&](Block& block) {
 					read = DeserializeBlock<true>(
 						source, block, read, header, loader);
 				});
@@ -698,9 +718,6 @@ namespace Langulus::Flow
 		}
 
 		if (result.IsDefaultable()) {
-			if (result.IsSparse())
-				TODO();
-
 			// Type is statically producible, and has default constructor,	
 			// therefore we can deserialize it by making a default copy		
 			// and then filling in the reflected members and bases			

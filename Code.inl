@@ -129,7 +129,7 @@ namespace Langulus
 
 	/// Make a code literal																		
 	inline Flow::Code operator "" _code(const char* text, ::std::size_t size) {
-		return Anyness::Text {text, size};
+		return {text, size};
 	}
 
 } // namespace Langulus

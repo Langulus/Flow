@@ -97,6 +97,13 @@ namespace Langulus::Verbs
 			// Types are the same														
 			return from;
 		}
+		else if constexpr (CT::Same<TO, Any>) {
+			// Always interpreted as deserialization								
+			if constexpr (CT::SameAsOneOf<FROM, Code, Bytes>)
+				return Deserialize(from);
+			else LANGULUS_ASSERT(
+				"No deserializer exists between these types");
+		}
 		else if constexpr (CT::Convertible<FROM, TO>) {
 			// Directly convert if constructs/conversion operators exist	
 			return static_cast<TO>(from);

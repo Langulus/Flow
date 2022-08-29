@@ -133,7 +133,7 @@ namespace Langulus
 	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
 		Logger::A::Interface& lhs, const T& rhs) noexcept {
 		if constexpr (CT::Sparse<T>)
-			return lhs.operator << (rhs ? rhs->mToken : rhs->GetDefaultToken());
+			return lhs.operator << (rhs ? rhs->mToken : Decay<T>::DefaultToken);
 		else
 			return lhs.operator << (rhs.mToken);
 	}

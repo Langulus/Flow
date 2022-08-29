@@ -319,15 +319,17 @@ namespace Langulus::Flow
 					<< "; Could be one of: " << Logger::Tabs {};
 
 				for (auto& meta : symbols) {
-					Logger::Verbose() << Logger::Red << meta << " (";
 					switch (meta->GetMetaType()) {
 					case RTTI::Meta::Data:
+						Logger::Verbose() << Logger::Red << static_cast<DMeta>(meta) << " (";
 						Logger::Append() << "meta data)";
 						break;
 					case RTTI::Meta::Trait:
+						Logger::Verbose() << Logger::Red << static_cast<TMeta>(meta) << " (";
 						Logger::Append() << "meta trait)";
 						break;
 					case RTTI::Meta::Constant:
+						Logger::Verbose() << Logger::Red << static_cast<CMeta>(meta) << " (";
 						Logger::Append() << "meta constant)";
 						break;
 					default:

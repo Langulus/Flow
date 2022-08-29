@@ -1,7 +1,6 @@
 #pragma once
 #include "Serial.hpp"
 #include "verbs/Do.inl"
-#include "verbs/Interpret.inl"
 
 #define LGLS_VERBOSE_SERIALIZATION(a)
 
@@ -224,7 +223,7 @@ namespace Langulus::Flow
 					SerializeNumber<int64_t>(from, to);
 				else {
 					Logger::Error() << "Can't serialize block of "
-						<< from.GetToken() << " to " << MetaData::Of<TO>()
+						<< from.GetToken() << " to " << MetaData::Of<TO>()->mToken
 						<< " - the number type is not implemented";
 					Throw<Except::Convert>(
 						"Can't serialize numbers to text");

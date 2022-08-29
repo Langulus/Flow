@@ -46,7 +46,10 @@ SCENARIO("Serialization", "[serialization]") {
 
 	GIVEN("An Any instance containing Text") {
 		Any pack;
-		pack << Text {"hello"} << Text {"i love you"} << Text {"won't you tell me your name"};
+		pack
+			<< "hello"_text
+			<< "i love you"_text
+			<< "won't you tell me your name"_text;
 
 		WHEN("Pack is serialized as binary") {
 			auto serialized = Verbs::Interpret::To<Bytes>(pack);
@@ -58,10 +61,11 @@ SCENARIO("Serialization", "[serialization]") {
 	}
 
 	GIVEN("An Any instance containing Trait") {
-		Any pack; pack
-			<< Traits::Name(Text {"hello"})
-			<< Traits::Name(Text {"i love you"})
-			<< Traits::Name(Text {"won't you tell me your name"});
+		Any pack;
+		pack
+			<< Traits::Name("hello"_text)
+			<< Traits::Name("i love you"_text)
+			<< Traits::Name("won't you tell me your name"_text);
 
 		WHEN("Pack is serialized as binary") {
 			auto serialized = Verbs::Interpret::To<Bytes>(pack);

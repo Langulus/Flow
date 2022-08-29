@@ -205,7 +205,7 @@ namespace Langulus::Flow
 					SerializeNumber<RealSP>(from, to);
 				else if (from.CastsTo<RealDP, true>())
 					SerializeNumber<RealDP>(from, to);
-				//else if (from.CastsTo<uint8_t, true>())
+				//else if (from.CastsTo<uint8_t, true>()) //this gets mistaken as letter, so not considered number
 				//	SerializeNumber<uint8_t>(from, to);
 				else if (from.CastsTo<uint16_t, true>())
 					SerializeNumber<uint16_t>(from, to);
@@ -339,7 +339,7 @@ namespace Langulus::Flow
 	template<class META, CT::Text TO>
 	void Detail::SerializeMeta(const Block& from, TO& to, const RTTI::Member* member) {
 		static_assert(CT::DerivedFrom<META, RTTI::Meta>,
-			"META has to be an AMeta derivative");
+			"META has to be an RTTI::Meta derivative");
 
 		auto meta = member->As<META>(from.GetRaw());
 		if (meta)	to += meta->GetToken();
@@ -412,6 +412,8 @@ namespace Langulus::Flow
 				SerializeMeta<TMeta>(from, to, &member);
 			else if (member.mType->Is<VMeta>())
 				SerializeMeta<VMeta>(from, to, &member);
+			else if (member.mType->Is<CMeta>())
+				SerializeMeta<CMeta>(from, to, &member);
 			else
 				SerializeBlock(from.GetMember(member), to);
 
@@ -488,7 +490,8 @@ namespace Langulus::Flow
 				source.ForEach(
 					[&result](DMeta meta) { result += meta; },
 					[&result](VMeta meta) { result += meta; },
-					[&result](TMeta meta) { result += meta; }
+					[&result](TMeta meta) { result += meta; },
+					[&result](CMeta meta) { result += meta; }
 				);
 
 				return;
@@ -712,6 +715,14 @@ namespace Langulus::Flow
 						++p;
 					}
 				}
+				else if (result.Is<MetaConst>()) {
+					while (p != pEnd) {
+						CMeta ptr;
+						read = DeserializeMeta(source, ptr, read, header, loader);
+						p->mPointer = const_cast<Byte*>(reinterpret_cast<const Byte*>(ptr));
+						++p;
+					}
+				}
 
 				return read;
 			}
@@ -779,13 +790,15 @@ namespace Langulus::Flow
 		read = DeserializeAtom(source, count, read, header, loader);
 		if (count) {
 			RequestMoreBytes(source, read, count, loader);
-			const Token token {source.As<char*>(read), count};
+			const Token token {source.GetRawAs<Letter>() + read, count};
 			if constexpr (CT::Same<META, MetaData>)
 				result = RTTI::Database.GetMetaData(token);
 			else if constexpr (CT::Same<META, MetaVerb>)
 				result = RTTI::Database.GetMetaVerb(token);
 			else if constexpr (CT::Same<META, MetaTrait>)
 				result = RTTI::Database.GetMetaTrait(token);
+			else if constexpr (CT::Same<META, MetaConst>)
+				result = RTTI::Database.GetMetaConstant(token);
 			else
 				LANGULUS_ASSERT("Unsupported meta deserialization");
 

@@ -230,7 +230,9 @@ namespace Langulus::Flow
 	using Script = TAny<Verb>;
 
 
+	///																								
 	/// Statically typed verb, used as CRTP for all specific verbs					
+	///																								
 	template<class VERB>
 	struct StaticVerb : public Verb {
 		LANGULUS_BASES(Verb);
@@ -244,7 +246,38 @@ namespace Langulus::Flow
 		StaticVerb(T&&, const Charge& = {}, VerbState = {});
 	};
 
-} // namespace Langulus::Flow
+
+	///																								
+	/// Statically typed verb, used as CRTP for arithmetic verbs					
+	///																								
+	template<class VERB, bool NOEXCEPT>
+	struct ArithmeticVerb : public StaticVerb<VERB> {
+		template<CT::Data T>
+		using Operator = Conditional<NOEXCEPT,
+			T(*)(const T*, const T*) noexcept, 
+			T(*)(const T*, const T*)
+		>;
+
+		template<CT::Data T>
+		using OperatorMutable = Conditional<NOEXCEPT,
+			void(*)(T*, const T*) noexcept,
+			void(*)(T*, const T*)
+		>;
+
+		using StaticVerb<VERB>::StaticVerb;
+
+		template<CT::Data T>
+		static bool Vector(const Block&, const Block&, Verb&, Operator<T>) noexcept(NOEXCEPT);
+		template<CT::Data T>
+		static bool Vector(const Block&, Block&, Verb&, OperatorMutable<T>) noexcept(NOEXCEPT);
+
+		template<CT::Data T>
+		static bool Scalar(const Block&, const Block&, Verb&, Operator<T>) noexcept(NOEXCEPT);
+		template<CT::Data T>
+		static bool Scalar(const Block&, Block&, Verb&, OperatorMutable<T>) noexcept(NOEXCEPT);
+	};
+
+} // namespace Langulus::Flowv
 
 
 namespace Langulus::CT
@@ -356,7 +389,7 @@ namespace Langulus::Verbs
 
 	/// Add/Subtract verb																		
 	/// Performs arithmetic addition or subtraction										
-	struct Add : public StaticVerb<Add> {
+	struct Add : public ArithmeticVerb<Add, true> {
 		LANGULUS(POSITIVE_VERB) "Add";
 		LANGULUS(NEGATIVE_VERB) "Subtract";
 		LANGULUS(POSITIVE_OPERATOR) " + ";
@@ -365,7 +398,7 @@ namespace Langulus::Verbs
 		LANGULUS(INFO)
 			"Performs arithmetic addition or subtraction";
 
-		using StaticVerb::StaticVerb;
+		using ArithmeticVerb::ArithmeticVerb;
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -379,14 +412,18 @@ namespace Langulus::Verbs
 		static bool ExecuteDefault(Block&, Verb&);
 		static bool ExecuteStateless(Verb&);
 
-		template<CT::Data T>
-		static void BatchOperator(const Block&, Verb&);
+		template<CT::Data... T>
+		static bool OperateOnTypes(const Block&, const Block&, Verb&);
+		template<CT::Data... T>
+		static bool OperateOnTypes(const Block&, Block&, Verb&);
+		template<CT::Data... T>
+		static bool OperateOnTypes(Block&, Verb&);
 	};
 
 	/// Multiply/Divide verb																	
 	/// Performs arithmetic multiplication or division									
 	/// If context is no specified, it is always 1										
-	struct Multiply : public StaticVerb<Multiply> {
+	struct Multiply : public ArithmeticVerb<Multiply, false> {
 		LANGULUS(POSITIVE_VERB) "Multiply";
 		LANGULUS(NEGATIVE_VERB) "Divide";
 		LANGULUS(POSITIVE_OPERATOR) "*";
@@ -396,7 +433,7 @@ namespace Langulus::Verbs
 			"Performs arithmetic multiplication or division. "
 			"If context is not specified, it is always 1";
 
-		using StaticVerb::StaticVerb;
+		using ArithmeticVerb::ArithmeticVerb;
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -410,13 +447,17 @@ namespace Langulus::Verbs
 		static bool ExecuteDefault(Block&, Verb&);
 		static bool ExecuteStateless(Verb&);
 
-		template<CT::Data T>
-		static void BatchOperator(const Block&, Verb&);
+		template<CT::Data... T>
+		static bool OperateOnTypes(const Block&, const Block&, Verb&);
+		template<CT::Data... T>
+		static bool OperateOnTypes(const Block&, Block&, Verb&);
+		template<CT::Data... T>
+		static bool OperateOnTypes(Block&, Verb&);
 	};
 
 	/// Exponent/Root verb																		
 	/// Performs exponentiation or root														
-	struct Exponent : public StaticVerb<Exponent> {
+	struct Exponent : public ArithmeticVerb<Exponent, true> {
 		LANGULUS(POSITIVE_VERB) "Exponent";
 		LANGULUS(NEGATIVE_VERB) "Root";
 		LANGULUS(POSITIVE_OPERATOR) "^";
@@ -424,7 +465,7 @@ namespace Langulus::Verbs
 		LANGULUS(PRECEDENCE) 5;
 		LANGULUS(INFO) "Performs exponentiation or root";
 
-		using StaticVerb::StaticVerb;
+		using ArithmeticVerb::ArithmeticVerb;
 
 		template<CT::Data T, CT::Data... A>
 		static constexpr bool AvailableFor() noexcept;
@@ -437,8 +478,10 @@ namespace Langulus::Verbs
 		static bool ExecuteDefault(const Block&, Verb&);
 		static bool ExecuteDefault(Block&, Verb&);
 
-		template<CT::Data T>
-		static void BatchOperator(const Block&, Verb&);
+		template<CT::Data... T>
+		static bool OperateOnTypes(const Block&, const Block&, Verb&);
+		template<CT::Data... T>
+		static bool OperateOnTypes(const Block&, Block&, Verb&);
 	};
 
 	/// Catenate/Split verb																		

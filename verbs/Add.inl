@@ -1,6 +1,5 @@
 #pragma once
-#include "../Code.hpp"
-#include "Do.inl"
+#include "Arithmetic.inl"
 
 #define VERBOSE_ADD(a) //Logger::Verbose() << a
 
@@ -63,32 +62,71 @@ namespace Langulus::Verbs
 		return verb.IsDone();
 	}
 
-	/// Directly reinterprets lhs and rhs as the provided T and uses operator	
-	/// + or - on each of the elements														
-	///	@tparam T - type to interpret as													
-	///	@param lhs - left operand															
-	///	@param rhs - right operand															
-	template<CT::Data T>
-	LANGULUS(ALWAYSINLINE) void Add::BatchOperator(const Block& lhs, Verb& rhs) {
-		//TODO use TSIMD to batch compute
-		//TODO once vulkan module is available, lock and replace the ExecuteDefault in MVulkan to incorporate compute shader for even batcher batching!!1
-		//TODO detect underflows and overflows
-		TAny<T> result;
-		result.template Allocate<false, true>(lhs.GetCount());
-		const T* ilhs = lhs.GetRawAs<T>();
-		const T* const ilhsEnd = ilhs + lhs.GetCount();
-		const T* irhs = rhs.GetRawAs<T>();
-		T* ires = result.template GetRawAs<T>();
-		if (rhs.GetMass() < 0) {
-			while (ilhs != ilhsEnd)
-				*(ires++) = *(ilhs++) - *(irhs++);
-		}
-		else {
-			while (ilhs != ilhsEnd)
-				*(ires++) = *(ilhs++) + *(irhs++);
-		}
+	/// Operate in a number of types															
+	///	@tparam ...T - the list of types to operate on								
+	///						order matters!														
+	///	@param context - the original context											
+	///	@param common - the base to operate on											
+	///	@param verb - the original verb													
+	///	@return if at least one of the types matched verb							
+	template<CT::Data... T>
+	bool Add::OperateOnTypes(const Block& context, const Block& common, Verb& verb) {
+		return ((
+			common.CastsTo<T, true>()
+			&& ArithmeticVerb::Vector<T>(
+				context, common, verb,
+				verb.GetMass() < 0
+					? [](const T* lhs, const T* rhs) noexcept -> T {
+						return *lhs - *rhs;
+					}
+					: [](const T* lhs, const T* rhs) noexcept -> T {
+						return *lhs + *rhs;
+					}
+			)
+		) || ...);
+	}
 
-		rhs << Abandon(result);
+	/// Operate in a number of types (destructive version)							
+	///	@tparam ...T - the list of types to operate on								
+	///						order matters!														
+	///	@param context - the original context											
+	///	@param common - the base to operate on											
+	///	@param verb - the original verb													
+	///	@return if at least one of the types matched verb							
+	template<CT::Data... T>
+	bool Add::OperateOnTypes(const Block& context, Block& common, Verb& verb) {
+		return ((
+			common.CastsTo<T, true>()
+			&& ArithmeticVerb::Vector<T>(
+				context, common, verb,
+				verb.GetMass() < 0
+					? [](T* lhs, const T* rhs) noexcept {
+						*lhs -= *rhs;
+					}
+					: [](T* lhs, const T* rhs) noexcept {
+						*lhs += *rhs;
+					}
+			)
+		) || ...);
+	}
+
+	/// Invert verb's arguments																
+	///	@tparam ...T - the list of types to operate on								
+	///						order matters!														
+	///	@param common - the base to operate on											
+	///	@param verb - the original verb													
+	///	@return if at least one of the types matched verb							
+	template<CT::Data... T>
+	bool Add::OperateOnTypes(Block& common, Verb& verb) {
+		return ((
+			common.CastsTo<T, true>()
+			&& ArithmeticVerb::Scalar<T>(
+				common, common, verb,
+				[](T* lhs, const T*) noexcept {
+					*lhs *= T {-1};
+				}
+			)
+		) || ...);
 	}
 
 	/// Default add/subtract in an immutable context									
@@ -97,37 +135,30 @@ namespace Langulus::Verbs
 	inline bool Add::ExecuteDefault(const Block& context, Verb& verb) {
 		const auto common = context.ReinterpretAs(verb);
 		if (common.CastsTo<A::Number>()) {
-			if (common.CastsTo<int8_t, true>()) UNLIKELY()
-				BatchOperator<int8_t>(common, verb);
-			else if (common.CastsTo<uint8_t, true>()) UNLIKELY()
-				BatchOperator<uint8_t>(common, verb);
-			else if (common.CastsTo<int16_t, true>()) UNLIKELY()
-				BatchOperator<int16_t>(common, verb);
-			else if (common.CastsTo<uint16_t, true>()) UNLIKELY()
-				BatchOperator<uint16_t>(common, verb);
-			else if (common.CastsTo<int32_t, true>())
-				BatchOperator<int32_t>(common, verb);
-			else if (common.CastsTo<uint32_t, true>())
-				BatchOperator<uint32_t>(common, verb);
-			else if (common.CastsTo<int64_t, true>())
-				BatchOperator<int64_t>(common, verb);
-			else if (common.CastsTo<uint64_t, true>())
-				BatchOperator<uint64_t>(common, verb);
-			else if (common.CastsTo<RealSP, true>()) LIKELY()
-				BatchOperator<RealSP>(common, verb);
-			else if (common.CastsTo<RealDP, true>()) LIKELY()
-				BatchOperator<RealDP>(common, verb);
+			return OperateOnTypes<
+				RealSP, RealDP,
+				int32_t, uint32_t, int64_t, uint64_t,
+				int8_t, uint8_t, int16_t, uint16_t
+			>(context, common, verb);
 		}
 
-		return verb.IsDone();
+		return false;
 	}
 
 	/// Default add/subtract in mutable context											
 	///	@param context - the block to execute in										
 	///	@param verb - add/subtract verb													
 	inline bool Add::ExecuteDefault(Block& context, Verb& verb) {
-		//TODO
-		return true;
+		auto common = context.ReinterpretAs(verb);
+		if (common.CastsTo<A::Number>()) {
+			return OperateOnTypes<
+				RealSP, RealDP,
+				int32_t, uint32_t, int64_t, uint64_t,
+				int8_t, uint8_t, int16_t, uint16_t
+			>(context, common, verb);
+		}
+
+		return false;
 	}
 
 	/// A stateless subtraction																
@@ -135,7 +166,22 @@ namespace Langulus::Verbs
 	///	@param verb - the verb instance to execute									
 	///	@return true if execution was a success										
 	inline bool Add::ExecuteStateless(Verb& verb) {
-		//TODO negate
+		if (verb.CastsTo<A::Number>()) {
+			if (verb.GetMass() < 0) {
+				// Negate signed numbers, otherwise verb is not satisfied	
+				return OperateOnTypes<
+					RealSP, RealDP,
+					int32_t, int64_t,
+					int8_t, int16_t
+				>(verb, verb);
+			}
+			else {
+				// Don't do anything														
+				verb << verb.GetArgument();
+				return true;
+			}
+		}
+
 		return false;
 	}
 

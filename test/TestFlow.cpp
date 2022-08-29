@@ -325,10 +325,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 	GIVEN("The script: Create^1(Count(1)) Add^2(2) Multiply^3(4)") {
 		const Code code = "Create^1(Count(1)) Add^2(2) Multiply^3(4)";
-		Any required = Verbs::Add(
-			Verbs::Multiply(Real(4))
-				.SetFrequency(3)
-				.SetSource(Real(2)))
+		Any required = Verbs::Add(Real(8))
 			.SetFrequency(2)
 			.SetSource(
 				Verbs::Create(Traits::Count(Real(1)))
@@ -346,9 +343,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 	GIVEN("The script: Create^1(Count(1)) + 2 * 4") {
 		const Code code = "Create^1(Count(1)) + 2 * 4";
-		Any required = Verbs::Add(
-				Verbs::Multiply(Real(4))
-				.SetSource(Real(2)))
+		Any required = Verbs::Add(Real(8))
 			.SetSource(
 				Verbs::Create(Traits::Count(Real(1)))
 				.SetFrequency(1)

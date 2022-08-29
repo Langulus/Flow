@@ -1,6 +1,5 @@
 #pragma once
-#include "../Code.hpp"
-#include "Do.inl"
+#include "Arithmetic.inl"
 
 #define VERBOSE_MUL(a) //Logger::Verbose() << a
 
@@ -49,33 +48,29 @@ namespace Langulus::Verbs
 		context.Exponent(verb);
 		return verb.IsDone();
 	}
-	
-	/// Directly reinterprets lhs and rhs as the provided T and raises to a		
-	/// power, or lowers to a root each of the elements								
-	///	@tparam T - type to interpret as													
-	///	@param lhs - left operand															
-	///	@param rhs - right operand															
-	template<CT::Data T>
-	LANGULUS(ALWAYSINLINE) void Exponent::BatchOperator(const Block& lhs, Verb& rhs) {
-		//TODO use TSIMD to batch compute
-		//TODO once vulkan module is available, lock and replace the ExecuteDefault in MVulkan to incorporate compute shader for even batcher batching!!1
-		//TODO detect underflows and overflows
-		TAny<T> result;
-		result.template Allocate<false, true>(lhs.GetCount());
-		const T* ilhs = lhs.GetRawAs<T>();
-		const T* const ilhsEnd = ilhs + lhs.GetCount();
-		const T* irhs = rhs.GetRawAs<T>();
-		T* ires = result.template GetRawAs<T>();
-		if (rhs.GetMass() < 0) {
-			while (ilhs != ilhsEnd)
-				*(ires++) = ::std::pow(*(ilhs++), *(irhs++));
-		}
-		else {
-			while (ilhs != ilhsEnd)
-				*(ires++) = ::std::pow(*(ilhs++), T {1} / *(irhs++));
-		}
 
-		rhs << Abandon(result);
+	/// Operate in a number of types															
+	///	@tparam ...T - the list of types to operate on								
+	///						order matters!														
+	///	@param context - the original context											
+	///	@param common - the base to operate on											
+	///	@param verb - the original verb													
+	///	@return if at least one of the types matched verb							
+	template<CT::Data... T>
+	bool Exponent::OperateOnTypes(const Block& context, const Block& common, Verb& verb) {
+		return ((
+			common.CastsTo<T, true>()
+			&& ArithmeticVerb::Vector<T>(
+				context, common, verb,
+				verb.GetMass() < 0
+					? [](const T* lhs, const T* rhs) noexcept -> T {
+						return ::std::pow(*lhs, T {1} / *rhs);
+					}
+					: [](const T* lhs, const T* rhs) noexcept -> T {
+						return ::std::pow(*lhs, *rhs);
+					}
+			)
+		) || ...);
 	}
 
 	/// Default power/root in an immutable context										
@@ -84,37 +79,30 @@ namespace Langulus::Verbs
 	inline bool Exponent::ExecuteDefault(const Block& context, Verb& verb) {
 		const auto common = context.ReinterpretAs(verb);
 		if (common.CastsTo<A::Number>()) {
-			if (common.CastsTo<int8_t, true>()) UNLIKELY()
-				BatchOperator<int8_t>(common, verb);
-			else if (common.CastsTo<uint8_t, true>()) UNLIKELY()
-				BatchOperator<uint8_t>(common, verb);
-			else if (common.CastsTo<int16_t, true>()) UNLIKELY()
-				BatchOperator<int16_t>(common, verb);
-			else if (common.CastsTo<uint16_t, true>()) UNLIKELY()
-				BatchOperator<uint16_t>(common, verb);
-			else if (common.CastsTo<int32_t, true>())
-				BatchOperator<int32_t>(common, verb);
-			else if (common.CastsTo<uint32_t, true>())
-				BatchOperator<uint32_t>(common, verb);
-			else if (common.CastsTo<int64_t, true>())
-				BatchOperator<int64_t>(common, verb);
-			else if (common.CastsTo<uint64_t, true>())
-				BatchOperator<uint64_t>(common, verb);
-			else if (common.CastsTo<RealSP, true>()) LIKELY()
-				BatchOperator<RealSP>(common, verb);
-			else if (common.CastsTo<RealDP, true>()) LIKELY()
-				BatchOperator<RealDP>(common, verb);
+			return OperateOnTypes<
+				RealSP, RealDP,
+				int32_t, uint32_t, int64_t, uint64_t,
+				int8_t, uint8_t, int16_t, uint16_t
+			>(context, common, verb);
 		}
 
-		return verb.IsDone();
+		return false;
 	}
 
 	/// Default power/root in mutable context												
 	///	@param context - the block to execute in										
 	///	@param verb - power/root verb														
 	inline bool Exponent::ExecuteDefault(Block& context, Verb& verb) {
-		//TODO
-		return true;
+		const auto common = context.ReinterpretAs(verb);
+		if (common.CastsTo<A::Number>()) {
+			return OperateOnTypes<
+				RealSP, RealDP,
+				int32_t, uint32_t, int64_t, uint64_t,
+				int8_t, uint8_t, int16_t, uint16_t
+			>(context, common, verb);
+		}
+
+		return false;
 	}
 
 } // namespace Langulus::Verbs

@@ -313,7 +313,7 @@ namespace Langulus::Flow
 				}
 				else {
 					Logger::Error() << "Can't serialize block of type "
-						<< from.GetToken() << " to " << MetaData::Of<TO>();
+						<< from.GetToken() << " to " << MetaData::Of<TO>()->mToken;
 					Throw<Except::Convert>(
 						"Can't serialize block to text");
 				}

@@ -1,6 +1,7 @@
 #pragma once
 #include "Serial.hpp"
 #include "verbs/Do.inl"
+#include "verbs/Interpret.inl"
 
 #define LGLS_VERBOSE_SERIALIZATION(a)
 

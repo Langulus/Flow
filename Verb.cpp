@@ -1,4 +1,5 @@
 #include "Verb.hpp"
+#include "verbs/Interpret.inl"
 
 #define DELEGATION_VERBOSE(a) pcLogSelfVerbose << a
 

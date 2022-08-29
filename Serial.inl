@@ -357,7 +357,8 @@ namespace Langulus::Flow
 			const auto dataEnd = from.GetRawEndAs<T>();
 			while (data != dataEnd) {
 				to += *data;
-				to += from.GetType()->mSuffix;
+				if (from.GetType()->mSuffix.size())
+					to += from.GetType()->mSuffix;
 				if (data < dataEnd - 1)
 					to += Separator(from.IsOr());
 				++data;

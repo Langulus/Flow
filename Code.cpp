@@ -73,8 +73,8 @@ namespace Langulus::Flow
 	/// Parse code																					
 	///	@param optimize - whether or not to precompile 								
 	///	@returned the parsed flow															
-	Any Code::Parse(bool optimize) const {
-		Any output;
+	Scope Code::Parse(bool optimize) const {
+		Scope output;
 		const auto parsed = UnknownParser::Parse(*this, output, 0, optimize);
 		if (parsed != GetCount()) {
 			Logger::Warning() << "Some characters were left out at the end, while parsing code:";

@@ -159,6 +159,21 @@ namespace Langulus
 		return lhs.operator << (Token {Verbs::Interpret::To<Flow::Debug>(rhs)});
 	}
 
+	/// Extend the logger to be capable of logging Trait								
+	///	@param lhs - the logger interface												
+	///	@param rhs - the trait to stringify												
+	///	@return a reference to the logger for chaining								
+	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
+		Logger::A::Interface& lhs, const Anyness::Trait& rhs) {
+		lhs << rhs.GetTrait()
+			? rhs.GetTrait()->mToken
+			: RTTI::MetaTrait::DefaultToken;
+		lhs << '(';
+		lhs << static_cast<const Anyness::Any&>(rhs);
+		lhs << ')';
+		return lhs;
+	}
+
 } // namespace Langulus
 
 

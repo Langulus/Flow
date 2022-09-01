@@ -156,7 +156,7 @@ namespace Langulus::Flow
 	///							contexts, getting the most concrete type				
 	///	@tparam DISPATCH - whether or not to use custom dispatcher for			
 	///							 contexts, if any												
-	///	@tparam DEFAULT - whether or not to wllo default/stateless verb		
+	///	@tparam DEFAULT - whether or not to allow default/stateless verb		
 	///							execution, if all else fails								
 	///	@param context - the context in which to dispatch the verb				
 	///	@param verb - the verb to send over												
@@ -242,7 +242,7 @@ namespace Langulus::Flow
 	///							contexts, getting the most concrete type				
 	///	@tparam DISPATCH - whether or not to use custom dispatcher for			
 	///							 contexts, if any												
-	///	@tparam DEFAULT - whether or not to wllo default/stateless verb		
+	///	@tparam DEFAULT - whether or not to allow default/stateless verb		
 	///							execution, if all else fails								
 	///	@param context - the context in which scope will be dispatched to		
 	///	@param verb - the verb to execute												

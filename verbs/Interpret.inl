@@ -60,6 +60,7 @@ namespace Langulus::Verbs
 		verb.ForEach([&](DMeta to) {
 			if (to->CastsTo<A::Text>())
 				return !InterpretTo<Text>::ExecuteDefault(context, verb);
+			//TODO check reflected morphisms?
 			return true;
 		});
 

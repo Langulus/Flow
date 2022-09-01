@@ -6,10 +6,12 @@ namespace Langulus::Flow
 
 	///																								
 	/// A scope is simply an Any container (binary compatible, too)				
-	/// It has some additional functions for executing the flow						
+	/// It has some additional functions for executing flows							
 	///																								
 	struct Scope : public Any {
 		using Any::Any;
+
+		Scope Clone() const;
 
 		bool IsExecutable() const noexcept;
 		bool IsExecutableDeep() const noexcept;

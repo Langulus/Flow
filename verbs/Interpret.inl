@@ -145,7 +145,7 @@ namespace Langulus
 	template<CT::Deep T>
 	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
 		Logger::A::Interface& lhs, const T& rhs) {
-		return lhs.operator << (Token {Verbs::Interpret::To<Flow::Debug>(rhs)});
+		return lhs.operator << (Token {Verbs::Interpret::To<Flow::Debug>(DenseCast(rhs))});
 	}
 
 	/// Extend the logger to be capable of logging anything statically			
@@ -156,9 +156,28 @@ namespace Langulus
 	template<CT::Flat T>
 	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
 		Logger::A::Interface& lhs, const T& rhs) requires (CT::Convertible<T, Flow::Debug> && !Logger::Formattable<T>) {
-		return lhs.operator << (Token {Verbs::Interpret::To<Flow::Debug>(rhs)});
+		return lhs.operator << (Token {Verbs::Interpret::To<Flow::Debug>(DenseCast(rhs))});
 	}
 
+	/// Extend the logger to be capable of logging any shared pointer				
+	///	@param lhs - the logger interface												
+	///	@param rhs - the pointer															
+	///	@return a reference to the logger for chaining								
+	template<CT::Data T>
+	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
+		Logger::A::Interface& lhs, const Anyness::TOwned<T>& rhs) {
+		if constexpr (CT::Sparse<T>) {
+			const auto block = rhs.GetBlock();
+			if (block.Get() == nullptr) {
+				lhs << block.GetType();
+				lhs << "(null)";
+				return lhs;
+			}
+			else return lhs << (*rhs.Get());
+		}
+		else return lhs << (rhs.Get());
+	}
+	
 	/// Extend the logger to be capable of logging Trait								
 	///	@param lhs - the logger interface												
 	///	@param rhs - the trait to stringify												

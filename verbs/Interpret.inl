@@ -185,9 +185,10 @@ namespace Langulus
 	///	@return a reference to the logger for chaining								
 	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
 		Logger::A::Interface& lhs, const Anyness::Trait& rhs) {
-		lhs << rhs.GetTrait()
-			? rhs.GetTrait()->mToken
-			: RTTI::MetaTrait::DefaultToken;
+		lhs << (rhs.GetTrait()
+				? rhs.GetTrait()->mToken
+				: RTTI::MetaTrait::DefaultToken
+			);
 		lhs << '(';
 		lhs << static_cast<const Anyness::Any&>(rhs);
 		lhs << ')';

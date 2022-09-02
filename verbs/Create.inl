@@ -128,8 +128,8 @@ namespace Langulus::Verbs
 	///	@param data - the data to set to													
 	///	@return true if at least one member in one element was set				
 	inline void Create::SetMembers(Any& context, const Any& data) {
-		THashMap<TMeta, Count> satisfiedTraits;
-		THashMap<DMeta, Count> satisfiedData;
+		TUnorderedMap<TMeta, Count> satisfiedTraits;
+		TUnorderedMap<DMeta, Count> satisfiedData;
 
 		data.ForEachDeep([&](const Block& group) {
 			VERBOSE_CREATION("Manually initializing " << context

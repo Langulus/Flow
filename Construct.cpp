@@ -26,10 +26,15 @@ namespace Langulus::Flow
 		, mType {other.mValue.mType}
 		, mHash {other.mValue.mHash} { }
 
-	/// Construct from a header																
+	/// Construct from a type																	
 	///	@param type - the type of the content											
 	Construct::Construct(DMeta type)
 		: mType {type} {}
+
+	/// Construct from a type name															
+	///	@param type - the type of the content											
+	Construct::Construct(const Token& token)
+		: mType {RTTI::Database.GetMetaData(token)} {}
 
 	/// Hash the construct																		
 	///	@return the hash of the content													

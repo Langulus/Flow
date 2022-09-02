@@ -4,7 +4,7 @@
 namespace Langulus::Flow
 {
 
-	/// Construct from a header and shallow-copied arguments							
+	/// Construct from a type and shallow-copied arguments							
 	///	@param type - the type of the content											
 	///	@param arguments - the arguments to copy										
 	///	@param charge - the charge for the construction								
@@ -14,7 +14,11 @@ namespace Langulus::Flow
 		, Charge {charge}
 		, mType {type} { }
 
-	/// Construct from a header and moved arguments										
+	template<CT::Data T>
+	Construct::Construct(DMeta type, T& arguments, const Charge& charge)
+		: Construct {type, const_cast<const T&>(arguments), charge} { }
+
+	/// Construct from a type and moved arguments										
 	///	@param type - the type of the content											
 	///	@param arguments - the arguments to move										
 	///	@param charge - the charge for the construction								
@@ -23,6 +27,30 @@ namespace Langulus::Flow
 		: Any {Forward<T>(arguments)}
 		, Charge {charge}
 		, mType {type} { }
+
+	/// Construct from a type token and shallow-copied arguments					
+	///	@param token - the type of the content											
+	///	@param arguments - the arguments to copy										
+	///	@param charge - the charge for the construction								
+	template<CT::Data T>
+	Construct::Construct(const Token& token, const T& arguments, const Charge& charge)
+		: Any {arguments}
+		, Charge {charge}
+		, mType {RTTI::Database.GetMetaData(token)} { }
+
+	template<CT::Data T>
+	Construct::Construct(const Token& token, T& arguments, const Charge& charge)
+		: Construct {token, const_cast<const T&>(arguments), charge} { }
+
+	/// Construct from a type token and moved arguments								
+	///	@param token - the type of the content											
+	///	@param arguments - the arguments to move										
+	///	@param charge - the charge for the construction								
+	template<CT::Data T>
+	Construct::Construct(const Token& token, T&& arguments, const Charge& charge)
+		: Any {Forward<T>(arguments)}
+		, Charge {charge}
+		, mType {RTTI::Database.GetMetaData(token)} { }
 
 	/// Create content descriptor from a static type and arguments by copy		
 	///	@tparam T - type of the construct												

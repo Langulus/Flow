@@ -63,7 +63,17 @@ namespace Langulus::Flow
 		template<CT::Data T = Any>
 		Construct(DMeta, const T&, const Charge& = {});
 		template<CT::Data T = Any>
+		Construct(DMeta, T&, const Charge& = {});
+		template<CT::Data T = Any>
 		Construct(DMeta, T&&, const Charge& = {});
+
+		Construct(const Token&);
+		template<CT::Data T = Any>
+		Construct(const Token&, const T&, const Charge& = {});
+		template<CT::Data T = Any>
+		Construct(const Token&, T&, const Charge& = {});
+		template<CT::Data T = Any>
+		Construct(const Token&, T&&, const Charge& = {});
 
 		Construct& operator = (const Construct&) = default;
 		Construct& operator = (Construct&&) noexcept = default;
@@ -81,9 +91,13 @@ namespace Langulus::Flow
 		NOD() static Construct From(const DATA&);
 		template<CT::Data T, CT::Data DATA>
 		NOD() static Construct From(DATA&&);
-
 		template<CT::Data T>
 		NOD() static Construct From();
+
+		// Omit these inherited from Any												
+		Any FromMeta() = delete;
+		Any FromBlock() = delete;
+		Any FromState() = delete;
 
 		NOD() bool operator == (const Construct&) const;
 

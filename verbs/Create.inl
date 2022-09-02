@@ -162,7 +162,7 @@ namespace Langulus::Verbs
 							if (sati)
 								++satisfiedTraits.GetValue(sati);
 							else
-								satisfiedTraits.Insert({meta, 1});
+								satisfiedTraits.Insert(meta, 1);
 
 							VERBOSE_CREATION(Logger::Yellow << "Initialized "
 								<< selector.GetOutput() << " (" << index << ")");
@@ -193,7 +193,7 @@ namespace Langulus::Verbs
 				VERBOSE_CREATION("Searching for data " << meta
 					<< "... " << " (" << index << ")");
 
-				Verbs::Select selector(Any::Wrap(meta, index));
+				Verbs::Select selector {Any::Wrap(meta, index)};
 				Verb::GenericExecuteIn(context, selector);
 				if (!selector.GetOutput().IsEmpty()) {
 					VERBOSE_CREATION("Initializing data " << selector.GetOutput()
@@ -205,7 +205,7 @@ namespace Langulus::Verbs
 						if (sati)
 							++satisfiedData.GetValue(sati);
 						else
-							satisfiedData.Insert({meta, 1});
+							satisfiedData.Insert(meta, 1);
 
 						VERBOSE_CREATION(Logger::Yellow << "Initialized "
 							<< selector.GetOutput() << " (" << index << ")");

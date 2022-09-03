@@ -168,9 +168,8 @@ namespace Langulus
 	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
 		Logger::A::Interface& lhs, const Anyness::TOwned<T>& rhs) {
 		if constexpr (CT::Sparse<T>) {
-			const auto block = rhs.GetBlock();
-			if (block.Get() == nullptr) {
-				lhs << block.GetType();
+			if (rhs == nullptr) {
+				lhs << rhs.GetType();
 				lhs << "(null)";
 				return lhs;
 			}

@@ -82,7 +82,7 @@ namespace Langulus::Flow
 	bool Scope::Execute(Any& environment, Any& output, bool& skipVerbs) const {
 		auto results = Any::FromState(*this);
 		if (!IsEmpty()) {
-			VERBOSE_TAB("Executing scope: " << *this);
+			VERBOSE_TAB("Executing scope: [" << *this << ']');
 
 			try {
 				if (IsOr() && GetCount() > 1)

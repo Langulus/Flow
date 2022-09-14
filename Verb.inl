@@ -356,7 +356,7 @@ namespace Langulus::Flow
 	inline bool Verb::operator == (const Verb& rhs) const {
 		return (mVerb == rhs.mVerb || (mVerb && mVerb->Is(rhs.mVerb)))
 			&& mSource == rhs.mSource
-			&& Any::operator == (rhs)
+			&& Any::operator == (rhs.GetArgument())
 			&& mOutput == rhs.mOutput
 			&& mState == rhs.mState;
 	}
@@ -609,7 +609,7 @@ namespace Langulus::Flow
 
 				TAny<TO> result;
 				result.template Allocate<false, true>(1);
-				found(result.GetRaw(), context.GetRaw());
+				found(context.GetRaw(), result.GetRaw());
 				verb << Abandon(result);
 			}
 			else {
@@ -623,7 +623,7 @@ namespace Langulus::Flow
 
 					Any result = Any::FromMeta(to);
 					result.Allocate<false, true>(1);
-					found(result.GetRaw(), context.GetRaw());
+					found(context.GetRaw(), result.GetRaw());
 					verb << Abandon(result);
 				}
 				else {

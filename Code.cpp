@@ -375,7 +375,7 @@ namespace Langulus::Flow
 			}
 		}
 
-		VERBOSE("Keyword parsed: " << keyword << lhs << " (" << lhs.GetToken() << ")");
+		VERBOSE("Keyword parsed: `" << keyword << "` as " << lhs << " (" << lhs.GetToken() << ")");
 		return progress;
 	}
 

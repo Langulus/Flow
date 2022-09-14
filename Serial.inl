@@ -89,7 +89,7 @@ namespace Langulus::Flow
 			}
 			catch (const Except::Convert&) {}
 		}
-		else LANGULUS_ASSERT("Serializer not implemented");
+		else LANGULUS_ERROR("Serializer not implemented");
 
 		// If this is reached, then we weren't able to serialize the item	
 		// to the desired type															
@@ -103,7 +103,7 @@ namespace Langulus::Flow
 	template<CT::Block FROM>
 	Any Deserialize(const FROM& item) {
 		if constexpr (CT::Same<FROM, Debug>) {
-			LANGULUS_ASSERT(
+			LANGULUS_ERROR(
 				"You can't deserialize debug containers "
 				" - debug serialization is a one-way process");
 		}
@@ -116,7 +116,7 @@ namespace Langulus::Flow
 			(void)Detail::DeserializeBlock<true>(item, result, 0, header, {});
 			return result;
 		}
-		else LANGULUS_ASSERT("Deserializer not implemented");
+		else LANGULUS_ERROR("Deserializer not implemented");
 	}
 
 	/// Convert a byte to hexadecimal string, and append it to text container	
@@ -849,7 +849,7 @@ namespace Langulus::Flow
 			else if constexpr (CT::Same<META, MetaConst>)
 				result = RTTI::Database.GetMetaConstant(token);
 			else
-				LANGULUS_ASSERT("Unsupported meta deserialization");
+				LANGULUS_ERROR("Unsupported meta deserialization");
 
 			return read + count;
 		}

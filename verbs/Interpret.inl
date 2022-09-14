@@ -102,7 +102,7 @@ namespace Langulus::Verbs
 			// Always interpreted as deserialization								
 			if constexpr (CT::SameAsOneOf<FROM, Code, Bytes>)
 				return Deserialize(from);
-			else LANGULUS_ASSERT(
+			else LANGULUS_ERROR(
 				"No deserializer exists between these types");
 		}
 		else if constexpr (CT::Convertible<FROM, TO>) {
@@ -115,7 +115,7 @@ namespace Langulus::Verbs
 			// if TO is	supported														
 			return Serialize<TO>(from);
 		}
-		else LANGULUS_ASSERT(
+		else LANGULUS_ERROR(
 			"No static conversion routine, or dynamic serializer "
 			"exists between these types");
 	}
@@ -223,7 +223,7 @@ namespace Langulus::Anyness
 			else if constexpr (CT::Defaultable<T>)
 				return {};
 			else {
-				LANGULUS_ASSERT(
+				LANGULUS_ERROR(
 					"Unable to AsCast to non-default-constructible type, "
 					"when lack of FATAL_FAILURE demands it");
 			}

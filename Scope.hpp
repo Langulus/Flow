@@ -10,6 +10,7 @@ namespace Langulus::Flow
 	///																								
 	struct Scope : public Any {
 		using Any::Any;
+		using Any::operator ==;
 
 		Scope Clone() const;
 

@@ -99,12 +99,12 @@ namespace Langulus::Flow
 		if constexpr (CT::UnsignedInteger<T>) {
 			*this += "u";
 			if constexpr (sizeof(T) != sizeof(void*))
-				*this += sizeof(T) * 8;
+				*this += Text {sizeof(T) * 8};
 		}
 		else if constexpr (CT::SignedInteger<T>) {
 			*this += "i";
 			if constexpr (sizeof(T) != sizeof(void*))
-				*this += sizeof(T) * 8;
+				*this += Text {sizeof(T) * 8};
 		}
 		else if constexpr (CT::Same<T, Real>)
 			;

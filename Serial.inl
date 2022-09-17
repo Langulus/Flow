@@ -158,13 +158,13 @@ namespace Langulus::Flow
 
 		if (from.IsPast()) {
 			if (stateWritten)
-				to += ' ';
+				to += Text {' '};
 			to += Code {Code::Past};
 			stateWritten = true;
 		}
 		else if (from.IsFuture()) {
 			if (stateWritten)
-				to += ' ';
+				to += Text {' '};
 			to += Code {Code::Future};
 			stateWritten = true;
 		}
@@ -181,7 +181,7 @@ namespace Langulus::Flow
 		if (!from.IsEmpty()) {
 			// Add a bit of spacing														
 			if (stateWritten)
-				to += ' ';
+				to += Text {' '};
 
 			if (from.IsDeep()) {
 				// Nested serialization, wrap it in content scope				
@@ -194,7 +194,7 @@ namespace Langulus::Flow
 			else if (from.CastsTo<bool>()) {
 				// Contained type is boolean											
 				for (Offset i = 0; i < from.GetCount(); ++i) {
-					to += from.As<bool>(i) ? "yes" : "no";
+					to += from.As<bool>(i) ? TO {"yes"} : TO {"no"};
 					if (i < from.GetCount() - 1)
 						to += Separator(from.IsOr());
 				}
@@ -233,7 +233,7 @@ namespace Langulus::Flow
 				// Contained type is a character										
 				for (Offset i = 0; i < from.GetCount(); ++i) {
 					to += Code {Code::OpenCharacter};
-					to += from.As<Letter>(i);
+					to += Text {from.As<Letter>(i)};
 					to += Code {Code::CloseCharacter};
 					if (i < from.GetCount() - 1)
 						to += Separator(from.IsOr());
@@ -356,7 +356,7 @@ namespace Langulus::Flow
 			auto data = from.GetRawAs<T>();
 			const auto dataEnd = from.GetRawEndAs<T>();
 			while (data != dataEnd) {
-				to += *data;
+				to += TO {*data};
 				if (from.GetType()->mSuffix.size())
 					to += from.GetType()->mSuffix;
 				if (data < dataEnd - 1)
@@ -366,7 +366,7 @@ namespace Langulus::Flow
 		}
 		else {
 			for (Offset i = 0; i < from.GetCount(); ++i) {
-				to += from.As<T>(i);
+				to += TO {from.As<T>(i)};
 				to += from.GetType()->mSuffix;
 				if (i < from.GetCount() - 1)
 					to += Separator(from.IsOr());
@@ -447,9 +447,9 @@ namespace Langulus::Flow
 	template<bool HEADER>
 	void Detail::SerializeBlock(const Block& source, Bytes& result) {
 		if constexpr (HEADER) {
-			result += source.GetCount();
-			result += source.GetUnconstrainedState();
-			result += source.GetType();
+			result += Bytes {source.GetCount()};
+			result += Bytes {source.GetUnconstrainedState()};
+			result += Bytes {source.GetType()};
 		}
 
 		if (source.IsEmpty() || source.IsUntyped())
@@ -489,10 +489,10 @@ namespace Langulus::Flow
 			else if (source.CastsTo<RTTI::Meta>()) {
 				// Serialize meta															
 				source.ForEach(
-					[&result](DMeta meta) { result += meta; },
-					[&result](VMeta meta) { result += meta; },
-					[&result](TMeta meta) { result += meta; },
-					[&result](CMeta meta) { result += meta; }
+					[&result](DMeta meta) { result += Bytes {meta}; },
+					[&result](VMeta meta) { result += Bytes {meta}; },
+					[&result](TMeta meta) { result += Bytes {meta}; },
+					[&result](CMeta meta) { result += Bytes {meta}; }
 				);
 
 				return;
@@ -500,9 +500,9 @@ namespace Langulus::Flow
 			else if (source.CastsTo<Verb>()) {
 				// Serialize verb															
 				source.ForEach([&result](const Verb& verb) {
-					result += verb.GetVerb();
-					result += verb.GetCharge();
-					result += verb.GetVerbState();
+					result += Bytes {verb.GetVerb()};
+					result += Bytes {verb.GetCharge()};
+					result += Bytes {verb.GetVerbState()};
 					SerializeBlock<true>(verb.GetSource(), result);
 					SerializeBlock<true>(verb.GetArgument(), result);
 				});
@@ -518,7 +518,7 @@ namespace Langulus::Flow
 			for (Count i = 0; i < source.GetCount(); ++i) {
 				auto element = source.GetElementResolved(i);
 				if (resolvable)
-					result += element.GetType();
+					result += Bytes {element.GetType()};
 
 				// Serialize all reflected bases										
 				for (auto& base : element.GetType()->mBases) {

@@ -11,19 +11,19 @@ namespace Langulus::Flow
 		Code code;
 		if (mMass != Charge::DefaultMass) {
 			code += Code::Mass;
-			code += mMass;
+			code += Text {mMass};
 		}
 		if (mFrequency != Charge::DefaultFrequency) {
 			code += Code::Frequency;
-			code += mFrequency;
+			code += Text {mFrequency};
 		}
 		if (mTime != Charge::DefaultTime) {
 			code += Code::Time;
-			code += mTime;
+			code += Text {mTime};
 		}
 		if (mPriority != Charge::DefaultPriority) {
 			code += Code::Priority;
-			code += mPriority;
+			code += Text {mPriority};
 		}
 		return code;
 	}

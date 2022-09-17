@@ -763,7 +763,7 @@ namespace Langulus::Flow
 				else {
 					// Write as token														
 					if (mSource.IsValid())
-						result += ' ';
+						result += Text {' '};
 					result += mVerb->mTokenReverse;
 					result += Verbs::Interpret::To<T>(GetCharge() * -1);
 				}
@@ -777,7 +777,7 @@ namespace Langulus::Flow
 				else {
 					// Write as token														
 					if (mSource.IsValid())
-						result += ' ';
+						result += Text {' '};
 					result += mVerb->mToken;
 					result += Verbs::Interpret::To<T>(GetCharge());
 				}

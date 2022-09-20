@@ -44,8 +44,8 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 # Build and install Flow library
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} SOURCE_FILES)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/verbs SOURCE_FILES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source SOURCE_FILES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/verbs SOURCE_FILES)
 add_library(Langulus.Flow ${SOURCE_FILES})
 target_include_directories(Langulus.Flow PUBLIC include)
 target_link_libraries(Langulus.Flow PUBLIC Langulus.RTTI Langulus.Anyness)

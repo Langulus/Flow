@@ -1,15 +1,17 @@
 #pragma once
-#include "../Code.hpp"
+#include "../source/Code.hpp"
+#include "../source/Resolvable.hpp"
+#include "../source/Temporal.hpp"
 
-#include "../verbs/Create.inl"
-#include "../verbs/Conjunct.inl"
-#include "../verbs/Associate.inl"
-#include "../verbs/Interpret.inl"
-#include "../verbs/Select.inl"
-#include "../verbs/Add.inl"
-#include "../verbs/Multiply.inl"
-#include "../verbs/Exponent.inl"
-#include "../verbs/Catenate.inl"
-#include "../verbs/Do.inl"
+#include "../source/verbs/Create.inl"
+#include "../source/verbs/Conjunct.inl"
+#include "../source/verbs/Associate.inl"
+#include "../source/verbs/Interpret.inl"
+#include "../source/verbs/Select.inl"
+#include "../source/verbs/Add.inl"
+#include "../source/verbs/Multiply.inl"
+#include "../source/verbs/Exponent.inl"
+#include "../source/verbs/Catenate.inl"
+#include "../source/verbs/Do.inl"
 
 #define LANGULUS_MODULE_FLOW()

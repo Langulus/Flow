@@ -466,10 +466,8 @@ namespace Langulus::Flow
 					// ... pointer by pointer if sparse								
 					auto p = source.GetRawSparse();
 					const auto pEnd = p + source.GetCount();
-					while (p != pEnd) {
-						result += Bytes {p->mPointer, denseStride};
-						++p;
-					}
+					while (p != pEnd)
+						result += Bytes {p++, denseStride};
 				}
 				else {
 					// ... at once if dense												
@@ -669,8 +667,7 @@ namespace Langulus::Flow
 					const auto pEnd = p + result.GetCount();
 					const auto size = result.GetType()->mSize;
 					while (p != pEnd) {
-						p->mEntry = temporary;
-						(p++)->mPointer = start;
+						new (p++) Block::KnownPointer {start, temporary};
 						start += size;
 					}
 				}
@@ -708,32 +705,28 @@ namespace Langulus::Flow
 					while (p != pEnd) {
 						DMeta ptr;
 						read = DeserializeMeta(source, ptr, read, header, loader);
-						p->mPointer = const_cast<Byte*>(reinterpret_cast<const Byte*>(ptr));
-						++p;
+						new (p++) Block::KnownPointer {ptr, nullptr};
 					}
 				}
 				else if (result.Is<MetaTrait>()) {
 					while (p != pEnd) {
 						TMeta ptr;
 						read = DeserializeMeta(source, ptr, read, header, loader);
-						p->mPointer = const_cast<Byte*>(reinterpret_cast<const Byte*>(ptr));
-						++p;
+						new (p++) Block::KnownPointer {ptr, nullptr};
 					}
 				}
 				else if (result.Is<MetaVerb>()) {
 					while (p != pEnd) {
 						VMeta ptr;
 						read = DeserializeMeta(source, ptr, read, header, loader);
-						p->mPointer = const_cast<Byte*>(reinterpret_cast<const Byte*>(ptr));
-						++p;
+						new (p++) Block::KnownPointer {ptr, nullptr};
 					}
 				}
 				else if (result.Is<MetaConst>()) {
 					while (p != pEnd) {
 						CMeta ptr;
 						read = DeserializeMeta(source, ptr, read, header, loader);
-						p->mPointer = const_cast<Byte*>(reinterpret_cast<const Byte*>(ptr));
-						++p;
+						new (p++) Block::KnownPointer {ptr, nullptr};
 					}
 				}
 

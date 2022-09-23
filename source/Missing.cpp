@@ -39,7 +39,7 @@ namespace Langulus::Flow
 	/// Get the filter part of the point													
 	///	@param content - the content to push											
 	///	@return a reference to the filter part											
-	NOD() inline bool MissingPoint::Accepts(const Block& content) const SAFETY_NOEXCEPT() {
+	bool MissingPoint::Accepts(const Block& content) const SAFETY_NOEXCEPT() {
 		if (GetFilter().IsEmpty())
 			return true;
 
@@ -53,7 +53,7 @@ namespace Langulus::Flow
 
 	/// Get the content part of the point													
 	///	@return a reference to the filter part											
-	NOD() inline const Block& MissingPoint::GetContent() const SAFETY_NOEXCEPT() {
+	const Block& MissingPoint::GetContent() const SAFETY_NOEXCEPT() {
 		LANGULUS_ASSUME(DevAssumes, !IsFork(),
 			"Point is a fork, and must be handled explicitly");
 
@@ -65,7 +65,7 @@ namespace Langulus::Flow
 
 	/// Get the content part of the point													
 	///	@return a reference to the filter part											
-	NOD() inline bool MissingPoint::HasRelevantContent() const SAFETY_NOEXCEPT() {
+	bool MissingPoint::HasRelevantContent() const SAFETY_NOEXCEPT() {
 		auto& content = GetContent();
 		if (content.IsEmpty() || GetFilter().IsEmpty())
 			return false;

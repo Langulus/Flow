@@ -39,6 +39,14 @@ namespace Langulus::Flow
 		return *this == Charge {};
 	}
 
+	/// Check if charge is default															
+	///	@return true if charge is default												
+	constexpr bool Charge::IsFlowDependent() const noexcept {
+		return mFrequency != DefaultFrequency
+			|| mTime != DefaultTime
+			|| mPriority != DefaultPriority;
+	}
+
 	/// Get the hash of the charge															
 	///	@return the hash of the charge													
 	inline Hash Charge::GetHash() const noexcept {
@@ -738,6 +746,7 @@ namespace Langulus::Flow
 
 	/// Serialize verb to any form of text													
 	///	@tparam T - the type of text to serialize to									
+	///	@return the serialized verb														
 	template<CT::Text T>
 	T Verb::SerializeVerb() const {
 		Code result;
@@ -752,8 +761,9 @@ namespace Langulus::Flow
 		if (mSource.IsValid())
 			result += Verbs::Interpret::To<T>(mSource);
 
-		// After the source, we decide whether to write . and verb token,	
-		// or simply an operator, depending on the verb definition			
+		// After the source, we decide whether to write verb token or		
+		// verb operator, depending on the verb definition, state and		
+		// charge																			
 		bool enscope = true;
 		if (!mVerb) {
 			// An invalid verb is always written as token						
@@ -762,7 +772,7 @@ namespace Langulus::Flow
 		else {
 			// A valid verb is written either as token, or as operator		
 			if (mMass < 0) {
-				if (!mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault()) {
+				if (!mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault() && mState.IsDefault()) {
 					// Write as operator													
 					result += mVerb->mOperatorReverse;
 					enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
@@ -776,7 +786,7 @@ namespace Langulus::Flow
 				}
 			}
 			else {
-				if (!mVerb->mOperator.empty() && GetCharge().IsDefault()) {
+				if (!mVerb->mOperator.empty() && GetCharge().IsDefault() && mState.IsDefault()) {
 					// Write as operator													
 					result += mVerb->mOperator;
 					enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
@@ -790,6 +800,11 @@ namespace Langulus::Flow
 				}
 			}
 		}
+
+		if (IsLongCircuited())
+			result += " long ";
+		if (IsMonocast())
+			result += " mono ";
 
 		if (enscope)
 			result += Code::OpenScope;

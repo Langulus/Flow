@@ -72,6 +72,8 @@ namespace Langulus::Flow
 		void Reset();
 		void Update(Block&, Time);
 		void Execute(Block&, TimePoint = {}, Time = {});
+
+		NOD() operator Debug() const;
 	};
 
 } // namespace Langulus::Flow

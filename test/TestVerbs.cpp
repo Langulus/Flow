@@ -1,7 +1,7 @@
 #include "Main.hpp"
 #include <catch2/catch.hpp>
 
-SCENARIO("Text capsulation in verbs", "[text]") {
+SCENARIO("Text capsulation in verbs", "[verbs]") {
 	GIVEN("A templated utf8 text container") {
 		Text text = "tests";
 
@@ -25,7 +25,7 @@ SCENARIO("Text capsulation in verbs", "[text]") {
 		}
 
 		WHEN("Wrapped inside a verb's argument") {
-			Verb wrapper = Verbs::Do(&text);
+			Verbs::Do wrapper(&text);
 			THEN("The block's reference count must increase") {
 				REQUIRE(text.GetUses() == 1);
 				REQUIRE(text == "tests");

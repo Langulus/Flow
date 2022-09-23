@@ -55,4 +55,15 @@ namespace Langulus::Flow
 	
 } // namespace Langulus::Flow
 
+namespace Langulus
+{
+
+	template<class T>
+	NOD() LANGULUS(ALWAYSINLINE) Anyness::Text IdentityOf(const T&);
+
+	template<class T>
+	NOD() LANGULUS(ALWAYSINLINE) Anyness::Text IdentityOf(RTTI::DMeta, const T&);
+
+} //namespace Langulus
+
 #include "Resolvable.inl"

@@ -19,10 +19,10 @@ namespace Langulus::Flow
 		using Any::Any;
 		using Any::operator ==;
 
-		Scope Clone() const;
+		NOD() Scope Clone() const;
 
-		bool IsExecutable() const noexcept;
-		bool IsExecutableDeep() const noexcept;
+		NOD() bool IsExecutable() const noexcept;
+		NOD() bool IsExecutableDeep() const noexcept;
 
 		bool Execute(Any&) const;
 		bool Execute(Any&, Any& output) const;

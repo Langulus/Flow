@@ -18,14 +18,12 @@ void DumpResults(const INPUT& in, const OUTPUT& out, const REQUIRED& required) {
 }
 
 
-SCENARIO("Parsing scripts with corner cases", "[code]") {
+SCENARIO("Parsing scripts with corner cases", "[flow]") {
 	Any pastMissing;
 	pastMissing.MakePast();
-	pastMissing.MakeMissing();
 
 	Any futureMissing;
 	futureMissing.MakeFuture();
-	futureMissing.MakeMissing();
 
 
 	GIVEN("The script: `plural` associate many") {
@@ -182,9 +180,9 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("The script: ',' = ([past number? >< future number?] or single or \"and\")") {
-		const Code code = "',' = ([past number? >< future number?] or single or \"and\")";
-		auto argument = Any::Wrap("past number? >< future number?"_code, IndexSingle, "and"_text);
+	GIVEN("The script: ',' = ([number? >< number??] or single or \"and\")") {
+		const Code code = "',' = ([number? >< number??] or single or \"and\")";
+		auto argument = Any::Wrap("number? >< number??"_code, IndexSingle, "and"_text);
 		argument.MakeOr();
 		const Any required = Verbs::Associate(argument)
 			.SetSource(',');
@@ -198,8 +196,8 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("The script: Create!-1(Verb(past?, future?))") {
-		const Code code = "Create!-1(Verb(past?, future?))";
+	GIVEN("The script: Create!-1(Verb(?, ??))") {
+		const Code code = "Create!-1(Verb(?, ??))";
 		TAny<Any> package = Any::Wrap(pastMissing, futureMissing);
 		const Any required = Verbs::Create(
 			Construct::From<Verb>(package)
@@ -214,8 +212,8 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("The script: past number    ?       ><  future     number ? ") {
-		const Code code = "past number    ?       ><   future     number ? ";
+	GIVEN("The script: number    ?       ><       number ?? ") {
+		const Code code = "number    ?       ><     number ?? ";
 		Any source {pastMissing};
 		source << MetaData::Of<A::Number>();
 		Any argument {futureMissing};
@@ -232,8 +230,8 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("The script: `is` = (past? = future?)") {
-		const Code code = "`is` = (past? = future?)";
+	GIVEN("The script: `is` = (? = ??)") {
+		const Code code = "`is` = (? = ??)";
 		const auto package = 
 			Verbs::Associate(futureMissing).SetSource(pastMissing);
 		const Any required = 
@@ -248,8 +246,8 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("The script: .Context = .Verb.Future?") {
-		const Code code = ".Context = .Verb.Future?";
+	GIVEN("The script: .Context = .Verb.??") {
+		const Code code = ".Context = .Verb.??";
 		const Any required = Verbs::Associate(
 			Verbs::Select(futureMissing).SetSource(
 				Verbs::Select(MetaData::Of<Verb>())
@@ -267,7 +265,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 		}
 	}
 
-	GIVEN("The script: Create!-1(Verb(past?(Number,DMeta,Construct), future?(Number,DMeta,Construct)))") {
+	GIVEN("The script: Create!-1(Verb(?(Number,DMeta,Construct), ??(Number,DMeta,Construct)))") {
 		Any a1 {pastMissing};
 		a1
 			<< MetaData::Of<A::Number>()
@@ -280,7 +278,7 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 			<< MetaData::Of<MetaData>()
 			<< MetaData::Of<Construct>();
 
-		const Code code = "Create!-1(Verb(past?(Number,DMeta,Construct), future?(Number,DMeta,Construct)))";
+		const Code code = "Create!-1(Verb(?(Number,DMeta,Construct), ??(Number,DMeta,Construct)))";
 		const Any required = Verbs::Create(
 			Construct::From<Verb>(Any::WrapCommon(a1, a2))
 		).SetPriority(-1);
@@ -330,7 +328,9 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 
 	GIVEN("The script: Create^1(Count(1)) Add^2(2) Multiply^3(4)") {
 		const Code code = "Create^1(Count(1)) Add^2(2) Multiply^3(4)";
-		Any required = Verbs::Add(Real(8))
+		Any required = Verbs::Add(
+				Verbs::Multiply(Real(4)).SetSource(Real(2)).SetFrequency(3)
+			)
 			.SetFrequency(2)
 			.SetSource(
 				Verbs::Create(Traits::Count(Real(1)))
@@ -391,4 +391,62 @@ SCENARIO("Parsing scripts with corner cases", "[code]") {
 			}
 		}
 	}
+
+	GIVEN("The script: ? create Entity(User)") {
+		const Code code = "? create Entity(User)";
+
+		WHEN("Parsed") {
+			Any required = Verbs::Create(
+				Construct::From<Entity>(
+					MetaData::Of<User>()
+				)
+			).SetSource(pastMissing);
+
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: (number? >< number??) or (? Conjunct!4 ??)") {
+		const Code code = "(number? >< number??) or (? Conjunct!4 ??)";
+
+		WHEN("Parsed") {
+			Any pastNumber {pastMissing};
+			pastNumber << MetaData::Of<A::Number>();
+			Any futrNumber {futureMissing};
+			futrNumber << MetaData::Of<A::Number>();
+
+			Verbs::Catenate catenate(futrNumber);
+			catenate.SetSource(pastNumber);
+
+			Verbs::Conjunct conjunct(futureMissing);
+			conjunct.SetSource(pastMissing);
+			conjunct.SetPriority(4);
+
+			Any required = Any::WrapCommon<Verb>(catenate, conjunct);
+			required.MakeOr();
+
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	/*
+	const auto COMMA = "(number? >< future number?) or (? Conjunct!4 future?)"_code.Parse();
+	const auto DOT = "(number? + Fraction(future number?)) or (? Conjunct!8 future?)"_code.Parse();
+	const auto MY = "?.Entity(User).future?"_code.Parse();
+	const auto NAME = "Traits::Name"_code.Parse();
+	const auto IS = "? = future?"_code.Parse();
+	const auto APOSTROPHE_S = "(? = future?) or (?.Entity(Session or User)) or (?.future?)"_code.Parse();
+	const auto MAKE = "? create future?"_code.Parse();
+	const auto AA = "single"_code.Parse();
+	const auto GAME = "Entity(Universe, Window, Temporal)"_code.Parse();
+	const auto CALLED = "? create Name(future text?)"_code.Parse();*/
+
 }

@@ -70,7 +70,6 @@ namespace Langulus::Flow
 	///	@param output - [in/out] the pack to fully iterate							
 	void ResetPointState(Block& output) {
 		output.ForEachDeep<false>([](Block& part) {
-			part.MakeMissing(false);
 			part.MakeNow();
 			part.ForEach(
 				[](Verb& v) {
@@ -118,7 +117,6 @@ namespace Langulus::Flow
 				else if (!part.IsDeep())
 					part.Reset();
 
-				part.MakeMissing(false);
 				part.MakeNow();
 			}
 
@@ -171,7 +169,6 @@ namespace Langulus::Flow
 			// Propagate the context to the next update							
 			Any argument {};
 			argument.MakeFuture();
-			argument.MakeMissing();
 
 			if (localContext.GetRaw() == context.GetRaw() && localContext.GetCount() == context.GetCount()) {
 				mPriorityStack = Verbs::Do {argument}
@@ -326,7 +323,6 @@ namespace Langulus::Flow
 					// works for now...
 					auto missingNumber = Ptr<Any>::New(
 						MetaData::Of<A::Number>());
-					missingNumber->MakeMissing();
 					missingNumber->MakePast();
 					auto newPoint = Ptr<MissingPoint>::New(
 						Real {}, missingNumber, &construct);
@@ -645,7 +641,7 @@ namespace Langulus::Flow
 		if (scope.IsEmpty())
 			return true;
 
-		VERBOSE_TEMPORAL_TAB(this << ": Pushing: " << scope);
+		VERBOSE_TEMPORAL_TAB(*this << ": Pushing: " << scope);
 
 		// Collect all future points inside the priority stack				
 		// those points might or might not have filters;						
@@ -665,6 +661,11 @@ namespace Langulus::Flow
 		#endif
 
 		return InnerPush<false, false>(futures, scope, false);
+	}
+
+	/// Stringify the context (shows class type and an identifier)					
+	Temporal::operator Debug() const {
+		return IdentityOf(this);
 	}
 
 } // namespace Langulus::Flow

@@ -10,9 +10,9 @@
 #include "verbs/Do.inl"
 #include "verbs/Interpret.inl"
 
-#define VERBOSE(a)		Logger::Verbose() << a
-#define VERBOSE_TAB(a)	const auto tab = Logger::Verbose() << a << Logger::Tabs{}
-#define FLOW_ERRORS(a)	Logger::Error() << a
+#define VERBOSE(a)		//Logger::Verbose() << a
+#define VERBOSE_TAB(a)	//const auto tab = Logger::Verbose() << a << Logger::Tabs{}
+#define FLOW_ERRORS(a)	//Logger::Error() << a
 
 namespace Langulus::Flow
 {
@@ -131,6 +131,12 @@ namespace Langulus::Flow
 			executed = ForEach(
 				// Nest if traits, but retain each trait 							
 				[&](const Trait& trait) {
+					if (trait.IsMissing()) {
+						// Never touch missing stuff, only propagate it			
+						output.SmartPush(trait);
+						return;
+					}
+
 					const auto& scope = ReinterpretCast<Scope>(static_cast<const Block&>(trait));
 					Any local;
 					if (!scope.Execute(environment, local, skipVerbs)) {
@@ -142,6 +148,12 @@ namespace Langulus::Flow
 				},
 				// Nest if constructs, but retain each construct				
 				[&](const Construct& construct) {
+					if (construct.IsMissing()) {
+						// Never touch missing stuff, only propagate it			
+						output.SmartPush(construct);
+						return;
+					}
+
 					const auto& scope = ReinterpretCast<Scope>(construct.GetArgument());
 					Any local;
 					if (!scope.Execute(environment, local, skipVerbs)) {
@@ -163,6 +175,13 @@ namespace Langulus::Flow
 					if (skipVerbs)
 						return false;
 
+					if (constVerb.GetCharge().IsFlowDependent()) {
+						// The verb hasn't been integrated into a flow, just	
+						// forward it														
+						output.SmartPush(constVerb);
+						return true;
+					}
+
 					// Shallow-copy the verb to make it mutable					
 					// Also resets its output											
 					Verb verb {
@@ -171,6 +190,7 @@ namespace Langulus::Flow
 						constVerb,
 						constVerb.GetVerbState()
 					};
+					verb.SetSource(constVerb.GetSource());
 
 					// Execute the verb													
 					if (!Scope::ExecuteVerb(environment, verb)) {
@@ -221,6 +241,12 @@ namespace Langulus::Flow
 			executed = ForEach(
 				// Nest if traits, but retain each trait 							
 				[&](const Trait& trait) {
+					if (trait.IsMissing()) {
+						// Never touch missing stuff, only propagate it			
+						output.SmartPush(trait);
+						return;
+					}
+
 					const auto& scope = 
 						ReinterpretCast<Scope>(static_cast<const Block&>(trait));
 
@@ -232,6 +258,12 @@ namespace Langulus::Flow
 				},
 				// Nest if constructs, but retain each construct				
 				[&](const Construct& construct) {
+					if (construct.IsMissing()) {
+						// Never touch missing stuff, only propagate it			
+						output.SmartPush(construct);
+						return;
+					}
+
 					const auto& scope = 
 						ReinterpretCast<Scope>(construct.GetArgument());
 
@@ -245,6 +277,13 @@ namespace Langulus::Flow
 				[&](const Verb& constVerb) {
 					if (localSkipVerbs)
 						return false;
+
+					if (constVerb.GetCharge().IsFlowDependent()) {
+						// The verb hasn't been integrated into a flow, just	
+						// forward it														
+						output.SmartPush(constVerb);
+						return true;
+					}
 
 					// Shallow-copy the verb to make it mutable					
 					// Also resets its output											
@@ -290,7 +329,7 @@ namespace Langulus::Flow
 		Any localSource;
 		if (!ReinterpretCast<Scope>(verb.mSource)
 			.Execute(environment, localSource)) {
-			Logger::Error() << "Error at source: " << verb.mSource;
+			FLOW_ERRORS(Logger::Error() << "Error at source: " << verb.mSource);
 			return false;
 		}
 
@@ -301,7 +340,7 @@ namespace Langulus::Flow
 		Any localArgument;
 		if (!ReinterpretCast<Scope>(verb.GetArgument())
 			.Execute(localSource, localArgument)) {
-			Logger::Error() << "Error at argument: " << verb.GetArgument();
+			FLOW_ERRORS(Logger::Error() << "Error at argument: " << verb.GetArgument());
 			return false;
 		}
 
@@ -353,6 +392,14 @@ namespace Langulus::Flow
 		VERBOSE("Executed: " << Logger::Green << verb
 			<< " (" << verb.GetVerb() << ')');
 		return true;
+	}
+
+	/// Clone the scope																			
+	///	@return the cloned scope															
+	Scope Scope::Clone() const {
+		Scope result;
+		static_cast<Any&>(result) = Any::Clone();
+		return Abandon(result);
 	}
 
 } // namespace Langulus::Flow

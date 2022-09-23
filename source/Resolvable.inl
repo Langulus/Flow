@@ -9,6 +9,47 @@
 #include "Resolvable.hpp"
 #include "verbs/Do.inl"
 
+namespace Langulus
+{
+
+	/// Get a string representing an instance in memory								
+	/// Used all across framework to stringify short instance IDs					
+	///	@tparam T - type of the instance (deducible)									
+	///	@param type - the resolved type, from which token is taken				
+	///	@param instance - the instance to stringify									
+	///	@return text containing the generated identity								
+	template<class T>
+	Anyness::Text IdentityOf(RTTI::DMeta type, const T& instance) {
+		Flow::Code result;
+		result += type->mToken;
+		result += Flow::Code::OpenScope;
+		#if !LANGULUS(PARANOID) && LANGULUS(DEBUG)
+			// We're not paranoid, so directly dump the memory address		
+			result += Anyness::Text {fmt::format("{:X}",
+				reinterpret_cast<intptr_t>(SparseCast(instance)))};
+		#else
+			// Obfuscate the pointer, by hashing it								
+			result += Anyness::Text {fmt::format("{:X}",
+				HashNumber(reinterpret_cast<intptr_t>(SparseCast(instance))).mHash)};
+		#endif
+		result += Flow::Code::CloseScope;
+		return Abandon(static_cast<Anyness::Text&>(result));
+	}
+
+
+	/// Get a string representing an instance in memory								
+	/// Used all across framework to stringify short instance IDs					
+	///	@tparam T - type of the instance (deducible)									
+	///	@param instance - the instance to stringify									
+	///	@return text containing the generated identity								
+	template<class T>
+	Anyness::Text IdentityOf(const T& instance) {
+		return IdentityOf(RTTI::MetaData::Of<Decay<T>>(), instance);
+	}
+
+} // namespace Langulus
+
+
 namespace Langulus::Flow
 {
 
@@ -70,18 +111,7 @@ namespace Langulus::Flow
 
 	/// Stringify the context (shows class type and an identifier)					
 	inline Resolvable::operator Debug() const {
-		Flow::Code result;
-		result += GetToken();
-		result += Flow::Code::OpenScope;
-		#if !LANGULUS(PARANOID) && LANGULUS(DEBUG)
-			// We're not paranoid, so directly dump the memory address		
-			result += Text {fmt::format("{:X}", reinterpret_cast<intptr_t>(this))};
-		#else
-			// Obfuscate the pointer, by hashing it								
-			result += Text {fmt::format("{:X}", HashNumber(reinterpret_cast<intptr_t>(this)).mHash)};
-		#endif
-		result += Flow::Code::CloseScope;
-		return result;
+		return IdentityOf(mClassType, this);
 	}
 
 	/// Wrap this context instance in a static memory block							

@@ -32,9 +32,8 @@ namespace Langulus::Flow
 			OpenCharacter,
 			CloseCharacter,
 			OpenByte,
-			Past,
 			Future,
-			Missing,
+			Past,
 			Constant,
 			Sparse,
 			Mass,
@@ -123,7 +122,6 @@ namespace Langulus::Flow
 			NOD() static Offset ParsePhase(Code::Operator, const Code&, Any&, bool optimize);
 			NOD() static Offset ParseConst(const Code&, Any&, bool optimize);
 			NOD() static Offset ParseSparse(const Code&, Any&, bool optimize);
-			NOD() static Offset ParseMissing(const Code&, Any&);
 			NOD() static Offset ParseReflected(Verb&, const Code&, Any&, bool optimize);
 
 			static void InsertContent(Any&, Any&);

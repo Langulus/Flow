@@ -163,23 +163,15 @@ namespace Langulus::Flow
 			stateWritten = true;
 		}
 
-		if (from.IsPast()) {
-			if (stateWritten)
-				to += Text {' '};
-			to += Code {Code::Past};
-			stateWritten = true;
-		}
-		else if (from.IsFuture()) {
-			if (stateWritten)
-				to += Text {' '};
-			to += Code {Code::Future};
-			stateWritten = true;
-		}
-
 		UNUSED() bool scoped;
 		if constexpr (!ENSCOPED) {
 			scoped = NeedsScope(from);
 			if (scoped) {
+				if (from.IsPast())
+					to += Code {Code::Past};
+				else if (from.IsFuture())
+					to += Code {Code::Future};
+
 				to += Code {Code::OpenScope};
 				stateWritten = false;
 			}
@@ -291,6 +283,15 @@ namespace Langulus::Flow
 						to += Separator(from.IsOr());
 				}
 			}
+			else if (from.CastsTo<Verb>()) {
+				// Contained type is verb												
+				for (Offset i = 0; i < from.GetCount(); ++i) {
+					auto& verb = from.As<Verb>(i);
+					to += verb.operator TO();
+					if (i < from.GetCount() - 1)
+						to += Separator(from.IsOr());
+				}
+			}
 			else if (from.CastsTo<Byte>()) {
 				// Contained type is raw bytes, wrap it in byte scope			
 				auto raw_bytes = from.GetRaw();
@@ -309,6 +310,8 @@ namespace Langulus::Flow
 			else {
 				// Serialize all elements one by one using RTTI					
 				Verbs::InterpretTo<TO> interpreter;
+				interpreter.ShortCircuit(false);
+
 				if (DispatchFlat(from, interpreter)) {
 					bool separate = false;
 					interpreter.GetOutput().ForEach([&](const Text& r) {
@@ -331,10 +334,19 @@ namespace Langulus::Flow
 		if constexpr (!ENSCOPED) {
 			if (scoped)
 				to += Code {Code::CloseScope};
+			else {
+				if (from.IsPast())
+					to += Code {Code::Past};
+				else if (from.IsFuture())
+					to += Code {Code::Future};
+			}
 		}
-
-		if (from.IsMissing())
-			to += Code {Code::Missing};
+		else {
+			if (from.IsPast())
+				to += Code {Code::Past};
+			else if (from.IsFuture())
+				to += Code {Code::Future};
+		}
 
 		return to.GetCount() - initial;
 	}

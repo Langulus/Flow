@@ -6,8 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses									
 ///																									
 #pragma once
-#include <Langulus.Logger.hpp>
-#include <Langulus.Anyness.hpp>
+#include <LangulusAnyness.hpp>
 
 #ifndef LANGULUS_ENABLE_FEATURE_MANAGED_MEMORY
 #error Langulus::Flow can be compiled only with enabled LANGULUS_FEATURE_MANAGED_MEMORY
@@ -81,6 +80,7 @@ namespace Langulus::Flow
 		NOD() constexpr Charge& operator ^= (const Real&) noexcept;
 
 		NOD() constexpr bool IsDefault() const noexcept;
+		NOD() constexpr bool IsFlowDependent() const noexcept;
 		NOD() Hash GetHash() const noexcept;
 		void Reset() noexcept;
 

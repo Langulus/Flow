@@ -9,7 +9,9 @@
 #include "../Verb.hpp"
 #include "../Scope.hpp"
 #include "../Serial.hpp"
+#include "../Time.hpp"
 #include "Do.inl"
+#include <fmt/chrono.h>
 
 #define VERBOSE_CONVERSION(a) //Logger::Verbose() << a
 
@@ -185,18 +187,58 @@ namespace Langulus
 		else return lhs << (rhs.Get());
 	}
 	
-	/// Extend the logger to be capable of logging Trait								
+	/// Extend the logger to be capable of logging traits								
 	///	@param lhs - the logger interface												
 	///	@param rhs - the trait to stringify												
 	///	@return a reference to the logger for chaining								
+	template<CT::Trait T>
 	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
-		Logger::A::Interface& lhs, const Anyness::Trait& rhs) {
-		lhs << (rhs.GetTrait()
-				? rhs.GetTrait()->mToken
-				: RTTI::MetaTrait::DefaultToken
-			);
+		Logger::A::Interface& lhs, const T& rhs) {
+		lhs << DenseCast(rhs).GetTrait();
 		lhs << '(';
-		lhs << static_cast<const Anyness::Any&>(rhs);
+		lhs << static_cast<const Anyness::Any&>(DenseCast(rhs));
+		lhs << ')';
+		return lhs;
+	}
+
+	/// Extend the logger to be capable of logging time								
+	///	@param lhs - the logger interface												
+	///	@param rhs - the time duration to stringify									
+	///	@return a reference to the logger for chaining								
+	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
+		Logger::A::Interface& lhs, const Flow::Time& rhs) {
+		return lhs << fmt::format("{}", static_cast<const Flow::Time::Base&>(rhs));
+	}
+
+	/// Extend the logger to be capable of logging time point						
+	///	@param lhs - the logger interface												
+	///	@param rhs - the time point to stringify										
+	///	@return a reference to the logger for chaining								
+	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
+		Logger::A::Interface& lhs, const Flow::TimePoint& rhs) {
+		return lhs << fmt::format("{}", rhs.time_since_epoch());
+	}
+
+	/// Extend the logger to be capable of logging maps								
+	///	@param lhs - the logger interface												
+	///	@param rhs - the map to stringify												
+	///	@return a reference to the logger for chaining								
+	template<CT::Map T>
+	LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
+		Logger::A::Interface& lhs, const T& rhs) {
+		lhs << RTTI::MetaData::Of<T>()->mToken;
+		lhs << '(';
+		bool first = true;
+		for (auto pair : rhs) {
+			if (!first)
+				lhs << ", ";
+			lhs << '(';
+			lhs << pair.mKey;
+			lhs << ", ";
+			lhs << pair.mValue;
+			lhs << ')';
+			first = true;
+		}
 		lhs << ')';
 		return lhs;
 	}

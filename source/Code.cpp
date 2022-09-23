@@ -28,9 +28,9 @@
 		Throw<Except::Flow>("Parse error"); \
 	}
 
-#define VERBOSE(a) VERBOSE_INNER(a)
-#define VERBOSE_TAB(a) auto tab = VERBOSE_INNER(a) << Logger::Tabs{}
-#define VERBOSE_ALT(a) Logger::Verbose() << a
+#define VERBOSE(a) //VERBOSE_INNER(a)
+#define VERBOSE_TAB(a) //auto tab = VERBOSE_INNER(a) << Logger::Tabs{}
+#define VERBOSE_ALT(a) //Logger::Verbose() << a
 
 
 namespace Langulus::Flow
@@ -51,9 +51,8 @@ namespace Langulus::Flow
 		{ "'", 0, false },		// OpenCharacter
 		{ "'", 0, false },		// CloseCharacter
 		{ "0x", 0, false },		// OpenByte
-		{ "past", 0, false },	// Past
-		{ "future", 0, false },	// Future
-		{ "?", 0, false },		// Missing
+		{ "??", 0, false },		// Future
+		{ "?", 0, false },		// Past
 		{ "const", 0, false },	// Constant
 		{ "sparse", 0, false },	// Sparse
 		{ "*", 0, true },			// Mass
@@ -519,8 +518,6 @@ namespace Langulus::Flow
 				return progress + ParseConst(relevant, lhs, optimize);
 			case Sparse:
 				return progress + ParseSparse(relevant, lhs, optimize);
-			case Missing:
-				return progress + ParseMissing(relevant, lhs);
 			default:
 				PRETTY_ERROR("Unhandled built-in operator");
 			}
@@ -809,15 +806,6 @@ namespace Langulus::Flow
 		return 0;
 	}
 
-	/// Missing contents																			
-	///	@param input - the code to parse													
-	///	@param lhs - [in/out] parsed content goes here								
-	///	@return number of parsed characters												
-	Offset Code::OperatorParser::ParseMissing(const Code&, Any& lhs) {
-		lhs.MakeMissing();
-		return 0;
-	}
-
 	/// Execute a reflected verb operator													
 	///	@param op - the operator to execute												
 	///	@param input - the code to parse													
@@ -835,7 +823,7 @@ namespace Langulus::Flow
 		progress += UnknownParser::Parse(
 			input.RightOf(progress), op.GetArgument(), op.GetVerb()->mPrecedence, optimize);
 
-		if (optimize) {
+		if (optimize && !op.GetCharge().IsFlowDependent()) {
 			// Try executing operator at compile-time								
 			// We must disable multicast for this									
 			VERBOSE_TAB("Attempting compile-time execution... ");

@@ -6,6 +6,12 @@
 int main(int argc, char* argv[]) {
 	// For reflection of all verbs													
 	(void)MetaData::Of<Index>();
+	(void)MetaData::Of<Entity>();
+	(void)MetaData::Of<Temporal>();
+	(void)MetaData::Of<Universe>();
+	(void)MetaData::Of<Window>();
+	(void)MetaData::Of<User>();
+	(void)MetaData::Of<Fraction>();
 
 	// For reflection of all verbs													
 	(void)MetaVerb::Of<Verbs::Add>();

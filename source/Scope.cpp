@@ -325,11 +325,18 @@ namespace Langulus::Flow
 	///	@param verb - [in/out] verb to integrate										
 	///	@return true of no errors occured												
 	bool Scope::IntegrateVerb(Any& environment, Verb& verb) {
-		// Integrate the verb source to the current context					
+		if (verb.IsMonocast()) {
+			// We're executing on whole argument/source, so be lazy			
+			if (verb.GetSource().IsInvalid())
+				verb.GetSource() = environment;
+			return true;
+		}
+
+		// Integrate the verb source to environment								
 		Any localSource;
-		if (!ReinterpretCast<Scope>(verb.mSource)
-			.Execute(environment, localSource)) {
-			FLOW_ERRORS(Logger::Error() << "Error at source: " << verb.mSource);
+		if (!ReinterpretCast<Scope>(verb.GetSource()).Execute(environment, localSource)) {
+			// It's considered error only if verb is not monocast				
+			FLOW_ERRORS(Logger::Error() << "Error at source of: " << verb);
 			return false;
 		}
 
@@ -338,9 +345,9 @@ namespace Langulus::Flow
 
 		// Integrate the verb argument to the source								
 		Any localArgument;
-		if (!ReinterpretCast<Scope>(verb.GetArgument())
-			.Execute(localSource, localArgument)) {
-			FLOW_ERRORS(Logger::Error() << "Error at argument: " << verb.GetArgument());
+		if (!ReinterpretCast<Scope>(verb.GetArgument()).Execute(localSource, localArgument)) {
+			// It's considered error only if verb is not monocast				
+			FLOW_ERRORS(Logger::Error() << "Error at argument of: " << verb);
 			return false;
 		}
 
@@ -369,7 +376,7 @@ namespace Langulus::Flow
 			// Just making sure that the integrated argument & source are	
 			// propagated to the verb's output										
 			if (verb.mOutput.IsEmpty()) {
-				if (!verb.GetArgument().IsEmpty())
+				if (!verb.IsEmpty())
 					verb << Move(verb.GetArgument());
 				else
 					verb << Move(verb.GetSource());

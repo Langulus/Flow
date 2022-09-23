@@ -94,6 +94,9 @@ namespace Langulus::Verbs
 	///	@return true if execution was a success										
 	template<bool MUTABLE>
 	bool Select::DefaultSelect(Block& context, Verb& verb) {
+		if (verb.IsMissing() || context.IsEmpty() || context.IsMissing())
+			return false;
+
 		TAny<Index> indices;
 		verb.GetArgument().Gather(indices);
 		bool containsOnlyIndices = !indices.IsEmpty();
@@ -102,7 +105,7 @@ namespace Langulus::Verbs
 		TAny<const RTTI::Ability*> selectedAbilities;
 
 		// Scan verb argument for anything but indices							
-		verb.GetArgument().ForEachDeep([&](const Block& group) {
+		verb.ForEachDeep([&](const Block& group) {
 			// Skip indices - they were gathered before the loop				
 			if (group.Is<Index>())
 				return;
@@ -140,8 +143,8 @@ namespace Langulus::Verbs
 		}
 
 		// Output results if any, satisfying the verb							
-		verb << selectedTraits;// .Decay(); //TODO investigate this issue and if an issue generalize it by implementing it in verb::operator <<
-		verb << selectedAbilities;// .Decay();
+		verb << selectedTraits;
+		verb << selectedAbilities;
 		return verb.IsDone();
 	}
 
@@ -194,7 +197,7 @@ namespace Langulus::Verbs
 	inline bool Select::SelectByMeta(const TAny<Index>& indices, DMeta id, Block& context, TAny<Trait>& selectedTraits, TAny<const RTTI::Ability*>& selectedVerbs) {
 		const auto type = context.GetType();
 		if (id->Is<VMeta>()) {
-			if (indices.IsEmpty() || indices == IndexAll) { //TODO make sure the == operator is optimal
+			if (indices.IsEmpty() || indices == IndexAll) {
 				// Retrieve each ability corresponding to verbs in rhs		
 				for (auto& ability : type->mAbilities)
 					selectedVerbs << &ability.second;

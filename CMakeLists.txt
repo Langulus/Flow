@@ -29,8 +29,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	add_compile_definitions(LANGULUS_ENABLE_ASSERTION_LEVEL=1000)
     add_compile_definitions(LANGULUS_ENABLE_FEATURE_MEMORY_STATISTICS)
     add_compile_definitions(LANGULUS_ENABLE_DEBUGGING)
-    add_compile_definitions(LANGULUS_ENABLE_DEBUGGING)
-	#pragma GCC diagnostic ignored "-Wtrigraphs"
 endif()
 
 if (CMAKE_CXX_FLAGS)

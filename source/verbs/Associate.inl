@@ -64,12 +64,24 @@ namespace Langulus::Verbs
 	///	@param verb - the verb instance to execute									
 	///	@return true if execution was a success										
 	inline bool Associate::ExecuteDefault(Block& context, Verb& verb) {
-		if (context.IsConstant() || context.IsMissing() || verb.IsMissingDeep() || !context.Is(verb.GetType()))
+		auto& lhs = ReinterpretCast<Scope>(context);
+		auto& rhs = ReinterpretCast<Scope>(verb.GetArgument());
+		if (lhs.IsConstant())
+			// Can't overwrite a constant context									
+			return false;
+		else if (lhs.IsMissing() || rhs.IsMissing())
+			// Can't associate missing stuff											
+			return false;
+		else if (lhs.IsExecutableDeep() || rhs.IsExecutableDeep())
+			// Can't associate unexecuted verbs										
+			return false;
+		else if (!lhs.Is(rhs.GetType()))
+			// Can't associate unrelated types										
 			return false;
 
 		// Attempt directly copying, if possible									
 		// This will happen only if types are exactly the same				
-		// This is default, fallback routine, let's keep things simple		
+		// This is a default (fallback) routine, let's keep things simple	
 		try { verb.Copy(context); }
 		catch (const Except::Copy&) {
 			return false;

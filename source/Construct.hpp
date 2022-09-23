@@ -94,10 +94,10 @@ namespace Langulus::Flow
 	public:
 		NOD() Hash GetHash() const;
 
-		template<CT::Data T, CT::Data DATA>
-		NOD() static Construct From(const DATA&);
-		template<CT::Data T, CT::Data DATA>
-		NOD() static Construct From(DATA&&);
+		template<CT::Data T, CT::Data HEAD, CT::Data... TAIL>
+		NOD() static Construct From(const HEAD&, const TAIL&...);
+		template<CT::Data T, CT::Data HEAD, CT::Data... TAIL>
+		NOD() static Construct From(HEAD&&, TAIL&&...);
 		template<CT::Data T>
 		NOD() static Construct From();
 

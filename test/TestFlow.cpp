@@ -249,9 +249,8 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 	GIVEN("The script: .Context = .Verb.??") {
 		const Code code = ".Context = .Verb.??";
 		const Any required = Verbs::Associate(
-			Verbs::Select(futureMissing).SetSource(
-				Verbs::Select(MetaData::Of<Verb>())
-			)
+			Verbs::Select(futureMissing)
+				.SetSource(Verbs::Select(MetaData::Of<Verb>()))
 		).SetSource(
 			Verbs::Select(MetaTrait::Of<Traits::Context>())
 		);
@@ -365,16 +364,15 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: -(2 * 8.75 - 14 ^ 2)") {
 		const Code code = "-(2 * 8.75 - 14 ^ 2)";
+		Any required = Verbs::Add(
+			Verbs::Add(
+				Verbs::Exponent(Real(2)).SetSource(Real(14))
+			)
+			.SetMass(-1)
+			.SetSource(Verbs::Multiply(Real(8.75)).SetSource(Real(2)))
+		).SetMass(-1);
 
 		WHEN("Parsed without optimization") {
-			Any required = Verbs::Add(
-				Verbs::Add(
-					Verbs::Exponent(Real(2)).SetSource(Real(14))
-				)
-				.SetMass(-1)
-				.SetSource(Verbs::Multiply(Real(8.75)).SetSource(Real(2)))
-			).SetMass(-1);
-
 			const auto parsed = code.Parse(false);
 			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
@@ -394,14 +392,13 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: ? create Entity(User)") {
 		const Code code = "? create Entity(User)";
+		Any required = Verbs::Create(
+			Construct::From<Entity>(
+				MetaData::Of<User>()
+				)
+		).SetSource(pastMissing);
 
 		WHEN("Parsed") {
-			Any required = Verbs::Create(
-				Construct::From<Entity>(
-					MetaData::Of<User>()
-				)
-			).SetSource(pastMissing);
-
 			const auto parsed = code.Parse();
 			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
@@ -412,23 +409,22 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: (number? >< number??) or (? Conjunct!4 ??)") {
 		const Code code = "(number? >< number??) or (? Conjunct!4 ??)";
+		Any pastNumber {pastMissing};
+		pastNumber << MetaData::Of<A::Number>();
+		Any futrNumber {futureMissing};
+		futrNumber << MetaData::Of<A::Number>();
+
+		Verbs::Catenate catenate(futrNumber);
+		catenate.SetSource(pastNumber);
+
+		Verbs::Conjunct conjunct(futureMissing);
+		conjunct.SetSource(pastMissing);
+		conjunct.SetPriority(4);
+
+		Any required = Any::WrapCommon<Verb>(catenate, conjunct);
+		required.MakeOr();
 
 		WHEN("Parsed") {
-			Any pastNumber {pastMissing};
-			pastNumber << MetaData::Of<A::Number>();
-			Any futrNumber {futureMissing};
-			futrNumber << MetaData::Of<A::Number>();
-
-			Verbs::Catenate catenate(futrNumber);
-			catenate.SetSource(pastNumber);
-
-			Verbs::Conjunct conjunct(futureMissing);
-			conjunct.SetSource(pastMissing);
-			conjunct.SetPriority(4);
-
-			Any required = Any::WrapCommon<Verb>(catenate, conjunct);
-			required.MakeOr();
-
 			const auto parsed = code.Parse();
 			DumpResults(code, parsed, required);
 			THEN("The parsed contents must match the requirements") {
@@ -437,16 +433,159 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		}
 	}
 
-	/*
-	const auto COMMA = "(number? >< future number?) or (? Conjunct!4 future?)"_code.Parse();
-	const auto DOT = "(number? + Fraction(future number?)) or (? Conjunct!8 future?)"_code.Parse();
-	const auto MY = "?.Entity(User).future?"_code.Parse();
-	const auto NAME = "Traits::Name"_code.Parse();
-	const auto IS = "? = future?"_code.Parse();
-	const auto APOSTROPHE_S = "(? = future?) or (?.Entity(Session or User)) or (?.future?)"_code.Parse();
-	const auto MAKE = "? create future?"_code.Parse();
-	const auto AA = "single"_code.Parse();
-	const auto GAME = "Entity(Universe, Window, Temporal)"_code.Parse();
-	const auto CALLED = "? create Name(future text?)"_code.Parse();*/
+	GIVEN("The script: (number? + Fraction(number??)) or (? Conjunct!8 ??)") {
+		const Code code = "(number? + Fraction(number??)) or (? Conjunct!8 ??)";
+		Any pastNumber {pastMissing};
+		pastNumber << MetaData::Of<A::Number>();
+		Any futrNumber {futureMissing};
+		futrNumber << MetaData::Of<A::Number>();
 
+		Verbs::Add add(Construct::From<Fraction>(futrNumber));
+		add.SetSource(pastNumber);
+
+		Verbs::Conjunct conjunct(futureMissing);
+		conjunct.SetSource(pastMissing);
+		conjunct.SetPriority(8);
+
+		Any required = Any::WrapCommon<Verb>(add, conjunct);
+		required.MakeOr();
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: ?.Entity(User).??") {
+		const Code code = "?.Entity(User).??";
+		const Any required = Verbs::Select(futureMissing)
+			.SetSource(
+				Verbs::Select(
+					Construct::From<Entity>(MetaData::Of<User>())
+				).SetSource(pastMissing)
+			);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: Traits::Name") {
+		const Code code = "Traits::Name";
+		const Any required = MetaTrait::Of<Traits::Name>();
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: ? = ??") {
+		const Code code = "? = ??";
+		const Any required = Verbs::Associate(futureMissing).SetSource(pastMissing);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: (? = ??) or (?.Entity(Session or User)) or (?.??)") {
+		const Code code = "(? = ??) or (?.Entity(Session or User)) or (?.??)";
+
+		Any sessionOrUser = Any::WrapCommon(MetaData::Of<Session>(), MetaData::Of<User>());
+		sessionOrUser.MakeOr();
+
+		Verbs::Associate first(futureMissing);
+		first.SetSource(pastMissing);
+
+		Verbs::Select second(Construct::From<Entity>(sessionOrUser));
+		second.SetSource(pastMissing);
+
+		Verbs::Select third(futureMissing);
+		third.SetSource(pastMissing);
+
+		Any required = Any::WrapCommon<Verb>(first, second, third);
+		required.MakeOr();
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: ? create ??") {
+		const Code code = "? create ??";
+		const Any required = Verbs::Create(futureMissing).SetSource(pastMissing);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: single") {
+		const Code code = "single";
+		const Any required = IndexSingle;
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: Entity(Universe, Window, Temporal)") {
+		const Code code = "Entity(Universe, Window, Temporal)";
+		const Any required = Construct::From<Entity>(
+			MetaData::Of<Universe>(),
+			MetaData::Of<Window>(),
+			MetaData::Of<Temporal>()
+		);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
+	GIVEN("The script: ? create Name(A::Text??)") {
+		const Code code = "? create Name(A::Text??)";
+		Any missingFutureText(futureMissing);
+		missingFutureText << MetaData::Of<A::Text>();
+		const Any required = Verbs::Create {Traits::Name{missingFutureText}}
+			.SetSource(pastMissing);
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
 }

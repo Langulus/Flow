@@ -26,6 +26,11 @@ struct User {
 	LANGULUS(PRODUCER) Entity;
 };
 
+/// A mockup of a session component, for testing purposes							
+struct Session {
+	LANGULUS(PRODUCER) Entity;
+};
+
 /// A mockup of a fraction																		
 struct Fraction {
 

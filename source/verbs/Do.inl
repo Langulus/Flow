@@ -269,7 +269,7 @@ namespace Langulus::Flow
 				// Context is empty, but has relevant states, so directly	
 				// forward it as context. Alternatively, the verb is not a	
 				// multicast verb, and we're operating on context as one		
-				verb.SetSource<T>(context);
+				verb.template SetSource<T>(context);
 				Execute<DISPATCH, DEFAULT, true>(context, verb);
 				return verb.GetSuccesses();
 			}

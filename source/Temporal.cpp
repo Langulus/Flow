@@ -6,8 +6,8 @@
 /// See LICENSE file, or https://www.gnu.org/licenses									
 ///																									
 #include "Temporal.hpp"
-#include "Inner/Missing.hpp"
-#include "Inner/Fork.hpp"
+#include "inner/Missing.hpp"
+#include "inner/Fork.hpp"
 
 #define VERBOSE_TEMPORAL(a)		Logger::Verbose() << *this << ": " << a
 #define VERBOSE_TEMPORAL_TAB(a)	const auto tab = Logger::Verbose() << *this << ": " << a << Logger::Tabs{}

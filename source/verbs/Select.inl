@@ -61,7 +61,7 @@ namespace Langulus::Verbs
 	///	@param verb - selection verb														
 	///	@return true if verb has been satisfied										
 	inline bool Select::ExecuteStateless(Verb& verb) {
-		verb.GetArgument().ForEachDeep([&](TMeta t) {
+		verb.ForEachDeep([&](TMeta t) {
 			if (t->Is<Traits::Logger>())
 				verb << &Logger::Instance;
 		});
@@ -98,7 +98,7 @@ namespace Langulus::Verbs
 			return false;
 
 		TAny<Index> indices;
-		verb.GetArgument().Gather(indices);
+		verb.Gather(indices);
 		bool containsOnlyIndices = !indices.IsEmpty();
 
 		TAny<Trait> selectedTraits;

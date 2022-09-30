@@ -28,9 +28,9 @@
 		Throw<Except::Flow>("Parse error"); \
 	}
 
-#define VERBOSE(a)		VERBOSE_INNER(a)
-#define VERBOSE_TAB(a)	auto tab = VERBOSE_INNER(a) << Logger::Tabs{}
-#define VERBOSE_ALT(a)	Logger::Verbose() << a
+#define VERBOSE(a)		//VERBOSE_INNER(a)
+#define VERBOSE_TAB(a)	//auto tab = VERBOSE_INNER(a) << Logger::Tabs{}
+#define VERBOSE_ALT(a)	//Logger::Verbose() << a
 
 
 namespace Langulus::Flow

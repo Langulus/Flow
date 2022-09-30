@@ -75,7 +75,7 @@ namespace Langulus::Verbs
 	///	@param verb - the do/undo verb													
 	///	@return true if verb was satisfied												
 	inline bool Do::ExecuteStateless(Verb& verb) {
-		if (verb.GetArgument().IsEmpty())
+		if (verb.IsEmpty())
 			return false;
 
 		//TODO execute
@@ -269,7 +269,7 @@ namespace Langulus::Flow
 				// Context is empty, but has relevant states, so directly	
 				// forward it as context. Alternatively, the verb is not a	
 				// multicast verb, and we're operating on context as one		
-				verb.SetSource(context);
+				verb.SetSource<T>(context);
 				Execute<DISPATCH, DEFAULT, true>(context, verb);
 				return verb.GetSuccesses();
 			}

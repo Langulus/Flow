@@ -4,17 +4,17 @@
 SCENARIO("Temporal flow", "[temporal]") {
 	///																								
 	/// The following tests rely on this ontology sequence							
-	/*const auto HI = "? create Entity(User)"_code.Parse();
-	const auto COMMA = "(number? >< future number?) or (? Conjunct!4 future?)"_code.Parse();
-	const auto DOT = "(number? + Fraction(future number?)) or (? Conjunct!8 future?)"_code.Parse();
-	const auto MY = "?.Entity(User).future?"_code.Parse();
+	const auto HI = "? create Entity(User)"_code.Parse();
+	const auto COMMA = "(number? >< number??) or (? Conjunct!4 ??)"_code.Parse();
+	const auto DOT = "(number? + Fraction(number??)) or (? Conjunct!8 ??)"_code.Parse();
+	const auto MY = "?.Entity(User).??"_code.Parse();
 	const auto NAME = "Traits::Name"_code.Parse();
-	const auto IS = "? = future?"_code.Parse();
-	const auto APOSTROPHE_S = "(? = future?) or (?.Entity(Session or User)) or (?.future?)"_code.Parse();
-	const auto MAKE = "? create future?"_code.Parse();
+	const auto IS = "? = ??"_code.Parse();
+	const auto APOSTROPHE_S = "(? = ??) or (?.Entity(Session or User)) or (?.??)"_code.Parse();
+	const auto MAKE = "? create ??"_code.Parse();
 	const auto AA = "single"_code.Parse();
 	const auto GAME = "Entity(Universe, Window, Temporal)"_code.Parse();
-	const auto CALLED = "? create Name(future text?)"_code.Parse();
+	const auto CALLED = "? create Name(a::text??)"_code.Parse();
 
 	GIVEN("An empty temporal flow") {
 		Temporal flow;
@@ -22,33 +22,33 @@ SCENARIO("Temporal flow", "[temporal]") {
 		WHEN("Code is pushed to the flow") {
 			flow.Push(HI);
 			flow.Push(COMMA);
-			flow.Push(" ");
+			flow.Push(" "_text);
 			flow.Push(MY);
-			flow.Push(" ");
+			flow.Push(" "_text);
 			flow.Push(NAME);
-			flow.Push(" ");
+			flow.Push(" "_text);
 			flow.Push(IS);
-			flow.Push(" Dimo");
+			flow.Push(" Dimo"_text);
 			flow.Push(DOT);
-			flow.Push("let");
+			flow.Push("let"_text);
 			flow.Push(APOSTROPHE_S);
-			flow.Push(" ");
+			flow.Push(" "_text);
 			flow.Push(MAKE);
-			flow.Push(" ");
+			flow.Push(" "_text);
 			flow.Push(AA);
-			flow.Push(" ");
+			flow.Push(" "_text);
 			flow.Push(GAME);
-			flow.Push(" ");
+			flow.Push(" "_text);
 			flow.Push(CALLED);
-			flow.Push(" t");
-			flow.Push("e");
-			flow.Push("st");
-			flow.Push(" game");
+			flow.Push(" t"_text);
+			flow.Push("e"_text);
+			flow.Push("st"_text);
+			flow.Push(" game"_text);
 			flow.Push(GAME);
 
 			THEN("The generated temporal flow should be correct") {
 
 			}
 		}
-	}*/
+	}
 }

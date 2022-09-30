@@ -89,7 +89,7 @@ namespace Langulus::Verbs
 
 		// At this point, context has a copy of verb's argument				
 		// Just make sure it goes to output											
-		verb << context;
+		verb << Any {context};
 		return true;
 
 		// Collect all viably typed or interpreted stuff from argument		

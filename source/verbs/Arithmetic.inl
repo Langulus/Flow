@@ -34,7 +34,7 @@ namespace Langulus::Flow
 			*(ires++) = o(ilhs++, irhs++);
 
 		// Interpret back to the original and push to verb output			
-		rhs << result.ReinterpretAs(original);
+		rhs << Any {result.ReinterpretAs(original)};
 		return true;
 	}
 
@@ -60,7 +60,7 @@ namespace Langulus::Flow
 
 		// We're editing through the reinterpretation, but we must return	
 		// the original																	
-		rhs << original;
+		rhs << Any {original};
 		return true;
 	}
 
@@ -115,7 +115,7 @@ namespace Langulus::Flow
 
 		// We're editing through the reinterpretation, but we must return	
 		// the original																	
-		rhs << original;
+		rhs << Any {original};
 		return true;
 	}
 

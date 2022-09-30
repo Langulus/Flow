@@ -189,17 +189,19 @@ namespace Langulus::Flow
 		template<CT::Data T>
 		Verb& SetSource(const T&);
 		template<CT::Data T>
-		Verb& SetSource(T&&);
+		Verb& SetSource(T&);
+		template<CT::Data T>
+		Verb& SetSource(T&&) requires CT::Mutable<T>;
 
 		template<CT::Data T>
 		Verb& SetArgument(const T&);
 		template<CT::Data T>
-		Verb& SetArgument(T&&);
+		Verb& SetArgument(T&&) requires CT::Mutable<T>;
 
 		template<CT::Data T>
 		Verb& SetOutput(const T&);
 		template<CT::Data T>
-		Verb& SetOutput(T&&);
+		Verb& SetOutput(T&&) requires CT::Mutable<T>;
 
 		NOD() bool operator == (const Verb&) const;
 		NOD() bool operator == (VMeta) const noexcept;

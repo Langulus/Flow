@@ -29,6 +29,9 @@ namespace Langulus::Flow
 		constexpr TimePoint() noexcept
 			: time_point {min()} {}
 
+		constexpr TimePoint(const time_point& a) noexcept
+			: time_point {a} {}
+
 		constexpr explicit operator bool() const noexcept {
 			return *this != min();
 		}
@@ -49,9 +52,13 @@ namespace Langulus::Flow
 	public:
 		using Base = SteadyClock::duration;
 		using Base::duration;
+		using Base::operator +;
 
 		constexpr Time() noexcept
 			: duration {zero()} {}
+
+		constexpr Time(const duration& a) noexcept
+			: duration {a} {}
 
 		constexpr explicit operator bool() const noexcept {
 			return *this != zero();

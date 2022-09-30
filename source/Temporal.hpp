@@ -26,14 +26,27 @@ namespace Langulus::Flow
 	/// record the sequence you used to make your game, play your game, or		
 	/// truly anything you can imagine, that can be described by a sequence		
 	/// of actions. Which is practically everything there is.						
-	///	You can execute scripts with missing future/past/any elements in		
+	///	You can execute scripts with missing future/past elements in			
 	/// them, which means that the temporal flow acts as a time-based linker,	
 	/// that actively seeks the past and future inputs for suitable data to		
 	/// complete your scripts at runtime.													
 	///																								
 	class Temporal final {
 	private:
+		struct State {
+			TimePoint mStart;
+			Time mTime;
+			Time mPeriod;
+		};
+
+		// A default execution context												
+		Any mEnvironment;
+
+		// A parent flow																	
 		Temporal* mParent {};
+
+		// Background charge																
+		State mState;
 
 		// Increments on each call to Update()										
 		TimePoint mPreviousTime;
@@ -42,18 +55,25 @@ namespace Langulus::Flow
 		// Accumulated flow duration													
 		Time mDuration;
 
-		// Priority stack																	
+		// Priority stack, i.e. the order of things that happen NOW			
 		Scope mPriorityStack;
 
-		// Verb temporal stack - flows that trigger at given time			
-		TMap<TimePoint, Temporal> mTimeStack;
+		// Verb temporal stack, i.e. things that happen at specific time	
+		TMap<Time, Temporal> mTimeStack;
 
-		// Verb frequency stack - flows that trigger periodically			
+		// Verb frequency stack, i.e. things that happen periodically		
 		TUnorderedMap<Time, Temporal> mFrequencyStack;
 
+	protected:
+		Temporal(Temporal*, const State&);
+
+		Scope Collapse(const Block&) const;
+		Scope Compile(const Block&) const;
+		bool Link(const Scope&, Block&);
+
 	public:
+		Temporal();
 		Temporal(const Temporal&) = delete;
-		Temporal(Temporal* parent = nullptr);
 		Temporal(Temporal&&) noexcept = default;
 
 		Temporal& operator = (Temporal&&) noexcept = default;
@@ -65,15 +85,14 @@ namespace Langulus::Flow
 		NOD() Temporal Clone() const;
 		NOD() bool IsValid() const;
 
-		void Dump() const;
 		void Merge(const Temporal&);
-		bool Push(const Any&);
+		bool Push(Any);
 
 		void Reset();
-		void Update(Block&, Time);
-		void Execute(Block&, TimePoint = {}, Time = {});
+		void Update(Time);
 
 		NOD() operator Debug() const;
+		void Dump() const;
 	};
 
 } // namespace Langulus::Flow

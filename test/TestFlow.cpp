@@ -459,6 +459,30 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		}
 	}
 
+	GIVEN("The script: (? + Fraction(number??)) or (? Conjunct!8 ??)") {
+		const Code code = "(? + Fraction(number??)) or (? Conjunct!8 ??)";
+		Any futrNumber {futureMissing};
+		futrNumber << MetaData::Of<A::Number>();
+
+		Verbs::Add add(Construct::From<Fraction>(futrNumber));
+		add.SetSource(pastMissing);
+
+		Verbs::Conjunct conjunct(futureMissing);
+		conjunct.SetSource(pastMissing);
+		conjunct.SetPriority(8);
+
+		Any required = Any::WrapCommon<Verb>(add, conjunct);
+		required.MakeOr();
+
+		WHEN("Parsed") {
+			const auto parsed = code.Parse();
+			DumpResults(code, parsed, required);
+			THEN("The parsed contents must match the requirements") {
+				REQUIRE(parsed == required);
+			}
+		}
+	}
+
 	GIVEN("The script: ?.Entity(User).??") {
 		const Code code = "?.Entity(User).??";
 		const Any required = Verbs::Select(futureMissing)

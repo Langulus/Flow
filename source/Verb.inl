@@ -320,11 +320,17 @@ namespace Langulus::Flow
 		return *this;
 	}
 
+	template<CT::Data T>
+	Verb& Verb::SetSource(T& value) {
+		mSource = value;
+		return *this;
+	}
+
 	/// Set the verb's source by move														
 	///	@param value  - the value to set													
 	///	@return a reference to self														
 	template<CT::Data T>
-	Verb& Verb::SetSource(T&& value) {
+	Verb& Verb::SetSource(T&& value) requires CT::Mutable<T> {
 		mSource = Forward<T>(value);
 		return *this;
 	}
@@ -342,7 +348,7 @@ namespace Langulus::Flow
 	///	@param value  - the value to set													
 	///	@return a reference to self														
 	template<CT::Data T>
-	Verb& Verb::SetArgument(T&& value) {
+	Verb& Verb::SetArgument(T&& value) requires CT::Mutable<T> {
 		static_cast<Any&>(*this).operator = (Forward<T>(value));
 		return *this;
 	}
@@ -360,7 +366,7 @@ namespace Langulus::Flow
 	///	@param value  - the value to set													
 	///	@return a reference to self														
 	template<CT::Data T>
-	Verb& Verb::SetOutput(T&& value) {
+	Verb& Verb::SetOutput(T&& value) requires CT::Mutable<T> {
 		mOutput = Forward<T>(value);
 		return *this;
 	}

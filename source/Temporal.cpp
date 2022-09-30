@@ -6,33 +6,40 @@
 /// See LICENSE file, or https://www.gnu.org/licenses									
 ///																									
 #include "Temporal.hpp"
-#include "Missing.hpp"
+#include "Inner/Missing.hpp"
+#include "Inner/Fork.hpp"
 
-#define VERBOSE_TEMPORAL(a) Logger::Verbose() << a
-#define VERBOSE_TEMPORAL_TAB(a) const auto tab = Logger::Verbose() << a << Logger::Tabs{}
-#define VERBOSE_FUTURE(a) 
+#define VERBOSE_TEMPORAL(a)		Logger::Verbose() << *this << ": " << a
+#define VERBOSE_TEMPORAL_TAB(a)	const auto tab = Logger::Verbose() << *this << ": " << a << Logger::Tabs{}
 
 namespace Langulus::Flow
 {
 
-	Pasts FindPastPoints(Any&);
+	/// Default constructor, add the initial missing future point					
+	Temporal::Temporal() {
+		mPriorityStack << Inner::MissingFuture {};
+	}
 
 	/// Construct as a sub-flow																
-	///	@param parent - flow producer and parent										
-	Temporal::Temporal(Temporal* parent)
-		: mParent {parent} { }
+	///	@attention assumes parent is a valid pointer									
+	///	@param parent - the parent flow													
+	///	@param background - the background charge, as provided from parent	
+	Temporal::Temporal(Temporal* parent, const State& state)
+		: mParent {parent}
+		, mState {state} { }
 
-	/// This will essentially fork the parent flow, if any							
+	/// Clone the flow, but fork the parent flow, if any								
 	///	@return the cloned flow																
 	Temporal Temporal::Clone() const {
 		Temporal clone;
-		// Note, that the producer and owners are not cloned or copied		
+		// Note, that the parent flow is never cloned							
 		clone.mFrequencyStack = mFrequencyStack.Clone();
 		clone.mTimeStack = mTimeStack.Clone();
 		clone.mPriorityStack = mPriorityStack.Clone();
 		clone.mPreviousTime = mPreviousTime;
 		clone.mCurrentTime = mCurrentTime;
 		clone.mDuration = mDuration;
+		clone.mState = mState;
 		return clone;
 	}
 
@@ -66,124 +73,27 @@ namespace Langulus::Flow
 		Logger::Verbose() << mFrequencyStack;
 	}
 
-	/// Remove all missing states inside all output's subpacks						
-	///	@param output - [in/out] the pack to fully iterate							
-	void ResetPointState(Block& output) {
-		output.ForEachDeep<false>([](Block& part) {
-			part.MakeNow();
-			part.ForEach(
-				[](Verb& v) {
-					ResetPointState(v.GetSource());
-					ResetPointState(v.GetArgument());
-					ResetPointState(v.GetOutput());
-				},
-				[](Trait& v) {
-					ResetPointState(v);
-				},
-				[](Construct& v) {
-					ResetPointState(v);
-				}
-			);
-		});
-	}
-
-	/// Remove all filters, polarization and missingness								
-	/// Strictly typed contents will be finalized										
-	///	@param scope - [in/out] the scope to prepare									
-	void PrepareForExecution(Block& scope) {
-		scope.ForEachDeep<false>([](Any& part) {
-			if (part.IsMissing()) {
-				if (part.IsDeep() && part.GetCount() == 2) {
-					// Check if filter is of a single type and whether			
-					// contents match that type or not								
-					Any& filter = part.Get<Any>(0);
-					Any content = part.Get<Any>(1);
-
-					const auto meta = filter.Get<DMeta>();
-					if (filter.GetCount() == 1 && !content.Is(meta)) {
-						Logger::Verbose() << "Finalizing " << content << " to " << meta;
-						auto finalized = Any::FromMeta(meta);
-						finalized.Allocate<true>(1);
-
-						auto catenator = Verbs::Catenate {content};
-						if (Flow::DispatchFlat<false>(finalized, catenator)) {
-							Logger::Verbose() << "Finalized " << content << " to " << finalized;
-							content = Move(finalized);
-						}
-					}
-
-					part = Move(content);
-				}
-				else if (!part.IsDeep())
-					part.Reset();
-
-				part.MakeNow();
-			}
-
-			part.ForEach(
-				[](Verb& v) {
-					PrepareForExecution(v.GetSource());
-					PrepareForExecution(v.GetArgument());
-					PrepareForExecution(v.GetOutput());
-				},
-				[](Trait& v) {
-					PrepareForExecution(v);
-				},
-				[](Construct& v) {
-					PrepareForExecution(v);
-				}
-			);
-		});
-	}
-
 	/// Advance the flow - moves time forward, executes stacks						
-	///	@param context - the context to execute any verbs							
 	///	@param dt - delta time																
-	void Temporal::Update(Block& context, Time dt) {
+	void Temporal::Update(Time dt) {
 		if (!mCurrentTime) {
 			// If we're at the beginning of time - prepare for execution	
-			// This will omit any compilation-stage junk that remains in	
-			// the priority stack - we no longer need it							
-			PrepareForExecution(mPriorityStack);
+			auto collapsed = Collapse(mPriorityStack);
 
-			// Now execute the priority stack										
-			// It will have two products:												
-			//																					
-			// 1. The outputs of the execution, that is, the verb outputs	
-			//		and data propagation that happens in the stack				
-			//		The outputs are short-lived, and may contain some			
-			//		results to queries and other temporary data					
-			//																					
-			//	2. The context of the execution, that changes in its own		
-			//		way, and will later be used to link the next pushes		
-			//		to this flow. The context transcends a flow exection and	
-			//		propagates to the next push										
-			//																					
+			// Now execute the collapsed priority stack							
 			Any output;
-			Any localContext {context};
-			if (!mPriorityStack.Execute(localContext, output)) {
-				// oh-oh - an error occurs												
+			if (!collapsed.Execute(mEnvironment, output))
 				Throw<Except::Flow>("Update failed");
-			}
 
-			// Propagate the context to the next update							
-			Any argument {};
-			argument.MakeFuture();
+			// Then, set the priority stack to the output, by wrapping it	
+			// in a hight-priority Do verb with future attachment				
+			// This guarantees, that a Push is possible after the Update	
+			Any future; future.MakeFuture();
+			mPriorityStack = Verbs::Do {future}
+				.SetSource(Abandon(output))
+				.SetPriority(8);
 
-			if (localContext.GetRaw() == context.GetRaw() && localContext.GetCount() == context.GetCount()) {
-				mPriorityStack = Verbs::Do {argument}
-					.SetSource(localContext)
-					.SetPriority(8); //TODO contexts on multiple levels can be implemented via this priority modifier! Neat!
-			}
-			else {
-				auto source = Any::Wrap(localContext, context);
-				source.MakeOr();
-				mPriorityStack = Verbs::Do {argument}
-					.SetSource(Abandon(source))
-					.SetPriority(8); //TODO contexts on multiple levels can be implemented via this priority modifier! Neat!
-			}
-
-			VERBOSE_TEMPORAL(Logger::Purple 
+			VERBOSE_TEMPORAL(Logger::Purple
 				<< "Flow after execution " << mPriorityStack);
 		}
 
@@ -207,29 +117,20 @@ namespace Langulus::Flow
 
 				// Update the flow														
 				// It might have periodic flows inside								
-				pair.mValue.Update(context, pair.mKey);
+				pair.mValue.Update(pair.mKey);
 			}
 		}
 
 		// Execute flows that occur after a given point in time				
 		for (auto pair : mTimeStack) {
-			if (mCurrentTime < pair.mKey)
+			if (mCurrentTime < mState.mStart + pair.mKey)
 				// The time stack is sorted, so no point in continuing		
 				break;
 
 			// Update the time flow														
 			// It might have periodic flows inside									
-			pair.mValue.Update(context, dt);
+			pair.mValue.Update(dt);
 		}
-	}
-
-	/// Execute the whole flow in a specific context									
-	///	@param context - context to execute in											
-	///	@param offset - time offset to set before execution						
-	///	@param period - the period to execute											
-	void Temporal::Execute(Block& context, const TimePoint offset, const Time period) {
-		mCurrentTime = mPreviousTime = offset;
-		Update(context, period);
 	}
 
 	/// Merge a flow																				
@@ -241,270 +142,34 @@ namespace Langulus::Flow
 		// Merge time stacks																
 		for (auto pair : other.mTimeStack) {
 			const auto found = mTimeStack.FindKeyIndex(pair.mKey);
-			if (!found)
-				mTimeStack.Insert(pair.mKey, Temporal {this});
+			if (!found) {
+				const State state {
+					TimePoint {mState.mStart + pair.mKey},
+					Time {mState.mTime + pair.mKey},
+					mState.mPeriod
+				};
+
+				mTimeStack.Insert(pair.mKey, Temporal {this, state});
+			}
+
 			mTimeStack[pair.mKey].Merge(pair.mValue);
 		};
 
 		// Merge periodic stacks														
 		for (auto pair : other.mFrequencyStack) {
 			const auto found = mFrequencyStack.FindKeyIndex(pair.mKey);
-			if (!found)
-				mFrequencyStack.Insert(pair.mKey, Temporal {this});
+			if (!found) {
+				const State state {
+					mState.mStart,
+					mState.mTime,
+					pair.mKey
+				};
+
+				mFrequencyStack.Insert(pair.mKey, Temporal {this, state});
+			}
+
 			mFrequencyStack[pair.mKey].Merge(pair.mValue);
 		};
-	}
-
-	/// Find past points inside a scope														
-	///	@param scope - the scope to analyze												
-	///	@return the collection of past points											
-	Pasts FindPastPoints(Any& scope) {
-		Pasts result;
-		const auto pushToPasts = [&]() {
-			// Check if scope is a missing future									
-			if (!scope.IsFuture() && scope.IsMissing()) {
-				auto newPoint = Ptr<MissingPoint>::New(Real {}, &scope);
-				result << newPoint.Get();
-			}
-		};
-
-		if (scope.IsEmpty()) {
-			pushToPasts();
-			return result;
-		}
-
-		if (scope.IsDeep()) {
-			// Scope is deep																
-			// There is no escape from this scope once entered					
-			scope.ForEach([&](Any& subscope) {
-				auto pastPoints = FindPastPoints(subscope);
-				if (!pastPoints.IsEmpty())
-					result.InsertBlock(Move(pastPoints));
-			});
-
-			pushToPasts();
-			return result;
-		}
-
-		// If this is reached, then scope is flat									
-		Pasts localResult;
-		scope.ForEach(
-			[&](Verb& verb) {
-				// Nest in each verb output											
-				localResult = FindPastPoints(verb.GetOutput());
-				if (!localResult.IsEmpty())
-					result.InsertBlock(Move(localResult));
-
-				// Nest in each verb argument											
-				localResult = FindPastPoints(verb.GetArgument());
-				if (!localResult.IsEmpty())
-					result.InsertBlock(Move(localResult));
-
-				// Nest in each verb source											
-				localResult = FindPastPoints(verb.GetSource());
-				if (!localResult.IsEmpty())
-					result.InsertBlock(Move(localResult));
-			},
-			[&](Trait& trait) {
-				// Nest inside traits													
-				localResult = FindPastPoints(trait);
-				if (!localResult.IsEmpty())
-					result.InsertBlock(Move(localResult));
-			},
-			[&](Construct& construct) {
-				// Nest inside constructs												
-				localResult = FindPastPoints(construct);
-				if (!localResult.IsEmpty()) {
-					result.InsertBlock(Move(localResult));
-
-					// Each construct also implicitly seeks charge from past	
-					//TODO this is a pretty radical heuristic - only constructs with missing arguments 
-					// search for implicit mass, but what if you want to make a number of constructs, that are explicitly defined in the ontology?
-					// works for now...
-					auto missingNumber = Ptr<Any>::New(
-						MetaData::Of<A::Number>());
-					missingNumber->MakePast();
-					auto newPoint = Ptr<MissingPoint>::New(
-						Real {}, missingNumber, &construct);
-					result << newPoint.Get();
-				}
-			}
-		);
-
-		pushToPasts();
-		return result;
-	}
-
-	/// Find future points inside a scope													
-	///	@param scope - the scope to analyze												
-	///	@param priority - the priority under which the scope falls				
-	///	@param priorityFeedback - [in/out] tracks priority change forwards	
-	///	@return the collection of future points, paired with verb priority	
-	Futures FindFuturePoints(Block& scope, const Real priority, Real& priorityFeedback) {
-		auto localPriorityFeedback = Charge::MinPriority;
-		Futures result;
-		const auto pushToFutures = [&]() {
-			// Check if scope is a missing future									
-			if (!scope.IsPast() && scope.IsMissing()) {
-				VERBOSE_FUTURE(Logger::Input()
-					<< "Pushed future point (priority " 
-					<< priority << "): " << scope);
-				auto newPoint = Ptr<MissingPoint>::New(priority, ReinterpretCast<Any>(&scope));
-				result << newPoint.Get();
-			}
-		};
-
-		if (scope.IsEmpty()) {
-			priorityFeedback = priority;
-			pushToFutures();
-			return result;
-		}
-
-		if (scope.IsDeep()) {
-			// Scope is deep																
-			// There is no escape from this scope once entered					
-			if (scope.IsOr() && scope.GetCount() > 1) {
-				VERBOSE_FUTURE(const auto tab = Logger::Special()
-					<< "Scanning deep fork for future points (<= priority " 
-					<< priority << "): " << scope << Logger::Tabs {});
-
-				// DEEP OR																	
-				// An OR scope represents branches inside the flow				
-				// Future points in those are combined under one priority	
-				Fork fork;
-				scope.ForEach([&](Any& branch) {
-					auto branchFuturePoints = 
-						FindFuturePoints(branch, priority, localPriorityFeedback);
-					if (!branchFuturePoints.IsEmpty())
-						fork.mBranches << Move(branchFuturePoints);
-					else {
-						// Even if no future point is available in the		
-						// branch we are obliged to provide the branch		
-						// itself as a future point								
-						auto newPoint = Ptr<MissingPoint>::New(priority, &branch);
-						branchFuturePoints << newPoint.Get();
-						fork.mBranches << Move(branchFuturePoints);
-					}
-				});
-
-				if (!fork.mBranches.IsEmpty()) {
-					fork.mRoot = ReinterpretCast<Any>(&scope);
-					fork.mIdentity = ReinterpretCast<Any>(scope);
-					fork.mDedicatedIdentity = false;
-					VERBOSE_FUTURE(Logger::Input()
-						<< "Fork with " << fork.mBranches.GetCount() 
-						<< " branches inserted at priority " << priority);
-					auto newPoint = Ptr<MissingPoint>::New(priority, Ptr<Any>::New(Move(fork)));
-					result << newPoint.Get();
-				}
-			}
-			else {
-				VERBOSE_FUTURE(const auto tab = Logger::Special()
-					<< "Scanning scope for future points (<= priority "
-					<< priority << "): " << scope << tab);
-
-				// DEEP AND																	
-				// Scan scope in reverse and push futures to result			
-				scope.ForEachRev([&](Any& subscope) {
-					auto branchFuturePoints = 
-						FindFuturePoints(subscope, priority, localPriorityFeedback);
-					if (!branchFuturePoints.IsEmpty())
-						result.InsertBlock(Move(branchFuturePoints));
-				});
-
-				if (priority != NoPriority && priority > localPriorityFeedback && localPriorityFeedback != Charge::MinPriority) {
-					// The end of an AND scope is always considered a future	
-					// if priority changed on the boundary							
-					VERBOSE_FUTURE(Logger::Input()
-						<< "Pushed priority-boundary future point due to transition from priority "
-						<< priority << " to " << localPriorityFeedback << ": " << scope);
-					auto newPoint = Ptr<MissingPoint>::New(priority, ReinterpretCast<Any>(&scope));
-					result << newPoint.Get();
-					priorityFeedback = priority;
-				}
-			}
-
-			if (localPriorityFeedback > priorityFeedback)
-				priorityFeedback = localPriorityFeedback;
-			pushToFutures();
-			return result;
-		}
-
-		// If this is reached, then scope is flat									
-		if (scope.IsOr() && scope.GetCount() > 1) {
-			const auto tab = Logger::Special()
-				<< "Scanning flat fork for future points (<= priority " 
-				<< priority << "): " << scope << Logger::Tabs {};
-
-			// FLAT OR																		
-			Fork fork;
-			for (Offset i = 0; i < scope.GetCount(); ++i) {
-				auto branch = scope.GetElementResolved(i);
-				auto branchFuturePoints = FindFuturePoints(
-					branch, priority, localPriorityFeedback);
-				if (!branchFuturePoints.IsEmpty())
-					fork.mBranches << Move(branchFuturePoints);
-			}
-
-			if (!fork.mBranches.IsEmpty()) {
-				fork.mRoot = ReinterpretCast<Any>(&scope);
-				fork.mDedicatedIdentity = true;
-				VERBOSE_FUTURE(Logger::Input()
-					<< "Fork with " << fork.mBranches.GetCount() 
-					<< " branches inserted at priority " << priority);
-				auto newPoint = Ptr<MissingPoint>::New(priority, Ptr<Any>::New(Move(fork)));
-				result << newPoint.Get();
-			}
-		}
-		else {
-			// FLAT AND																		
-			scope.ForEachRev(
-				[&](Verb& verb) {
-					const auto nextp = verb.GetPriority();
-					localPriorityFeedback = ::std::max(nextp, localPriorityFeedback);
-					Futures localResult;
-
-					// Nest in each verb output										
-					Real unusedFeedback = priority;
-					localResult = FindFuturePoints(
-						verb.GetOutput(), nextp, unusedFeedback);
-					if (!localResult.IsEmpty())
-						result.InsertBlock(Move(localResult));
-
-					// Nest in each verb argument										
-					localResult = FindFuturePoints(
-						verb.GetArgument(), nextp, unusedFeedback);
-					if (!localResult.IsEmpty())
-						result.InsertBlock(Move(localResult));
-
-					// Nest in each verb source										
-					localResult = FindFuturePoints(
-						verb.GetSource(), nextp, unusedFeedback);
-					if (!localResult.IsEmpty())
-						result.InsertBlock(Move(localResult));
-				},
-				[&](Trait& trait) {
-					// Nest inside traits												
-					auto localResult = FindFuturePoints(
-						trait, priority, localPriorityFeedback);
-					if (!localResult.IsEmpty())
-						result.InsertBlock(Move(localResult));
-				},
-				[&](Construct& construct) {
-					// Nest inside constructs											
-					auto localResult = FindFuturePoints(
-						construct, priority, localPriorityFeedback);
-					if (!localResult.IsEmpty())
-						result.InsertBlock(Move(localResult));
-				}
-			);
-		}
-
-		if (localPriorityFeedback > priorityFeedback)
-			priorityFeedback = localPriorityFeedback;
-
-		pushToFutures();
-		return result;
 	}
 
 	/// Push a scope of elements to the flow, branching if required, removing	
@@ -513,7 +178,7 @@ namespace Langulus::Flow
 	///	@param scope - the scope to push													
 	///	@param branchOut - whether or not to push to a branch						
 	///	@return true if at least one element been pushed successfully			
-	template<bool ATTEMPT, bool CLONE>
+	/*template<bool ATTEMPT, bool CLONE>
 	bool InnerPush(Futures& futures, const Block& content, bool branchOut) {
 		if (content.IsEmpty())
 			return false;
@@ -632,35 +297,213 @@ namespace Langulus::Flow
 		}
 
 		return done;
-	}
+	}*/
 
 	/// Push a scope of verbs and data to the flow										
+	///	@attention assumes argument is a valid scope									
 	///	@param scope - the scope to analyze and push									
 	///	@return true if anything was pushed to the flow								
-	bool Temporal::Push(const Any& scope) {
-		if (scope.IsEmpty())
-			return true;
+	bool Temporal::Push(Any scope) {
+		VERBOSE_TEMPORAL_TAB("Pushing: " << scope);
 
-		VERBOSE_TEMPORAL_TAB(*this << ": Pushing: " << scope);
+		// Compile pushed scope to an intermediate format						
+		auto compiled = Compile(scope);
+		VERBOSE_TEMPORAL("Compiled to: " << compiled);
 
-		// Collect all future points inside the priority stack				
-		// those points might or might not have filters;						
-		// all the points are paired with a priority if contained in		
-		// verbs																				
-		auto smallestPriority = NoPriority;
-		auto futures = FindFuturePoints(mPriorityStack, NoPriority, smallestPriority);
+		// Link new scope with the available stacks								
+		return Link(compiled, mPriorityStack);
+	}
 
-		// Always push entire priority stack as the last option				
-		auto newPoint = Ptr<MissingPoint>::New(NoPriority, &mPriorityStack);
-		futures << newPoint.Get();
+	/// This will omit any compile-time junk that remains in the provided		
+	/// scope, so we can execute it conventionally										
+	///	@param scope - the scope to collapse											
+	///	@return the collapsed scope														
+	Scope Temporal::Collapse(const Block& scope) const {
+		Scope result;
+		if (scope.IsOr())
+			result.MakeOr();
 
-		#if LANGULUS_DEBUG()
-			VERBOSE_TEMPORAL(Logger::Purple << "=================");
-			for (const auto future : futures)
-				future->Dump();
-		#endif
+		if (scope.IsDeep()) {
+			// Nest deep scopes															
+			scope.ForEach([&](const Block& subscope) {
+				auto collapsed = Collapse(subscope);
+				if (!collapsed.IsEmpty())
+					result << Abandon(collapsed);
+			});
 
-		return InnerPush<false, false>(futures, scope, false);
+			if (result.GetCount() < 2)
+				result.MakeAnd();
+			return Abandon(result);
+		}
+
+		const auto done = scope.ForEach(
+			[&](const Trait& subscope) {
+				auto collapsed = Collapse(subscope);
+				if (!collapsed.IsEmpty()) {
+					result << Trait {
+						subscope.GetTrait(), 
+						Abandon(collapsed)
+					};
+				}
+			},
+			[&](const Construct& subscope) {
+				auto collapsed = Collapse(subscope);
+				if (!collapsed.IsEmpty()) {
+					result << Construct {
+						subscope.GetType(),
+						Abandon(collapsed),
+						subscope.GetCharge()
+					};
+				}
+			},
+			[&](const Verb& subscope) {
+				auto collapsedArgument = Collapse(subscope.GetArgument());
+				if (!collapsedArgument.IsEmpty()) {
+					Verb v {
+						subscope.GetVerb(),
+						Abandon(collapsedArgument),
+						subscope.GetCharge(),
+						subscope.GetVerbState()
+					};
+					v.SetSource(Collapse(subscope.GetSource()));
+					result << Abandon(v);
+				}
+			},
+			[&](const Inner::MissingPast& subscope) {
+				if (subscope.IsSatisfied())
+					result << subscope.mContent;
+			},
+			[&](const Inner::MissingFuture& subscope) {
+				if (subscope.IsSatisfied())
+					result << subscope.mContent;
+			}
+		);
+
+		if (!done && !scope.IsEmpty())
+			result = scope;
+		if (result.GetCount() < 2)
+			result.MakeAnd();
+		return Abandon(result);
+	}
+
+	/// Compiles a scope into an intermediate form, used by the flow				
+	///	@attention assumes argument is a valid scope									
+	///	@param scope - the scope to compile												
+	///	@return the compiled scope															
+	Scope Temporal::Compile(const Block& scope) const {
+		Scope result;
+		if (scope.IsOr())
+			result.MakeOr();
+
+		if (scope.IsPast()) {
+			// Convert the scope to a MissingPast intermediate format		
+			result = Inner::MissingPast {scope};
+			return Abandon(result);
+		}
+		else if (scope.IsFuture()) {
+			// Convert the scope to a MissingFuture intermediate format		
+			result = Inner::MissingFuture {scope};
+			return Abandon(result);
+		}
+		else if (scope.IsDeep()) {
+			// Nest deep scopes															
+			scope.ForEach([&](const Block& subscope) {
+				result << Compile(subscope);
+			});
+			return Abandon(result);
+		}
+
+		const auto done = scope.ForEach(
+			[&](const Trait& subscope) {
+				result << Trait {
+					subscope.GetTrait(), 
+					Compile(subscope)
+				};
+			},
+			[&](const Construct& subscope) {
+				result << Construct {
+					subscope.GetType(),
+					Compile(subscope),
+					subscope.GetCharge()
+				};
+			},
+			[&](const Verb& subscope) {
+				Verb v {
+					subscope.GetVerb(),
+					Compile(subscope.GetArgument()),
+					subscope.GetCharge(),
+					subscope.GetVerbState()
+				};
+				v.SetSource(Compile(subscope.GetSource()));
+				result << Abandon(v);
+			}
+		);
+
+		if (!done) {
+			// Just propagate content													
+			result = ReinterpretCast<Scope>(scope);
+		}
+
+		return Abandon(result);
+	}
+
+	/// Links the missing past points of the provided scope, with the missing	
+	/// future points of the provided stack. But anything new could go into		
+	/// old future points, as long as state and filters allows it!					
+	///	@attention assumes argument is a valid scope									
+	///	@param scope - the scope to link													
+	///	@param stack - [in/out] the stack to link with								
+	///	@return true if scope was linked successfully								
+	bool Temporal::Link(const Scope& scope, Block& stack) {
+		bool atLeastOneSuccess = false;
+
+		if (stack.IsDeep()) {
+			// Nest deep stack															
+			stack.ForEachRev([&](Block& substack) {
+				atLeastOneSuccess |= Link(scope, substack);
+				// Continue linking only if the stack is branched				
+				return !(stack.IsOr() && atLeastOneSuccess);
+			});
+			return atLeastOneSuccess;
+		}
+
+		// Iterate backwards - the last future points are always most		
+		// relevant for linking															
+		// Lets start, by scanning all future points in the available		
+		// stack. Scope will be duplicated for each encountered branch		
+		stack.ForEachRev(
+			[&](Trait& substack) {
+				atLeastOneSuccess |= Link(scope, substack);
+				// Continue linking only if the stack is branched				
+				return !(stack.IsOr() && atLeastOneSuccess);
+			},
+			[&](Construct& substack) {
+				atLeastOneSuccess |= Link(scope, substack);
+				// Continue linking only if the stack is branched				
+				return !(stack.IsOr() && atLeastOneSuccess);
+			},
+			[&](Verb& substack) {
+				if (Link(scope, substack.GetArgument())) {
+					atLeastOneSuccess = true;
+					// Continue linking only if the stack is branched			
+					return !stack.IsOr();
+				}
+				if (Link(scope, substack.GetSource())) {
+					atLeastOneSuccess = true;
+					// Continue linking only if the stack is branched			
+					return !stack.IsOr();
+				}
+
+				return true;
+			},
+			[&](Inner::MissingFuture& future) {
+				VERBOSE_TEMPORAL("Linking to: " << future);
+				atLeastOneSuccess |= future.Push(scope);
+				return !(stack.IsOr() && atLeastOneSuccess);
+			}
+		);
+
+		return atLeastOneSuccess;
 	}
 
 	/// Stringify the context (shows class type and an identifier)					

@@ -116,7 +116,20 @@ namespace Langulus::Flow::Inner
 			}
 
 			// Scope is either verbs or something else, just push				
-			mContent = Link(content, environment);
+			bool pastHasBeenConsumed = false;
+			auto linked = Link(content, environment, pastHasBeenConsumed);
+			if (pastHasBeenConsumed) {
+				// There were missing points in content, and this				
+				// mContent	has been consumed to fill them, so we				
+				// directly overwrite													
+				mContent = Abandon(linked);
+			}
+			else {
+				// There were no missing points in content, so just			
+				// push it to this future point as it was provided				
+				mContent << Abandon(linked);
+			}
+
 			VERBOSE_MISSING_POINT("Resulting contents: " << mContent);
 			return true;
 		}
@@ -132,7 +145,7 @@ namespace Langulus::Flow::Inner
 
 		if (DispatchDeep(content, interpreter)) {
 			// If results in verb skip insertion									
-			// Instead delay push to an unfiltered pointer later on			
+			// Instead delay push to an unfiltered location later on			
 			//TODO is this really required? removed for now
 			const auto compiled = Temporal::Compile(interpreter.GetOutput());
 			VERBOSE_MISSING_POINT(Logger::Green
@@ -151,8 +164,10 @@ namespace Langulus::Flow::Inner
 	///	@attention assumes argument is a valid scope									
 	///	@param scope - the scope to link													
 	///	@param environment - a fallback past provided by Temporal				
+	///	@param consumedPast - [out] set to true if anythingin this point has	
+	///		been used in any scope missing past											
 	///	@return the linked equivalent to the provided scope						
-	Any Missing::Link(const Block& scope, const Block& environment) const {
+	Any Missing::Link(const Block& scope, const Block& environment, bool& consumedPast) const {
 		Any result;
 		if (scope.IsOr())
 			result.MakeOr();
@@ -161,7 +176,7 @@ namespace Langulus::Flow::Inner
 			// Nest scopes, linking any past points in subscopes				
 			scope.ForEach([&](const Block& subscope) {
 				try {
-					result << Link(subscope, environment);
+					result << Link(subscope, environment, consumedPast);
 				}
 				catch (const Except::Link&) {
 					if (!scope.IsOr())
@@ -170,12 +185,6 @@ namespace Langulus::Flow::Inner
 						<< "Skipped branch: " << subscope);
 				}
 			});
-
-			if (result.IsEmpty()) {
-				VERBOSE_MISSING_POINT(Logger::DarkYellow
-					<< "Scope reduced to nothing: " << scope);
-				return {};
-			}
 
 			if (result.GetCount() < 2)
 				result.MakeAnd();
@@ -189,7 +198,7 @@ namespace Langulus::Flow::Inner
 		const auto linked = scope.ForEach(
 			[&](const Trait& trait) {
 				try {
-					result << Trait {trait.GetTrait(), Link(trait, environment)};
+					result << Trait {trait.GetTrait(), Link(trait, environment, consumedPast)};
 				}
 				catch (const Except::Link&) {
 					if (!scope.IsOr())
@@ -200,7 +209,7 @@ namespace Langulus::Flow::Inner
 			},
 			[&](const Construct& construct) {
 				try {
-					result << Construct {construct.GetType(), Link(construct, environment)};
+					result << Construct {construct.GetType(), Link(construct, environment, consumedPast)};
 				}
 				catch (const Except::Link&) {
 					if (!scope.IsOr())
@@ -213,10 +222,10 @@ namespace Langulus::Flow::Inner
 				try {
 					result << Verb {
 						verb.GetVerb(), 
-						Link(verb.GetArgument(), environment), 
+						Link(verb.GetArgument(), environment, consumedPast),
 						verb.GetCharge(), 
 						verb.GetVerbState()
-					}.SetSource(Link(verb.GetSource(), environment));
+					}.SetSource(Link(verb.GetSource(), environment, consumedPast));
 				}
 				catch (const Except::Link&) {
 					if (!scope.IsOr())
@@ -243,29 +252,20 @@ namespace Langulus::Flow::Inner
 							LANGULUS_THROW(Link, "Scope not likable");
 					}
 				}
-				else if (!pastShallowCopy.Push(mContent, {})) {
-					if (!scope.IsOr())
-						LANGULUS_THROW(Link, "Scope not linkable");
+				else {
+					if (!pastShallowCopy.Push(mContent, {})) {
+						if (!scope.IsOr())
+							LANGULUS_THROW(Link, "Scope not linkable");
+					}
+					else consumedPast = true;
 				}
 
 				result << Abandon(pastShallowCopy.mContent);
 			}
 		);
 
-		if (!linked) {
-			if (mContent.IsEmpty())
-				result = scope;
-			else {
-				result << mContent;
-				result << Any {scope};
-			}
-		}
-
-		if (result.IsEmpty()) {
-			VERBOSE_MISSING_POINT(Logger::DarkYellow
-				<< "Scope reduced to nothing: " << scope);
-			return {};
-		}
+		if (!linked)
+			result = Any {scope};
 
 		if (result.GetCount() < 2)
 			result.MakeAnd();

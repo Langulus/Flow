@@ -488,13 +488,14 @@ namespace Langulus::Flow
 				// Continue linking only if the stack is branched				
 				return !(stack.IsOr() && atLeastOneSuccess);
 			});
+
 			return atLeastOneSuccess;
 		}
 
 		// Iterate backwards - the last future points are always most		
-		// relevant for linking															
-		// Lets start, by scanning all future points in the available		
-		// stack. Scope will be duplicated for each encountered branch		
+		// relevant for linking. Lets start, by scanning all future			
+		// points in the available stack. Scope will be duplicated for		
+		// each encountered branch														
 		stack.ForEachRev(
 			[&](Trait& substack) {
 				atLeastOneSuccess |= Link(scope, substack);

@@ -20,13 +20,15 @@ namespace Langulus::Flow::Inner
 
 	/// Initialize a missing point by a precompiled filter							
 	///	@param filter - the filter to set												
-	inline Missing::Missing(const TAny<DMeta>& filter)
-		: mFilter {filter} { }
+	inline Missing::Missing(const TAny<DMeta>& filter, Real priority)
+		: mFilter {filter}
+		, mPriority {priority} { }
 
 	/// Initialize a missing point by a filter, will be precompiled				
 	/// i.e. all meta data definitions will be gathered								
 	///	@param filter - the filter to set												
-	inline Missing::Missing(const Block& filter) {
+	inline Missing::Missing(const Block& filter, Real priority)
+		: mPriority {priority} {
 		filter.Gather(mFilter, DataState::Missing);
 		mFilter.SetState(filter.GetState());
 	}
@@ -78,7 +80,7 @@ namespace Langulus::Flow::Inner
 			if (content.IsOr()) {
 				// We're building a fork, we should take special care to		
 				// preserve the hierarchy of the branches							
-				Missing fork {mFilter};
+				Missing fork {mFilter, mPriority};
 				fork.mContent.MakeOr();
 				
 				content.ForEach([&](const Any& subcontent) {
@@ -110,28 +112,39 @@ namespace Langulus::Flow::Inner
 				if (DispatchDeep(content, interpreter)) {
 					// Something was interpreted to verbs							
 					// Compile and push it												
-					const auto compiled = Temporal::Compile(interpreter.GetOutput());
+					const auto compiled = Temporal::Compile(
+						interpreter.GetOutput(), NoPriority);
 					return Push(compiled, environment);
 				}
 			}
 
 			// Scope is either verbs or something else, just push				
 			bool pastHasBeenConsumed = false;
-			auto linked = Link(content, environment, pastHasBeenConsumed);
-			if (pastHasBeenConsumed) {
-				// There were missing points in content, and this				
-				// mContent	has been consumed to fill them, so we				
-				// directly overwrite													
-				mContent = Abandon(linked);
+			Any linked;
+			try {
+				linked = Link(content, environment, pastHasBeenConsumed);
 			}
-			else {
-				// There were no missing points in content, so just			
-				// push it to this future point as it was provided				
-				mContent << Abandon(linked);
+			catch (const Except::Link&) {
+				return false;
 			}
 
-			VERBOSE_MISSING_POINT("Resulting contents: " << mContent);
-			return true;
+			if (!linked.IsEmpty()) {
+				if (pastHasBeenConsumed) {
+					// There were missing points in content, and this			
+					// mContent	has been consumed to fill them, so we			
+					// directly overwrite												
+					mContent = Abandon(linked);
+				}
+				else {
+					// There were no missing points in content, so just		
+					// push it to this future point as it was provided			
+					mContent << Abandon(linked);
+				}
+
+				VERBOSE_MISSING_POINT("Resulting contents: " << mContent);
+				return true;
+			}
+			else return false;
 		}
 
 		//																						
@@ -147,7 +160,8 @@ namespace Langulus::Flow::Inner
 			// If results in verb skip insertion									
 			// Instead delay push to an unfiltered location later on			
 			//TODO is this really required? removed for now
-			const auto compiled = Temporal::Compile(interpreter.GetOutput());
+			const auto compiled = Temporal::Compile(
+				interpreter.GetOutput(), NoPriority);
 			VERBOSE_MISSING_POINT(Logger::Green
 				<< "Interpreted as: " << compiled);
 			return Push(compiled, environment);
@@ -195,7 +209,7 @@ namespace Langulus::Flow::Inner
 		// relevant for linking															
 		// Lets start, by scanning all future points in the available		
 		// stack. Scope will be duplicated for each encountered branch		
-		const auto linked = scope.ForEach(
+		const auto found = scope.ForEach(
 			[&](const Trait& trait) {
 				try {
 					result << Trait {trait.GetTrait(), Link(trait, environment, consumedPast)};
@@ -238,6 +252,12 @@ namespace Langulus::Flow::Inner
 				VERBOSE_MISSING_POINT_TAB(
 					"Linking future point " << *this << " to past point " << past);
 
+				if (mPriority != NoPriority && mPriority <= past.mPriority) {
+					VERBOSE_MISSING_POINT(Logger::DarkYellow
+						<< "Skipped past point with higher priority: " << past);
+					LANGULUS_THROW(Link, "Past point of higher priority");
+				}
+
 				Inner::MissingPast pastShallowCopy;
 				pastShallowCopy.mFilter = past.mFilter;
 				if (mContent.IsEmpty()) {
@@ -264,8 +284,10 @@ namespace Langulus::Flow::Inner
 			}
 		);
 
-		if (!linked)
+		if (!found) {
+			// Anything else just gets propagated									
 			result = Any {scope};
+		}
 
 		if (result.GetCount() < 2)
 			result.MakeAnd();
@@ -277,10 +299,16 @@ namespace Langulus::Flow::Inner
 		Code result;
 		result += Code::OpenScope;
 		result += Verbs::Interpret::To<Debug>(mFilter);
+		if (mPriority != NoPriority) {
+			result += " !";
+			result += Text {mPriority};
+		}
+
 		if (!mContent.IsEmpty()) {
 			result += ", ";
 			result += Verbs::Interpret::To<Debug>(mContent);
 		}
+
 		result += Code::CloseScope;
 		return result;
 	}

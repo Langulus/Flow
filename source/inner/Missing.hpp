@@ -24,10 +24,11 @@ namespace Langulus::Flow::Inner
 	struct Missing {
 		TAny<DMeta> mFilter;
 		Any mContent;
+		Real mPriority {NoPriority};
 
 		Missing() = default;
-		Missing(const TAny<DMeta>&);
-		Missing(const Block&);
+		Missing(const TAny<DMeta>&, Real priority);
+		Missing(const Block&, Real priority);
 
 		NOD() bool Accepts(const Block&) const;
 		NOD() bool IsSatisfied() const;

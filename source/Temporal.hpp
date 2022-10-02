@@ -76,7 +76,7 @@ namespace Langulus::Flow
 		Temporal(Temporal*, const State&);
 
 		static Scope Collapse(const Block&);
-		static Scope Compile(const Block&);
+		static Scope Compile(const Block&, Real priority);
 
 		bool Link(const Scope&, Block&) const;
 		bool Link(const Scope&, Inner::MissingFuture&) const;

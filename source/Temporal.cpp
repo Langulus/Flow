@@ -25,7 +25,7 @@ namespace Langulus::Flow
 	/// Construct as a sub-flow																
 	///	@attention assumes parent is a valid pointer									
 	///	@param parent - the parent flow													
-	///	@param background - the background charge, as provided from parent	
+	///	@param state - the flow state														
 	Temporal::Temporal(Temporal* parent, const State& state)
 		: mParent {parent}
 		, mState {state} { }
@@ -302,14 +302,34 @@ namespace Langulus::Flow
 	}*/
 
 	/// Push a scope of verbs and data to the flow										
+	/// The following rules are used to place the data:								
+	///	1. Data is always inserted at future missing points (??) - there is	
+	///		always at least one such point in any flow (at the back of the		
+	///		main scope)																			
+	///	2. If inserted data has a past missing point (?), that point will be	
+	///		filled with whatever data is already available at the place of		
+	///		insertion																			
+	///	3. Future and past points might have a filter, which decides what		
+	///		kind of data can be inserted at that point								
+	///	4. Future and past points might have priority, which decides what		
+	///		kind of verbs are allowed inside. Priorities are set when a			
+	///		verb is inserted. A verb of higher-or-equal priority can never be	
+	///		inserted	in a point of lower priority. A verb of higher-or-equal	
+	///		priority can only wrap lower-or-equal priority scopes in itself.	
+	///	5. Future and past points might have branches, which forces shallow	
+	///		duplication of missing future/past content when linking				
+	///	6. Verbs with different frequency and time charge go to the				
+	///		corresponding stacks, and are stripped from such properties;		
+	///		from there on, they're handled conventionally, by the					
+	///		aforementioned rules in the context of that stack						
 	///	@attention assumes argument is a valid scope									
 	///	@param scope - the scope to analyze and push									
-	///	@return true if anything was pushed to the flow								
+	///	@return true if the flow changed													
 	bool Temporal::Push(Any scope) {
 		VERBOSE_TEMPORAL_TAB("Pushing: " << scope);
 
 		// Compile pushed scope to an intermediate format						
-		auto compiled = Compile(scope);
+		auto compiled = Compile(scope, Inner::NoPriority);
 		VERBOSE_TEMPORAL("Compiled to: " << compiled);
 
 		// Link new scope with the available stacks								
@@ -342,6 +362,7 @@ namespace Langulus::Flow
 
 		const auto done = scope.ForEach(
 			[&](const Trait& subscope) {
+				// Collapse traits														
 				auto collapsed = Collapse(subscope);
 				if (!collapsed.IsEmpty()) {
 					result << Trait {
@@ -351,6 +372,7 @@ namespace Langulus::Flow
 				}
 			},
 			[&](const Construct& subscope) {
+				// Collapse constructs													
 				auto collapsed = Collapse(subscope);
 				if (!collapsed.IsEmpty()) {
 					result << Construct {
@@ -361,6 +383,7 @@ namespace Langulus::Flow
 				}
 			},
 			[&](const Verb& subscope) {
+				// Collapse verbs															
 				auto collapsedArgument = Collapse(subscope.GetArgument());
 				if (!collapsedArgument.IsEmpty()) {
 					Verb v {
@@ -374,10 +397,12 @@ namespace Langulus::Flow
 				}
 			},
 			[&](const Inner::MissingPast& subscope) {
+				// Collapse missing pasts												
 				if (subscope.IsSatisfied())
 					result << subscope.mContent;
 			},
 			[&](const Inner::MissingFuture& subscope) {
+				// Collapse missing futures											
 				if (subscope.IsSatisfied())
 					result << subscope.mContent;
 			}
@@ -393,52 +418,57 @@ namespace Langulus::Flow
 	/// Compiles a scope into an intermediate form, used by the flow				
 	///	@attention assumes argument is a valid scope									
 	///	@param scope - the scope to compile												
+	///	@param priority - the priority to set for any missing point created	
+	///		for the provided scope															
 	///	@return the compiled scope															
-	Scope Temporal::Compile(const Block& scope) {
+	Scope Temporal::Compile(const Block& scope, Real priority) {
 		Scope result;
 		if (scope.IsOr())
 			result.MakeOr();
 
 		if (scope.IsPast()) {
 			// Convert the scope to a MissingPast intermediate format		
-			result = Inner::MissingPast {scope};
+			result = Inner::MissingPast {scope, priority};
 			return Abandon(result);
 		}
 		else if (scope.IsFuture()) {
 			// Convert the scope to a MissingFuture intermediate format		
-			result = Inner::MissingFuture {scope};
+			result = Inner::MissingFuture {scope, priority};
 			return Abandon(result);
 		}
 		else if (scope.IsDeep()) {
 			// Nest deep scopes															
 			scope.ForEach([&](const Block& subscope) {
-				result << Compile(subscope);
+				result << Compile(subscope, priority);
 			});
 			return Abandon(result);
 		}
 
 		const auto done = scope.ForEach(
 			[&](const Trait& subscope) {
+				// Compile traits															
 				result << Trait {
 					subscope.GetTrait(), 
-					Compile(subscope)
+					Compile(subscope, priority)
 				};
 			},
 			[&](const Construct& subscope) {
+				// Compile constructs													
 				result << Construct {
 					subscope.GetType(),
-					Compile(subscope),
+					Compile(subscope, priority),
 					subscope.GetCharge()
 				};
 			},
 			[&](const Verb& subscope) {
+				// Compile verbs															
 				Verb v {
 					subscope.GetVerb(),
-					Compile(subscope.GetArgument()),
+					Compile(subscope.GetArgument(), subscope.GetPriority()),
 					subscope.GetCharge(),
 					subscope.GetVerbState()
 				};
-				v.SetSource(Compile(subscope.GetSource()));
+				v.SetSource(Compile(subscope.GetSource(), subscope.GetPriority()));
 				result << Abandon(v);
 			}
 		);
@@ -457,7 +487,7 @@ namespace Langulus::Flow
 	/// as long as state and filters allows it!											
 	///	@attention assumes argument is a valid scope									
 	///	@param scope - the scope to link													
-	///	@param stack - [in/out] the stack to link with								
+	///	@param future - [in/out] the future point to place inside				
 	///	@return true if scope was linked successfully								
 	bool Temporal::Link(const Scope& scope, Inner::MissingFuture& future) const {
 		// Attempt linking to the contents first									
@@ -467,7 +497,7 @@ namespace Langulus::Flow
 		//																						
 		// If reached, then future point is flat and boring, fallback by	
 		// directly linking against it												
-		VERBOSE_TEMPORAL_TAB("Linking to: " << future.mContent);
+		VERBOSE_TEMPORAL_TAB("Linking to: " << future);
 		return future.Push(scope, mEnvironment);
 	}
 
@@ -523,6 +553,7 @@ namespace Langulus::Flow
 			},
 			[&](Inner::MissingFuture& future) {
 				atLeastOneSuccess |= Link(scope, future);
+				// Continue linking only if the stack is branched				
 				return !(stack.IsOr() && atLeastOneSuccess);
 			}
 		);

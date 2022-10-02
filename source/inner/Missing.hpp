@@ -32,7 +32,8 @@ namespace Langulus::Flow::Inner
 		NOD() bool Accepts(const Block&) const;
 		NOD() bool IsSatisfied() const;
 
-		bool Push(const Any&);
+		bool Push(const Any&, const Block& environment);
+		Any Link(const Block&, const Block& environment) const;
 		Any Collapse() const;
 
 		operator Debug() const;

@@ -16,7 +16,9 @@ namespace Langulus::Flow
 {
 
 	/// Default constructor, add the initial missing future point					
-	Temporal::Temporal() {
+	///	@param environment - the initial flow environment							
+	Temporal::Temporal(const Any& environment) {
+		mEnvironment = environment;
 		mPriorityStack << Inner::MissingFuture {};
 	}
 
@@ -83,7 +85,7 @@ namespace Langulus::Flow
 			// Now execute the collapsed priority stack							
 			Any output;
 			if (!collapsed.Execute(mEnvironment, output))
-				Throw<Except::Flow>("Update failed");
+				LANGULUS_THROW(Flow, "Update failed");
 
 			// Then, set the priority stack to the output, by wrapping it	
 			// in a hight-priority Do verb with future attachment				
@@ -311,14 +313,16 @@ namespace Langulus::Flow
 		VERBOSE_TEMPORAL("Compiled to: " << compiled);
 
 		// Link new scope with the available stacks								
-		return Link(compiled, mPriorityStack);
+		const bool done = Link(compiled, mPriorityStack);
+		VERBOSE_TEMPORAL(Logger::Purple << "Flow state: " << mPriorityStack);
+		return done;
 	}
 
 	/// This will omit any compile-time junk that remains in the provided		
 	/// scope, so we can execute it conventionally										
 	///	@param scope - the scope to collapse											
 	///	@return the collapsed scope														
-	Scope Temporal::Collapse(const Block& scope) const {
+	Scope Temporal::Collapse(const Block& scope) {
 		Scope result;
 		if (scope.IsOr())
 			result.MakeOr();
@@ -390,7 +394,7 @@ namespace Langulus::Flow
 	///	@attention assumes argument is a valid scope									
 	///	@param scope - the scope to compile												
 	///	@return the compiled scope															
-	Scope Temporal::Compile(const Block& scope) const {
+	Scope Temporal::Compile(const Block& scope) {
 		Scope result;
 		if (scope.IsOr())
 			result.MakeOr();
@@ -448,13 +452,33 @@ namespace Langulus::Flow
 	}
 
 	/// Links the missing past points of the provided scope, with the missing	
+	/// future point (or any nested future points inside).							
+	/// Anything could be pushed to provided future point as a fallback,			
+	/// as long as state and filters allows it!											
+	///	@attention assumes argument is a valid scope									
+	///	@param scope - the scope to link													
+	///	@param stack - [in/out] the stack to link with								
+	///	@return true if scope was linked successfully								
+	bool Temporal::Link(const Scope& scope, Inner::MissingFuture& future) const {
+		// Attempt linking to the contents first									
+		if (Link(scope, future.mContent))
+			return true;
+
+		//																						
+		// If reached, then future point is flat and boring, fallback by	
+		// directly linking against it												
+		VERBOSE_TEMPORAL_TAB("Linking to: " << future.mContent);
+		return future.Push(scope, mEnvironment);
+	}
+
+	/// Links the missing past points of the provided scope, with the missing	
 	/// future points of the provided stack. But anything new could go into		
 	/// old future points, as long as state and filters allows it!					
 	///	@attention assumes argument is a valid scope									
 	///	@param scope - the scope to link													
 	///	@param stack - [in/out] the stack to link with								
 	///	@return true if scope was linked successfully								
-	bool Temporal::Link(const Scope& scope, Block& stack) {
+	bool Temporal::Link(const Scope& scope, Block& stack) const {
 		bool atLeastOneSuccess = false;
 
 		if (stack.IsDeep()) {
@@ -497,8 +521,7 @@ namespace Langulus::Flow
 				return true;
 			},
 			[&](Inner::MissingFuture& future) {
-				VERBOSE_TEMPORAL("Linking to: " << future);
-				atLeastOneSuccess |= future.Push(scope);
+				atLeastOneSuccess |= Link(scope, future);
 				return !(stack.IsOr() && atLeastOneSuccess);
 			}
 		);

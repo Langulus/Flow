@@ -219,7 +219,7 @@ namespace Langulus::Verbs
 					}
 					else {
 						// Can't set the member											
-						Throw<Except::Construct>("Couldn't initialize member ");
+						LANGULUS_THROW(Construct, "Couldn't initialize member ");
 					}
 				}
 				else {
@@ -228,7 +228,7 @@ namespace Langulus::Verbs
 					// the constructed type is fully satisfied at this point	
 					if (!sati || satisfiedData.GetValue(sati) != context.GetType()->GetMemberCount(nullptr, meta)) {
 						// The context wasn't satisfied								
-						Throw<Except::Construct>("Excess, or insufficient arguments");
+						LANGULUS_THROW(Construct, "Excess, or insufficient arguments");
 					}
 				}
 			}

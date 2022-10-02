@@ -25,7 +25,7 @@
 		Logger::NewLine << "+-- [" \
 			<< Logger::Push << Logger::Underline << input.LeftOf(progress) << Logger::Pop \
 			<< input.RightOf(progress) << ']'; \
-		Throw<Except::Flow>("Parse error"); \
+		LANGULUS_THROW(Flow, "Parse error"); \
 	}
 
 #define VERBOSE(a)		//VERBOSE_INNER(a)
@@ -655,7 +655,7 @@ namespace Langulus::Flow
 		else {
 			Logger::Error() << "Bad scope for " << lhs << " (" << lhs.GetToken() << ")";
 			Logger::Error() << "Content to insert is: " << rhs << " (" << rhs.GetToken() << ")";
-			Throw<Except::Flow>("Syntax error - bad scope");
+			LANGULUS_THROW(Flow, "Syntax error - bad scope");
 		}
 	}
 

@@ -121,7 +121,7 @@ namespace Langulus::Flow
 				Any local;
 				if (!scope.Execute(environment, local, skipVerbs)) {
 					VERBOSE(Logger::Red << "Deep AND flow failed: " << *this);
-					Throw<Except::Flow>("Deep AND failure");
+					LANGULUS_THROW(Flow, "Deep AND failure");
 				}
 
 				output.SmartPush(Abandon(local));
@@ -141,7 +141,7 @@ namespace Langulus::Flow
 					Any local;
 					if (!scope.Execute(environment, local, skipVerbs)) {
 						VERBOSE(Logger::Red << "Trait AND flow failed: " << *this);
-						Throw<Except::Flow>("Trait AND failure");
+						LANGULUS_THROW(Flow, "Trait AND failure");
 					}
 
 					output.SmartPush(Trait {trait.GetTrait(), Abandon(local)});
@@ -158,7 +158,7 @@ namespace Langulus::Flow
 					Any local;
 					if (!scope.Execute(environment, local, skipVerbs)) {
 						VERBOSE(Logger::Red << "Construct AND flow failed: " << *this);
-						Throw<Except::Flow>("Construct AND failure");
+						LANGULUS_THROW(Flow, "Construct AND failure");
 					}
 
 					Construct newc {construct.GetType(), Move(local), construct};
@@ -195,7 +195,7 @@ namespace Langulus::Flow
 					// Execute the verb													
 					if (!Scope::ExecuteVerb(environment, verb)) {
 						VERBOSE(Logger::Red << "Verb AND flow failed: " << *this);
-						Throw<Except::Flow>("Verb AND failure");
+						LANGULUS_THROW(Flow, "Verb AND failure");
 					}
 
 					output.SmartPush(Abandon(verb.mOutput));

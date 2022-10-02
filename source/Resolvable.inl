@@ -63,7 +63,7 @@ namespace Langulus::Flow
 		RTTI::Base base;
 		UNUSED() bool found = mClassType->GetBase<Resolvable>(0, base);
 		SAFETY(if (!found)
-			Throw<Except::Construct>("Unrelated type provided to Resolvable"));
+			LANGULUS_THROW(Construct, "Unrelated type provided to Resolvable"));
 		const_cast<Offset&>(mClassOffset) = base.mOffset;
 	}
 

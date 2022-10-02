@@ -17,6 +17,7 @@
 #endif
 
 LANGULUS_EXCEPTION(Flow);
+LANGULUS_EXCEPTION(Link);
 
 namespace Langulus::Flow
 {

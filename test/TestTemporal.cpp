@@ -17,7 +17,7 @@ SCENARIO("Temporal flow", "[temporal]") {
 	const auto CALLED = "? create Name(a::text??)"_code.Parse();
 
 	GIVEN("An empty temporal flow") {
-		Temporal flow;
+		Temporal flow(new Entity {});
 
 		WHEN("Code is pushed to the flow") {
 			flow.Push(HI);

@@ -18,6 +18,8 @@ namespace Langulus::Flow
 	///																								
 	struct Resolvable {
 		LANGULUS(ABSTRACT) true;
+		LANGULUS(UNINSERTABLE) true;
+		LANGULUS_CONVERSIONS(Debug);
 	protected:
 		DMeta mClassType;
 		Offset mClassOffset;

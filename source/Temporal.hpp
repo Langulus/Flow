@@ -11,6 +11,13 @@
 
 namespace Langulus::Flow
 {
+	namespace Inner
+	{
+		struct Missing;
+		struct MissingFuture;
+		struct MissingPast;
+	}
+
 
 	///																								
 	///	Temporal flow																			
@@ -32,6 +39,7 @@ namespace Langulus::Flow
 	/// complete your scripts at runtime.													
 	///																								
 	class Temporal final {
+	friend class Inner::Missing;
 	private:
 		struct State {
 			TimePoint mStart;
@@ -67,12 +75,14 @@ namespace Langulus::Flow
 	protected:
 		Temporal(Temporal*, const State&);
 
-		Scope Collapse(const Block&) const;
-		Scope Compile(const Block&) const;
-		bool Link(const Scope&, Block&);
+		static Scope Collapse(const Block&);
+		static Scope Compile(const Block&);
+
+		bool Link(const Scope&, Block&) const;
+		bool Link(const Scope&, Inner::MissingFuture&) const;
 
 	public:
-		Temporal();
+		Temporal(const Any& environment = {});
 		Temporal(const Temporal&) = delete;
 		Temporal(Temporal&&) noexcept = default;
 

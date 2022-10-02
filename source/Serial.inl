@@ -224,8 +224,7 @@ namespace Langulus::Flow
 					Logger::Error() << "Can't serialize block of "
 						<< from.GetToken() << " to " << MetaData::Of<TO>()->mToken
 						<< " - the number type is not implemented";
-					Throw<Except::Convert>(
-						"Can't serialize numbers to text");
+					LANGULUS_THROW(Convert, "Can't serialize numbers to text");
 				}
 			}
 			else if (from.CastsTo<Letter>()) {
@@ -324,8 +323,7 @@ namespace Langulus::Flow
 				else {
 					Logger::Error() << "Can't serialize block of type "
 						<< from.GetToken() << " to " << MetaData::Of<TO>()->mToken;
-					Throw<Except::Convert>(
-						"Can't serialize block to text");
+					LANGULUS_THROW(Convert, "Can't serialize block to text");
 				}
 			}
 		}
@@ -558,7 +556,7 @@ namespace Langulus::Flow
 		}
 
 		// Failure if reached															
-		Throw<Except::Convert>("Can't binary serialize");
+		LANGULUS_THROW(Convert, "Can't binary serialize");
 	}
 
 	namespace Detail
@@ -566,7 +564,7 @@ namespace Langulus::Flow
 		inline void RequestMoreBytes(const Bytes& source, Offset read, Size byteCount, const Loader& loader) {
 			if (read >= source.GetCount() || source.GetCount() - read < byteCount) {
 				if (!loader)
-					Throw<Except::Access>("Deserializer has no loader");
+					LANGULUS_THROW(Access, "Deserializer has no loader");
 				loader(const_cast<Bytes&>(source), byteCount - (source.GetCount() - read));
 			}
 		}
@@ -597,14 +595,14 @@ namespace Langulus::Flow
 			::std::memcpy(&count8, source.At(read), 8);
 			read += 8;
 			if (count8 > std::numeric_limits<Offset>::max()) {
-				Throw<Except::Convert>(
+				LANGULUS_THROW(Convert,
 					"Deserialized atom contains a value "
 					"too powerful for your architecture");
 			}
 			result = static_cast<Offset>(count8);
 		}
 		else {
-			Throw<Except::Convert>(
+			LANGULUS_THROW(Convert,
 				"An unknown atomic size was deserialized "
 				"from source - is the source corrupted?");
 		}
@@ -654,7 +652,7 @@ namespace Langulus::Flow
 			// like a member, a base, or a cast operator sequence				
 			// In this case, result should already be allocated and known	
 			if (result.IsUntyped() || result.IsEmpty())
-				Throw<Except::Convert>("Bad resulting block");
+				LANGULUS_THROW(Convert, "Bad resulting block");
 
 			deserializedCount = result.GetCount();
 		}
@@ -834,7 +832,7 @@ namespace Langulus::Flow
 		}
 
 		// Failure if reached															
-		Throw<Except::Convert>("Can't binary-deserialize");
+		LANGULUS_THROW(Convert, "Can't binary-deserialize");
 	}
 
 	/// A snippet for conveniently deserializing a meta from binary				

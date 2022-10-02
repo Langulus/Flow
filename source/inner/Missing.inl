@@ -65,8 +65,11 @@ namespace Langulus::Flow::Inner
 
 	/// Push content to the missing point, if filters allow it						
 	///	@attention assumes content is a valid container								
+	///	@attention assumes content has been Temporal::Compiled previously		
 	///	@param content - the content to push											
-	inline bool Missing::Push(const Any& content) {
+	///	@param environment - a fallback past provided by Temporal				
+	///	@return true if mContent changed													
+	inline bool Missing::Push(const Any& content, const Block& environment) {
 		bool atLeastOneSuccess = false;
 
 		if (content.IsDeep()) {
@@ -79,7 +82,7 @@ namespace Langulus::Flow::Inner
 				fork.mContent.MakeOr();
 				
 				content.ForEach([&](const Any& subcontent) {
-					atLeastOneSuccess |= fork.Push(subcontent);
+					atLeastOneSuccess |= fork.Push(subcontent, environment);
 				});
 
 				mContent.SmartPush(Abandon(fork.mContent));
@@ -87,7 +90,7 @@ namespace Langulus::Flow::Inner
 			else {
 				// Just nest																
 				content.ForEach([&](const Any& subcontent) {
-					atLeastOneSuccess |= Push(subcontent);
+					atLeastOneSuccess |= Push(subcontent, environment);
 				});
 			}
 
@@ -106,14 +109,15 @@ namespace Langulus::Flow::Inner
 
 				if (DispatchDeep(content, interpreter)) {
 					// Something was interpreted to verbs							
-					//TODO integrate and attempt compile-time execution for interpreted stuff
-					return Push(interpreter.GetOutput());
+					// Compile and push it												
+					const auto compiled = Temporal::Compile(interpreter.GetOutput());
+					return Push(compiled, environment);
 				}
 			}
 
 			// Scope is either verbs or something else, just push				
-			//TODO still, we've got to integrate missing traits/constructs!
-			mContent << content;
+			mContent = Link(content, environment);
+			VERBOSE_MISSING_POINT("Resulting contents: " << mContent);
 			return true;
 		}
 
@@ -130,12 +134,142 @@ namespace Langulus::Flow::Inner
 			// If results in verb skip insertion									
 			// Instead delay push to an unfiltered pointer later on			
 			//TODO is this really required? removed for now
-			//TODO integrate and attempt compile-time execution for interpreted stuff
-			return Push(interpreter.GetOutput());
+			const auto compiled = Temporal::Compile(interpreter.GetOutput());
+			VERBOSE_MISSING_POINT(Logger::Green
+				<< "Interpreted as: " << compiled);
+			return Push(compiled, environment);
 		}
 
 		// Nothing pushed to this point												
+		VERBOSE_MISSING_POINT(Logger::DarkYellow
+			<< "Nothing viable remained after interpretation");
 		return false;
+	}
+
+	/// Links the missing past points of the provided scope, using mContent as	
+	/// the past, and returns a viable overwrite for mContent						
+	///	@attention assumes argument is a valid scope									
+	///	@param scope - the scope to link													
+	///	@param environment - a fallback past provided by Temporal				
+	///	@return the linked equivalent to the provided scope						
+	Any Missing::Link(const Block& scope, const Block& environment) const {
+		Any result;
+		if (scope.IsOr())
+			result.MakeOr();
+
+		if (scope.IsDeep()) {
+			// Nest scopes, linking any past points in subscopes				
+			scope.ForEach([&](const Block& subscope) {
+				try {
+					result << Link(subscope, environment);
+				}
+				catch (const Except::Link&) {
+					if (!scope.IsOr())
+						throw;
+					VERBOSE_MISSING_POINT(Logger::DarkYellow
+						<< "Skipped branch: " << subscope);
+				}
+			});
+
+			if (result.IsEmpty()) {
+				VERBOSE_MISSING_POINT(Logger::DarkYellow
+					<< "Scope reduced to nothing: " << scope);
+				return {};
+			}
+
+			if (result.GetCount() < 2)
+				result.MakeAnd();
+			return Abandon(result);
+		}
+
+		// Iterate backwards - the last future points are always most		
+		// relevant for linking															
+		// Lets start, by scanning all future points in the available		
+		// stack. Scope will be duplicated for each encountered branch		
+		const auto linked = scope.ForEach(
+			[&](const Trait& trait) {
+				try {
+					result << Trait {trait.GetTrait(), Link(trait, environment)};
+				}
+				catch (const Except::Link&) {
+					if (!scope.IsOr())
+						throw;
+					VERBOSE_MISSING_POINT(Logger::DarkYellow
+						<< "Skipped branch: " << trait);
+				}
+			},
+			[&](const Construct& construct) {
+				try {
+					result << Construct {construct.GetType(), Link(construct, environment)};
+				}
+				catch (const Except::Link&) {
+					if (!scope.IsOr())
+						throw;
+					VERBOSE_MISSING_POINT(Logger::DarkYellow
+						<< "Skipped branch: " << construct);
+				}
+			},
+			[&](const Verb& verb) {
+				try {
+					result << Verb {
+						verb.GetVerb(), 
+						Link(verb.GetArgument(), environment), 
+						verb.GetCharge(), 
+						verb.GetVerbState()
+					}.SetSource(Link(verb.GetSource(), environment));
+				}
+				catch (const Except::Link&) {
+					if (!scope.IsOr())
+						throw;
+					VERBOSE_MISSING_POINT(Logger::DarkYellow
+						<< "Skipped branch: " << verb);
+				}
+			},
+			[&](const Inner::MissingPast& past) {
+				VERBOSE_MISSING_POINT_TAB(
+					"Linking future point " << *this << " to past point " << past);
+
+				Inner::MissingPast pastShallowCopy;
+				pastShallowCopy.mFilter = past.mFilter;
+				if (mContent.IsEmpty()) {
+					if (environment.IsEmpty())
+						LANGULUS_THROW(Link, "No environment provided for temporal flow");
+
+					VERBOSE_MISSING_POINT(
+						"(empty future point, so falling back to environment: " << environment << ")");
+
+					if (!pastShallowCopy.Push(environment, {})) {
+						if (!scope.IsOr())
+							LANGULUS_THROW(Link, "Scope not likable");
+					}
+				}
+				else if (!pastShallowCopy.Push(mContent, {})) {
+					if (!scope.IsOr())
+						LANGULUS_THROW(Link, "Scope not linkable");
+				}
+
+				result << Abandon(pastShallowCopy.mContent);
+			}
+		);
+
+		if (!linked) {
+			if (mContent.IsEmpty())
+				result = scope;
+			else {
+				result << mContent;
+				result << Any {scope};
+			}
+		}
+
+		if (result.IsEmpty()) {
+			VERBOSE_MISSING_POINT(Logger::DarkYellow
+				<< "Scope reduced to nothing: " << scope);
+			return {};
+		}
+
+		if (result.GetCount() < 2)
+			result.MakeAnd();
+		return Abandon(result);
 	}
 
 	/// Log the missing point																	

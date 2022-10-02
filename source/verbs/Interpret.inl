@@ -268,7 +268,7 @@ namespace Langulus::Anyness
 		if (!Flow::DispatchDeep(GetElementResolved(0), interpreter)) {
 			// Failure																		
 			if constexpr (FATAL_FAILURE)
-				Throw<Except::Convert>("Unable to AsCast");
+				LANGULUS_THROW(Convert, "Unable to AsCast");
 			else if constexpr (CT::Defaultable<T>)
 				return {};
 			else {

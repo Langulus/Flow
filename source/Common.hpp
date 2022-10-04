@@ -8,14 +8,6 @@
 #pragma once
 #include <LangulusAnyness.hpp>
 
-#ifndef LANGULUS_ENABLE_FEATURE_MANAGED_MEMORY
-#error Langulus::Flow can be compiled only with enabled LANGULUS_FEATURE_MANAGED_MEMORY
-#endif
-
-#ifndef LANGULUS_ENABLE_FEATURE_MANAGED_REFLECTION
-#error Langulus::Flow can be compiled only with enabled LANGULUS_ENABLE_MANAGED_REFLECTION
-#endif
-
 LANGULUS_EXCEPTION(Flow);
 LANGULUS_EXCEPTION(Link);
 

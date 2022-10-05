@@ -103,6 +103,7 @@ namespace Langulus::Flow
 		throw Except::Convert("Can't serialize");
 	}
 
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 	/// Deserialize from Code/Bytes															
 	///	@tparam FROM - the type we're deserializing from (deducible)			
 	///	@param item - the item to deserialize											
@@ -125,6 +126,7 @@ namespace Langulus::Flow
 		}
 		else LANGULUS_ERROR("Deserializer not implemented");
 	}
+#endif
 
 	/// Convert a byte to hexadecimal string, and append it to text container	
 	///	@param from - the byte to convert to hexadecimal							
@@ -570,6 +572,7 @@ namespace Langulus::Flow
 		}
 	}
 
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 	/// Read an atom-sized unsigned integer, based on the provided header		
 	///	@param source - the serialized byte source									
 	///	@param result - [out] the resulting deserialized number					
@@ -867,6 +870,7 @@ namespace Langulus::Flow
 		result = {};
 		return read;
 	}
+#endif
 
 } // namespace Langulus::Flow
 

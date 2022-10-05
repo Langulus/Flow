@@ -15,9 +15,11 @@ namespace Langulus::Flow
 	NOD() TO Serialize(const FROM&);
 	template<CT::Block TO, bool HEADER = true, CT::Sparse FROM>
 	NOD() TO Serialize(FROM);
+
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 	template<CT::Block FROM>
 	NOD() Any Deserialize(const FROM&);
-
+#endif
 
 	namespace Detail
 	{
@@ -68,6 +70,7 @@ namespace Langulus::Flow
 
 		using Loader = TFunctor<void(Bytes&, Size)>;
 
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 		NOD() Size DeserializeAtom(const Bytes&, Offset&, Offset, const Header&, const Loader&);
 
 		template<bool HEADER>
@@ -75,6 +78,7 @@ namespace Langulus::Flow
 
 		template<class META>
 		NOD() Size DeserializeMeta(const Bytes&, META const*&, Offset, const Header&, const Loader&);
+#endif
 
 	} // namespace Detail
 } // namespace Langulus::Flow

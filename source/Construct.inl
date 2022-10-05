@@ -35,6 +35,7 @@ namespace Langulus::Flow
 		, Charge {charge}
 		, mType {type} { }
 
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 	/// Construct from a type token and shallow-copied arguments					
 	///	@param token - the type of the content											
 	///	@param arguments - the arguments to copy										
@@ -58,6 +59,7 @@ namespace Langulus::Flow
 		: Any {Forward<T>(arguments)}
 		, Charge {charge}
 		, mType {RTTI::Database.GetMetaData(token)} { }
+#endif
 
 	/// Create content descriptor from a static type and arguments by copy		
 	///	@tparam T - type of the construct												

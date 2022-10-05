@@ -74,6 +74,7 @@ namespace Langulus::Flow
 		template<CT::Data T = Any>
 		Construct(DMeta, T&&, const Charge& = {});
 
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 		Construct(const Token&);
 		template<CT::Data T = Any>
 		Construct(const Token&, const T&, const Charge& = {});
@@ -81,7 +82,7 @@ namespace Langulus::Flow
 		Construct(const Token&, T&, const Charge& = {});
 		template<CT::Data T = Any>
 		Construct(const Token&, T&&, const Charge& = {});
-
+#endif
 		Construct& operator = (const Construct&) = default;
 		Construct& operator = (Construct&&) noexcept = default;
 

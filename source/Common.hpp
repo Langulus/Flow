@@ -33,7 +33,7 @@ namespace Langulus::Flow
 
 	
 	///																								
-	/// Charge, carrying the four verb dimensions										
+	///	Charge, carrying the four verb dimensions										
 	///																								
 	struct Charge {
 		LANGULUS(POD) true;
@@ -82,3 +82,13 @@ namespace Langulus::Flow
 	};
 
 } // namespace Langulus::Flow
+
+
+LANGULUS_DEFINE_TRAIT(Mass,
+	"Mass of anything with charge, or with physical mass");
+LANGULUS_DEFINE_TRAIT(Frequency,
+	"Frequency of anything with charge, or with physical frequency");
+LANGULUS_DEFINE_TRAIT(Time,
+	"Time of anything with charge, or with a temporal component");
+LANGULUS_DEFINE_TRAIT(Priority,
+	"Priority of anything with charge, or some kind of priority");

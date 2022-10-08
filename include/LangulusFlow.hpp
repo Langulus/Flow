@@ -15,3 +15,21 @@
 #include "../source/verbs/Do.inl"
 
 #define LANGULUS_MODULE_FLOW()
+
+namespace Langulus
+{
+
+	/// Get the meta of some stuff, just for convenience								
+	///	@tparam T - type to get meta definition of									
+	///	@return the meta definition of the provided stuff							
+	template<class T>
+	NOD() auto MetaOf() {
+		if constexpr (CT::Trait<T>)
+			return RTTI::MetaTrait::Of<T>();
+		else if constexpr (CT::Verb<T>)
+			return RTTI::MetaVerb::Of<T>();
+		else
+			return RTTI::MetaData::Of<T>();
+	}
+
+} // namespace Langulus

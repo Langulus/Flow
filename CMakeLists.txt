@@ -1,54 +1,22 @@
 cmake_minimum_required(VERSION 3.22)
-include(cmake/FetchLangulusModule.cmake)
 project(Langulus.Flow)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Configure the features you require, all these are disabled by default
-option(LANGULUS_ENABLE_SAFE_MODE 
-    "Overrides additional error checking and sanity checks, \
-    incurs a serious runtime overhead")
-
-option(LANGULUS_ENABLE_PARANOIA 
-    "Make sure that any unused memory is nullified, \
-    incurs a serious runtime overhead")
-
-option(LANGULUS_ENABLE_DEBUGGING 
-    "Explicitly define debug mode, in the case that default flags are \
-    not detected by some odd reason")
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	message(STATUS "Debug mode, all assertions are enabled")
-	add_compile_definitions(LANGULUS_ENABLE_ASSERTION_LEVEL=1000)
-    add_compile_definitions(LANGULUS_ENABLE_FEATURE_MEMORY_STATISTICS)
-    add_compile_definitions(LANGULUS_ENABLE_DEBUGGING)
-endif()
-
-if (CMAKE_CXX_FLAGS)
-    STRING(FIND ${CMAKE_CXX_FLAGS} "/Zc:trigraphs" TRIGRAPHS_ENABLED)
-    if (${TRIGRAPHS_ENABLED} GREATER -1)
-        message(FATAL_ERROR "Langulus can't be built with trigraphs enabled")
-    endif()
-
-    STRING(FIND ${CMAKE_CXX_FLAGS} "-trigraphs" TRIGRAPHS_ENABLED)
-    if (${TRIGRAPHS_ENABLED} GREATER -1)
-        message(FATAL_ERROR "Langulus can't be built with trigraphs enabled")
-    endif()
-endif()
-
-set(LANGULUS_FEATURE_MANAGED_MEMORY ON CACHE BOOL "Managed memory feature")
-set(LANGULUS_FEATURE_MANAGED_REFLECTION ON CACHE BOOL "Managed reflection feature")
-
-if(LANGULUS_FEATURE_MANAGED_MEMORY)
-    add_compile_definitions(LANGULUS_ENABLE_FEATURE_MANAGED_MEMORY)
-endif()
-if(LANGULUS_FEATURE_MANAGED_REFLECTION)
-    add_compile_definitions(LANGULUS_ENABLE_FEATURE_MANAGED_REFLECTION)
-endif()
-
 # Check if this project is built as standalone, or a part of something else
 if (PROJECT_IS_TOP_LEVEL)
+    find_package(Git REQUIRED)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} submodule update --init -- cmake 
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMAND_ERROR_IS_FATAL ANY
+    )
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+    include(FetchLangulusModule)
+    include(HandleLangulusFeatures)
+
+    handle_langulus_features()
 
 	fetch_langulus_module(Core)
 	fetch_langulus_module(Logger)

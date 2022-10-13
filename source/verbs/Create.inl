@@ -6,8 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../Verb.hpp"
-#include "../Code.hpp"
+#include "Associate.inl"
 
 #define VERBOSE_CREATION(a) //Logger::Verbose() << a
 #define VERBOSE_SCOPES(a) Logger::Verbose() << a

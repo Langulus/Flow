@@ -109,10 +109,16 @@ namespace Langulus::Verbs
       }
       else if constexpr (CT::Same<TO, Any>) {
          // Always interpreted as deserialization                       
-         if constexpr (CT::SameAsOneOf<FROM, Code, Bytes>)
-            return Deserialize(from);
-         else LANGULUS_ERROR(
-            "No deserializer exists between these types");
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            if constexpr (CT::SameAsOneOf<FROM, Code, Bytes>)
+               return Deserialize(from);
+            else
+               LANGULUS_ERROR("No deserializer exists between these types");
+         #else
+            LANGULUS_ERROR(
+               "No deserializer exists between these types"
+               " (managed reflection is disabled)");
+         #endif
       }
       else if constexpr (CT::Convertible<FROM, TO>) {
          // Directly convert if constructs/conversion operators exist   

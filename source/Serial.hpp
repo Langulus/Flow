@@ -28,7 +28,7 @@ namespace Langulus::Flow
       ///   General Code/Debug serializer tools                               
       ///                                                                     
       NOD() bool NeedsScope(const Block& block) noexcept;
-      NOD() Code Separator(bool isOr);
+      NOD() Text Separator(bool isOr);
 
       template<bool ENSCOPE, CT::Text TO>
       NOD() Count SerializeBlock(const Block&, TO&);

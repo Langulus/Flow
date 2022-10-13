@@ -6,6 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
+#include "../Verb.hpp"
 #include "../Code.hpp"
 
 #define VERBOSE_SELECT(a) //Logger::Verbose() << a

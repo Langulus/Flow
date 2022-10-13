@@ -145,7 +145,7 @@ namespace Langulus::Flow
    /// Add a separator                                                        
    ///   @param isOr - OR separator or not                                    
    ///   @return the text equivalent of the separator                         
-   inline Code Detail::Separator(bool isOr) {
+   inline Text Detail::Separator(bool isOr) {
       return isOr 
          ? Verbs::Conjunct::CTTI_NegativeOperator 
          : Verbs::Conjunct::CTTI_PositiveOperator;

@@ -18,12 +18,6 @@ option(LANGULUS_ENABLE_DEBUGGING
     "Explicitly define debug mode, in the case that default flags are \
     not detected by some odd reason")
 
-set(LANGULUS_FEATURE_MANAGED_MEMORY ON CACHE BOOL "Managed memory feature")
-set(LANGULUS_FEATURE_MANAGED_REFLECTION ON CACHE BOOL "Managed reflection feature")
-
-add_compile_definitions(LANGULUS_ENABLE_FEATURE_MANAGED_MEMORY)
-add_compile_definitions(LANGULUS_ENABLE_FEATURE_MANAGED_REFLECTION)
-
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	message(STATUS "Debug mode, all assertions are enabled")
 	add_compile_definitions(LANGULUS_ENABLE_ASSERTION_LEVEL=1000)
@@ -43,8 +37,19 @@ if (CMAKE_CXX_FLAGS)
     endif()
 endif()
 
+set(LANGULUS_FEATURE_MANAGED_MEMORY ON CACHE BOOL "Managed memory feature")
+set(LANGULUS_FEATURE_MANAGED_REFLECTION ON CACHE BOOL "Managed reflection feature")
+
+if(LANGULUS_FEATURE_MANAGED_MEMORY)
+    add_compile_definitions(LANGULUS_ENABLE_FEATURE_MANAGED_MEMORY)
+endif()
+if(LANGULUS_FEATURE_MANAGED_REFLECTION)
+    add_compile_definitions(LANGULUS_ENABLE_FEATURE_MANAGED_REFLECTION)
+endif()
+
 # Check if this project is built as standalone, or a part of something else
 if (PROJECT_IS_TOP_LEVEL)
+
 	fetch_langulus_module(Core)
 	fetch_langulus_module(Logger)
 	fetch_langulus_module(RTTI)

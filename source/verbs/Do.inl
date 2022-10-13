@@ -6,8 +6,8 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../Code.hpp"
 #include "../Verb.hpp"
+#include "../Code.hpp"
 
 namespace Langulus::Verbs
 {

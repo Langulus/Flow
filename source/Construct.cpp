@@ -38,10 +38,12 @@ namespace Langulus::Flow
    Construct::Construct(DMeta type)
       : mType {type} {}
 
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
    /// Construct from a type name                                             
    ///   @param type - the type of the content                                
    Construct::Construct(const Token& token)
       : mType {RTTI::Database.GetMetaData(token)} {}
+#endif
 
    /// Hash the construct                                                     
    ///   @return the hash of the content                                      

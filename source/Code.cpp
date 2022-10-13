@@ -140,8 +140,10 @@ namespace Langulus::Flow
             return true;
       }
 
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
       if (!RTTI::Database.GetAmbiguousMeta(text).empty())
          return true;
+#endif
 
       return false;
    }
@@ -284,6 +286,7 @@ namespace Langulus::Flow
       progress += keyword.size();
       VERBOSE("Keyword isolated: " << keyword);
 
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       // Search for an exact token in meta definitions                  
       const auto dmeta = RTTI::Database.GetMetaData(keyword);
       const auto tmeta = RTTI::Database.GetMetaTrait(keyword);
@@ -383,6 +386,9 @@ namespace Langulus::Flow
 
       VERBOSE("Keyword parsed: `" << keyword << "` as " << lhs << " (" << lhs.GetToken() << ")");
       return progress;
+   #else    // LANGULUS_FEATURE(MANAGED_REFLECTION)
+      PRETTY_ERROR("Can't parse keyword, managed reflection feature is disabled");
+   #endif   // LANGULUS_FEATURE(MANAGED_REFLECTION)
    }
 
    /// Peek inside input, and return true if first symbol is a digit, or a    
@@ -434,6 +440,7 @@ namespace Langulus::Flow
       if (builtin != NoOperator)
          return builtin;
 
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
       const auto word = Isolate(input);
       auto found = RTTI::Database.GetOperator(word);
       if (found)
@@ -442,6 +449,7 @@ namespace Langulus::Flow
       found = RTTI::Database.GetMetaVerb(word);
       if (found)
          return ReflectedVerb;
+#endif
 
       return NoOperator;
    }
@@ -523,6 +531,7 @@ namespace Langulus::Flow
          }
       }
       else if (op == ReflectedOperator) {
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Handle a reflected operator                                 
          const auto word = Isolate(input);
          const auto found = RTTI::Database.GetOperator(word);
@@ -542,8 +551,12 @@ namespace Langulus::Flow
             operation.SetMass(-1);
 
          return progress + ParseReflected(operation, relevant, lhs, optimize);
+      #else    //LANGULUS_FEATURE(MANAGED_REFLECTION)
+         PRETTY_ERROR("Can't parse reflected operator, managed reflection feature is disabled");
+      #endif   //LANGULUS_FEATURE(MANAGED_REFLECTION)
       }
       else {
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Handle a reflected verb                                     
          const auto word = Isolate(input);
          const auto found = RTTI::Database.GetMetaVerb(word);
@@ -563,6 +576,9 @@ namespace Langulus::Flow
             operation.SetMass(-1);
 
          return progress + ParseReflected(operation, relevant, lhs, optimize);
+      #else    //LANGULUS_FEATURE(MANAGED_REFLECTION)
+         PRETTY_ERROR("Can't parse reflected verb, managed reflection feature is disabled");
+      #endif   //LANGULUS_FEATURE(MANAGED_REFLECTION)
       }
    }
 
@@ -942,4 +958,3 @@ namespace Langulus::Flow
    }
 
 } // namespace Langulus::Flow
-

@@ -331,7 +331,7 @@ namespace Langulus::Verbs
    struct Create : public StaticVerb<Create> {
       LANGULUS(POSITIVE_VERB) "Create";
       LANGULUS(NEGATIVE_VERB) "Destroy";
-      LANGULUS(PRECEDENCE) 100;
+      LANGULUS(PRECEDENCE) 1000;
       LANGULUS(INFO)
          "Used for allocating new elements. "
          "If the type you're creating has   a producer, "
@@ -362,7 +362,7 @@ namespace Langulus::Verbs
       LANGULUS(NEGATIVE_VERB) "Deselect";
       LANGULUS(POSITIVE_OPERATOR) ".";
       LANGULUS(NEGATIVE_OPERATOR) "..";
-      LANGULUS(PRECEDENCE) 2;
+      LANGULUS(PRECEDENCE) 100;
       LANGULUS(INFO)
          "Used to focus on a part of a container, or access members";
 

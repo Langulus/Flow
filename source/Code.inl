@@ -99,36 +99,6 @@ namespace Langulus::Flow
       return *this;
    }
 
-   /// A type naming convention for standard number types                     
-   ///   @return the suffix depending on the template argument                
-   template<class T>
-   Code& Code::TypeSuffix() {
-      if constexpr (CT::UnsignedInteger<T>) {
-         *this += "u";
-         if constexpr (sizeof(T) != sizeof(void*))
-            *this += Text {sizeof(T) * 8};
-      }
-      else if constexpr (CT::SignedInteger<T>) {
-         *this += "i";
-         if constexpr (sizeof(T) != sizeof(void*))
-            *this += Text {sizeof(T) * 8};
-      }
-      else if constexpr (CT::Same<T, Real>)
-         ;
-      else if constexpr (CT::Same<T, Float>)
-         *this += "f";
-      else if constexpr (CT::Same<T, Double>)
-         *this += "d";
-      else if constexpr (CT::Bool<T>)
-         *this += "b";
-      else {
-         *this += "<";
-         *this += MetaData::Of<T>();
-         *this += ">";
-      }
-      return *this;
-   }
-
 } // namespace Langulus::Flow
 
 namespace Langulus

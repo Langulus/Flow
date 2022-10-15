@@ -389,18 +389,15 @@ namespace Langulus::Verbs
       static bool SelectByMeta(const TAny<Index>&, DMeta, Block&, TAny<Trait>&, TAny<const RTTI::Ability*>&);
    };
 
-   /// Associate/Disassociate verb                                            
-   /// Either performs a shallow copy, or aggregates associations,            
-   /// depending on the context's complexity                                  
-   struct Associate : public StaticVerb<Associate> {
-      LANGULUS(POSITIVE_VERB) "Associate";
-      LANGULUS(NEGATIVE_VERB) "Disassocate";
-      LANGULUS(POSITIVE_OPERATOR) " = ";
-      LANGULUS(NEGATIVE_OPERATOR) " ~ ";
-      LANGULUS(PRECEDENCE) 1;
-      LANGULUS(INFO)
-         "Either performs a shallow copy, or aggregates associations, "
-         "depending on the context's complexity";
+   /// Catenate/Split verb                                                    
+   /// Catenates anything catenable, or split stuff apart using a mask        
+   struct Catenate : public StaticVerb<Catenate> {
+      LANGULUS(POSITIVE_VERB) "Catenate";
+      LANGULUS(NEGATIVE_VERB) "Split";
+      LANGULUS(POSITIVE_OPERATOR) " >< ";
+      LANGULUS(NEGATIVE_OPERATOR) " <> ";
+      LANGULUS(PRECEDENCE) 7;
+      LANGULUS(INFO) "Catenates, or splits stuff apart";
 
       using StaticVerb::StaticVerb;
 
@@ -412,19 +409,20 @@ namespace Langulus::Verbs
       template<CT::Data T>
       static bool ExecuteIn(T&, Verb&);
 
+      static bool ExecuteDefault(const Block&, Verb&);
       static bool ExecuteDefault(Block&, Verb&);
+      static bool ExecuteStateless(Verb&);
    };
 
-   /// Add/Subtract verb                                                      
-   /// Performs arithmetic addition or subtraction                            
-   struct Add : public ArithmeticVerb<Add, true> {
-      LANGULUS(POSITIVE_VERB) "Add";
-      LANGULUS(NEGATIVE_VERB) "Subtract";
-      LANGULUS(POSITIVE_OPERATOR) " + ";
-      LANGULUS(NEGATIVE_OPERATOR) " - ";
-      LANGULUS(PRECEDENCE) 3;
-      LANGULUS(INFO)
-         "Performs arithmetic addition or subtraction";
+   /// Exponent/Root verb                                                     
+   /// Performs exponentiation or root                                        
+   struct Exponent : public ArithmeticVerb<Exponent, true> {
+      LANGULUS(POSITIVE_VERB) "Exponent";
+      LANGULUS(NEGATIVE_VERB) "Root";
+      LANGULUS(POSITIVE_OPERATOR) "^";
+      LANGULUS(NEGATIVE_OPERATOR) "^^";
+      LANGULUS(PRECEDENCE) 6;
+      LANGULUS(INFO) "Performs exponentiation or root";
 
       using ArithmeticVerb::ArithmeticVerb;
 
@@ -438,14 +436,11 @@ namespace Langulus::Verbs
 
       static bool ExecuteDefault(const Block&, Verb&);
       static bool ExecuteDefault(Block&, Verb&);
-      static bool ExecuteStateless(Verb&);
 
       template<CT::Data... T>
       static bool OperateOnTypes(const Block&, const Block&, Verb&);
       template<CT::Data... T>
       static bool OperateOnTypes(const Block&, Block&, Verb&);
-      template<CT::Data... T>
-      static bool OperateOnTypes(Block&, Verb&);
    };
 
    /// Multiply/Divide verb                                                   
@@ -456,7 +451,7 @@ namespace Langulus::Verbs
       LANGULUS(NEGATIVE_VERB) "Divide";
       LANGULUS(POSITIVE_OPERATOR) "*";
       LANGULUS(NEGATIVE_OPERATOR) "/";
-      LANGULUS(PRECEDENCE) 4;
+      LANGULUS(PRECEDENCE) 5;
       LANGULUS(INFO)
          "Performs arithmetic multiplication or division. "
          "If context is not specified, it is always 1";
@@ -483,15 +478,16 @@ namespace Langulus::Verbs
       static bool OperateOnTypes(Block&, Verb&);
    };
 
-   /// Exponent/Root verb                                                     
-   /// Performs exponentiation or root                                        
-   struct Exponent : public ArithmeticVerb<Exponent, true> {
-      LANGULUS(POSITIVE_VERB) "Exponent";
-      LANGULUS(NEGATIVE_VERB) "Root";
-      LANGULUS(POSITIVE_OPERATOR) "^";
-      LANGULUS(NEGATIVE_OPERATOR) "^^";
-      LANGULUS(PRECEDENCE) 5;
-      LANGULUS(INFO) "Performs exponentiation or root";
+   /// Add/Subtract verb                                                      
+   /// Performs arithmetic addition or subtraction                            
+   struct Add : public ArithmeticVerb<Add, true> {
+      LANGULUS(POSITIVE_VERB) "Add";
+      LANGULUS(NEGATIVE_VERB) "Subtract";
+      LANGULUS(POSITIVE_OPERATOR) " + ";
+      LANGULUS(NEGATIVE_OPERATOR) " - ";
+      LANGULUS(PRECEDENCE) 4;
+      LANGULUS(INFO)
+         "Performs arithmetic addition or subtraction";
 
       using ArithmeticVerb::ArithmeticVerb;
 
@@ -505,22 +501,28 @@ namespace Langulus::Verbs
 
       static bool ExecuteDefault(const Block&, Verb&);
       static bool ExecuteDefault(Block&, Verb&);
+      static bool ExecuteStateless(Verb&);
 
       template<CT::Data... T>
       static bool OperateOnTypes(const Block&, const Block&, Verb&);
       template<CT::Data... T>
       static bool OperateOnTypes(const Block&, Block&, Verb&);
+      template<CT::Data... T>
+      static bool OperateOnTypes(Block&, Verb&);
    };
 
-   /// Catenate/Split verb                                                    
-   /// Catenates anything catenable, or split stuff apart using a mask        
-   struct Catenate : public StaticVerb<Catenate> {
-      LANGULUS(POSITIVE_VERB) "Catenate";
-      LANGULUS(NEGATIVE_VERB) "Split";
-      LANGULUS(POSITIVE_OPERATOR) " >< ";
-      LANGULUS(NEGATIVE_OPERATOR) " <> ";
-      LANGULUS(PRECEDENCE) 6;
-      LANGULUS(INFO) "Catenates, or splits stuff apart";
+   /// Associate/Disassociate verb                                            
+   /// Either performs a shallow copy, or aggregates associations,            
+   /// depending on the context's complexity                                  
+   struct Associate : public StaticVerb<Associate> {
+      LANGULUS(POSITIVE_VERB) "Associate";
+      LANGULUS(NEGATIVE_VERB) "Disassocate";
+      LANGULUS(POSITIVE_OPERATOR) " = ";
+      LANGULUS(NEGATIVE_OPERATOR) " ~ ";
+      LANGULUS(PRECEDENCE) 2;
+      LANGULUS(INFO)
+         "Either performs a shallow copy, or aggregates associations, "
+         "depending on the context's complexity";
 
       using StaticVerb::StaticVerb;
 
@@ -532,9 +534,7 @@ namespace Langulus::Verbs
       template<CT::Data T>
       static bool ExecuteIn(T&, Verb&);
 
-      static bool ExecuteDefault(const Block&, Verb&);
       static bool ExecuteDefault(Block&, Verb&);
-      static bool ExecuteStateless(Verb&);
    };
 
    /// Conjunct/Disjunct verb                                                 
@@ -545,6 +545,7 @@ namespace Langulus::Verbs
       LANGULUS(NEGATIVE_VERB) "Disjunct";
       LANGULUS(POSITIVE_OPERATOR) ", ";
       LANGULUS(NEGATIVE_OPERATOR) " or ";
+      LANGULUS(PRECEDENCE) 1;
       LANGULUS(INFO)
          "Either combines LHS and RHS as one AND container, or separates them "
          "as one OR container (does only shallow copying)";

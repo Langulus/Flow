@@ -16,15 +16,15 @@
 
 #define VERBOSE_INNER(a) \
       Logger::Verbose() << "Flow::Code: " << Logger::Push << Logger::Cyan << a << Logger::Pop << " at " << progress << ": " << \
-      Logger::NewLine << "+-- [" \
-         << Logger::Push << Logger::Underline << input.LeftOf(progress) << Logger::Pop \
-         << input.RightOf(progress) << ']'
+      Logger::NewLine << Logger::DarkYellow << "+-- [" \
+         << input.LeftOf(progress) << Logger::Push << Logger::Red << Logger::Underline \
+         << input.RightOf(progress) << Logger::Pop << ']'
 
 #define PRETTY_ERROR(a) { \
       Logger::Error() << "Flow::Code: " << Logger::Push << Logger::DarkYellow << a << Logger::Pop << " at " << progress << ": " << \
-      Logger::NewLine << "+-- [" \
-         << Logger::Push << Logger::Underline << input.LeftOf(progress) << Logger::Pop \
-         << input.RightOf(progress) << ']'; \
+      Logger::NewLine << Logger::DarkYellow << "+-- [" \
+         << input.LeftOf(progress) << Logger::Push << Logger::Red << Logger::Underline \
+         << input.RightOf(progress) << Logger::Pop << ']'; \
       LANGULUS_THROW(Flow, "Parse error"); \
    }
 

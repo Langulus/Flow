@@ -132,7 +132,7 @@ namespace Langulus::Flow
    ///   @param from - the byte to convert to hexadecimal                     
    ///   @param to - the container to append to                               
    inline void ToHex(const Byte& from, Text& to) {
-      fmt::format_to_n(to.Extend(2).GetRaw(), 2, "{:x}", from);
+      fmt::format_to_n(to.Extend(2).GetRaw(), 2, "{:x}", from.mValue);
    }
 
    /// Check if a memory block needs a Code scope decorated                   

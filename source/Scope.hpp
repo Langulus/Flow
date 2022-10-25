@@ -15,7 +15,8 @@ namespace Langulus::Flow
    /// A scope is simply an Any container (binary compatible, too)            
    /// It has some additional functions for executing flows                   
    ///                                                                        
-   struct Scope : public Any {
+   class Scope : public Any {
+   public:
       using Any::Any;
       using Any::operator ==;
 

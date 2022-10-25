@@ -119,9 +119,9 @@ namespace Langulus::Flow
          NOD() static Offset ParseContent(const Code&, Any&, bool optimize);
          NOD() static Offset ParseString(Code::Operator, const Code&, Any&);
          NOD() static Offset ParseBytes(const Code&, Any&);
-         NOD() static Offset ParsePhase(Code::Operator, const Code&, Any&, bool optimize);
-         NOD() static Offset ParseConst(const Code&, Any&, bool optimize);
-         NOD() static Offset ParseSparse(const Code&, Any&, bool optimize);
+         NOD() static Offset ParsePhase(Code::Operator, Any&);
+         NOD() static Offset ParseConst(Any&);
+         NOD() static Offset ParseSparse(Any&);
          NOD() static Offset ParseReflected(Verb&, const Code&, Any&, bool optimize);
 
          static void InsertContent(Any&, Any&);

@@ -58,7 +58,7 @@ namespace Langulus::Verbs
    /// Default do/undo in an immutable context                                
    ///   @param context - the block to execute in                             
    ///   @param verb - do/undo verb                                           
-   inline bool Do::ExecuteDefault(const Block& context, Verb& verb) {
+   inline bool Do::ExecuteDefault(const Block&, Verb&) {
       //TODO
       return true;
    }
@@ -66,7 +66,7 @@ namespace Langulus::Verbs
    /// Default do/undo in a mutable context                                   
    ///   @param context - the block to execute in                             
    ///   @param verb - do/undo verb                                           
-   inline bool Do::ExecuteDefault(Block& context, Verb& verb) {
+   inline bool Do::ExecuteDefault(Block&, Verb&) {
       //TODO
       return true;
    }
@@ -92,7 +92,7 @@ namespace Langulus::Flow
    Count Execute(T& context, V& verb);
 
    template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::Verb V, CT::Data... BASES>
-   Count ExecuteInBases(T& context, V& verb, TTypeList<BASES...> bases) {
+   Count ExecuteInBases(T& context, V& verb, TTypeList<BASES...>) {
       if constexpr (CT::Constant<T>)
          return (Execute<DISPATCH, DEFAULT, FALLBACK>(static_cast<const BASES&>(context), verb) || ...);
       else 
@@ -177,7 +177,8 @@ namespace Langulus::Flow
             // as a stateless verb execution                            
             if constexpr (DEFAULT)
                return Verb::GenericExecuteStateless(verb);
-            return 0;
+            else
+               return 0;
          }
          else {
             // Context is empty, but has relevant states, so directly   
@@ -263,7 +264,8 @@ namespace Langulus::Flow
             // as a stateless verb execution                            
             if constexpr (DEFAULT)
                return Verb::GenericExecuteStateless(verb);
-            return 0;
+            else
+               return 0;
          }
          else {
             // Context is empty, but has relevant states, so directly   

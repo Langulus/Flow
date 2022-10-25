@@ -35,7 +35,7 @@ namespace Langulus::Flow
    ///                                                                        
    ///   Charge, carrying the four verb dimensions                            
    ///                                                                        
-   struct Charge {
+   class Charge {
       LANGULUS(POD) true;
       LANGULUS(NULLIFIABLE) false;
 

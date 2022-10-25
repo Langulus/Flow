@@ -678,6 +678,8 @@ namespace Langulus::Flow
          // Literally zero ability searching overhead!                  
          if constexpr (CT::DefaultableVerb<V>)
             return V::ExecuteDefault(context, verb);
+         else
+            return false;
       }
       else {
          // Execute appropriate default routine by RTTI                 
@@ -689,9 +691,8 @@ namespace Langulus::Flow
             verb.mVerb->mDefaultInvocationConstant(context, verb);
             return verb.IsDone();
          }
+         else return false;
       }
-
-      return false;
    }
 
    /// Execute an unknown verb with its default behavior inside a constant    
@@ -711,6 +712,8 @@ namespace Langulus::Flow
          // Literally zero ability searching overhead!                  
          if constexpr (CT::DefaultableVerbConstant<V>)
             return V::ExecuteDefault(context, verb);
+         else
+            return false;
       }
       else {
          // Execute appropriate default routine by RTTI                 
@@ -718,9 +721,8 @@ namespace Langulus::Flow
             verb.mVerb->mDefaultInvocationConstant(context, verb);
             return verb.IsDone();
          }
+         else return false;
       }
-
-      return false;
    }
 
    /// Execute an unknown verb without context                                
@@ -738,6 +740,8 @@ namespace Langulus::Flow
          // Literally zero ability searching overhead!                  
          if constexpr (CT::StatelessVerb<V>)
             return V::ExecuteStateless(verb);
+         else
+            return false;
       }
       else {
          // Execute appropriate stateless routine by RTTI               
@@ -745,9 +749,8 @@ namespace Langulus::Flow
             verb.mVerb->mStatelessInvocation(verb);
             return verb.IsDone();
          }
+         else return false;
       }
-
-      return false;
    }
 
    /// Serialize verb to any form of text                                     

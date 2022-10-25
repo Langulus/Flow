@@ -39,7 +39,7 @@ namespace Langulus::Flow
    /// complete your scripts at runtime.                                      
    ///                                                                        
    class Temporal final {
-   friend class Inner::Missing;
+   friend struct Inner::Missing;
    private:
       struct State {
          TimePoint mStart;

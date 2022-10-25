@@ -61,7 +61,7 @@ namespace Langulus::Verbs
    ///   @param context - the producer                                        
    ///   @param verb - the creation/destruction verb                          
    ///   @return true if verb was satisfied                                   
-   inline bool Create::ExecuteDefault(Anyness::Block& context, Verb& verb) {
+   inline bool Create::ExecuteDefault(Anyness::Block&, Verb& verb) {
       // Attempt creating/destroying constructs                         
       verb.ForEachDeep([&](const Construct& construct) {
          if (construct.GetProducer()) {
@@ -120,7 +120,7 @@ namespace Langulus::Verbs
    /// Stateless creation of any type without a producer                      
    ///   @param verb - the creation verb                                      
    ///   @return true if verb was satisfied                                   
-   inline bool Create::ExecuteStateless(Verb& verb) {
+   inline bool Create::ExecuteStateless(Verb&) {
       /*if (verb.IsEmpty() || verb.GetMass() < 0)
          return false;
 

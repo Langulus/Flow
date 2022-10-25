@@ -68,9 +68,9 @@ namespace Langulus::Flow
       : Any {other.Forward<Any>()}
       , Charge {other.mValue}
       , mVerb {other.mValue.mVerb}
+      , mState {other.mValue.mState}
       , mSource {Disown(other.mValue.mSource)}
-      , mOutput {Disown(other.mValue.mOutput)}
-      , mState {other.mValue.mState} { }
+      , mOutput {Disown(other.mValue.mOutput)} { }
 
    /// Abandon-construct a verb                                               
    ///   @param other - the verb to abandon and move                          
@@ -78,9 +78,9 @@ namespace Langulus::Flow
       : Any {other.Forward<Any>()}
       , Charge {other.mValue}
       , mVerb {other.mValue.mVerb}
+      , mState {other.mValue.mState}
       , mSource {Abandon(other.mValue.mSource)}
-      , mOutput {Abandon(other.mValue.mOutput)}
-      , mState {other.mValue.mState} { }
+      , mOutput {Abandon(other.mValue.mOutput)} { }
 
    /// Manual constructor with verb meta                                      
    ///   @param verb - the verb type                                          
@@ -95,9 +95,9 @@ namespace Langulus::Flow
       Any::operator = (other.Forward<Any>());
       Charge::operator = (other.mValue);
       mVerb = other.mValue.mVerb;
+      mState = other.mValue.mState;
       mSource = Disown(other.mValue.mSource);
       mOutput = Disown(other.mValue.mOutput);
-      mState = other.mValue.mState;
       return *this;
    }
 
@@ -108,9 +108,9 @@ namespace Langulus::Flow
       Any::operator = (other.Forward<Any>());
       Charge::operator = (other.mValue);
       mVerb = other.mValue.mVerb;
+      mState = other.mValue.mState;
       mSource = Abandon(other.mValue.mSource);
       mOutput = Abandon(other.mValue.mOutput);
-      mState = other.mValue.mState;
       return *this;
    }
 

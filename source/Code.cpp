@@ -521,11 +521,11 @@ namespace Langulus::Flow
             return progress + ParseBytes(relevant, lhs);
          case Past:
          case Future:
-            return progress + ParsePhase(op, relevant, lhs, optimize);
+            return progress + ParsePhase(op, lhs);
          case Constant:
-            return progress + ParseConst(relevant, lhs, optimize);
+            return progress + ParseConst(lhs);
          case Sparse:
-            return progress + ParseSparse(relevant, lhs, optimize);
+            return progress + ParseSparse(lhs);
          default:
             PRETTY_ERROR("Unhandled built-in operator");
          }
@@ -790,11 +790,9 @@ namespace Langulus::Flow
 
    /// Phase contents                                                         
    ///   @param op - the phase operator                                       
-   ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] phased content goes here                       
-   ///   @param optimize - whether or not to attempt precompile RHS           
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParsePhase(const Code::Operator op, const Code& input, Any& lhs, bool optimize) {
+   Offset Code::OperatorParser::ParsePhase(const Code::Operator op, Any& lhs) {
       if (op == Code::Past)
          lhs.MakePast();
       else
@@ -805,9 +803,8 @@ namespace Langulus::Flow
    /// Const contents                                                         
    ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] constant content goes here                     
-   ///   @param optimize - whether or not to attempt precompile RHS           
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseConst(const Code& input, Any& lhs, bool optimize) {
+   Offset Code::OperatorParser::ParseConst(Any& lhs) {
       lhs.MakeConst();
       return 0;
    }
@@ -815,9 +812,8 @@ namespace Langulus::Flow
    /// Sparse contents                                                        
    ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] sparse content goes here                       
-   ///   @param optimize - whether or not to attempt precompile RHS           
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseSparse(const Code& input, Any& lhs, bool optimize) {
+   Offset Code::OperatorParser::ParseSparse(Any& lhs) {
       lhs.MakeSparse();
       return 0;
    }

@@ -66,15 +66,14 @@ namespace Langulus::Verbs
    template<CT::Data... T>
    bool Exponent::OperateOnTypes(const Block& context, const Block& common, Verb& verb) {
       return ((
-         common.CastsTo<T, true>()
-         && ArithmeticVerb::Vector<T>(
+         common.CastsTo<T, true>() && ArithmeticVerb::Vector<T>(
             context, common, verb,
             verb.GetMass() < 0
                ? [](const T* lhs, const T* rhs) noexcept -> T {
-                  return ::std::pow(*lhs, T {1} / *rhs);
+                  return static_cast<T>(::std::pow(*lhs, T {1} / *rhs));
                }
                : [](const T* lhs, const T* rhs) noexcept -> T {
-                  return ::std::pow(*lhs, *rhs);
+                  return static_cast<T>(::std::pow(*lhs, *rhs));
                }
          )
       ) || ...);

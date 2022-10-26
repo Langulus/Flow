@@ -13,7 +13,7 @@ namespace Langulus::Flow
 
    ///                                                                        
    /// A scope is simply an Any container (binary compatible, too)            
-   /// It has some additional functions for executing flows                   
+   /// It has some additional interface for executing flows                   
    ///                                                                        
    class Scope : public Any {
    public:

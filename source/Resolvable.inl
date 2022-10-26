@@ -25,17 +25,20 @@ namespace Langulus
       result += Flow::Code::OpenScope;
       #if !LANGULUS(PARANOID) && LANGULUS(DEBUG)
          // We're not paranoid, so directly dump the memory address     
-         result += Anyness::Text {fmt::format("{:X}",
-            reinterpret_cast<intptr_t>(SparseCast(instance)))};
+         result += Anyness::Text {
+            fmt::format("{:X}",
+            reinterpret_cast<intptr_t>(SparseCast(instance)))
+         };
       #else
          // Obfuscate the pointer, by hashing it                        
-         result += Anyness::Text {fmt::format("{:X}",
-            HashNumber(reinterpret_cast<intptr_t>(SparseCast(instance))).mHash)};
+         result += Anyness::Text {
+            fmt::format("{:X}",
+            HashNumber(reinterpret_cast<intptr_t>(SparseCast(instance))).mHash)
+         };
       #endif
       result += Flow::Code::CloseScope;
       return Abandon(static_cast<Anyness::Text&>(result));
    }
-
 
    /// Get a string representing an instance in memory                        
    /// Used all across framework to stringify short instance IDs              
@@ -59,7 +62,7 @@ namespace Langulus::Flow
    inline Resolvable::Resolvable(DMeta type) noexcept
       : mClassType {type}
       , mClassOffset {0} {
-      // Precalculate offset                                            
+      // Precalculate offset, no need to do it at runtime               
       RTTI::Base base;
       UNUSED() bool found = mClassType->GetBase<Resolvable>(0, base);
       SAFETY(if (!found)
@@ -122,6 +125,8 @@ namespace Langulus::Flow
       // 'this' pointer points to Resolvable object, so we need to      
       // compensate this, by offsetting 'this' by the relative class    
       // type offset. I like to live dangerously <3                     
+      // But seriously, this is well tested                             
+      //TODO test
       auto thisint = reinterpret_cast<Offset>(this);
       auto offsetd = reinterpret_cast<void*>(thisint - mClassOffset);
       return Block {DataState::Static, mClassType, 1, offsetd};
@@ -137,6 +142,26 @@ namespace Langulus::Flow
    bool Resolvable::Run(V& verb) {
       auto environment = GetBlock();
       return DispatchFlat<false, DISPATCH, DEFAULT>(environment, verb);
+   }
+
+   /// Get a reflected member from the resolved instance (mutable)            
+   ///   @tparam INDEX - type of indexing used                                
+   ///   @param trait - the type of trait to search for (nullptr for any)     
+   ///   @param offset - the index of the match to return                     
+   ///   @return the static mutable memory block representing the member      
+   template<CT::Index INDEX>
+   NOD() Block Resolvable::GetMember(TMeta trait, const INDEX& offset) noexcept {
+      return GetBlock().GetMember(trait, offset);
+   }
+
+   /// Get a reflected member from the resolved instance (immutable)          
+   ///   @tparam INDEX - type of indexing used                                
+   ///   @param trait - the type of trait to search for (nullptr for any)     
+   ///   @param offset - the index of the match to return                     
+   ///   @return the static constant memory block representing the member     
+   template<CT::Index INDEX>
+   NOD() Block Resolvable::GetMember(TMeta trait, const INDEX& offset) const noexcept {
+      return GetBlock().GetMember(trait, offset);
    }
 
 } // namespace Langulus::Flow

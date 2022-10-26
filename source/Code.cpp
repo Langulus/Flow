@@ -14,6 +14,8 @@
 #include "verbs/Multiply.inl"
 #include "verbs/Exponent.inl"
 
+#define ENABLE_VERBOSE() 0//1
+
 #define VERBOSE_INNER(a) \
       Logger::Verbose() << "Flow::Code: " << Logger::Push << Logger::Cyan << a << Logger::Pop << " at " << progress << ": " << \
       Logger::NewLine << Logger::DarkYellow << "+-- [" \
@@ -28,9 +30,15 @@
       LANGULUS_THROW(Flow, "Parse error"); \
    }
 
-#define VERBOSE(a)      //VERBOSE_INNER(a)
-#define VERBOSE_TAB(a)  //auto tab = VERBOSE_INNER(a) << Logger::Tabs{}
-#define VERBOSE_ALT(a)  //Logger::Verbose() << a
+#if ENABLE_VERBOSE()
+   #define VERBOSE(a)      VERBOSE_INNER(a)
+   #define VERBOSE_TAB(a)  auto tab = VERBOSE_INNER(a) << Logger::Tabs{}
+   #define VERBOSE_ALT(a)  Logger::Verbose() << a
+#else
+   #define VERBOSE(a)      
+   #define VERBOSE_TAB(a)  
+   #define VERBOSE_ALT(a)  
+#endif
 
 
 namespace Langulus::Flow
@@ -183,8 +191,10 @@ namespace Langulus::Flow
       Any rhs;
       Offset progress = 0;
       VERBOSE_TAB("Parsing unknown");
-      if (lhs.IsValid())
-         VERBOSE_ALT("LHS: " << lhs);
+      #if ENABLE_VERBOSE()
+         if (lhs.IsValid())
+            VERBOSE_ALT("LHS: " << lhs);
+      #endif
 
       while (progress < input.GetCount()) {
          // Scan input until end                                        

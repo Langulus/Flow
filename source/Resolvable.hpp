@@ -44,6 +44,7 @@ namespace Langulus::Flow
       NOD() Token GetToken() const noexcept;
       NOD() constexpr DMeta GetType() const noexcept;
       NOD() Block GetBlock() const noexcept;
+
       template<bool DISPATCH = true, bool DEFAULT = true, CT::Verb V>
       NOD() bool Run(V& verb);
 

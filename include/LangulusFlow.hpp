@@ -21,4 +21,4 @@
 #include "../source/verbs/Catenate.inl"
 #include "../source/verbs/Do.inl"
 
-#define LANGULUS_MODULE_FLOW()
+#define LANGULUS_LIBRARY_FLOW() 1

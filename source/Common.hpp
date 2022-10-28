@@ -8,6 +8,12 @@
 #pragma once
 #include <LangulusAnyness.hpp>
 
+#if defined(LANGULUS_EXPORT_ALL) || defined(LANGULUS_EXPORT_FLOW)
+   #define LANGULUS_API_FLOW() LANGULUS_EXPORT()
+#else
+   #define LANGULUS_API_FLOW() LANGULUS_IMPORT()
+#endif
+
 LANGULUS_EXCEPTION(Flow);
 LANGULUS_EXCEPTION(Link);
 

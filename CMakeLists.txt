@@ -6,6 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Check if this project is built as standalone, or a part of something else
 if (PROJECT_IS_TOP_LEVEL)
+    if(LANGULUS_BUILD_SHARED_LIBRARIES)
+        set(LANGULUS_LIBRARY_TYPE SHARED)
+    else()
+        set(LANGULUS_LIBRARY_TYPE STATIC)
+    endif()
+
     find_package(Git REQUIRED)
     execute_process(
         COMMAND ${GIT_EXECUTABLE} submodule update --init -- cmake 
@@ -26,20 +32,15 @@ if (PROJECT_IS_TOP_LEVEL)
     add_compile_definitions(LANGULUS_ENABLE_TESTING)
     enable_testing()
 	add_subdirectory(test)
+else()
+    set(LANGULUS_LIBRARY_TYPE OBJECT)
 endif()
 
 # Build and install Flow library
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source SOURCE_FILES)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/verbs SOURCE_FILES)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/inner SOURCE_FILES)
-add_library(Langulus.Flow ${SOURCE_FILES})
+add_library(Langulus.Flow ${LANGULUS_LIBRARY_TYPE} ${SOURCE_FILES})
+
 target_include_directories(Langulus.Flow PUBLIC include)
 target_link_libraries(Langulus.Flow PUBLIC Langulus.RTTI Langulus.Anyness)
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(Langulus.Flow PUBLIC -Wno-trigraphs)
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(Langulus.Flow PUBLIC -Wno-trigraphs)
-elseif (MSVC)
-    target_compile_options(Langulus.Flow PRIVATE /utf-8)
-endif()

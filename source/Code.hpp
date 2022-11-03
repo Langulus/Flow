@@ -133,15 +133,6 @@ namespace Langulus::Flow
          NOD() static Offset Parse(const Code&, Charge&);
          NOD() static Operator Peek(const Code&) noexcept;
       };
-
-      struct OperatorProperties {
-         Token mToken;
-         Real mPrecedence;
-         bool mCharge;
-      };
-
-      /// Built-in operators database                                         
-      static const OperatorProperties mOperators[OpCounter];
    };
 
 } // namespace Langulus::Flow

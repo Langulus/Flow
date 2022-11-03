@@ -73,32 +73,6 @@ namespace Langulus::Flow
       return !IsEmpty() && ::std::isdigit(last());
    }
 
-   /// Check if the Code code container begins with an operator               
-   ///   @param i - the operator to check for                                 
-   ///   @return true if the operator matches                                 
-   inline bool Code::StartsWithOperator(Offset i) const noexcept {
-      const Size tokenSize = mOperators[i].mToken.size();
-      if (!tokenSize || mCount < tokenSize)
-         return false;
-
-      const auto token = Code(mOperators[i].mToken);
-      const auto remainder = RightOf(tokenSize);
-      const auto endsWithALetter = token.EndsWithLetter();
-      return tokenSize > 0 && MatchesLoose(token) == tokenSize
-         && (GetCount() == tokenSize 
-            || (endsWithALetter && (!remainder.StartsWithLetter() && !remainder.StartsWithDigit()))
-            || !endsWithALetter
-         );
-   }
-
-   /// Append a built-in operator to the code                                 
-   ///   @param o - the built-in operator enumerator                          
-   ///   @return a reference to this code for chaining                        
-   inline Code& Code::operator += (Operator o) {
-      Text::operator += (mOperators[o].mToken);
-      return *this;
-   }
-
 } // namespace Langulus::Flow
 
 namespace Langulus

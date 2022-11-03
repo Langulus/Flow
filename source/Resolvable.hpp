@@ -28,7 +28,7 @@ namespace Langulus::Flow
       Resolvable() = delete;
       Resolvable(const Resolvable&) noexcept = default;
       Resolvable(Resolvable&&) noexcept = default;
-      Resolvable(DMeta) noexcept;
+      Resolvable(DMeta) SAFETY_NOEXCEPT();
 
       Resolvable& operator = (const Resolvable&) noexcept = default;
       Resolvable& operator = (Resolvable&&) noexcept = default;

@@ -44,8 +44,14 @@
 namespace Langulus::Flow
 {
 
+   struct OperatorProperties {
+      Token mToken;
+      Real mPrecedence;
+      bool mCharge;
+   };
+
    /// Built-in operator properties                                           
-   constexpr Code::OperatorProperties Code::mOperators[OpCounter] = {
+   constexpr OperatorProperties GlobalOperators[Code::OpCounter] = {
       { "(", 0, false },      // OpenScope
       { ")", 0, false },      // CloseScope
       { "[", 0, false },      // OpenCode
@@ -72,7 +78,7 @@ namespace Langulus::Flow
    /// Generate code from operator                                            
    ///   @param op - the operator to stringify                                
    Code::Code(Operator op)
-      : Text {Disowned(mOperators[op].mToken.data())} { }
+      : Text {Disowned(GlobalOperators[op].mToken.data())} { }
 
    /// Disown-construct a code container                                      
    ///   @param other - the container to shallow-copy                         
@@ -103,6 +109,32 @@ namespace Langulus::Flow
    ///   @return the cloned code                                              
    Code Code::Clone() const {
       return Text::Clone();
+   }
+   
+   /// Check if the Code code container begins with an operator               
+   ///   @param i - the operator to check for                                 
+   ///   @return true if the operator matches                                 
+   bool Code::StartsWithOperator(Offset i) const noexcept {
+      const Size tokenSize = GlobalOperators[i].mToken.size();
+      if (!tokenSize || mCount < tokenSize)
+         return false;
+
+      const auto token = Code(GlobalOperators[i].mToken);
+      const auto remainder = RightOf(tokenSize);
+      const auto endsWithALetter = token.EndsWithLetter();
+      return tokenSize > 0 && MatchesLoose(token) == tokenSize
+         && (GetCount() == tokenSize 
+            || (endsWithALetter && (!remainder.StartsWithLetter() && !remainder.StartsWithDigit()))
+            || !endsWithALetter
+         );
+   }
+
+   /// Append a built-in operator to the code                                 
+   ///   @param o - the built-in operator enumerator                          
+   ///   @return a reference to this code for chaining                        
+   Code& Code::operator += (Operator o) {
+      Text::operator += (GlobalOperators[o].mToken);
+      return *this;
    }
 
    /// Compare two tokens, ignoring case                                      
@@ -143,15 +175,15 @@ namespace Langulus::Flow
    ///   @param text - the text to check                                      
    ///   @return true if text is reserved                                     
    bool Code::IsReserved(const Text& text) {
-      for (auto& a : mOperators) {
+      for (auto& a : GlobalOperators) {
          if (CompareOperators(text, a.mToken))
             return true;
       }
 
-#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      if (!RTTI::Database.GetAmbiguousMeta(text).empty())
-         return true;
-#endif
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         if (!RTTI::Database.GetAmbiguousMeta(text).empty())
+            return true;
+      #endif
 
       return false;
    }
@@ -434,7 +466,7 @@ namespace Langulus::Flow
    ///   @return true if input begins with an operators                       
    Code::Operator Code::OperatorParser::PeekBuiltin(const Code& input) noexcept {
       for (Offset i = 0; i < Code::OpCounter; ++i) {
-         if (!mOperators[i].mCharge && input.StartsWithOperator(i))
+         if (!GlobalOperators[i].mCharge && input.StartsWithOperator(i))
             return Operator(i);
       }
 
@@ -504,16 +536,16 @@ namespace Langulus::Flow
       Offset progress = 0;
       if (op < NoOperator) {
          // Handle a built-in operator                                  
-         if (mOperators[op].mPrecedence && priority >= mOperators[op].mPrecedence) {
+         if (GlobalOperators[op].mPrecedence && priority >= GlobalOperators[op].mPrecedence) {
             VERBOSE(Logger::Yellow 
-               << "Delaying built-in operator [" << mOperators[op].mToken
+               << "Delaying built-in operator [" << GlobalOperators[op].mToken
                << "] due to a prioritized operation");
             return 0;
          }
 
          // Skip the operator, we already know it                       
-         progress += mOperators[op].mToken.size();
-         VERBOSE_TAB("Parsing built-in operator: [" << mOperators[op].mToken << ']');
+         progress += GlobalOperators[op].mToken.size();
+         VERBOSE_TAB("Parsing built-in operator: [" << GlobalOperators[op].mToken << ']');
          const Code relevant = input.RightOf(progress);
 
          switch (op) {
@@ -605,12 +637,12 @@ namespace Langulus::Flow
 
       // We don't know what to expect, so we attempt blind parse        
       Any rhs;
-      progress = UnknownParser::Parse(input, rhs, mOperators[OpenScope].mPrecedence, optimize);
+      progress = UnknownParser::Parse(input, rhs, GlobalOperators[OpenScope].mPrecedence, optimize);
       if (!input.RightOf(progress).StartsWithOperator(CloseScope))
          PRETTY_ERROR("Missing closing bracket");
 
       // Account for the closing content scope                          
-      progress += mOperators[CloseScope].mToken.size();
+      progress += GlobalOperators[CloseScope].mToken.size();
 
       // Insert to new content in rhs to the already available lhs      
       InsertContent(rhs, lhs);
@@ -705,7 +737,7 @@ namespace Langulus::Flow
             //TODO handle escapes!
             const auto closer = op == OpenString ? CloseString : CloseStringAlt;
             if (relevant.StartsWithOperator(closer)) {
-               const auto tokenSize = mOperators[closer].mToken.size();
+               const auto tokenSize = GlobalOperators[closer].mToken.size();
                lhs << Text {input.LeftOf(progress)};
                VERBOSE("String parsed: " << lhs);
                return tokenSize + progress;
@@ -716,7 +748,7 @@ namespace Langulus::Flow
             // Finish up a 'c'haracter                                  
             //TODO handle escapes!
             if (relevant.StartsWithOperator(CloseCharacter)) {
-               const auto tokenSize = mOperators[CloseCharacter].mToken.size();
+               const auto tokenSize = GlobalOperators[CloseCharacter].mToken.size();
                lhs << input[0];
                VERBOSE("Character parsed: " << lhs);
                return tokenSize + progress;
@@ -731,7 +763,7 @@ namespace Langulus::Flow
             else if (relevant.StartsWithOperator(CloseCode)) {
                --depth;
                if (0 == depth) {
-                  const auto tokenSize = mOperators[CloseCode].mToken.size();
+                  const auto tokenSize = GlobalOperators[CloseCode].mToken.size();
                   lhs << input.LeftOf(progress);
                   VERBOSE("Code parsed: " << lhs);
                   return tokenSize + progress;
@@ -875,7 +907,7 @@ namespace Langulus::Flow
    ///   @return true if input begins with an operator for charging           
    Code::Operator Code::ChargeParser::Peek(const Code& input) noexcept {
       for (Offset i = 0; i < Code::OpCounter; ++i) {
-         if (mOperators[i].mCharge && input.StartsWithOperator(i))
+         if (GlobalOperators[i].mCharge && input.StartsWithOperator(i))
             return Operator(i);
       }
 
@@ -900,7 +932,7 @@ namespace Langulus::Flow
          if (op == Operator::NoOperator)
             return progress;
 
-         progress += mOperators[op].mToken.size();
+         progress += GlobalOperators[op].mToken.size();
          relevant = input.RightOf(progress);
          VERBOSE("Parsing charge operator: [" << mOperators[op].mToken << ']');
 
@@ -955,7 +987,7 @@ namespace Langulus::Flow
             charge.mPriority = asReal;
             break;
          default:
-            PRETTY_ERROR("Invalid charge operator: " << mOperators[op].mToken);
+            PRETTY_ERROR("Invalid charge operator: " << GlobalOperators[op].mToken);
          }
       }
 

@@ -59,7 +59,7 @@ namespace Langulus::Flow
    /// Constructor                                                            
    ///   @attention type is assumed derived from Resolvable                   
    ///   @param type - type of the resolvable                                 
-   inline Resolvable::Resolvable(DMeta type) noexcept
+   inline Resolvable::Resolvable(DMeta type) SAFETY_NOEXCEPT()
       : mClassType {type}
       , mClassOffset {0} {
       // Precalculate offset, no need to do it at runtime               

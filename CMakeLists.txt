@@ -28,6 +28,7 @@ if (PROJECT_IS_TOP_LEVEL)
 	fetch_langulus_module(Core)
 	fetch_langulus_module(Logger)
 	fetch_langulus_module(RTTI)
+	fetch_langulus_module(SIMD)
 	fetch_langulus_module(Anyness)
 
     add_compile_definitions(LANGULUS_ENABLE_TESTING)
@@ -42,4 +43,10 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/inner SOURCE_FILES)
 add_library(Langulus.Flow ${LANGULUS_LIBRARY_TYPE} ${SOURCE_FILES})
 
 target_include_directories(Langulus.Flow PUBLIC include)
-target_link_libraries(Langulus.Flow PUBLIC Langulus.Anyness)
+target_link_libraries(Langulus.Flow
+    PUBLIC      Langulus.Core
+                Langulus.Logger
+                Langulus.RTTI
+                Langulus.SIMD
+                Langulus.Anyness
+)

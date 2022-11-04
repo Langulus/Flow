@@ -545,8 +545,8 @@ namespace Langulus::Flow
    ///   @param data - the data to merge                                      
    ///   @return a reference to this verb for chaining                        
    template<CT::Data T>
-   Verb& Verb::operator <<= (const T& data) {
-      //TODO
+   Verb& Verb::operator <<= (const T&) {
+      TODO();
       return *this;
    }
 
@@ -555,8 +555,8 @@ namespace Langulus::Flow
    ///   @param data - the data to merge                                      
    ///   @return a reference to this verb for chaining                        
    template<CT::Data T>
-   Verb& Verb::operator >>= (const T& data) {
-      //TODO
+   Verb& Verb::operator >>= (const T&) {
+      TODO();
       return *this;
    }
 

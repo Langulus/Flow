@@ -426,13 +426,13 @@ namespace Langulus::Flow
          if (separate)
             to += Verbs::Conjunct::CTTI_PositiveOperator;
 
-         if (member.mType->Is<DMeta>())
+         if (member.template Is<DMeta>())
             SerializeMeta<DMeta>(from, to, &member);
-         else if (member.mType->Is<TMeta>())
+         else if (member.template Is<TMeta>())
             SerializeMeta<TMeta>(from, to, &member);
-         else if (member.mType->Is<VMeta>())
+         else if (member.template Is<VMeta>())
             SerializeMeta<VMeta>(from, to, &member);
-         else if (member.mType->Is<CMeta>())
+         else if (member.template Is<CMeta>())
             SerializeMeta<CMeta>(from, to, &member);
          else
             SerializeBlock(from.GetMember(member), to);
@@ -636,7 +636,7 @@ namespace Langulus::Flow
          // First read the serialized data state                        
          DataState deserializedState {};
          RequestMoreBytes(source, read, sizeof(DataState), loader);
-         ::std::memcpy(&deserializedState, source.At(read), sizeof(DataState));
+         ::std::memcpy(static_cast<void*>(&deserializedState), source.At(read), sizeof(DataState));
          read += sizeof(DataState);
          result.AddState(deserializedState);
 
@@ -766,14 +766,14 @@ namespace Langulus::Flow
                // Deserialize the charge                                
                Charge charge;
                RequestMoreBytes(source, read, sizeof(Charge), loader);
-               ::std::memcpy(&charge, source.At(read), sizeof(Charge));
+               ::std::memcpy(static_cast<void*>(&charge), source.At(read), sizeof(Charge));
                read += sizeof(Charge);
                verb.SetCharge(charge);
 
                // Deserialize the verb state                            
                VerbState vstate;
                RequestMoreBytes(source, read, sizeof(VerbState), loader);
-               ::std::memcpy(&vstate, source.At(read), sizeof(VerbState));
+               ::std::memcpy(static_cast<void*>(&vstate), source.At(read), sizeof(VerbState));
                read += sizeof(VerbState);
                verb.SetVerbState(vstate);
 

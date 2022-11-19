@@ -381,11 +381,11 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		}
 
 		WHEN("Parsed with optimization") {
-			Any required = Real(178.5);
+			Any required2 = Real(178.5);
 			const auto parsed = code.Parse();
-			DumpResults(code, parsed, required);
+			DumpResults(code, parsed, required2);
 			THEN("The parsed contents must match the requirements") {
-				REQUIRE(parsed == required);
+				REQUIRE(parsed == required2);
 			}
 		}
 	}

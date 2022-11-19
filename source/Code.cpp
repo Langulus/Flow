@@ -429,6 +429,8 @@ namespace Langulus::Flow
       VERBOSE("Keyword parsed: `" << keyword << "` as " << lhs << " (" << lhs.GetToken() << ")");
       return progress;
    #else    // LANGULUS_FEATURE(MANAGED_REFLECTION)
+      (void)lhs;
+      (void)allowCharge;
       PRETTY_ERROR("Can't parse keyword, managed reflection feature is disabled");
    #endif   // LANGULUS_FEATURE(MANAGED_REFLECTION)
    }

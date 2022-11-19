@@ -9,6 +9,7 @@
 #include "../source/Code.hpp"
 #include "../source/Resolvable.hpp"
 #include "../source/Temporal.hpp"
+#include "../source/TFactory.hpp"
 
 #include "../source/verbs/Create.inl"
 #include "../source/verbs/Conjunct.inl"

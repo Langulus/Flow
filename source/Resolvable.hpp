@@ -16,7 +16,7 @@ namespace Langulus::Flow
    ///                                                                        
    /// Holds a reflected class type and context state                         
    ///                                                                        
-   struct Resolvable {
+   struct Resolvable : public Referenced {
       LANGULUS(ABSTRACT) true;
       LANGULUS(UNINSERTABLE) true;
       LANGULUS_CONVERSIONS(Debug);
@@ -54,6 +54,8 @@ namespace Langulus::Flow
       NOD() Block GetMember(TMeta, const INDEX&) const noexcept;
 
       NOD() explicit operator Debug() const;
+
+      Debug Self() const;
    };
    
 } // namespace Langulus::Flow
@@ -67,6 +69,6 @@ namespace Langulus
    template<class T>
    NOD() LANGULUS(ALWAYSINLINE) Anyness::Text IdentityOf(RTTI::DMeta, const T&);
 
-} //namespace Langulus
+} // namespace Langulus
 
 #include "Resolvable.inl"

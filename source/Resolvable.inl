@@ -117,6 +117,14 @@ namespace Langulus::Flow
       return IdentityOf(mClassType, this);
    }
 
+   /// Convenience function that logs this's identity and suffixes with ": "  
+   /// Useful when used like: Logger::Verbose() << Self() << "etc..."         
+   inline Debug Resolvable::Self() const {
+      auto temp = operator Debug();
+      temp += ": ";
+      return Abandon(temp);
+   }
+
    /// Wrap this context instance in a static memory block                    
    /// The availability of this function is reflected via CT::Resolvable      
    /// You can invoke this function via Block::GetElementResolved()           

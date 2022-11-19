@@ -587,6 +587,26 @@ namespace Langulus::Verbs
       static bool ExecuteDefault(const Block&, Verb&);
    };
 
+   /// Interact                                                               
+   /// Used for processing user events, such as mouse movement, keyboard,     
+   /// joystick and any other input                                           
+   struct Interact : public StaticVerb<Interact> {
+      LANGULUS(VERB) "Interact";
+      LANGULUS(INFO) 
+         "Used for processing user events, such as mouse movement, "
+         "keyboard, joystick and any other input";
+
+      using StaticVerb::StaticVerb;
+
+      template<CT::Data T, CT::Data... A>
+      static constexpr bool AvailableFor() noexcept;
+      template<CT::Data T, CT::Data... A>
+      static constexpr auto Of() noexcept;
+
+      template<CT::Data T>
+      static bool ExecuteIn(T&, Verb&);
+   };
+
    /// Statically optimized interpret verb                                    
    ///   @tparam TO - what are we converting to?                              
    template<class TO>

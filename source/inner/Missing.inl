@@ -29,7 +29,7 @@ namespace Langulus::Flow::Inner
    ///   @param filter - the filter to set                                    
    inline Missing::Missing(const Block& filter, Real priority)
       : mPriority {priority} {
-      filter.Gather(mFilter, DataState::Missing);
+      mFilter.GatherFrom(filter, DataState::Missing);
       mFilter.SetState(filter.GetState());
    }
 

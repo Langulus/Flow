@@ -310,11 +310,11 @@ namespace Langulus
    template<class T>
    NOD() auto MetaOf() {
       if constexpr (CT::Trait<T>)
-         return RTTI::MetaTrait::Of<T>();
+         return RTTI::MetaTrait::Of<Decay<T>>();
       else if constexpr (CT::Verb<T>)
-         return RTTI::MetaVerb::Of<T>();
+         return RTTI::MetaVerb::Of<Decay<T>>();
       else
-         return RTTI::MetaData::Of<T>();
+         return RTTI::MetaData::Of<Decay<T>>();
    }
 
 } // namespace Langulus

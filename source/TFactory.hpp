@@ -25,6 +25,41 @@ namespace Langulus::Flow
 
 
    ///                                                                        
+   /// Normalized data container                                              
+   ///                                                                        
+   class Normalized {
+   private:
+      // Verbs will always be ordered in the order they appear          
+      // Their contents will be normalized all the way through          
+      TAny<Verb> mVerbs;
+      // Traits are ordered first by their trait type, then by their    
+      // order of appearance. Duplicate trait types are allowed         
+      // Trait contents are also normalized all the way through         
+      TUnorderedMap<TMeta, TAny<Trait>> mTraits;
+      // Metas are ordered by their hash, duplicates are discarded      
+      TUnorderedSet<DMeta> mMetaDatas;
+      TUnorderedSet<TMeta> mMetaTraits;
+      TUnorderedSet<CMeta> mMetaConstants;
+      TUnorderedSet<VMeta> mMetaVerbs;
+      // Subconstructs are sorted first by the construct type, and then 
+      // by their order of appearance. Their contents are also          
+      // nest-normalized all the way through                            
+      TUnorderedMap<DMeta, TAny<Construct>> mConstructs;
+      // Any other block type that doesn't fit in the above is sorted   
+      // first by the block type, then by the order of appearance       
+      // All sub-blocks are normalized all the way through              
+      TUnorderedMap<DMeta, TAny<Any>> mAnythingElse;
+
+      mutable Hash mHash;
+
+   public:
+      Normalized(const Any&);
+
+      Hash GetHash() const;
+   };
+
+
+   ///                                                                        
    ///   Factory container                                                    
    ///                                                                        
    ///   Basically a templated container used to contain, produce, but most   
@@ -74,10 +109,10 @@ namespace Langulus::Flow
       TUnorderedMap<Hash, TAny<Element*>> mHashmap;
 
    protected:
-      NOD() T* Produce(Hash, const Any&);
-      void CreateInner(Verb&, int, const Any&);
+      NOD() T* Produce(Hash, const Any&, const Normalized&);
+      void CreateInner(Verb&, int, const Any& = {});
       void Destroy(Element*);
-      NOD() Element* Find(Hash, const Any&) const;
+      NOD() Element* Find(Hash, const Normalized&) const;
 
    public:
       /// Factories can't be default-, move- or copy-constructed              
@@ -141,7 +176,7 @@ namespace Langulus::Flow
 
       // The descriptor used for hashing, and element identification    
       // Not valid if mReferences is zero                               
-      Any mDescriptor;
+      Normalized mDescriptor;
 
       // Counts the uses of a factory element, because T should be      
       // referencable. If references are zero, element is unused, and   
@@ -152,7 +187,7 @@ namespace Langulus::Flow
 
    public:
       Element() = delete;
-      Element(TFactory*, Hash, const Any&);
+      Element(TFactory*, Hash, const Any&, const Normalized&);
       Element(Element&&) = default;
       ~Element() noexcept = default;
    };

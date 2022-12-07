@@ -63,8 +63,8 @@ namespace Langulus::Flow
 
    /// Create content descriptor from a static type and arguments by copy     
    ///   @tparam T - type of the construct                                    
-   ///   @tparam DATA - type of the arguments (deducible)                     
-   ///   @param arguments - the constructor arguments                         
+   ///   @tparam HEAD, TAIL - types of the arguments (deducible)              
+   ///   @param head, tail  - the constructor arguments                       
    ///   @return the request                                                  
    template<CT::Data T, CT::Data HEAD, CT::Data... TAIL>
    Construct Construct::From(const HEAD& head, const TAIL&... tail) {
@@ -85,8 +85,8 @@ namespace Langulus::Flow
 
    /// Create content descriptor from a static type and arguments by move     
    ///   @tparam T - type of the construct                                    
-   ///   @tparam DATA - type of the arguments (deducible)                     
-   ///   @param arguments - the constructor arguments                         
+   ///   @tparam HEAD, TAIL - types of the arguments (deducible)              
+   ///   @param head, tail  - the constructor arguments                       
    ///   @return the request                                                  
    template<CT::Data T, CT::Data HEAD, CT::Data... TAIL>
    Construct Construct::From(HEAD&& head, TAIL&&... tail) {
@@ -105,14 +105,45 @@ namespace Langulus::Flow
       }
    }
 
-   /// Create content descriptor from a static type                           
+   /// Create content descriptor from a static type (without arguments)       
    ///   @tparam T - type of the construct                                    
    ///   @return the request                                                  
    template<CT::Data T>
    Construct Construct::From() {
-      return Construct(MetaData::Of<T>());
+      return Construct {MetaData::Of<T>()};
    }
 
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   /// Create content descriptor from a type token and arguments by copy      
+   ///   @tparam HEAD, TAIL - types of the arguments (deducible)              
+   ///   @param token - the type name for the construct                       
+   ///   @param head, tail  - the constructor arguments                       
+   ///   @return the request                                                  
+   template<CT::Data HEAD, CT::Data... TAIL>
+   Construct Construct::FromToken(const Token& token, const HEAD& head, const TAIL&... tail) {
+      const auto meta = RTTI::Database.GetMetaData(token);
+      if constexpr (sizeof...(tail) == 0) {
+         // Only one argument, just forward it                          
+         return Construct {meta, Forward<HEAD>(head)};
+      }
+      else if constexpr (CT::Same<HEAD, TAIL...>) {
+         // All arguments are the same, combine them in a single pack   
+         return Construct {meta, Any::WrapCommon(head, tail...)};
+      }
+      else {
+         // All else gets shoved in a pack and forwarded                
+         return Construct {meta, Any::Wrap(head, tail...)};
+      }
+   }
+
+   /// Create content descriptor from a type token (without arguments)        
+   ///   @param token - type of the construct                                 
+   ///   @return the request                                                  
+   inline Construct Construct::FromToken(const Token& token) {
+      return Construct {RTTI::Database.GetMetaData(token)};
+   }
+#endif
+   
    /// Check if construct type can be interpreted as a given static type      
    ///   @tparam T - type of the construct to compare against                 
    template<CT::Data T>

@@ -83,6 +83,7 @@ namespace Langulus::Flow
       template<CT::Data T = Any>
       Construct(const Token&, T&&, const Charge& = {});
 #endif
+
       Construct& operator = (const Construct&) = default;
       Construct& operator = (Construct&&) noexcept = default;
 
@@ -101,6 +102,12 @@ namespace Langulus::Flow
       NOD() static Construct From(HEAD&&, TAIL&&...);
       template<CT::Data T>
       NOD() static Construct From();
+
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      template<CT::Data HEAD, CT::Data... TAIL>
+      NOD() static Construct FromToken(const Token&, const HEAD&, const TAIL&...);
+      NOD() static Construct FromToken(const Token&);
+#endif
 
       // Omit these inherited from Any                                  
       Any FromMeta() = delete;

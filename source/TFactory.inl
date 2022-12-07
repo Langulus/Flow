@@ -10,6 +10,7 @@
 
 #define TEMPLATE() template<class T, FactoryUsage USAGE>
 #define FACTORY() TFactory<T, USAGE>
+#define ITERATOR() TFactory<T, USAGE>::template TIterator<MUTABLE>
 
 namespace Langulus::Flow
 {
@@ -17,13 +18,16 @@ namespace Langulus::Flow
    /// The only allowed element constructor                                   
    ///   @param factory - the factory who owns the T instance                 
    ///   @param hash - precomputed descriptor hash (optimization)             
-   ///   @param descriptor - the element descriptor, used for hashing         
+   ///   @param normalizedDescriptor - the normalized element descriptor,     
+   ///          used for hashing and match compare                            
+   ///   @param messyDescriptor - the messy element descriptor, used          
+   ///          to construct the element                                      
    TEMPLATE()
-   FACTORY()::Element::Element(TFactory* factory, Hash hash, const Any& descriptor)
+   FACTORY()::Element::Element(TFactory* factory, Hash hash, const Any& messyDescriptor, const Normalized& descriptor)
       : mFactory {factory}
       , mHash {hash}
       , mDescriptor {descriptor}
-      , mData {descriptor} {}
+      , mData {messyDescriptor} {}
 
    /// Construction of a factory                                              
    ///   @param owner - the factory owner                                     
@@ -54,15 +58,15 @@ namespace Langulus::Flow
    }
 
    /// Find an element with the provided hash and descriptor                  
-   ///   @param hash - precomputed descriptor hash (optimization)             
-   ///   @param descriptor - the full descriptor for the element              
+   ///   @param hash - precomputed normalized descriptor hash (optimization)  
+   ///   @param descriptor - the normalized descriptor for the element        
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE()
-   typename FACTORY()::Element* FACTORY()::Find(Hash hash, const Any& descriptor) const {
+   typename FACTORY()::Element* FACTORY()::Find(Hash hash, const Normalized& descriptor) const {
       const auto found = mHashmap.FindKeyIndex(hash);
       if (found) {
          for (auto candidate : mHashmap.GetValue(found)) {
-            if (candidate->mDescriptor != descriptor) //TODO orderless comparison instead
+            if (candidate->mDescriptor != descriptor)
                continue;
 
             // Found                                                    
@@ -74,17 +78,14 @@ namespace Langulus::Flow
       return nullptr;
    }
 
-
    /// Create/Destroy element(s) inside the factory                           
    ///   @param verb - the creation verb                                      
-   ///   @param arguments... - additional arguments for element constructor,  
-   ///                         usually provided by factory owner              
    TEMPLATE()
    void FACTORY()::Create(Verb& verb) {
       verb.ForEachDeep(
          [&](const Construct& construct) {
             // For each construct...                                    
-            if (!construct.GetType()->template HasDerivation<T>())
+            if (!MetaData::Of<T>()->CastsTo(construct.GetType()))
                return;
             
             auto count = static_cast<int>(
@@ -94,25 +95,100 @@ namespace Langulus::Flow
          },
          [&](const MetaData* type) {
             // For each type...                                         
-            if (!type || !type->template HasDerivation<T>())
+            if (!type || !MetaData::Of<T>()->CastsTo(type))
                return;
 
             auto count = static_cast<int>(
                ::std::floor(verb.GetMass())
             );
-            const Any descriptor {};
-            CreateInner(verb, count, descriptor);
+            CreateInner(verb, count);
          }
       );
    }
    
+   /// Compile a descriptor, by removing Traits::Parent, and grouping elements
+   /// in predictable ways, ensuring further comparisons are fast & orderless 
+   ///   @param messy - the messy descriptor to normalize                     
+   ///   @return the normalized descriptor                                    
+   Normalized::Normalized(const Any& messy) {
+      messy.ForEachDeep([this](const Any& group) {
+         if (group.IsOr())
+            TODO();
+
+         if (group.ForEach(
+            [this](const Verb& verb) {
+               // Never modify verb sequences, but make sure their      
+               // contents are normalized                               
+               Verb normalizedVerb {verb.PartialCopy()};
+               normalizedVerb.SetSource(Normalized {verb.GetSource()});
+               normalizedVerb.SetArgument(Normalized {verb.GetArgument()});
+               mVerbs << Abandon(normalizedVerb);
+            },
+            [this](const Trait& trait) {
+               // Always skip parent trait                              
+               if (trait.TraitIs<Traits::Parent>())
+                  return;
+               
+               // Normalize trait contents and push sort it by its      
+               // trait type                                            
+               mTraits[trait.GetTrait()] << Trait {
+                  trait.GetTrait(), Normalized {trait}
+               };
+            },
+            [this](const MetaData* type) {
+               mMetaDatas << type;
+            },
+            [this](const MetaTrait* type) {
+               mMetaTraits << type;
+            },
+            [this](const MetaConst* type) {
+               mMetaConstants << type;
+            },
+            [this](const MetaVerb* type) {
+               mMetaVerbs << type;
+            },
+            [this](const Construct& construct) {
+               // Normalize contents and push sort it by type           
+               mConstructs[construct.GetType()] << Construct {
+                  construct.GetType(), 
+                  Normalized {construct}
+               };
+            }
+         )) return;
+
+         // If reached, just propagate the block without changing it    
+         // But still sort it by block type                             
+         mAnythingElse[group.GetType()] << group;
+      });
+   }
+
+   /// Get the hash of a normalized descriptor                                
+   ///   @return the hash                                                     
+   Hash Normalized::GetHash() const {
+      if (mHash)
+         return mHash;
+
+      // Cache hash so we don't recompute it all the time               
+      mHash = HashData(
+         mVerbs.GetHash(),
+         mTraits.GetHash(),
+         mMetaDatas.GetHash(),
+         mMetaTraits.GetHash(),
+         mMetaConstants.GetHash(),
+         mMetaVerbs.GetHash(),
+         mConstructs.GetHash(),
+         mAnythingElse.GetHash()
+      );
+      return mHash;
+   }
+
    /// Inner creation/destruction verb                                        
    ///   @param verb - [in/out] the creation/destruction verb                 
    ///   @param count - the number of items to create (or destroy if negative)
-   ///   @param descriptor - the element descriptor                           
-   ///   @param arguments... - additional arguments for element construction  
+   ///   @param messyDescriptor - uncompiled messy element descriptor         
    TEMPLATE()
-   void FACTORY()::CreateInner(Verb& verb, int count, const Any& descriptor) {
+   void FACTORY()::CreateInner(Verb& verb, int count, const Any& messyDescriptor) {
+      Normalized descriptor {messyDescriptor};
       const auto hash = descriptor.GetHash();
       if (count > 0) {
          // Produce amount of compatible constructs                     
@@ -131,12 +207,12 @@ namespace Langulus::Flow
             // Produce exactly one element with this descriptor         
             // Mass will be ignored, it makes no sense to create        
             // multiple instances if unique                             
-            verb << Produce(hash, descriptor);
+            verb << Produce(hash, messyDescriptor, descriptor);
          }
          else {
             // Satisfy the required count                               
             while (count >= 1) {
-               verb << Produce(hash, descriptor);
+               verb << Produce(hash, messyDescriptor, descriptor);
                --count;
             }
          }
@@ -176,34 +252,42 @@ namespace Langulus::Flow
       // For each construct or meta compatible with the factory         
       verb.ForEachDeep(
          [&](const Construct& construct) {
-            if (!construct.GetType()->template HasDerivation<T>())
+            // For each construct...                                    
+            if (!MetaData::Of<T>()->CastsTo(construct.GetType()))
                return;
+
+            TODO();
          },
          [&](const MetaData* type) {
-            if (!type || !type->template HasDerivation<T>())
+            // For each type...                                         
+            if (!type || !MetaData::Of<T>()->CastsTo(type))
                return;
+
+            TODO();
          }
       );
    }
 
    /// Produce a single T with the given descriptor and arguments             
    ///   @param hash - precomputed descriptor hash (optimization)             
-   ///   @param descriptor - the element descriptor                           
-   ///   @param arguments... - additional arguments for element constructor,  
-   ///                         usually provided by factory owner              
+   ///   @param messyDescriptor - the original, messy element descriptor      
+   ///   @param descriptor - the normalized element descriptor                
+   ///   @return the produced instance                                        
    TEMPLATE()
-   T* FACTORY()::Produce(Hash hash, const Any& descriptor) {
+   T* FACTORY()::Produce(Hash hash, const Any& messyDescriptor, const Normalized& descriptor) {
       if (mReusable) {
          // Reuse a slot                                                
          auto memory = mReusable;
          mReusable = mReusable->mNextFreeElement;
-         auto result = new (memory) Element {this, hash, descriptor};
+         auto result = new (memory) Element {
+            this, hash, messyDescriptor, descriptor
+         };
          mHashmap[hash] << result;
          return &result->mData;
       }
 
       // If this is reached, then a reallocation is required            
-      mData.Emplace(this, hash, descriptor);
+      mData.Emplace(this, hash, messyDescriptor, descriptor);
       mHashmap[hash] << &mData.Last();
       return &mData.Last().mData;
    }
@@ -312,7 +396,6 @@ namespace Langulus::Flow
    ///                                                                        
    ///   TFactory iterator                                                    
    ///                                                                        
-   #define ITERATOR() TFactory<T, USAGE>::template TIterator<MUTABLE>
 
    /// Construct an iterator                                                  
    ///   @param element - the current element                                 

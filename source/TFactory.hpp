@@ -55,7 +55,9 @@ namespace Langulus::Flow
    public:
       Normalized(const Any&);
 
-      Hash GetHash() const;
+      NOD() Hash GetHash() const;
+
+      bool operator == (const Normalized&) const;
    };
 
 

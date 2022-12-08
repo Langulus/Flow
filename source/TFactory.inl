@@ -109,8 +109,7 @@ namespace Langulus::Flow
    /// Compile a descriptor, by removing Traits::Parent, and grouping elements
    /// in predictable ways, ensuring further comparisons are fast & orderless 
    ///   @param messy - the messy descriptor to normalize                     
-   ///   @return the normalized descriptor                                    
-   Normalized::Normalized(const Any& messy) {
+   inline Normalized::Normalized(const Any& messy) {
       messy.ForEachDeep([this](const Any& group) {
          if (group.IsOr())
             TODO();
@@ -164,7 +163,7 @@ namespace Langulus::Flow
 
    /// Get the hash of a normalized descriptor                                
    ///   @return the hash                                                     
-   Hash Normalized::GetHash() const {
+   inline Hash Normalized::GetHash() const {
       if (mHash)
          return mHash;
 
@@ -180,6 +179,23 @@ namespace Langulus::Flow
          mAnythingElse.GetHash()
       );
       return mHash;
+   }
+
+   /// Get the hash of a normalized descriptor                                
+   ///   @return the hash                                                     
+   inline bool Normalized::operator == (const Normalized& rhs) const {
+      if (GetHash() != rhs.GetHash())
+         return false;
+
+      return 
+            mVerbs == rhs.mVerbs
+         && mTraits == rhs.mTraits
+         && mMetaDatas == rhs.mMetaDatas
+         && mMetaTraits == rhs.mMetaTraits
+         && mMetaConstants == rhs.mMetaConstants
+         && mMetaVerbs == rhs.mMetaVerbs
+         && mConstructs == rhs.mConstructs
+         && mAnythingElse == rhs.mAnythingElse;
    }
 
    /// Inner creation/destruction verb                                        

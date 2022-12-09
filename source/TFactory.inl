@@ -15,13 +15,13 @@
 namespace Langulus::Flow
 {
 
-   /// The only allowed element constructor                                   
+   /// Constructor for descriptor-constructible element                       
    ///   @param factory - the factory who owns the T instance                 
    ///   @param hash - precomputed descriptor hash (optimization)             
-   ///   @param normalizedDescriptor - the normalized element descriptor,     
-   ///          used for hashing and match compare                            
    ///   @param messyDescriptor - the messy element descriptor, used          
-   ///          to construct the element                                      
+   ///                            to construct the element                    
+   ///   @param descriptor - the normalized element descriptor,               
+   ///                       used for hashing and match compare               
    TEMPLATE()
    FACTORY()::Element::Element(TFactory* factory, Hash hash, const Any& messyDescriptor, const Normalized& descriptor)
       : mFactory {factory}

@@ -84,6 +84,7 @@ namespace Langulus::Flow
       static_assert(CT::Data<T>, "T can't be void");
       static_assert(CT::Referencable<T>, "T must be referencable");
       static_assert(CT::Producible<T>, "T must have a producer");
+      static_assert(CT::DescriptorMakable<T>, "T must have a descriptor-constructor");
       static_assert(!CT::Abstract<T>, "T can't be abstract");
 
       /// Makes the factory CT::Typed                                         
@@ -92,6 +93,7 @@ namespace Langulus::Flow
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
 
    protected:
+   TESTING(public:)
       struct Element;
 
       // Each factory is bound to a producer instance                   
@@ -110,7 +112,6 @@ namespace Langulus::Flow
       // A hash map for fast retrieval of elements                      
       TUnorderedMap<Hash, TAny<Element*>> mHashmap;
 
-   protected:
       NOD() T* Produce(Hash, const Any&, const Normalized&);
       void CreateInner(Verb&, int, const Any& = {});
       void Destroy(Element*);
@@ -162,6 +163,7 @@ namespace Langulus::Flow
    template<class T, FactoryUsage USAGE>
    struct TFactory<T, USAGE>::Element {
    protected:
+   TESTING(public:)
       friend class TFactory<T, USAGE>;
       union {
          // When element is in use, this pointer points to the          

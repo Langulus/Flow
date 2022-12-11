@@ -6,20 +6,35 @@ using namespace Langulus::Flow;
 
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 
-/// A mockup of Langulus::Entity, for testing purposes                        
-struct Entity : public Resolvable {
+/// A mockup of Langulus::Thing, for testing purposes                         
+struct Thing : public Resolvable {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
-   LANGULUS(PRODUCER) Entity;
+   LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
-   Entity() : Resolvable(MetaData::Of<Entity>()) {}
+   Thing() : Resolvable(MetaData::Of<Thing>()) {}
+   Thing(DMeta type) : Resolvable(type) {}
+
+   virtual void Update() {}
+
+   int mMember = 666;
+};
+
+/// A mockup of more concrete Langulus::Thing, for testing purposes           
+struct Thing2 : public Thing {
+   LANGULUS_BASES(Thing);
+   Thing2() : Thing {MetaData::Of<Thing2>()} {}
+
+   void Update() final {}
+
+   int mMember = 777;
 };
 
 /// A mockup of a universe component, for testing purposes                    
 struct Universe : public Resolvable {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
-   LANGULUS(PRODUCER) Entity;
+   LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
    Universe() : Resolvable(MetaData::Of<Universe>()) {}
 };
@@ -28,7 +43,7 @@ struct Universe : public Resolvable {
 struct Window : public Resolvable {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
-   LANGULUS(PRODUCER) Entity;
+   LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
    Window() : Resolvable(MetaData::Of<Window>()) {}
 };
@@ -37,7 +52,7 @@ struct Window : public Resolvable {
 struct User : public Resolvable {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
-   LANGULUS(PRODUCER) Entity;
+   LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
    User() : Resolvable(MetaData::Of<User>()) {}
 };
@@ -46,7 +61,7 @@ struct User : public Resolvable {
 struct Session : public Resolvable {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
-   LANGULUS(PRODUCER) Entity;
+   LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
    Session() : Resolvable(MetaData::Of<Session>()) {}
 };

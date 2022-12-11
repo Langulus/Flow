@@ -143,7 +143,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb type                                          
    ///   @param argument - the argument                                       
    ///   @param charge - the charge                                           
-   ///   @param shortCircuit - short circuit                                  
+   ///   @param state - verb state                                            
    template<CT::Data T>
    Verb::Verb(VMeta verb, const T& argument, const Charge& charge, const VerbState state)
       : Any {argument}
@@ -156,7 +156,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb type                                          
    ///   @param argument - the argument to move in                            
    ///   @param charge - the charge                                           
-   ///   @param shortCircuit - short circuit                                  
+   ///   @param state - verb state                                            
    template<CT::Data T>
    Verb::Verb(VMeta verb, T&& argument, const Charge& charge, const VerbState state)
       : Any {Forward<T>(argument)}
@@ -643,13 +643,14 @@ namespace Langulus::Flow
                   return false;
 
                Any result = Any::FromMeta(to);
-               result.Allocate<false, true>(1);
+               result.template Allocate<false, true>(1);
                found(context.GetRaw(), result.GetRaw());
                verb << Abandon(result);
             }
             else {
-               // Scan for any another ability                          
-               const auto found = meta->template GetAbility<CT::Mutable<T>>(verb.mVerb, verb.GetType());
+               // Scan for any other ability                            
+               const auto found = meta->template 
+                  GetAbility<CT::Mutable<T>>(verb.mVerb, verb.GetType());
                if (!found)
                   return false;
 

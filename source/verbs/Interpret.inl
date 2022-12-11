@@ -161,7 +161,9 @@ namespace Langulus
    template<CT::Deep T>
    LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
       Logger::A::Interface& lhs, const T& rhs) {
-      return lhs.operator << (Token {Verbs::Interpret::To<Flow::Debug>(DenseCast(rhs))});
+      return lhs.operator << (Token {
+         Verbs::Interpret::To<Flow::Debug>(DenseCast(rhs))
+      });
    }
 
    /// Extend the logger to be capable of logging anything statically         
@@ -172,7 +174,9 @@ namespace Langulus
    template<CT::Flat T>
    LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
       Logger::A::Interface& lhs, const T& rhs) requires (CT::Convertible<T, Flow::Debug> && !Logger::Formattable<T>) {
-      return lhs.operator << (Token {Verbs::Interpret::To<Flow::Debug>(DenseCast(rhs))});
+      return lhs.operator << (Token {
+         Verbs::Interpret::To<Flow::Debug>(DenseCast(rhs))
+      });
    }
 
    /// Extend the logger to be capable of logging any shared pointer          

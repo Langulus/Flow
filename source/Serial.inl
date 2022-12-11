@@ -17,7 +17,7 @@ namespace Langulus::Flow
    /// Conversion routine, that is specialized for serialization              
    ///   @tparam TO - the type we're serializing to                           
    ///   @tparam HEADER - ignored when serializing to text formats            
-   ///      -   when serializing to binary formats: true if you want to write 
+   ///      -  when serializing to binary formats: true if you want to write  
    ///         a portability header for the data (useful for serializing      
    ///         standalone data). The serializer uses this internally when     
    ///         nesting, to reduce redundant writes                            
@@ -34,7 +34,7 @@ namespace Langulus::Flow
    /// Conversion routine, that is specialized for serialization              
    ///   @tparam TO - the type we're serializing to                           
    ///   @tparam HEADER - ignored when serializing to text formats            
-   ///      -   when serializing to binary formats: true if you want to write 
+   ///      -  when serializing to binary formats: true if you want to write  
    ///         a portability header for the data (useful for serializing      
    ///         standalone data). The serializer uses this internally when     
    ///         nesting, to reduce redundant writes                            
@@ -362,7 +362,7 @@ namespace Langulus::Flow
 
       auto meta = member->As<META>(from.GetRaw());
       if (meta)   to += meta->GetToken();
-      else         to += Decay<META>::DefaultToken;
+      else        to += Decay<META>::DefaultToken;
    }
 
    /// A snippet for serializing a block of numbers                           

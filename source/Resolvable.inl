@@ -64,7 +64,7 @@ namespace Langulus::Flow
       , mClassOffset {0} {
       // Precalculate offset, no need to do it at runtime               
       RTTI::Base base;
-      UNUSED() bool found = mClassType->GetBase<Resolvable>(0, base);
+      UNUSED() bool found = mClassType->template GetBase<Resolvable>(0, base);
       SAFETY(if (!found)
          LANGULUS_THROW(Construct, "Unrelated type provided to Resolvable"));
       const_cast<Offset&>(mClassOffset) = base.mOffset;
@@ -94,7 +94,7 @@ namespace Langulus::Flow
    ///   @return true if this context can be dynamically interpreted as T     
    template<CT::Data T>
    bool Resolvable::CastsTo() const {
-      return mClassType->CastsTo<T>();
+      return mClassType->template CastsTo<T>();
    }
 
    /// Check if context is an exact type                                      
@@ -109,7 +109,7 @@ namespace Langulus::Flow
    ///   @return true if this context can be dynamically interpreted as T     
    template<CT::Data T>
    inline bool Resolvable::Is() const {
-      return mClassType->Is<T>();
+      return mClassType->template Is<T>();
    }
 
    /// Stringify the context (shows class type and an identifier)             
@@ -134,7 +134,6 @@ namespace Langulus::Flow
       // compensate this, by offsetting 'this' by the relative class    
       // type offset. I like to live dangerously <3                     
       // But seriously, this is well tested                             
-      //TODO test
       auto thisint = reinterpret_cast<Offset>(this);
       auto offsetd = reinterpret_cast<void*>(thisint - mClassOffset);
       return Block {DataState::Static, mClassType, 1, offsetd};

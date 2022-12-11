@@ -390,12 +390,12 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		}
 	}
 
-	GIVEN("The script: ? create Entity(User)") {
-		const Code code = "? create Entity(User)";
+	GIVEN("The script: ? create Thing(User)") {
+		const Code code = "? create Thing(User)";
 		Any required = Verbs::Create(
-			Construct::From<Entity>(
+			Construct::From<Thing>(
 				MetaData::Of<User>()
-				)
+			)
 		).SetSource(pastMissing);
 
 		WHEN("Parsed") {
@@ -483,12 +483,12 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		}
 	}
 
-	GIVEN("The script: ?.Entity(User).??") {
-		const Code code = "?.Entity(User).??";
+	GIVEN("The script: ?.Thing(User).??") {
+		const Code code = "?.Thing(User).??";
 		const Any required = Verbs::Select(futureMissing)
 			.SetSource(
 				Verbs::Select(
-					Construct::From<Entity>(MetaData::Of<User>())
+					Construct::From<Thing>(MetaData::Of<User>())
 				).SetSource(pastMissing)
 			);
 
@@ -527,8 +527,8 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		}
 	}
 
-	GIVEN("The script: (? = ??) or (?.Entity(Session or User)) or (?.??)") {
-		const Code code = "(? = ??) or (?.Entity(Session or User)) or (?.??)";
+	GIVEN("The script: (? = ??) or (?.Thing(Session or User)) or (?.??)") {
+		const Code code = "(? = ??) or (?.Thing(Session or User)) or (?.??)";
 
 		Any sessionOrUser = Any::WrapCommon(MetaData::Of<Session>(), MetaData::Of<User>());
 		sessionOrUser.MakeOr();
@@ -536,7 +536,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		Verbs::Associate first(futureMissing);
 		first.SetSource(pastMissing);
 
-		Verbs::Select second(Construct::From<Entity>(sessionOrUser));
+		Verbs::Select second(Construct::From<Thing>(sessionOrUser));
 		second.SetSource(pastMissing);
 
 		Verbs::Select third(futureMissing);
@@ -556,7 +556,8 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: ? create ??") {
 		const Code code = "? create ??";
-		const Any required = Verbs::Create(futureMissing).SetSource(pastMissing);
+		const Any required = Verbs::Create(futureMissing)
+			.SetSource(pastMissing);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -580,9 +581,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		}
 	}
 
-	GIVEN("The script: Entity(Universe, Window, Temporal)") {
-		const Code code = "Entity(Universe, Window, Temporal)";
-		const Any required = Construct::From<Entity>(
+	GIVEN("The script: Thing(Universe, Window, Temporal)") {
+		const Code code = "Thing(Universe, Window, Temporal)";
+		const Any required = Construct::From<Thing>(
 			MetaData::Of<Universe>(),
 			MetaData::Of<Window>(),
 			MetaData::Of<Temporal>()

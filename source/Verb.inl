@@ -654,7 +654,7 @@ namespace Langulus::Flow
                if (!found)
                   return false;
 
-               found(SparseCast(context), verb);
+               found(context.GetRaw(), verb);
             }
          }
       }

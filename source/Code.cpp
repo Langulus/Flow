@@ -116,7 +116,7 @@ namespace Langulus::Flow
    ///   @return true if the operator matches                                 
    bool Code::StartsWithOperator(Offset i) const noexcept {
       const Size tokenSize = GlobalOperators[i].mToken.size();
-      if (!tokenSize || mCount < tokenSize)
+      if (!tokenSize || GetCount() < tokenSize)
          return false;
 
       const auto token = Code(GlobalOperators[i].mToken);

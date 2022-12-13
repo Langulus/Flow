@@ -15,7 +15,7 @@ namespace Langulus::Flow
    ///   @param offset - the number of elements to discard from the front     
    ///   @return a shallow-copied container with the correct offset           
    inline Code Code::RightOf(Offset o) const {
-      return Code {Text::Crop(o, mCount - o)};
+      return Code {Text::Crop(o, GetCount() - o)};
    }
 
    /// Remove elements from the right side of Code code                       

@@ -69,18 +69,10 @@ namespace Langulus::Flow
    template<CT::Data T, CT::Data HEAD, CT::Data... TAIL>
    Construct Construct::From(const HEAD& head, const TAIL&... tail) {
       const auto meta = MetaData::Of<Decay<T>>();
-      if constexpr (sizeof...(tail) == 0) {
-         // Only one argument, just forward it                          
+      if constexpr (sizeof...(tail) == 0)
          return Construct {meta, head};
-      }
-      else if constexpr (CT::Same<HEAD, TAIL...>) {
-         // All arguments are the same, combine them in a single pack   
-         return Construct {meta, Any::WrapCommon(head, tail...)};
-      }
-      else {
-         // All else gets shoved in a pack and forwarded                
-         return Construct {meta, Any::Wrap(head, tail...)};
-      }
+      else
+         return Construct {meta, Any {head, tail...}};
    }
 
    /// Create content descriptor from a static type and arguments by move     
@@ -91,18 +83,10 @@ namespace Langulus::Flow
    template<CT::Data T, CT::Data HEAD, CT::Data... TAIL>
    Construct Construct::From(HEAD&& head, TAIL&&... tail) {
       const auto meta = MetaData::Of<Decay<T>>();
-      if constexpr (sizeof...(tail) == 0) {
-         // Only one argument, just forward it                          
+      if constexpr (sizeof...(tail) == 0)
          return Construct {meta, Forward<HEAD>(head)};
-      }
-      else if constexpr (CT::Same<HEAD, TAIL...>) {
-         // All arguments are the same, combine them in a single pack   
-         return Construct {meta, Any::WrapCommon(Forward<HEAD>(head), Forward<TAIL>(tail)...)};
-      }
-      else {
-         // All else gets shoved in a pack and forwarded                
-         return Construct {meta, Any::Wrap(Forward<HEAD>(head), Forward<TAIL>(tail)...)};
-      }
+      else
+         return Construct {meta, Any {Forward<HEAD>(head), Forward<TAIL>(tail)...}};
    }
 
    /// Create content descriptor from a static type (without arguments)       
@@ -122,18 +106,10 @@ namespace Langulus::Flow
    template<CT::Data HEAD, CT::Data... TAIL>
    Construct Construct::FromToken(const Token& token, const HEAD& head, const TAIL&... tail) {
       const auto meta = RTTI::Database.GetMetaData(token);
-      if constexpr (sizeof...(tail) == 0) {
-         // Only one argument, just forward it                          
+      if constexpr (sizeof...(tail) == 0)
          return Construct {meta, Forward<HEAD>(head)};
-      }
-      else if constexpr (CT::Same<HEAD, TAIL...>) {
-         // All arguments are the same, combine them in a single pack   
-         return Construct {meta, Any::WrapCommon(head, tail...)};
-      }
-      else {
-         // All else gets shoved in a pack and forwarded                
-         return Construct {meta, Any::Wrap(head, tail...)};
-      }
+      else
+         return Construct {meta, Any {head, tail...}};
    }
 
    /// Create content descriptor from a type token (without arguments)        

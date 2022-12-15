@@ -212,7 +212,10 @@ namespace Langulus::Flow::Inner
       const auto found = scope.ForEach(
          [&](const Trait& trait) {
             try {
-               result << Trait {trait.GetTrait(), Link(trait, environment, consumedPast)};
+               result << Trait::From(
+                  trait.GetTrait(), 
+                  Link(trait, environment, consumedPast)
+               );
             }
             catch (const Except::Link&) {
                if (!scope.IsOr())

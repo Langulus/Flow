@@ -130,9 +130,9 @@ namespace Langulus::Flow
                
                // Normalize trait contents and push sort it by its      
                // trait type                                            
-               mTraits[trait.GetTrait()] << Trait {
+               mTraits[trait.GetTrait()] << Trait::From(
                   trait.GetTrait(), Normalized {trait}
-               };
+               );
             },
             [this](const MetaData* type) {
                mMetaDatas << type;

@@ -144,7 +144,7 @@ namespace Langulus::Flow
                   LANGULUS_THROW(Flow, "Trait AND failure");
                }
 
-               output.SmartPush(Trait {trait.GetTrait(), Abandon(local)});
+               output.SmartPush(Trait::From(trait.GetTrait(), Abandon(local)));
             },
             // Nest if constructs, but retain each construct            
             [&](const Construct& construct) {
@@ -253,7 +253,7 @@ namespace Langulus::Flow
                Any local;
                if (scope.Execute(environment, local)) {
                   executed = true;
-                  output.SmartPush(Trait {trait.GetTrait(), Abandon(local)});
+                  output.SmartPush(Trait::From(trait.GetTrait(), Abandon(local)));
                }
             },
             // Nest if constructs, but retain each construct            

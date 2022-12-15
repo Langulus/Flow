@@ -238,10 +238,10 @@ namespace Langulus::Flow
             // Collapse traits                                          
             auto collapsed = Collapse(subscope);
             if (!collapsed.IsEmpty()) {
-               result << Trait {
+               result << Trait::From(
                   subscope.GetTrait(), 
                   Abandon(collapsed)
-               };
+               );
             }
          },
          [&](const Construct& subscope) {
@@ -320,10 +320,10 @@ namespace Langulus::Flow
       const auto done = scope.ForEach(
          [&](const Trait& subscope) {
             // Compile traits                                           
-            result << Trait {
+            result << Trait::From(
                subscope.GetTrait(), 
                Compile(subscope, priority)
-            };
+            );
          },
          [&](const Construct& subscope) {
             // Compile constructs                                       

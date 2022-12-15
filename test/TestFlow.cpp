@@ -154,7 +154,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: `things` associate(\"thing\", `plural`)") {
 		const auto code = "`things` associate(\"thing\", `plural`)"_code;
-		const Any required = Verbs::Associate(Any::WrapCommon("thing"_text, "plural"_text))
+		const Any required = Verbs::Associate(Any {"thing"_text, "plural"_text})
 			.SetSource("things"_text);
 
 		WHEN("Parsed") {
@@ -168,7 +168,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: `things` = (\"thing\", `plural`)") {
 		const auto code = "`things` = (\"thing\", `plural`)"_code;
-		const Any required = Verbs::Associate(Any::WrapCommon("thing"_text, "plural"_text))
+		const Any required = Verbs::Associate(Any {"thing"_text, "plural"_text})
 			.SetSource("things"_text);
 
 		WHEN("Parsed") {
@@ -279,7 +279,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 		const Code code = "Create!-1(Verb(?(Number,DMeta,Construct), ??(Number,DMeta,Construct)))";
 		const Any required = Verbs::Create(
-			Construct::From<Verb>(Any::WrapCommon(a1, a2))
+			Construct::From<Verb>(Any {a1, a2})
 		).SetPriority(-1);
 
 		WHEN("Parsed") {
@@ -421,7 +421,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		conjunct.SetSource(pastMissing);
 		conjunct.SetPriority(4);
 
-		Any required = Any::WrapCommon<Verb>(catenate, conjunct);
+		Any required = Any::WrapAs<Verb>(catenate, conjunct);
 		required.MakeOr();
 
 		WHEN("Parsed") {
@@ -447,7 +447,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		conjunct.SetSource(pastMissing);
 		conjunct.SetPriority(8);
 
-		Any required = Any::WrapCommon<Verb>(add, conjunct);
+		Any required = Any::WrapAs<Verb>(add, conjunct);
 		required.MakeOr();
 
 		WHEN("Parsed") {
@@ -471,7 +471,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		conjunct.SetSource(pastMissing);
 		conjunct.SetPriority(8);
 
-		Any required = Any::WrapCommon<Verb>(add, conjunct);
+		Any required = Any::WrapAs<Verb>(add, conjunct);
 		required.MakeOr();
 
 		WHEN("Parsed") {
@@ -530,19 +530,19 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 	GIVEN("The script: (? = ??) or (?.Thing(Session or User)) or (?.??)") {
 		const Code code = "(? = ??) or (?.Thing(Session or User)) or (?.??)";
 
-		Any sessionOrUser = Any::WrapCommon(MetaData::Of<Session>(), MetaData::Of<User>());
+		Any sessionOrUser {MetaData::Of<Session>(), MetaData::Of<User>()};
 		sessionOrUser.MakeOr();
 
-		Verbs::Associate first(futureMissing);
+		Verbs::Associate first {futureMissing};
 		first.SetSource(pastMissing);
 
-		Verbs::Select second(Construct::From<Thing>(sessionOrUser));
+		Verbs::Select second {Construct::From<Thing>(sessionOrUser)};
 		second.SetSource(pastMissing);
 
-		Verbs::Select third(futureMissing);
+		Verbs::Select third {futureMissing};
 		third.SetSource(pastMissing);
 
-		Any required = Any::WrapCommon<Verb>(first, second, third);
+		Any required = Any::WrapAs<Verb>(first, second, third);
 		required.MakeOr();
 
 		WHEN("Parsed") {

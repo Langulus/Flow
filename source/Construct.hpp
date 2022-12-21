@@ -105,7 +105,7 @@ namespace Langulus::Flow
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       template<CT::Data HEAD, CT::Data... TAIL>
-      NOD() static Construct FromToken(const Token&, const HEAD&, const TAIL&...);
+      NOD() static Construct FromToken(const Token&, HEAD&&, TAIL&&...);
       NOD() static Construct FromToken(const Token&);
 #endif
 

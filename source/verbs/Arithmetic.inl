@@ -25,7 +25,8 @@ namespace Langulus::Flow
       // MVulkan to incorporate compute shader for even batcher batching!!1
       //TODO detect underflows and overflows
       TAny<T> result;
-      result.template Allocate<false, true>(lhs.GetCount());
+      result.AllocateFresh(result.RequestSize(lhs.GetCount()));
+      result.mCount = lhs.GetCount();
       const T* ilhs = lhs.GetRawAs<T>();
       const T* const ilhsEnd = ilhs + lhs.GetCount();
       const T* irhs = rhs.GetRawAs<T>();
@@ -79,7 +80,8 @@ namespace Langulus::Flow
       // MVulkan to incorporate compute shader for even batcher batching!!1
       //TODO detect underflows and overflows
       TAny<T> result;
-      result.template Allocate<false, true>(lhs.GetCount());
+      result.AllocateFresh(result.RequestSize(lhs.GetCount()));
+      result.mCount = lhs.GetCount();
       const T* ilhs = lhs.GetRawAs<T>();
       const T* const ilhsEnd = ilhs + lhs.GetCount();
       const T& irhs = *rhs.GetRawAs<T>();

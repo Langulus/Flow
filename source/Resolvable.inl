@@ -144,31 +144,213 @@ namespace Langulus::Flow
    ///   @tparam DEFAULT - whether to allow default/stateless verbs on fail   
    ///   @tparam V - type of verb to run (deducible)                          
    ///   @param verb - the verb to execute in this resolved type              
-   ///   @return true if verb was satisfied                                   
+   ///   @return a reference to the verb's output                             
    template<bool DISPATCH, bool DEFAULT, CT::Verb V>
-   bool Resolvable::Run(V& verb) {
-      auto environment = GetBlock();
-      return DispatchFlat<false, DISPATCH, DEFAULT>(environment, verb);
+   const Any& Resolvable::Run(const V& verb) {
+      return Run<DISPATCH, DEFAULT, V>(const_cast<V&>(verb));
    }
 
-   /// Get a reflected member from the resolved instance (mutable)            
+   /// Invoke a verb on the resolved type                                     
+   ///   @tparam DISPATCH - whether to allow custom dispatchers               
+   ///   @tparam DEFAULT - whether to allow default/stateless verbs on fail   
+   ///   @tparam V - type of verb to run (deducible)                          
+   ///   @param verb - the verb to execute in this resolved type              
+   ///   @return a reference to the verb's output                             
+   template<bool DISPATCH, bool DEFAULT, CT::Verb V>
+   Any& Resolvable::Run(V& verb) {
+      auto environment = GetBlock();
+      DispatchFlat<false, DISPATCH, DEFAULT>(environment, verb);
+      return verb.GetOutput();
+   }
+
+   /// Invoke a verb on the resolved type                                     
+   ///   @tparam DISPATCH - whether to allow custom dispatchers               
+   ///   @tparam DEFAULT - whether to allow default/stateless verbs on fail   
+   ///   @tparam V - type of verb to run (deducible)                          
+   ///   @param verb - the verb to execute in this resolved type              
+   ///   @return a reference to the verb's output                             
+   template<bool DISPATCH, bool DEFAULT, CT::Verb V>
+   Any& Resolvable::Run(V&& verb) requires (CT::Mutable<V>) {
+      return Run<DISPATCH, DEFAULT, V>(verb);
+   }
+
+   /// Get the first member matching a runtime trait definition               
+   ///   @param trait - the trait to search for                               
+   ///   @return the static mutable memory block representing the member      
+   inline Block Resolvable::GetMember(TMeta trait) noexcept {
+      return GetBlock().GetMember(trait);
+   }
+
+   /// Get the first member matching a runtime trait definition (const)       
+   ///   @param trait - the trait to search for                               
+   ///   @return the static constant memory block representing the member     
+   inline Block Resolvable::GetMember(TMeta trait) const noexcept {
+      return GetBlock().GetMember(trait);
+   }
+
+   /// Get the first member matching a runtime trait token                    
+   ///   @param trait - the trait to search for                               
+   ///   @return the static mutable memory block representing the member      
+   inline Block Resolvable::GetMember(const Token& trait) noexcept {
+      return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait));
+   }
+
+   /// Get the first member matching a runtime trait token (const)            
+   ///   @param trait - the trait to search for                               
+   ///   @return the static constant memory block representing the member     
+   inline Block Resolvable::GetMember(const Token& trait) const noexcept {
+      return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait));
+   }
+
+   /// Get Nth reflected member by trait definition                           
    ///   @tparam INDEX - type of indexing used                                
    ///   @param trait - the type of trait to search for (nullptr for any)     
    ///   @param offset - the index of the match to return                     
    ///   @return the static mutable memory block representing the member      
    template<CT::Index INDEX>
-   NOD() Block Resolvable::GetMember(TMeta trait, const INDEX& offset) noexcept {
+   Block Resolvable::GetMember(TMeta trait, const INDEX& offset) noexcept {
       return GetBlock().GetMember(trait, offset);
    }
 
-   /// Get a reflected member from the resolved instance (immutable)          
+   /// Get Nth reflected member by trait definition (const)                   
    ///   @tparam INDEX - type of indexing used                                
    ///   @param trait - the type of trait to search for (nullptr for any)     
    ///   @param offset - the index of the match to return                     
    ///   @return the static constant memory block representing the member     
    template<CT::Index INDEX>
-   NOD() Block Resolvable::GetMember(TMeta trait, const INDEX& offset) const noexcept {
+   Block Resolvable::GetMember(TMeta trait, const INDEX& offset) const noexcept {
       return GetBlock().GetMember(trait, offset);
+   }
+
+   /// Get Nth reflected member by trait token                                
+   ///   @tparam INDEX - type of indexing used                                
+   ///   @param trait - the trait token                                       
+   ///   @param offset - the index of the match to return                     
+   ///   @return the static mutable memory block representing the member      
+   template<CT::Index INDEX>
+   Block Resolvable::GetMember(const Token& trait, const INDEX& offset) noexcept {
+      return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait), offset);
+   }
+
+   /// Get Nth reflected member by trait token (const)                        
+   ///   @tparam INDEX - type of indexing used                                
+   ///   @param trait - the trait token                                       
+   ///   @param offset - the index of the match to return                     
+   ///   @return the static constant memory block representing the member     
+   template<CT::Index INDEX>
+   Block Resolvable::GetMember(const Token& trait, const INDEX& offset) const noexcept {
+      return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait), offset);
+   }
+
+   /// Get a statically typed trait member and cast it to the desired type    
+   ///   @tparam T - the trait to search for                                  
+   ///   @tparam D - the data to interpret it as (deducible)                  
+   ///   @param data - [out] the data to set                                  
+   ///   @return true if trait was found, and data was set                    
+   template<CT::Trait T, CT::Data D>
+   bool Resolvable::GetTrait(D& data) const {
+      auto found = GetBlock().GetMember(RTTI::MetaTrait::Of<T>());
+      try {
+         data = found.template AsCast<D>();
+         return true;
+      }
+      catch (...) {}
+      return false;
+   }
+
+   /// Get a member of a specific type                                        
+   ///   @tparam D - the data to interpret it as (deducible)                  
+   ///   @param data - [out] the data to set                                  
+   ///   @return true if trait was found, and data was set                    
+   template<CT::Data D>
+   bool Resolvable::GetValue(D& data) const {
+      auto found = GetBlock().GetMember(RTTI::MetaData::Of<D>());
+      data = found.As<D>();
+      return true;
+   }
+
+   /// Set a statically typed trait by shallow copy                           
+   ///   @tparam T - the trait to search for                                  
+   ///   @tparam DIRECT - if true, will directly set the trait, without       
+   ///                    using a dynamically dispatched Verbs::Associate;    
+   ///                    this will not notify the context of the change, but 
+   ///                    is considerably faster (false by default)           
+   ///   @tparam D - the data to set (deducible)                              
+   ///   @param data - [out] the data to copy                                 
+   ///   @return true if trait was found and overwritten                      
+   template<CT::Trait T, bool DIRECT, CT::Data D>
+   bool Resolvable::SetTrait(const D& data) {
+      if constexpr (DIRECT) {
+         auto found = GetBlock().GetMember(RTTI::MetaTrait::Of<T>());
+         if (found.IsEmpty())
+            return false;
+         return found.Copy(Block::From(data)) > 0;
+      }
+      else {
+         Verbs::Associate verb {T{data}};
+         Run(verb);
+         return verb.IsDone();
+      }
+   }
+
+   /// Set a statically typed data by shallow copy                            
+   ///   @tparam DIRECT - if true, will directly set the trait, without       
+   ///                    using a dynamically dispatched Verbs::Associate;    
+   ///                    this will not notify the context of the change, but 
+   ///                    is considerably faster (false by default)           
+   ///   @tparam D - the data to set (deducible)                              
+   ///   @param data - [out] the data to copy                                 
+   ///   @return true if data was found and overwritten                       
+   template<bool DIRECT, CT::Data D>
+   bool Resolvable::SetValue(const D& data) {
+      if constexpr (DIRECT) {
+         auto found = GetBlock().GetMember(RTTI::MetaData::Of<D>());
+         if (found.IsEmpty())
+            return false;
+         return found.Copy(Block::From(data)) > 0;
+      }
+      else {
+         Verbs::Associate verb {data};
+         Run(verb);
+         return verb.IsDone();
+      }
+   }
+
+   /// Set a statically typed trait by move                                   
+   ///   @tparam T - the trait to search for                                  
+   ///   @tparam DIRECT - if true, will directly set the trait, without       
+   ///                    using a dynamically dispatched Verbs::Associate;    
+   ///                    this will not notify the context of the change, but 
+   ///                    is considerably faster (false by default)           
+   ///   @tparam D - the data to set (deducible)                              
+   ///   @param data - [out] the data to move                                 
+   ///   @return true if trait was found and overwritten                      
+   template<CT::Trait T, bool DIRECT, CT::Data D>
+   bool Resolvable::SetTrait(D&& data) {
+      if constexpr (DIRECT) {
+         auto found = GetBlock().GetMember(RTTI::MetaTrait::Of<T>());
+         if (found.IsEmpty())
+            return false;
+         return found.Copy(Block::From(data)) > 0;
+      }
+      else {
+         Verbs::Associate verb {T{Forward<D>(data)}};
+         Run(verb);
+         return verb.IsDone();
+      }
+   }
+
+   /// Set a statically typed data by move                                    
+   ///   @tparam DIRECT - if true, will directly set the trait, without       
+   ///                    using a dynamically dispatched Verbs::Associate;    
+   ///                    this will not notify the context of the change, but 
+   ///                    is considerably faster (false by default)           
+   ///   @tparam D - the data to set (deducible)                              
+   ///   @param data - [out] the data to move                                 
+   ///   @return true if data was found and overwritten                       
+   template<bool DIRECT, CT::Data D>
+   bool Resolvable::SetValue(D&&) {
+
    }
 
 } // namespace Langulus::Flow

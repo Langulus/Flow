@@ -629,7 +629,8 @@ namespace Langulus::Flow
                return false;
 
             TAny<TO> result;
-            result.template Allocate<false, true>(1);
+            result.AllocateFresh(result.RequestSize(1));
+            result.mCount = 1;
             found(context.GetRaw(), result.GetRaw());
             verb << Abandon(result);
          }
@@ -643,7 +644,8 @@ namespace Langulus::Flow
                   return false;
 
                Any result = Any::FromMeta(to);
-               result.template Allocate<false, true>(1);
+               result.AllocateFresh(result.RequestSize(1));
+               result.mCount = 1;
                found(context.GetRaw(), result.GetRaw());
                verb << Abandon(result);
             }

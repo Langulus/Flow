@@ -46,12 +46,39 @@ namespace Langulus::Flow
       NOD() Block GetBlock() const noexcept;
 
       template<bool DISPATCH = true, bool DEFAULT = true, CT::Verb V>
-      NOD() bool Run(V& verb);
+      const Any& Run(const V&);
+      template<bool DISPATCH = true, bool DEFAULT = true, CT::Verb V>
+      Any& Run(V&);
+      template<bool DISPATCH = true, bool DEFAULT = true, CT::Verb V>
+      Any& Run(V&&) requires (CT::Mutable<V>);
+
+      NOD() Block GetMember(TMeta) noexcept;
+      NOD() Block GetMember(TMeta) const noexcept;
+      NOD() Block GetMember(const Token&) noexcept;
+      NOD() Block GetMember(const Token&) const noexcept;
 
       template<CT::Index INDEX>
       NOD() Block GetMember(TMeta, const INDEX&) noexcept;
       template<CT::Index INDEX>
       NOD() Block GetMember(TMeta, const INDEX&) const noexcept;
+      template<CT::Index INDEX>
+      NOD() Block GetMember(const Token&, const INDEX&) noexcept;
+      template<CT::Index INDEX>
+      NOD() Block GetMember(const Token&, const INDEX&) const noexcept;
+
+      template<CT::Trait, CT::Data D>
+      bool GetTrait(D&) const;
+      template<CT::Data D>
+      bool GetValue(D&) const;
+
+      template<CT::Trait, bool DIRECT = false, CT::Data D>
+      bool SetTrait(const D&);
+      template<bool DIRECT = false, CT::Data D>
+      bool SetValue(const D&);
+      template<CT::Trait, bool DIRECT = false, CT::Data D>
+      bool SetTrait(D&&);
+      template<bool DIRECT = false, CT::Data D>
+      bool SetValue(D&&);
 
       NOD() explicit operator Debug() const;
 

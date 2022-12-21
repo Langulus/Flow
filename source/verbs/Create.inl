@@ -82,7 +82,7 @@ namespace Langulus::Verbs
             // Create                                                   
             // First allocate and default-initialize the results        
             auto created = Any::FromMeta(construct.GetType());
-            created.Allocate<true>(Count(construct.GetCharge().mMass));
+            created.AllocateMore<true>(Count(construct.GetCharge().mMass));
             auto& arguments = construct.GetArgument();
 
             // Then forward the constructors to each element            

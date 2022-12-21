@@ -104,12 +104,12 @@ namespace Langulus::Flow
    ///   @param head, tail  - the constructor arguments                       
    ///   @return the request                                                  
    template<CT::Data HEAD, CT::Data... TAIL>
-   Construct Construct::FromToken(const Token& token, const HEAD& head, const TAIL&... tail) {
+   Construct Construct::FromToken(const Token& token, HEAD&& head, TAIL&&... tail) {
       const auto meta = RTTI::Database.GetMetaData(token);
       if constexpr (sizeof...(tail) == 0)
          return Construct {meta, Forward<HEAD>(head)};
       else
-         return Construct {meta, Any {head, tail...}};
+         return Construct {meta, Any {Forward<HEAD>(head), Forward<TAIL>(tail)...}};
    }
 
    /// Create content descriptor from a type token (without arguments)        

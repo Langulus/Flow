@@ -480,7 +480,7 @@ namespace Langulus::Flow
             // If data is POD, optimize by directly memcpying it        
             const auto denseStride = source.GetStride();
             const auto byteCount = denseStride * source.GetCount();
-            result.Allocate(result.GetCount() + byteCount);
+            result.AllocateMore(result.GetCount() + byteCount);
             if (source.IsSparse()) {
                // ... pointer by pointer if sparse                      
                auto p = source.GetRawSparse();
@@ -669,7 +669,7 @@ namespace Langulus::Flow
          if (result.IsPOD()) {
             // If data is POD, optimize by directly memcpying it        
             if constexpr (HEADER)
-               result.Allocate<false, true>(deserializedCount);
+               result.AllocateMore<false, true>(deserializedCount);
 
             const auto byteSize = result.GetByteSize();
             RequestMoreBytes(source, read, byteSize, loader);
@@ -702,7 +702,7 @@ namespace Langulus::Flow
          else if (result.IsDeep()) {
             // If data is deep, nest each sub-block                     
             if constexpr (HEADER)
-               result.Allocate<true>(deserializedCount);
+               result.AllocateMore<true>(deserializedCount);
 
             result.ForEach([&](Block& block) {
                read = DeserializeBlock<true>(
@@ -717,7 +717,7 @@ namespace Langulus::Flow
             result.MakeSparse();
 
             if constexpr (HEADER)
-               result.Allocate<true>(deserializedCount);
+               result.AllocateMore<true>(deserializedCount);
 
             auto p = result.GetRawSparse();
             const auto pEnd = p + result.GetCount();
@@ -755,7 +755,7 @@ namespace Langulus::Flow
          else if (result.CastsTo<Verb>()) {
             // If data is verb, deserialize it here                     
             if constexpr (HEADER)
-               result.Allocate<true>(deserializedCount);
+               result.AllocateMore<true>(deserializedCount);
 
             result.ForEach([&](Verb& verb) {
                // Deserialize verb type                                 
@@ -803,7 +803,7 @@ namespace Langulus::Flow
             if constexpr (HEADER) {
                // Create default copy only if not predictable           
                element = Any::FromMeta(resolvedType);
-               element.Allocate<true>(1);
+               element.AllocateMore<true>(1);
             }
             else {
                // We don't make a default copy if already predictable   

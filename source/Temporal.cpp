@@ -9,8 +9,10 @@
 #include "inner/Missing.hpp"
 #include "inner/Fork.hpp"
 
-#define VERBOSE_TEMPORAL(a)      Logger::Verbose() << *this << ": " << a
-#define VERBOSE_TEMPORAL_TAB(a)   const auto tab = Logger::Verbose() << *this << ": " << a << Logger::Tabs{}
+#define VERBOSE_TEMPORAL(a) \
+   Logger::Verbose() << *this << ": " << a
+#define VERBOSE_TEMPORAL_TAB(a) \
+   const auto tab = Logger::Verbose() << *this << ": " << a << Logger::Tabs{}
 
 namespace Langulus::Flow
 {
@@ -29,6 +31,14 @@ namespace Langulus::Flow
    Temporal::Temporal(Temporal* parent, const State& state)
       : mParent {parent}
       , mState {state} { }
+
+   Temporal::operator Code() const {
+      return IdentityOf(this);
+   }
+
+   Temporal::operator Debug() const {
+      return IdentityOf(this);
+   }
 
    /// Clone the flow, but fork the parent flow, if any                       
    ///   @return the cloned flow                                              
@@ -95,8 +105,8 @@ namespace Langulus::Flow
             .SetSource(Abandon(output))
             .SetPriority(8);
 
-         VERBOSE_TEMPORAL(Logger::Purple
-            << "Flow after execution " << mPriorityStack);
+         VERBOSE_TEMPORAL(Logger::Purple << 
+            "Flow after execution " << mPriorityStack);
       }
 
       if (!dt) {
@@ -110,16 +120,16 @@ namespace Langulus::Flow
 
       // Execute flows that occur periodically                          
       for (auto pair : mFrequencyStack) {
-         pair.mValue.mDuration += dt;
-         if (pair.mValue.mDuration >= pair.mKey) {
+         pair.mValue->mDuration += dt;
+         if (pair.mValue->mDuration >= pair.mKey) {
             // Time to execute the periodic flow                        
-            pair.mValue.mPreviousTime = mPreviousTime;
-            pair.mValue.mCurrentTime = mCurrentTime;
-            pair.mValue.mDuration -= pair.mKey;
+            pair.mValue->mPreviousTime = mPreviousTime;
+            pair.mValue->mCurrentTime = mCurrentTime;
+            pair.mValue->mDuration -= pair.mKey;
 
             // Update the flow                                          
             // It might have periodic flows inside                      
-            pair.mValue.Update(pair.mKey);
+            pair.mValue->Update(pair.mKey);
          }
       }
 
@@ -131,7 +141,7 @@ namespace Langulus::Flow
 
          // Update the time flow                                        
          // It might have periodic flows inside                         
-         pair.mValue.Update(dt);
+         pair.mValue->Update(dt);
       }
    }
 
@@ -151,10 +161,13 @@ namespace Langulus::Flow
                mState.mPeriod
             };
 
-            mTimeStack.Insert(pair.mKey, Temporal {this, state});
+            //TODO make this more elegant
+            Ptr<Temporal> newt;
+            newt.New(this, state);
+            mTimeStack.Insert(pair.mKey, newt.Get());
          }
 
-         mTimeStack[pair.mKey].Merge(pair.mValue);
+         mTimeStack[pair.mKey]->Merge(*pair.mValue);
       };
 
       // Merge periodic stacks                                          
@@ -167,10 +180,12 @@ namespace Langulus::Flow
                pair.mKey
             };
 
-            mFrequencyStack.Insert(pair.mKey, Temporal {this, state});
+            Ptr<Temporal> newt;
+            newt.New(this, state);
+            mFrequencyStack.Insert(pair.mKey, newt.Get());
          }
 
-         mFrequencyStack[pair.mKey].Merge(pair.mValue);
+         mFrequencyStack[pair.mKey]->Merge(*pair.mValue);
       };
    }
 
@@ -259,13 +274,12 @@ namespace Langulus::Flow
             // Collapse verbs                                           
             auto collapsedArgument = Collapse(subscope.GetArgument());
             if (!collapsedArgument.IsEmpty()) {
-               Verb v {
+               auto v = Verb::FromMeta(
                   subscope.GetVerb(),
                   Abandon(collapsedArgument),
                   subscope.GetCharge(),
                   subscope.GetVerbState()
-               };
-               v.SetSource(Collapse(subscope.GetSource()));
+               ).SetSource(Collapse(subscope.GetSource()));
                result << Abandon(v);
             }
          },
@@ -335,13 +349,12 @@ namespace Langulus::Flow
          },
          [&](const Verb& subscope) {
             // Compile verbs                                            
-            Verb v {
+            auto v = Verb::FromMeta(
                subscope.GetVerb(),
                Compile(subscope.GetArgument(), subscope.GetPriority()),
                subscope.GetCharge(),
                subscope.GetVerbState()
-            };
-            v.SetSource(Compile(subscope.GetSource(), subscope.GetPriority()));
+            ).SetSource(Compile(subscope.GetSource(), subscope.GetPriority()));
             result << Abandon(v);
          }
       );
@@ -432,11 +445,6 @@ namespace Langulus::Flow
       );
 
       return atLeastOneSuccess;
-   }
-
-   /// Stringify the context (shows class type and an identifier)             
-   Temporal::operator Debug() const {
-      return IdentityOf(this);
    }
 
 } // namespace Langulus::Flow

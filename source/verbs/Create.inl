@@ -52,7 +52,9 @@ namespace Langulus::Verbs
    template<CT::Data T>
    bool Create::ExecuteIn(T& context, Verb& verb) {
       static_assert(Create::AvailableFor<T>(),
-         "Verb is not available for this context, this shouldn't be reached by flow");
+         "Verb is not available for this context, "
+         "this shouldn't be reached by flow"
+      );
       context.Create(verb);
       return verb.IsDone();
    }
@@ -82,7 +84,7 @@ namespace Langulus::Verbs
             // Create                                                   
             // First allocate and default-initialize the results        
             auto created = Any::FromMeta(construct.GetType());
-            created.AllocateMore<true>(Count(construct.GetCharge().mMass));
+            created.New(Count(construct.GetCharge().mMass));
             auto& arguments = construct.GetArgument();
 
             // Then forward the constructors to each element            
@@ -91,12 +93,13 @@ namespace Langulus::Verbs
                   Any element {created.GetElement(i)};
 
                   // First attempt delegating                           
-                  VERBOSE_CREATION(Logger::Yellow<<
+                  VERBOSE_CREATION(Logger::Yellow <<
                      "Delegating: " << arguments << " to " << element);
 
-                  Verbs::Create creator(arguments);
+                  Verbs::Create creator {arguments};
                   if (Scope::ExecuteVerb(element, creator)) {
-                     VERBOSE_CREATION(Logger::Yellow << "Sideproduct: " << creator.GetOutput());
+                     VERBOSE_CREATION(Logger::Yellow <<
+                        "Sideproduct: " << creator.GetOutput());
                      created.MergeBlock(Abandon(creator.GetOutput()));
                      continue;
                   }
@@ -156,13 +159,13 @@ namespace Langulus::Verbs
                VERBOSE_CREATION("Searching trait " << meta
                   << "... " << " (" << index << ")");
 
-               Verbs::Select selector(Any::Wrap(meta, index));
+               Verbs::Select selector {meta, index};
                Verb::GenericExecuteIn(context, selector);
                if (!selector.GetOutput().IsEmpty()) {
                   VERBOSE_CREATION("Initializing trait " << selector.GetOutput()
                      << " with " << Logger::Cyan << element << " (" << index << ")");
 
-                  Verbs::Associate associator(element);
+                  Verbs::Associate associator {element};
                   if (Verb::GenericExecuteIn(selector.GetOutput(), associator)) {
                      // Trait was found and overwritten                 
                      if (sati)
@@ -199,13 +202,13 @@ namespace Langulus::Verbs
             VERBOSE_CREATION("Searching for data " << meta
                << "... " << " (" << index << ")");
 
-            Verbs::Select selector {Any::Wrap(meta, index)};
+            Verbs::Select selector {meta, index};
             Verb::GenericExecuteIn(context, selector);
             if (!selector.GetOutput().IsEmpty()) {
                VERBOSE_CREATION("Initializing data " << selector.GetOutput()
                   << " with " << Logger::Cyan << element << " (" << index << ")");
 
-               Verbs::Associate associator(Move(element));
+               Verbs::Associate associator {Move(element)};
                if (Verb::GenericExecuteIn(selector.GetOutput(), associator)) {
                   // Data was found and was overwritten                 
                   if (sati)

@@ -25,7 +25,7 @@ namespace Langulus::Flow
    ///   @param item - the item to serialize                                  
    ///   @return the serialized item                                          
    template<CT::Block TO, bool HEADER, CT::Sparse FROM>
-   TO Serialize(FROM item) {
+   TO Serializer::Serialize(FROM item) {
       if (!item)
          return "<null>";
       return Serialize<TO, HEADER>(*item);
@@ -42,7 +42,7 @@ namespace Langulus::Flow
    ///   @param item - the item to serialize                                  
    ///   @return the serialized item                                          
    template<CT::Block TO, bool HEADER, CT::Dense FROM>
-   TO Serialize(const FROM& item) {
+   TO Serializer::Serialize(const FROM& item) {
       if constexpr (CT::SameAsOneOf<TO, Debug, Text>) {
          ///   DEBUG SERIALIZER                                         
          // Debug serializer doesn't have any restrictions. It is       
@@ -53,7 +53,7 @@ namespace Langulus::Flow
          try {
             // Attempt converting to debug via reflected converters     
             Debug result;
-            (void)Detail::SerializeBlock<HEADER>(block, result);
+            (void)SerializeBlock<HEADER>(block, result);
             return result;
          }
          catch (const Except::Convert&) {}
@@ -67,7 +67,7 @@ namespace Langulus::Flow
             // of redundant and irrelevant data, but better something   
             // than nothing...                                          
             Code result;
-            (void)Detail::SerializeBlock<HEADER>(block, result);
+            (void)SerializeBlock<HEADER>(block, result);
             return result;
          }
          catch (const Except::Convert&) {}
@@ -79,7 +79,7 @@ namespace Langulus::Flow
 
          try {
             Code result;
-            (void)Detail::SerializeBlock<HEADER>(block, result);
+            (void)SerializeBlock<HEADER>(block, result);
             return result;
          }
          catch (const Except::Convert&) {}
@@ -91,7 +91,7 @@ namespace Langulus::Flow
 
          try {
             Bytes result;
-            (void)Detail::SerializeBlock<HEADER>(block, result);
+            (void)SerializeBlock<HEADER>(block, result);
             return result;
          }
          catch (const Except::Convert&) {}
@@ -109,7 +109,7 @@ namespace Langulus::Flow
    ///   @param item - the item to deserialize                                
    ///   @return the deserialized contents inside a container                 
    template<CT::Block FROM>
-   Any Deserialize(const FROM& item) {
+   Any Serializer::Deserialize(const FROM& item) {
       if constexpr (CT::Same<FROM, Debug>) {
          LANGULUS_ERROR(
             "You can't deserialize debug containers "
@@ -119,9 +119,9 @@ namespace Langulus::Flow
          return item.Parse();
       }
       else if constexpr (CT::Same<FROM, Bytes>) {
-         Detail::Header header;
+         Header header;
          Any result;
-         (void)Detail::DeserializeBlock<true>(item, result, 0, header, {});
+         (void)DeserializeBlock<true>(item, result, 0, header, {});
          return result;
       }
       else LANGULUS_ERROR("Deserializer not implemented");
@@ -138,14 +138,14 @@ namespace Langulus::Flow
    /// Check if a memory block needs a Code scope decorated                   
    ///   @param block - the memory block to check                             
    ///   @return true if a scope is required around the block                 
-   inline bool Detail::NeedsScope(const Block& block) noexcept {
+   inline bool Serializer::NeedsScope(const Block& block) noexcept {
       return block.GetCount() > 1 || block.IsInvalid();
    }
 
    /// Add a separator                                                        
    ///   @param isOr - OR separator or not                                    
    ///   @return the text equivalent of the separator                         
-   inline Text Detail::Separator(bool isOr) {
+   inline Text Serializer::Separator(bool isOr) {
       return isOr 
          ? Verbs::Conjunct::CTTI_NegativeOperator 
          : Verbs::Conjunct::CTTI_PositiveOperator;
@@ -157,7 +157,7 @@ namespace Langulus::Flow
    ///   @param to - [out] the serialized block goes here                     
    ///   @return the number of written characters                             
    template<bool ENSCOPED, CT::Text TO>
-   Count Detail::SerializeBlock(const Block& from, TO& to) {
+   Count Serializer::SerializeBlock(const Block& from, TO& to) {
       const auto initial = to.GetCount();
       bool stateWritten = false;
       if (from.IsConstant()) {
@@ -356,11 +356,11 @@ namespace Langulus::Flow
    ///   @param to - [out] the serialized data                                
    ///   @param member - reflection data about the member                     
    template<class META, CT::Text TO>
-   void Detail::SerializeMeta(const Block& from, TO& to, const RTTI::Member* member) {
+   void Serializer::SerializeMeta(const Block& from, TO& to, const RTTI::Member* member) {
       static_assert(CT::DerivedFrom<META, RTTI::Meta>,
          "META has to be an RTTI::Meta derivative");
 
-      auto meta = member->As<META>(from.GetRaw());
+      auto meta = member->template As<META>(from.GetRaw());
       if (meta)   to += meta->GetToken();
       else        to += Decay<META>::DefaultToken;
    }
@@ -369,11 +369,11 @@ namespace Langulus::Flow
    ///   @param from - the number block to serialize                          
    ///   @param to - [out] the serialized data                                
    template<CT::Number T, CT::Text TO>
-   void Detail::SerializeNumber(const Block& from, TO& to) {
+   void Serializer::SerializeNumber(const Block& from, TO& to) {
       if (from.IsDense()) {
          // Significantly faster routine if dense                       
-         auto data = from.GetRawAs<T>();
-         const auto dataEnd = from.GetRawEndAs<T>();
+         auto data = from.template GetRawAs<T>();
+         const auto dataEnd = from.template GetRawEndAs<T>();
          while (data != dataEnd) {
             to += TO {*data};
             if (from.GetType()->mSuffix.size())
@@ -385,7 +385,7 @@ namespace Langulus::Flow
       }
       else {
          for (Offset i = 0; i < from.GetCount(); ++i) {
-            to += TO {from.As<T>(i)};
+            to += TO {from.template As<T>(i)};
             to += from.GetType()->mSuffix;
             if (i < from.GetCount() - 1)
                to += Separator(from.IsOr());
@@ -397,9 +397,9 @@ namespace Langulus::Flow
    ///   @param from - the member block to serialize                          
    ///   @param to - the serialized data                                      
    template<CT::Text TO>
-   void Detail::SerializeMembers(const Block& from, TO& to) {
-      if (from.Is<Block>() || from.Is<Any>()) {
-         SerializeBlock(from.Get<Block>(), to);
+   void Serializer::SerializeMembers(const Block& from, TO& to) {
+      if (from.template Is<Block>() || from.template Is<Any>()) {
+         SerializeBlock(from.template Get<Block>(), to);
          return;
       }
 
@@ -442,7 +442,7 @@ namespace Langulus::Flow
    }
 
    /// Default header constructor                                             
-   inline Detail::Header::Header() noexcept {
+   inline Serializer::Header::Header() noexcept {
       mAtomSize = sizeof(Size);
 
       // First bit of the flag means the file was written by a big      
@@ -453,7 +453,7 @@ namespace Langulus::Flow
       mUnused = 0;
    }
 
-   inline bool Detail::Header::operator == (const Header& rhs) const noexcept {
+   inline bool Serializer::Header::operator == (const Header& rhs) const noexcept {
       return mAtomSize == rhs.mAtomSize && mFlags == rhs.mFlags;
    }
 
@@ -464,7 +464,7 @@ namespace Langulus::Flow
    ///   @param result - [out] the resulting byte array                       
    ///   @return the number of written bytes                                  
    template<bool HEADER>
-   void Detail::SerializeBlock(const Block& source, Bytes& result) {
+   void Serializer::SerializeBlock(const Block& source, Bytes& result) {
       if constexpr (HEADER) {
          result += Bytes {source.GetCount()};
          result += Bytes {source.GetUnconstrainedState()};
@@ -481,6 +481,7 @@ namespace Langulus::Flow
             const auto denseStride = source.GetStride();
             const auto byteCount = denseStride * source.GetCount();
             result.AllocateMore(result.GetCount() + byteCount);
+
             if (source.IsSparse()) {
                // ... pointer by pointer if sparse                      
                auto p = source.GetRawSparse();
@@ -561,14 +562,11 @@ namespace Langulus::Flow
       LANGULUS_THROW(Convert, "Can't binary serialize");
    }
 
-   namespace Detail
-   {
-      inline void RequestMoreBytes(const Bytes& source, Offset read, Size byteCount, const Loader& loader) {
-         if (read >= source.GetCount() || source.GetCount() - read < byteCount) {
-            if (!loader)
-               LANGULUS_THROW(Access, "Deserializer has no loader");
-            loader(const_cast<Bytes&>(source), byteCount - (source.GetCount() - read));
-         }
+   inline void Serializer::RequestMoreBytes(const Bytes& source, Offset read, Size byteCount, const Loader& loader) {
+      if (read >= source.GetCount() || source.GetCount() - read < byteCount) {
+         if (!loader)
+            LANGULUS_THROW(Access, "Deserializer has no loader");
+         loader(const_cast<Bytes&>(source), byteCount - (source.GetCount() - read));
       }
    }
 
@@ -580,7 +578,7 @@ namespace Langulus::Flow
    ///   @param header - environment header                                   
    ///   @param loader - loader for streaming                                 
    ///   @return the number of read bytes from byte container                 
-   inline Size Detail::DeserializeAtom(const Bytes& source, Offset& result, Offset read, const Header& header, const Loader& loader) {
+   inline Size Serializer::DeserializeAtom(const Bytes& source, Offset& result, Offset read, const Header& header, const Loader& loader) {
       if (header.mAtomSize == 4) {
          // We're deserializing data, that was serialized on a 32-bit   
          // architecture                                                
@@ -623,7 +621,7 @@ namespace Langulus::Flow
    ///   @param loader - loader for streaming                                 
    ///   @return the number of read/peek bytes from byte container            
    template<bool HEADER>
-   Size Detail::DeserializeBlock(const Bytes& source, Block& result, Offset readOffset, const Header& header, const Loader& loader) {
+   Size Serializer::DeserializeBlock(const Bytes& source, Block& result, Offset readOffset, const Header& header, const Loader& loader) {
       Count deserializedCount = 0;
       auto read = readOffset;
 
@@ -702,7 +700,7 @@ namespace Langulus::Flow
          else if (result.IsDeep()) {
             // If data is deep, nest each sub-block                     
             if constexpr (HEADER)
-               result.AllocateMore<true>(deserializedCount);
+               result.New(deserializedCount);
 
             result.ForEach([&](Block& block) {
                read = DeserializeBlock<true>(
@@ -717,7 +715,7 @@ namespace Langulus::Flow
             result.MakeSparse();
 
             if constexpr (HEADER)
-               result.AllocateMore<true>(deserializedCount);
+               result.New(deserializedCount);
 
             auto p = result.GetRawSparse();
             const auto pEnd = p + result.GetCount();
@@ -755,7 +753,7 @@ namespace Langulus::Flow
          else if (result.CastsTo<Verb>()) {
             // If data is verb, deserialize it here                     
             if constexpr (HEADER)
-               result.AllocateMore<true>(deserializedCount);
+               result.New(deserializedCount);
 
             result.ForEach([&](Verb& verb) {
                // Deserialize verb type                                 
@@ -803,7 +801,7 @@ namespace Langulus::Flow
             if constexpr (HEADER) {
                // Create default copy only if not predictable           
                element = Any::FromMeta(resolvedType);
-               element.AllocateMore<true>(1);
+               element.New(1);
             }
             else {
                // We don't make a default copy if already predictable   
@@ -847,7 +845,7 @@ namespace Langulus::Flow
    ///   @param loader - loader for streaming                                 
    ///   @return number of read bytes                                         
    template<class META>
-   Size Detail::DeserializeMeta(const Bytes& source, META const*& result, Offset read, const Header& header, const Loader& loader) {
+   Size Serializer::DeserializeMeta(const Bytes& source, META const*& result, Offset read, const Header& header, const Loader& loader) {
       Count count = 0;
       read = DeserializeAtom(source, count, read, header, loader);
       if (count) {

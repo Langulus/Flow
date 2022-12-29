@@ -11,8 +11,10 @@
 #include "../verbs/Do.inl"
 #include "../verbs/Interpret.inl"
 
-#define VERBOSE_MISSING_POINT(a)         Logger::Verbose() << a
-#define VERBOSE_MISSING_POINT_TAB(a)   const auto tabs = Logger::Verbose() << a << Logger::Tabs{}
+#define VERBOSE_MISSING_POINT(a) \
+   Logger::Verbose() << a
+#define VERBOSE_MISSING_POINT_TAB(a) \
+   const auto tabs = Logger::Verbose() << a << Logger::Tabs{}
 #define VERBOSE_FUTURE(a) 
 
 namespace Langulus::Flow::Inner
@@ -226,7 +228,10 @@ namespace Langulus::Flow::Inner
          },
          [&](const Construct& construct) {
             try {
-               result << Construct {construct.GetType(), Link(construct, environment, consumedPast)};
+               result << Construct {
+                  construct.GetType(), 
+                  Link(construct, environment, consumedPast)
+               };
             }
             catch (const Except::Link&) {
                if (!scope.IsOr())
@@ -237,12 +242,14 @@ namespace Langulus::Flow::Inner
          },
          [&](const Verb& verb) {
             try {
-               result << Verb {
+               result << Verb::FromMeta(
                   verb.GetVerb(), 
                   Link(verb.GetArgument(), environment, consumedPast),
                   verb.GetCharge(), 
                   verb.GetVerbState()
-               }.SetSource(Link(verb.GetSource(), environment, consumedPast));
+               ).SetSource(
+                  Link(verb.GetSource(), environment, consumedPast)
+               );
             }
             catch (const Except::Link&) {
                if (!scope.IsOr())

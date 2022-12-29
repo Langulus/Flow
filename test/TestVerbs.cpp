@@ -25,7 +25,7 @@ SCENARIO("Text capsulation in verbs", "[verbs]") {
 		}
 
 		WHEN("Wrapped inside a verb's argument") {
-			Verbs::Do wrapper(&text);
+			Verbs::Do wrapper {&text};
 			THEN("The block's reference count must increase") {
 				REQUIRE(text.GetUses() == 1);
 				REQUIRE(text == "tests");

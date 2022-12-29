@@ -79,7 +79,7 @@ namespace Langulus::Flow
       LANGULUS_CONVERSIONS(Code, Debug);
       LANGULUS_BASES(Any, Charge);
    friend class Scope;
-   private:
+   protected:
       // Verb meta, mass, frequency, time and priority                  
       VMeta mVerb {};
       // The number of successful executions                            
@@ -91,28 +91,44 @@ namespace Langulus::Flow
       // The container where output goes                                
       Any mOutput;
 
+      template<class T>
+      static constexpr bool NotRelated = CT::Sparse<T> || !CT::DerivedFrom<T, Verb>;
+      template<class T>
+      static constexpr bool Related = CT::Dense<T> && CT::DerivedFrom<T, Verb>;
+
    public:
-      Verb() noexcept {}
+      constexpr Verb() noexcept = default;
 
-      Verb(const Verb&) = default;
-      Verb(Verb&&) noexcept = default;
+      Verb(const Verb&);
+      Verb(Verb&&);
 
-      Verb(Disowned<Verb>&&) noexcept;
-      Verb(Abandoned<Verb>&&) noexcept;
+      template<CT::NotSemantic T>
+      Verb(const T&) requires Related<T>;
+      template<CT::NotSemantic T>
+      Verb(T&) requires Related<T>;
+      template<CT::NotSemantic T>
+      Verb(T&&) requires Related<T>;
 
-      ~Verb() = default;
+      template<CT::Semantic S>
+      Verb(S&&) requires Related<TypeOf<S>>;
 
-      Verb(VMeta);
-      template<CT::Data T = Any>
-      Verb(VMeta, const T& = {}, const Charge& = {}, VerbState = {});
-      template<CT::Data T = Any>
-      Verb(VMeta, T&& = {}, const Charge& = {}, VerbState = {});
+      template<CT::NotSemantic T>
+      Verb(const T&) requires NotRelated<T>;
+      template<CT::NotSemantic T>
+      Verb(T&) requires NotRelated<T>;
+      template<CT::NotSemantic T>
+      Verb(T&&) requires NotRelated<T>;
 
-      Verb& operator = (const Verb&) = default;
-      Verb& operator = (Verb&&) noexcept = default;
+      template<CT::Semantic S>
+      Verb(S&&) requires NotRelated<TypeOf<S>>;
 
-      Verb& operator = (Disowned<Verb>&&);
-      Verb& operator = (Abandoned<Verb>&&);
+      template<CT::Data HEAD, CT::Data... TAIL>
+      Verb(HEAD&&, TAIL&&...) requires (sizeof...(TAIL) >= 1);
+
+      Verb& operator = (const Verb&);
+      Verb& operator = (Verb&&);
+      template<CT::Semantic S>
+      Verb& operator = (S&&) requires Related<TypeOf<S>>;
 
       Verb operator * (const Real&) const;
       Verb operator ^ (const Real&) const;
@@ -135,8 +151,15 @@ namespace Langulus::Flow
       static bool GenericExecuteStateless(V&);
 
    public:
-      NOD() Hash GetHash() const;
+      template<CT::Data VERB>
+      NOD() static Verb From(const Charge& = {}, const VerbState& = {});
+      template<CT::Data VERB, CT::Data DATA>
+      NOD() static Verb From(DATA&&, const Charge& = {}, const VerbState& = {});
+      template<CT::Data DATA>
+      NOD() static Verb FromMeta(VMeta, DATA&&, const Charge& = {}, const VerbState& = {});
+      NOD() static Verb FromMeta(VMeta, const Charge& = {}, const VerbState& = {});
 
+      NOD() Hash GetHash() const;
       NOD() Verb PartialCopy() const noexcept;
       NOD() Verb Clone() const;
       void Reset();
@@ -179,6 +202,8 @@ namespace Langulus::Flow
       void Undo() noexcept;
       Verb& Invert() noexcept;
 
+      template<CT::Data>
+      Verb& SetVerb();
       Verb& SetVerb(VMeta) noexcept;
       Verb& SetMass(Real) noexcept;
       Verb& SetFrequency(Real) noexcept;
@@ -249,12 +274,26 @@ namespace Langulus::Flow
       LANGULUS_BASES(Verb);
 
       StaticVerb();
-      template<CT::Data T>
-      StaticVerb(const T&, const Charge& = {}, VerbState = {});
-      template<CT::Data T>
-      StaticVerb(T&, const Charge& = {}, VerbState = {});
-      template<CT::Data T>
-      StaticVerb(T&&, const Charge& = {}, VerbState = {});
+      StaticVerb(const StaticVerb&);
+      StaticVerb(StaticVerb&&);
+
+      template<CT::NotSemantic T>
+      StaticVerb(const T&);
+      template<CT::NotSemantic T>
+      StaticVerb(T&);
+      template<CT::NotSemantic T>
+      StaticVerb(T&&);
+
+      template<CT::Semantic S>
+      StaticVerb(S&&);
+
+      template<CT::Data HEAD, CT::Data... TAIL>
+      StaticVerb(HEAD&&, TAIL&&...) requires (sizeof...(TAIL) >= 1);
+
+      StaticVerb& operator = (const StaticVerb&);
+      StaticVerb& operator = (StaticVerb&&);
+      template<CT::Semantic S>
+      StaticVerb& operator = (S&&) requires Related<TypeOf<S>>;
    };
 
 

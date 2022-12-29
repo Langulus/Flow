@@ -7,6 +7,7 @@
 ///                                                                           
 #include "Scope.hpp"
 #include "Construct.hpp"
+#include "Verb.hpp"
 #include "verbs/Do.inl"
 #include "verbs/Interpret.inl"
 
@@ -184,12 +185,12 @@ namespace Langulus::Flow
 
                // Shallow-copy the verb to make it mutable              
                // Also resets its output                                
-               Verb verb {
+               auto verb = Verb::FromMeta(
                   constVerb.mVerb,
                   constVerb.GetArgument(),
                   constVerb,
                   constVerb.GetVerbState()
-               };
+               );
                verb.SetSource(constVerb.GetSource());
 
                // Execute the verb                                      
@@ -287,12 +288,12 @@ namespace Langulus::Flow
 
                // Shallow-copy the verb to make it mutable              
                // Also resets its output                                
-               Verb verb {
+               auto verb = Verb::FromMeta(
                   constVerb.mVerb,
                   constVerb.GetArgument(),
                   constVerb,
                   constVerb.GetVerbState()
-               };
+               );
 
                if (!Scope::ExecuteVerb(environment, verb))
                   return true;

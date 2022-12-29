@@ -14,6 +14,7 @@ struct Thing : public Resolvable {
    LANGULUS_BASES(Resolvable);
    Thing() : Resolvable(MetaData::Of<Thing>()) {}
    Thing(DMeta type) : Resolvable(type) {}
+   virtual ~Thing() = default;
 
    virtual void Update() {}
 

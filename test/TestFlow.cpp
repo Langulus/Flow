@@ -28,7 +28,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: `plural` associate many") {
 		const auto code = "`plural` associate many"_code;
-		const Any required = Verbs::Associate(IndexMany)
+		const Any required = Verbs::Associate {IndexMany}
 			.SetSource("plural"_text);
 
 		WHEN("Parsed") {
@@ -42,7 +42,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: `plural` associate(many)") {
 		const auto code = "`plural` associate(many)"_code;
-		const Any required = Verbs::Associate(IndexMany)
+		const Any required = Verbs::Associate {IndexMany}
 			.SetSource("plural"_text);
 
 		WHEN("Parsed") {
@@ -56,7 +56,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: (`plural`) associate (many)") {
 		const auto code = "(`plural`) associate (many)"_code;
-		const Any required = Verbs::Associate(IndexMany)
+		const Any required = Verbs::Associate {IndexMany}
 			.SetSource("plural"_text);
 
 		WHEN("Parsed") {
@@ -70,7 +70,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: (`plural`) associate (many)") {
 		const auto code = "(`plural`) associate many"_code;
-		const Any required = Verbs::Associate(IndexMany)
+		const Any required = Verbs::Associate {IndexMany}
 			.SetSource("plural"_text);
 
 		WHEN("Parsed") {
@@ -84,7 +84,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: `plural` = many") {
 		const auto code = "`plural` = many"_code;
-		const Any required = Verbs::Associate(IndexMany)
+		const Any required = Verbs::Associate {IndexMany}
 			.SetSource("plural"_text);
 
 		WHEN("Parsed") {
@@ -98,7 +98,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: `plural` = (many)") {
 		const auto code = "`plural` = (many)"_code;
-		const Any required = Verbs::Associate(IndexMany)
+		const Any required = Verbs::Associate {IndexMany}
 			.SetSource("plural"_text);
 
 		WHEN("Parsed") {
@@ -112,7 +112,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: (`plural`) = (many)") {
 		const auto code = "(`plural`) = (many)"_code;
-		const Any required = Verbs::Associate(IndexMany)
+		const Any required = Verbs::Associate {IndexMany}
 			.SetSource("plural"_text);
 
 		WHEN("Parsed") {
@@ -126,7 +126,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: (`plural`) = many") {
 		const auto code = "(`plural`) = many"_code;
-		const Any required = Verbs::Associate(IndexMany)
+		const Any required = Verbs::Associate {IndexMany}
 			.SetSource("plural"_text);
 
 		WHEN("Parsed") {
@@ -140,7 +140,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: `thing` associate [Entity(past?, future?)]") {
 		const auto code = "`thing` associate [Entity(past?, future?)]"_code;
-		const Any required = Verbs::Associate("Entity(past?, future?)"_code)
+		const Any required = Verbs::Associate {"Entity(past?, future?)"_code}
 			.SetSource("thing"_text);
 
 		WHEN("Parsed") {
@@ -154,7 +154,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: `things` associate(\"thing\", `plural`)") {
 		const auto code = "`things` associate(\"thing\", `plural`)"_code;
-		const Any required = Verbs::Associate(Any {"thing"_text, "plural"_text})
+		const Any required = Verbs::Associate {"thing"_text, "plural"_text}
 			.SetSource("things"_text);
 
 		WHEN("Parsed") {
@@ -168,7 +168,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: `things` = (\"thing\", `plural`)") {
 		const auto code = "`things` = (\"thing\", `plural`)"_code;
-		const Any required = Verbs::Associate(Any {"thing"_text, "plural"_text})
+		const Any required = Verbs::Associate {"thing"_text, "plural"_text}
 			.SetSource("things"_text);
 
 		WHEN("Parsed") {
@@ -182,9 +182,13 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: ',' = ([number? >< number??] or single or \"and\")") {
 		const Code code = "',' = ([number? >< number??] or single or \"and\")";
-		auto argument = Any::Wrap("number? >< number??"_code, IndexSingle, "and"_text);
+		Any argument {
+			"number? >< number??"_code, 
+			IndexSingle, 
+			"and"_text
+		};
 		argument.MakeOr();
-		const Any required = Verbs::Associate(argument)
+		const Any required = Verbs::Associate {argument}
 			.SetSource(',');
 
 		WHEN("Parsed") {
@@ -198,10 +202,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: Create!-1(Verb(?, ??))") {
 		const Code code = "Create!-1(Verb(?, ??))";
-		TAny<Any> package = Any::Wrap(pastMissing, futureMissing);
-		const Any required = Verbs::Create(
+		TAny<Any> package {pastMissing, futureMissing};
+		const Any required = Verbs::Create {
 			Construct::From<Verb>(package)
-		).SetPriority(-1);
+		}.SetPriority(-1);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -218,7 +222,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		source << MetaData::Of<A::Number>();
 		Any argument {futureMissing};
 		argument << MetaData::Of<A::Number>();
-		const Any required = Verbs::Catenate(argument)
+		const Any required = Verbs::Catenate {argument}
 			.SetSource(source);
 
 		WHEN("Parsed") {
@@ -232,10 +236,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: `is` = (? = ??)") {
 		const Code code = "`is` = (? = ??)";
-		const auto package = 
-			Verbs::Associate(futureMissing).SetSource(pastMissing);
-		const Any required = 
-			Verbs::Associate(package).SetSource("is"_text);
+		const Any package = Verbs::Associate {futureMissing}
+			.SetSource(pastMissing);
+		const Any required = Verbs::Associate {package}
+			.SetSource("is"_text);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -248,12 +252,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: .Context = .Verb.??") {
 		const Code code = ".Context = .Verb.??";
-		const Any required = Verbs::Associate(
-			Verbs::Select(futureMissing)
-				.SetSource(Verbs::Select(MetaData::Of<Verb>()))
-		).SetSource(
-			Verbs::Select(MetaTrait::Of<Traits::Context>())
-		);
+		const Any package = Verbs::Select {futureMissing}
+			.SetSource(Verbs::Select {MetaData::Of<Verb>()});
+		const Any required = Verbs::Associate {package}
+			.SetSource(Verbs::Select {MetaTrait::Of<Traits::Context>()});
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -278,9 +280,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 			<< MetaData::Of<Construct>();
 
 		const Code code = "Create!-1(Verb(?(Number,DMeta,Construct), ??(Number,DMeta,Construct)))";
-		const Any required = Verbs::Create(
+		const Any required = Verbs::Create {
 			Construct::From<Verb>(Any {a1, a2})
-		).SetPriority(-1);
+		}.SetPriority(-1);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -293,9 +295,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: Create^1(Count(1)) Add^3 2") {
 		const Code code = "Create^1(Count(1)) Add^3 2";
-		Any required = Verbs::Add(Real(2))
+		const Any required = Verbs::Add {Real(2)}
 			.SetSource(
-				Verbs::Create(Traits::Count(Real(1)))
+				Verbs::Create {Traits::Count {Real(1)}}
 					.SetFrequency(1))
 			.SetFrequency(3);
 
@@ -310,9 +312,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: Create^1(Count(1)) Add^3(2)") {
 		const Code code = "Create^1(Count(1)) Add^3(2)";
-		Any required = Verbs::Add(Real(2))
+		const Any required = Verbs::Add {Real(2)}
 			.SetSource(
-				Verbs::Create(Traits::Count(Real(1)))
+				Verbs::Create {Traits::Count {Real(1)}}
 					.SetFrequency(1))
 			.SetFrequency(3);
 
@@ -327,13 +329,14 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: Create^1(Count(1)) Add^2(2) Multiply^3(4)") {
 		const Code code = "Create^1(Count(1)) Add^2(2) Multiply^3(4)";
-		Any required = Verbs::Add(
-				Verbs::Multiply(Real(4)).SetSource(Real(2)).SetFrequency(3)
-			)
+		const Any multiply = Verbs::Multiply {Real(4)}
+			.SetSource(Real(2))
+			.SetFrequency(3);
+		const Any required = Verbs::Add {multiply}
 			.SetFrequency(2)
 			.SetSource(
-				Verbs::Create(Traits::Count(Real(1)))
-				.SetFrequency(1)
+				Verbs::Create {Traits::Count {Real(1)}}
+					.SetFrequency(1)
 			);
 
 		WHEN("Parsed") {
@@ -347,10 +350,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: Create^1(Count(1)) + 2 * 4") {
 		const Code code = "Create^1(Count(1)) + 2 * 4";
-		Any required = Verbs::Add(Real(8))
+		const Any required = Verbs::Add {Real(8)}
 			.SetSource(
-				Verbs::Create(Traits::Count(Real(1)))
-				.SetFrequency(1)
+				Verbs::Create {Traits::Count {Real(1)}}
+					.SetFrequency(1)
 			);
 
 		WHEN("Parsed") {
@@ -364,13 +367,16 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: -(2 * 8.75 - 14 ^ 2)") {
 		const Code code = "-(2 * 8.75 - 14 ^ 2)";
-		Any required = Verbs::Add(
-			Verbs::Add(
-				Verbs::Exponent(Real(2)).SetSource(Real(14))
-			)
+		const Any exponent = Verbs::Exponent {Real(2)}
+			.SetSource(Real(14));
+		const Any addition = Verbs::Add {exponent}
 			.SetMass(-1)
-			.SetSource(Verbs::Multiply(Real(8.75)).SetSource(Real(2)))
-		).SetMass(-1);
+			.SetSource(
+				Verbs::Multiply {Real(8.75)}
+					.SetSource(Real(2))
+			);
+		const Any required = Verbs::Add {addition}
+			.SetMass(-1);
 
 		WHEN("Parsed without optimization") {
 			const auto parsed = code.Parse(false);
@@ -392,11 +398,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: ? create Thing(User)") {
 		const Code code = "? create Thing(User)";
-		Any required = Verbs::Create(
-			Construct::From<Thing>(
-				MetaData::Of<User>()
-			)
-		).SetSource(pastMissing);
+		const Any required = Verbs::Create {
+			Construct::From<Thing>(MetaData::Of<User>())
+		}.SetSource(pastMissing);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -414,10 +418,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		Any futrNumber {futureMissing};
 		futrNumber << MetaData::Of<A::Number>();
 
-		Verbs::Catenate catenate(futrNumber);
+		Verbs::Catenate catenate {futrNumber};
 		catenate.SetSource(pastNumber);
 
-		Verbs::Conjunct conjunct(futureMissing);
+		Verbs::Conjunct conjunct {futureMissing};
 		conjunct.SetSource(pastMissing);
 		conjunct.SetPriority(4);
 
@@ -440,10 +444,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		Any futrNumber {futureMissing};
 		futrNumber << MetaData::Of<A::Number>();
 
-		Verbs::Add add(Construct::From<Fraction>(futrNumber));
+		Verbs::Add add {Construct::From<Fraction>(futrNumber)};
 		add.SetSource(pastNumber);
 
-		Verbs::Conjunct conjunct(futureMissing);
+		Verbs::Conjunct conjunct {futureMissing};
 		conjunct.SetSource(pastMissing);
 		conjunct.SetPriority(8);
 
@@ -464,10 +468,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 		Any futrNumber {futureMissing};
 		futrNumber << MetaData::Of<A::Number>();
 
-		Verbs::Add add(Construct::From<Fraction>(futrNumber));
+		Verbs::Add add {Construct::From<Fraction>(futrNumber)};
 		add.SetSource(pastMissing);
 
-		Verbs::Conjunct conjunct(futureMissing);
+		Verbs::Conjunct conjunct {futureMissing};
 		conjunct.SetSource(pastMissing);
 		conjunct.SetPriority(8);
 
@@ -485,11 +489,11 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: ?.Thing(User).??") {
 		const Code code = "?.Thing(User).??";
-		const Any required = Verbs::Select(futureMissing)
+		const Any required = Verbs::Select {futureMissing}
 			.SetSource(
-				Verbs::Select(
+				Verbs::Select {
 					Construct::From<Thing>(MetaData::Of<User>())
-				).SetSource(pastMissing)
+				}.SetSource(pastMissing)
 			);
 
 		WHEN("Parsed") {
@@ -516,7 +520,8 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: ? = ??") {
 		const Code code = "? = ??";
-		const Any required = Verbs::Associate(futureMissing).SetSource(pastMissing);
+		const Any required = Verbs::Associate {futureMissing}
+			.SetSource(pastMissing);
 
 		WHEN("Parsed") {
 			const auto parsed = code.Parse();
@@ -556,7 +561,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: ? create ??") {
 		const Code code = "? create ??";
-		const Any required = Verbs::Create(futureMissing)
+		const Any required = Verbs::Create {futureMissing}
 			.SetSource(pastMissing);
 
 		WHEN("Parsed") {
@@ -600,9 +605,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
 	GIVEN("The script: ? create Name(A::Text??)") {
 		const Code code = "? create Name(A::Text??)";
-		Any missingFutureText(futureMissing);
+		Any missingFutureText {futureMissing};
 		missingFutureText << MetaData::Of<A::Text>();
-		const Any required = Verbs::Create {Traits::Name{missingFutureText}}
+		const Any required = Verbs::Create {Traits::Name {missingFutureText}}
 			.SetSource(pastMissing);
 
 		WHEN("Parsed") {

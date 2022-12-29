@@ -94,7 +94,7 @@ namespace Langulus::Flow
 
       // If reached, data doesn't rely on a producer                    
       // Make sure we're creating something concrete                    
-      Verbs::Create creator(this);
+      Verbs::Create creator {this};
       if (Verbs::Create::ExecuteStateless(creator)) {
          VERBOSE_CONSTRUCT("Constructed from initializer-list: "
             << Logger::Cyan << creator.GetOutput());

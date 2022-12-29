@@ -62,58 +62,6 @@ namespace Langulus::Flow
       return *this;
    }
 
-   /// Disown-construct a verb                                                
-   ///   @param other - the verb to disown and copy                           
-   Verb::Verb(Disowned<Verb>&& other) noexcept
-      : Any {other.Forward<Any>()}
-      , Charge {other.mValue}
-      , mVerb {other.mValue.mVerb}
-      , mState {other.mValue.mState}
-      , mSource {Disown(other.mValue.mSource)}
-      , mOutput {Disown(other.mValue.mOutput)} { }
-
-   /// Abandon-construct a verb                                               
-   ///   @param other - the verb to abandon and move                          
-   Verb::Verb(Abandoned<Verb>&& other) noexcept
-      : Any {other.Forward<Any>()}
-      , Charge {other.mValue}
-      , mVerb {other.mValue.mVerb}
-      , mState {other.mValue.mState}
-      , mSource {Abandon(other.mValue.mSource)}
-      , mOutput {Abandon(other.mValue.mOutput)} { }
-
-   /// Manual constructor with verb meta                                      
-   ///   @param verb - the verb type                                          
-   Verb::Verb(VMeta verb)
-      : Any {}
-      , mVerb {verb} { }
-
-   /// Disown-assign a verb                                                   
-   ///   @param other - the verb to disown and copy                           
-   ///   @return a reference to this verb                                     
-   Verb& Verb::operator = (Disowned<Verb>&& other) {
-      Any::operator = (other.Forward<Any>());
-      Charge::operator = (other.mValue);
-      mVerb = other.mValue.mVerb;
-      mState = other.mValue.mState;
-      mSource = Disown(other.mValue.mSource);
-      mOutput = Disown(other.mValue.mOutput);
-      return *this;
-   }
-
-   /// Abandon-assign a verb                                                  
-   ///   @param other - the verb to abandon and move                          
-   ///   @return a reference to this verb                                     
-   Verb& Verb::operator = (Abandoned<Verb>&& other) {
-      Any::operator = (other.Forward<Any>());
-      Charge::operator = (other.mValue);
-      mVerb = other.mValue.mVerb;
-      mState = other.mValue.mState;
-      mSource = Abandon(other.mValue.mSource);
-      mOutput = Abandon(other.mValue.mOutput);
-      return *this;
-   }
-
    /// Hash the verb                                                          
    ///   @return the hash of the content                                      
    Hash Verb::GetHash() const {
@@ -158,13 +106,13 @@ namespace Langulus::Flow
    ///   @param other - the verb to use as base                               
    ///   @return the partially copied verb                                    
    Verb Verb::PartialCopy() const noexcept {
-      return {mVerb, Any{}, GetCharge(), mState};
+      return Verb::FromMeta(mVerb, GetCharge(), mState);
    }
 
    /// Clone the verb                                                         
    ///   @return the cloned verb                                              
    Verb Verb::Clone() const {
-      Verb clone {mVerb, Any::Clone(), GetCharge(), mState};
+      auto clone = FromMeta(mVerb, Any::Clone(), GetCharge(), mState);
       clone.mSource = mSource.Clone();
       clone.mOutput = mOutput.Clone();
       clone.mSuccesses = mSuccesses;

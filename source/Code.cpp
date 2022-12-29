@@ -7,6 +7,7 @@
 ///                                                                           
 #include "Code.hpp"
 #include "Serial.hpp"
+#include "Verb.hpp"
 #include "verbs/Do.inl"
 #include "verbs/Select.inl"
 #include "verbs/Associate.inl"
@@ -590,7 +591,7 @@ namespace Langulus::Flow
          VERBOSE_TAB("Parsing reflected operator: [" << word << "] (" << found << ")");
          progress += word.size();
          const Code relevant = input.RightOf(progress);
-         Verb operation {found};
+         auto operation = Verb::FromMeta(found);
          if (CompareOperators(word, found->mOperatorReverse))
             operation.SetMass(-1);
 
@@ -615,7 +616,7 @@ namespace Langulus::Flow
          VERBOSE_TAB("Parsing reflected verb: [" << word << "] (" << found << ")");
          progress += word.size();
          const Code relevant = input.RightOf(progress);
-         Verb operation {found};
+         auto operation = Verb::FromMeta(found);
          if (CompareOperators(word, found->mTokenReverse))
             operation.SetMass(-1);
 
@@ -688,7 +689,7 @@ namespace Langulus::Flow
       }
       else if (lhs.Is<VMeta>()) {
          // The content is for an uninstantiated verb scope             
-         Verb verb {lhs.As<VMeta>(-1), Move(rhs)};
+         auto verb = Verb::FromMeta(lhs.As<VMeta>(-1), Move(rhs));
          lhs.RemoveIndex(-1);
          lhs.SmartPush(Abandon(verb));
          VERBOSE_ALT("Constructed from VMeta: " << Logger::Cyan << lhs);

@@ -17,6 +17,7 @@ namespace Langulus::Flow
    ///   @param freq - the frequency charge                                   
    ///   @param time - the time charge                                        
    ///   @param prio - the priority charge                                    
+   LANGULUS(ALWAYSINLINE)
    constexpr Charge::Charge(Real mass, Real freq, Real time, Real prio) noexcept
       : mMass {mass}
       , mFrequency {freq}
@@ -26,6 +27,7 @@ namespace Langulus::Flow
    /// Compare charges                                                        
    ///   @param rhs - the charge to compare against                           
    ///   @return true if both charges match exactly                           
+   LANGULUS(ALWAYSINLINE)
    constexpr bool Charge::operator == (const Charge& rhs) const noexcept {
       return mMass == rhs.mMass
          && mFrequency == rhs.mFrequency
@@ -35,12 +37,14 @@ namespace Langulus::Flow
 
    /// Check if charge is default                                             
    ///   @return true if charge is default                                    
+   LANGULUS(ALWAYSINLINE)
    constexpr bool Charge::IsDefault() const noexcept {
       return *this == Charge {};
    }
 
    /// Check if charge is default                                             
    ///   @return true if charge is default                                    
+   LANGULUS(ALWAYSINLINE)
    constexpr bool Charge::IsFlowDependent() const noexcept {
       return mFrequency != DefaultFrequency
          || mTime != DefaultTime
@@ -49,12 +53,14 @@ namespace Langulus::Flow
 
    /// Get the hash of the charge                                             
    ///   @return the hash of the charge                                       
-   inline Hash Charge::GetHash() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Hash Charge::GetHash() const noexcept {
       return HashData(mMass, mFrequency, mTime, mPriority);
    }
 
    /// Reset the charge to the default                                        
-   inline void Charge::Reset() noexcept {
+   LANGULUS(ALWAYSINLINE)
+   void Charge::Reset() noexcept {
       mMass = DefaultMass;
       mFrequency = DefaultFrequency;
       mTime = DefaultTime;
@@ -63,11 +69,13 @@ namespace Langulus::Flow
 
    /// Manual construction                                                    
    ///   @param state - the state                                             
+   LANGULUS(ALWAYSINLINE)
    constexpr VerbState::VerbState(const Type& state) noexcept
       : mState {state} {}
 
    /// Explicit convertion to bool                                            
    ///   @return true if state is not default                                 
+   LANGULUS(ALWAYSINLINE)
    constexpr VerbState::operator bool() const noexcept {
       return !IsDefault();
    }
@@ -75,6 +83,7 @@ namespace Langulus::Flow
    /// Combine two states                                                     
    ///   @param rhs - the other state                                         
    ///   @return a new combined state                                         
+   LANGULUS(ALWAYSINLINE)
    constexpr VerbState VerbState::operator + (const VerbState& rhs) const noexcept {
       return mState | rhs.mState;
    }
@@ -82,6 +91,7 @@ namespace Langulus::Flow
    /// Remove rhs state from this state                                       
    ///   @param rhs - the other state                                         
    ///   @return a new leftover state                                         
+   LANGULUS(ALWAYSINLINE)
    constexpr VerbState VerbState::operator - (const VerbState& rhs) const noexcept {
       return mState & (~rhs.mState);
    }
@@ -89,6 +99,7 @@ namespace Langulus::Flow
    /// Destructively add state                                                
    ///   @param rhs - the other state                                         
    ///   @return a reference to this state                                    
+   LANGULUS(ALWAYSINLINE)
    constexpr VerbState& VerbState::operator += (const VerbState& rhs) noexcept {
       mState |= rhs.mState;
       return *this;
@@ -97,15 +108,18 @@ namespace Langulus::Flow
    /// Destructively remove state                                             
    ///   @param rhs - the other state                                         
    ///   @return a reference to this state                                    
+   LANGULUS(ALWAYSINLINE)
    constexpr VerbState& VerbState::operator -= (const VerbState& rhs) noexcept {
       mState &= ~rhs.mState;
       return *this;
    }
    
+   LANGULUS(ALWAYSINLINE)
    constexpr bool VerbState::operator & (const VerbState& rhs) const noexcept {
       return (mState & rhs.mState) == rhs.mState;
    }
    
+   LANGULUS(ALWAYSINLINE)
    constexpr bool VerbState::operator % (const VerbState& rhs) const noexcept {
       return (mState & rhs.mState) == 0;
    }
@@ -113,120 +127,228 @@ namespace Langulus::Flow
    /// Check if default data state                                            
    /// Default state is inclusive, mutable, nonpolar, nonvacuum, nonstatic,   
    /// nonencrypted, noncompressed, untyped, and dense                        
+   LANGULUS(ALWAYSINLINE)
    constexpr bool VerbState::IsDefault() const noexcept {
       return mState == VerbState::Default;
    }
    
    /// Check if state is multicast                                            
+   LANGULUS(ALWAYSINLINE)
    constexpr bool VerbState::IsMulticast() const noexcept {
       return (mState & VerbState::Monocast) == 0;
    }
    
    /// Check if state is monocast                                             
+   LANGULUS(ALWAYSINLINE)
    constexpr bool VerbState::IsMonocast() const noexcept {
       return mState & VerbState::Monocast;
    }
    
    /// Check if state is long-circuited                                       
+   LANGULUS(ALWAYSINLINE)
    constexpr bool VerbState::IsLongCircuited() const noexcept {
       return mState & VerbState::LongCircuited;
    }
    
    /// Check if state is short-circuited                                      
+   LANGULUS(ALWAYSINLINE)
    constexpr bool VerbState::IsShortCircuited() const noexcept {
       return (mState & VerbState::LongCircuited) == 0;
    }
-   
 
-   /// Manual constructor by shallow-copy                                     
-   ///   @tparam T - type of the argument (deducible)                         
-   ///   @param verb - the verb type                                          
-   ///   @param argument - the argument                                       
-   ///   @param charge - the charge                                           
-   ///   @param state - verb state                                            
-   template<CT::Data T>
-   Verb::Verb(VMeta verb, const T& argument, const Charge& charge, const VerbState state)
-      : Any {argument}
-      , Charge {charge}
-      , mVerb {verb}
-      , mState {state} { }
+   LANGULUS(ALWAYSINLINE)
+   Verb::Verb(const Verb& other)
+      : Verb {Langulus::Copy(other)} {}
 
-   /// Manual constructor by move                                             
-   ///   @tparam T - type of the argument (deducible)                         
-   ///   @param verb - the verb type                                          
-   ///   @param argument - the argument to move in                            
-   ///   @param charge - the charge                                           
-   ///   @param state - verb state                                            
-   template<CT::Data T>
-   Verb::Verb(VMeta verb, T&& argument, const Charge& charge, const VerbState state)
-      : Any {Forward<T>(argument)}
-      , Charge {charge}
-      , mVerb {verb}
-      , mState {state} { }
+   LANGULUS(ALWAYSINLINE)
+   Verb::Verb(Verb&& other)
+      : Verb {Langulus::Move(other)} {}
+
+   template<CT::NotSemantic T>
+   LANGULUS(ALWAYSINLINE)
+   Verb::Verb(const T& other) requires Related<T>
+      : Verb {Langulus::Copy(other)} {}
+
+   template<CT::NotSemantic T>
+   LANGULUS(ALWAYSINLINE)
+   Verb::Verb(T& other) requires Related<T>
+      : Verb {Langulus::Copy(other)} {}
+
+   template<CT::NotSemantic T>
+   LANGULUS(ALWAYSINLINE)
+   Verb::Verb(T&& other) requires Related<T>
+      : Verb {Langulus::Copy(other)} {}
+
+   template<CT::Semantic S>
+   LANGULUS(ALWAYSINLINE)
+   Verb::Verb(S&& other) requires Related<TypeOf<S>>
+      : Any {other.template Forward<Any>()}
+      , Charge {other.mValue}
+      , mVerb {other.mValue.mVerb}
+      , mState {other.mValue.mState}
+      , mSource {S::Nest(other.mValue.mSource)}
+      , mOutput {S::Nest(other.mValue.mOutput)} {}
+
+   template<CT::NotSemantic T>
+   LANGULUS(ALWAYSINLINE)
+   Verb::Verb(const T& other) requires NotRelated<T>
+      : Verb {Langulus::Copy(other)} {}
+
+   template<CT::NotSemantic T>
+   LANGULUS(ALWAYSINLINE)
+   Verb::Verb(T& other) requires NotRelated<T>
+      : Verb {Langulus::Copy(other)} {}
+
+   template<CT::NotSemantic T>
+   LANGULUS(ALWAYSINLINE)
+   Verb::Verb(T&& other) requires NotRelated<T>
+      : Verb {Langulus::Copy(other)} {}
+
+   template<CT::Semantic S>
+   LANGULUS(ALWAYSINLINE)
+   Verb::Verb(S&& other) requires NotRelated<TypeOf<S>>
+      : Any {other.Forward()} {}
+
+   template<CT::Data HEAD, CT::Data... TAIL>
+   LANGULUS(ALWAYSINLINE)
+   Verb::Verb(HEAD&& head, TAIL&&... tail) requires (sizeof...(TAIL) >= 1)
+      : Any {Forward<HEAD>(head), Forward<TAIL>(tail)...} {}
+
+   LANGULUS(ALWAYSINLINE)
+   Verb& Verb::operator = (const Verb& rhs) {
+      return operator = (Langulus::Copy(rhs));
+   }
+
+   LANGULUS(ALWAYSINLINE)
+   Verb& Verb::operator = (Verb&& rhs) {
+      return operator = (Langulus::Move(rhs));
+   }
+
+   template<CT::Semantic S>
+   LANGULUS(ALWAYSINLINE)
+   Verb& Verb::operator = (S&& rhs) requires Related<TypeOf<S>> {
+      Any::operator = (rhs.template Forward<Any>());
+      Charge::operator = (rhs.mValue);
+      mVerb = rhs.mValue.mVerb;
+      mState = rhs.mValue.mState;
+      mSource = S::Nest(rhs.mValue.mSource);
+      mOutput = S::Nest(rhs.mValue.mOutput);
+      return *this;
+   }
+
+   template<CT::Data VERB>
+   LANGULUS(ALWAYSINLINE)
+   Verb Verb::From(const Charge& charge, const VerbState& state) {
+      Verb result;
+      result.template SetVerb<VERB>();
+      result.SetCharge(charge);
+      result.SetVerbState(state);
+      return result;
+   }
+
+   template<CT::Data VERB, CT::Data DATA>
+   LANGULUS(ALWAYSINLINE)
+   Verb Verb::From(DATA&& argument, const Charge& charge, const VerbState& state) {
+      Verb result;
+      result.template SetVerb<VERB>();
+      result.SetArgument(Forward<DATA>(argument));
+      result.SetCharge(charge);
+      result.SetVerbState(state);
+      return result;
+   }
+
+   template<CT::Data DATA>
+   LANGULUS(ALWAYSINLINE)
+   Verb Verb::FromMeta(VMeta verb, DATA&& argument, const Charge& charge, const VerbState& state) {
+      Verb result;
+      result.SetVerb(verb);
+      result.SetArgument(Forward<DATA>(argument));
+      result.SetCharge(charge);
+      result.SetVerbState(state);
+      return result;
+   }
+
+   LANGULUS(ALWAYSINLINE)
+   Verb Verb::FromMeta(VMeta verb, const Charge& charge, const VerbState& state) {
+      Verb result;
+      result.SetVerb(verb);
+      result.SetCharge(charge);
+      result.SetVerbState(state);
+      return result;
+   }
 
    /// Check if verb is of a specific type                                    
    ///   @tparam T - the verb to compare against                              
    ///   @return true if verbs match                                          
    template<CT::Data... T>
+   LANGULUS(ALWAYSINLINE)
    bool Verb::VerbIs() const noexcept {
-      static_assert((CT::Verb<T> && ...),
-         "Provided types must be verb definitions");
+      static_assert(CT::Verb<T...>, "Provided types must be verb definitions");
       return (VerbIs(MetaVerb::Of<T>()) || ...);
    }
 
    /// Check if verb has been satisfied at least once                         
    ///   @return true if verb has been satisfied at least once                
-   inline bool Verb::IsDone() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   bool Verb::IsDone() const noexcept {
       return mSuccesses > 0;
    }
 
    /// Check if verb is multicast                                             
    ///   @return true if verb is multicast                                    
+   LANGULUS(ALWAYSINLINE)
    constexpr bool Verb::IsMulticast() const noexcept {
       return mState.IsMulticast();
    }
 
    /// Check if verb is monocast                                              
    ///   @return true if verb is monocast                                     
+   LANGULUS(ALWAYSINLINE)
    constexpr bool Verb::IsMonocast() const noexcept {
       return mState.IsMonocast();
    }
 
    /// Check if verb is short-circuited                                       
    ///   @return true if verb is short-circuited                              
+   LANGULUS(ALWAYSINLINE)
    constexpr bool Verb::IsShortCircuited() const noexcept {
       return mState.IsShortCircuited();
    }
 
    /// Check if verb is long-circuited                                        
    ///   @return true if verb is long-circuited                               
+   LANGULUS(ALWAYSINLINE)
    constexpr bool Verb::IsLongCircuited() const noexcept {
       return mState.IsLongCircuited();
    }
 
    /// Get the verb state                                                     
    ///   @return the verb state                                               
-   inline const VerbState& Verb::GetVerbState() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   const VerbState& Verb::GetVerbState() const noexcept {
       return mState;
    }
 
    /// Set the verb state                                                     
    ///   @param state - the verb state                                        
    ///   @return a reference to this verb for chaining                        
-   inline Verb& Verb::SetVerbState(const VerbState& state) noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Verb& Verb::SetVerbState(const VerbState& state) noexcept {
       mState = state;
       return *this;
    }
 
    /// Get the number of successful execution of the verb                     
    ///   @return the number of successful executions                          
-   inline Count Verb::GetSuccesses() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Count Verb::GetSuccesses() const noexcept {
       return mSuccesses;
    }
 
    /// Check if anything inside the verb is missing on the surface level      
    ///   @return true if anything is missing                                  
-   inline bool Verb::IsMissing() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   bool Verb::IsMissing() const noexcept {
       return mSource.IsMissing()
          || Any::IsMissing()
          || mOutput.IsMissing();
@@ -234,31 +356,36 @@ namespace Langulus::Flow
 
    /// Check if anything inside the verb is missing deeply                    
    ///   @return true if anything is missing                                  
-   inline bool Verb::IsMissingDeep() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   bool Verb::IsMissingDeep() const noexcept {
       return mSource.IsMissingDeep()
          || Any::IsMissingDeep()
          || mOutput.IsMissingDeep();
    }
 
    /// Satisfy verb a number of times                                         
-   inline void Verb::Done(Count c) noexcept {
+   LANGULUS(ALWAYSINLINE)
+   void Verb::Done(Count c) noexcept {
       mSuccesses = c;
    }
 
    /// Satisfy verb once                                                      
-   inline void Verb::Done() noexcept {
+   LANGULUS(ALWAYSINLINE)
+   void Verb::Done() noexcept {
       ++mSuccesses;
    }
 
    /// Reset verb satisfaction, clear output                                  
-   inline void Verb::Undo() noexcept {
+   LANGULUS(ALWAYSINLINE)
+   void Verb::Undo() noexcept {
       mSuccesses = 0;
       mOutput.Reset();
    }
 
    /// Invert the verb (use the antonym)                                      
    ///   @return a reference to self                                          
-   inline Verb& Verb::Invert() noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Verb& Verb::Invert() noexcept {
       mMass *= Real {-1};
       return *this;
    }
@@ -266,7 +393,19 @@ namespace Langulus::Flow
    /// Set the verb ID                                                        
    ///   @param verb - the verb to assign                                     
    ///   @return a reference to self                                          
-   inline Verb& Verb::SetVerb(VMeta verb) noexcept {
+   template<CT::Data VERB>
+   LANGULUS(ALWAYSINLINE)
+   Verb& Verb::SetVerb() {
+      static_assert(CT::Verb<VERB>, "VERB must be a verb type");
+      mVerb = MetaVerb::Of<Decay<VERB>>();
+      return *this;
+   }
+
+   /// Set the verb ID                                                        
+   ///   @param verb - the verb to assign                                     
+   ///   @return a reference to self                                          
+   LANGULUS(ALWAYSINLINE)
+   Verb& Verb::SetVerb(VMeta verb) noexcept {
       mVerb = verb;
       return *this;
    }
@@ -274,7 +413,8 @@ namespace Langulus::Flow
    /// Set the verb mass                                                      
    ///   @param mass - the mass to set                                        
    ///   @return a reference to self                                          
-   inline Verb& Verb::SetMass(const Real mass) noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Verb& Verb::SetMass(const Real mass) noexcept {
       mMass = mass;
       return *this;
    }
@@ -282,7 +422,8 @@ namespace Langulus::Flow
    /// Set the verb frequency                                                 
    ///   @param frequency - the frequency to set                              
    ///   @return a reference to self                                          
-   inline Verb& Verb::SetFrequency(const Real frequency) noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Verb& Verb::SetFrequency(const Real frequency) noexcept {
       mFrequency = frequency;
       return *this;
    }
@@ -290,7 +431,8 @@ namespace Langulus::Flow
    /// Set the verb time                                                      
    ///   @param time - the time to set                                        
    ///   @return a reference to self                                          
-   inline Verb& Verb::SetTime(const Real time) noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Verb& Verb::SetTime(const Real time) noexcept {
       mTime = time;
       return *this;
    }
@@ -298,7 +440,8 @@ namespace Langulus::Flow
    /// Set the verb priority                                                  
    ///   @param priority - the priority to set                                
    ///   @return a reference to self                                          
-   inline Verb& Verb::SetPriority(const Real priority) noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Verb& Verb::SetPriority(const Real priority) noexcept {
       mPriority = priority;
       return *this;
    }
@@ -306,7 +449,8 @@ namespace Langulus::Flow
    /// Set the verb mass, frequency, time, and priority (a.k.a. charge)       
    ///   @param charge - the charge to set                                    
    ///   @return a reference to self                                          
-   inline Verb& Verb::SetCharge(const Charge& charge) noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Verb& Verb::SetCharge(const Charge& charge) noexcept {
       Charge::operator = (charge);
       return *this;
    }
@@ -315,12 +459,14 @@ namespace Langulus::Flow
    ///   @param value  - the value to set                                     
    ///   @return a reference to self                                          
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    Verb& Verb::SetSource(const T& value) {
       mSource = value;
       return *this;
    }
 
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    Verb& Verb::SetSource(T& value) {
       mSource = value;
       return *this;
@@ -330,6 +476,7 @@ namespace Langulus::Flow
    ///   @param value  - the value to set                                     
    ///   @return a reference to self                                          
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    Verb& Verb::SetSource(T&& value) requires CT::Mutable<T> {
       mSource = Forward<T>(value);
       return *this;
@@ -339,6 +486,7 @@ namespace Langulus::Flow
    ///   @param value  - the value to set                                     
    ///   @return a reference to self                                          
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    Verb& Verb::SetArgument(const T& value) {
       static_cast<Any&>(*this).operator = (value);
       return *this;
@@ -348,6 +496,7 @@ namespace Langulus::Flow
    ///   @param value  - the value to set                                     
    ///   @return a reference to self                                          
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    Verb& Verb::SetArgument(T&& value) requires CT::Mutable<T> {
       static_cast<Any&>(*this).operator = (Forward<T>(value));
       return *this;
@@ -357,6 +506,7 @@ namespace Langulus::Flow
    ///   @param value  - the value to set                                     
    ///   @return a reference to self                                          
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    Verb& Verb::SetOutput(const T& value) {
       mOutput = value;
       return *this;
@@ -366,6 +516,7 @@ namespace Langulus::Flow
    ///   @param value  - the value to set                                     
    ///   @return a reference to self                                          
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    Verb& Verb::SetOutput(T&& value) requires CT::Mutable<T> {
       mOutput = Forward<T>(value);
       return *this;
@@ -374,7 +525,8 @@ namespace Langulus::Flow
    /// Compare verbs                                                          
    ///   @param rhs - the verb to compare against                             
    ///   @return true if verbs match                                          
-   inline bool Verb::operator == (const Verb& rhs) const {
+   LANGULUS(ALWAYSINLINE)
+   bool Verb::operator == (const Verb& rhs) const {
       return (mVerb == rhs.mVerb || (mVerb && mVerb->Is(rhs.mVerb)))
          && mSource == rhs.mSource
          && Any::operator == (rhs.GetArgument())
@@ -385,114 +537,132 @@ namespace Langulus::Flow
    /// Compare verb types for equality                                        
    ///   @param rhs - the verb to compare against                             
    ///   @return true if verbs match                                          
-   inline bool Verb::operator == (VMeta rhs) const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   bool Verb::operator == (VMeta rhs) const noexcept {
       return VerbIs(rhs); 
    }
 
    /// Check if verb is satisfied at least once                               
    ///   @param rhs - flag to compare against                                 
    ///   @return true if verb satisfaction matches rhs                        
-   inline bool Verb::operator == (const bool rhs) const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   bool Verb::operator == (const bool rhs) const noexcept {
       return IsDone() == rhs; 
    }
 
    /// Compare verb priorities                                                
    ///   @param rhs - the verb to compare against                             
    ///   @return true if rhs has larger or equal priority                     
-   inline bool Verb::operator < (const Verb& ext) const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   bool Verb::operator < (const Verb& ext) const noexcept {
       return mPriority < ext.mPriority;
    }
 
    /// Compare verb priorities                                                
    ///   @param rhs - the verb to compare against                             
    ///   @return true if rhs has smaller or equal priority                    
-   inline bool Verb::operator > (const Verb& ext) const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   bool Verb::operator > (const Verb& ext) const noexcept {
       return mPriority > ext.mPriority;
    }
 
    /// Compare verb priorities                                                
    ///   @param rhs - the verb to compare against                             
    ///   @return true if rhs has smaller priority                             
-   inline bool Verb::operator >= (const Verb& ext) const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   bool Verb::operator >= (const Verb& ext) const noexcept {
       return mPriority >= ext.mPriority;
    }
 
    /// Compare verb priorities                                                
    ///   @param rhs - the verb to compare against                             
    ///   @return true if rhs has larger priority                              
-   inline bool Verb::operator <= (const Verb& rhs) const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   bool Verb::operator <= (const Verb& rhs) const noexcept {
       return mPriority <= rhs.mPriority;
    }
 
    /// Get the verb id                                                        
    ///   @return verb ID                                                      
-   inline VMeta Verb::GetVerb() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   VMeta Verb::GetVerb() const noexcept {
       return mVerb;
    }
 
    /// Get the verb id and charge                                             
    ///   @return verb charge                                                  
-   inline const Charge& Verb::GetCharge() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   const Charge& Verb::GetCharge() const noexcept {
       return static_cast<const Charge&>(*this);
    }
 
    /// Get the verb mass (a.k.a. magnitude)                                   
    ///   @return the current mass                                             
-   inline Real Verb::GetMass() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Real Verb::GetMass() const noexcept {
       return mMass;
    }
 
    /// Get the verb frequency                                                 
    ///   @return the current frequency                                        
-   inline Real Verb::GetFrequency() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Real Verb::GetFrequency() const noexcept {
       return mFrequency; 
    }
 
    /// Get the verb time                                                      
    ///   @return the current time                                             
-   inline Real Verb::GetTime() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Real Verb::GetTime() const noexcept {
       return mTime;
    }
 
    /// Get the verb priority                                                  
    ///   @return the current priority                                         
-   inline Real Verb::GetPriority() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Real Verb::GetPriority() const noexcept {
       return mPriority;
    }
 
    /// Get verb source                                                        
    ///   @return the verb source                                              
-   inline Any& Verb::GetSource() noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Any& Verb::GetSource() noexcept {
       return mSource;
    }
 
    /// Get verb source (constant)                                             
    ///   @return the verb source                                              
-   inline const Any& Verb::GetSource() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   const Any& Verb::GetSource() const noexcept {
       return mSource;
    }
 
    /// Get verb argument                                                      
    ///   @return the verb argument                                            
-   inline Any& Verb::GetArgument() noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Any& Verb::GetArgument() noexcept {
       return static_cast<Any&>(*this);
    }
 
    /// Get verb argument (constant)                                           
    ///   @return the verb argument                                            
-   inline const Any& Verb::GetArgument() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   const Any& Verb::GetArgument() const noexcept {
       return static_cast<const Any&>(*this);
    }
 
    /// Get verb output                                                        
    ///   @return the verb output                                              
-   inline Any& Verb::GetOutput() noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Any& Verb::GetOutput() noexcept {
       return mOutput;
    }
 
    /// Get verb output (constant)                                             
    ///   @return the verb output                                              
-   inline const Any& Verb::GetOutput() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   const Any& Verb::GetOutput() const noexcept {
       return mOutput;
    }
 
@@ -501,6 +671,7 @@ namespace Langulus::Flow
    ///   @param data - the data to push                                       
    ///   @return a reference to this verb for chaining                        
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    Verb& Verb::operator << (const T& data) {
       if (mOutput.SmartPush<IndexBack, true, true>(data))
          Done();
@@ -512,6 +683,7 @@ namespace Langulus::Flow
    ///   @param data - the data to move to output                             
    ///   @return a reference to this verb for chaining                        
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    Verb& Verb::operator << (T&& data) {
       if (mOutput.SmartPush<IndexBack, true, true>(Forward<T>(data)))
          Done();
@@ -523,6 +695,7 @@ namespace Langulus::Flow
    ///   @param data - the data to push to output                             
    ///   @return a reference to this verb for chaining                        
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    Verb& Verb::operator >> (const T& data) {
       if (mOutput.SmartPush<IndexFront, true, true>(data))
          Done();
@@ -534,6 +707,7 @@ namespace Langulus::Flow
    ///   @param data - the data to push                                       
    ///   @return a reference to this verb for chaining                        
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    Verb& Verb::operator >> (T&& data) {
       if (mOutput.SmartPush<IndexFront, true, true>(Forward<T>(data)))
          Done();
@@ -545,6 +719,7 @@ namespace Langulus::Flow
    ///   @param data - the data to merge                                      
    ///   @return a reference to this verb for chaining                        
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    Verb& Verb::operator <<= (const T&) {
       TODO();
       return *this;
@@ -555,6 +730,7 @@ namespace Langulus::Flow
    ///   @param data - the data to merge                                      
    ///   @return a reference to this verb for chaining                        
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    Verb& Verb::operator >>= (const T&) {
       TODO();
       return *this;
@@ -566,6 +742,7 @@ namespace Langulus::Flow
    ///   @param output - the output container                                 
    ///   @return the number of successes for the verb                         
    template<bool OR>
+   LANGULUS(ALWAYSINLINE)
    Count Verb::CompleteDispatch(const Count successes, Abandoned<Any>&& output) {
       if (IsShortCircuited()) {
          // If reached, this will result in failure in OR-context, or   
@@ -595,6 +772,7 @@ namespace Langulus::Flow
    /// specific verbs if you know them at compile time                        
    ///   @return true if the ability exists                                   
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    bool Verb::GenericAvailableFor() const noexcept {
       const auto meta = MetaData::Of<Decay<T>>();
       return meta && meta->template GetAbility<CT::Mutable<T>>(mVerb, GetType());
@@ -608,6 +786,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb was executed                                    
    template<CT::Data T, CT::Data V>
+   LANGULUS(ALWAYSINLINE)
    bool Verb::GenericExecuteIn(T& context, V& verb) {
       static_assert(CT::Verb<V>, "V must be a verb");
 
@@ -673,6 +852,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb instance to execute                           
    ///   @return true if verb was executed                                    
    template<CT::Data V>
+   LANGULUS(ALWAYSINLINE)
    bool Verb::GenericExecuteDefault(Block& context, V& verb) {
       static_assert(CT::Verb<V>, "V must be a verb");
 
@@ -707,6 +887,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb instance to execute                           
    ///   @return true if verb was executed                                    
    template<CT::Data V>
+   LANGULUS(ALWAYSINLINE)
    bool Verb::GenericExecuteDefault(const Block& context, V& verb) {
       static_assert(CT::Verb<V>, "V must be a verb");
 
@@ -735,6 +916,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb instance to execute                           
    ///   @return true if verb was executed                                    
    template<CT::Data V>
+   LANGULUS(ALWAYSINLINE)
    bool Verb::GenericExecuteStateless(V& verb) {
       static_assert(CT::Verb<V>, "V must be a verb");
 
@@ -760,8 +942,10 @@ namespace Langulus::Flow
    ///   @tparam T - the type of text to serialize to                         
    ///   @return the serialized verb                                          
    template<CT::Text T>
+   LANGULUS(ALWAYSINLINE)
    T Verb::SerializeVerb() const {
       Code result;
+
       if (mSuccesses) {
          // If verb has been executed, just dump the output             
          result += Verbs::Interpret::To<T>(mOutput);
@@ -830,32 +1014,89 @@ namespace Langulus::Flow
       return result;
    }
    
-   /// Default static verb construction                                       
-   template<class VERB>
-   StaticVerb<VERB>::StaticVerb()
-      : Verb {MetaOf<VERB>()} {}
 
-   /// Do/Undo verb construction via shallow-copy                             
-   ///   @param a - what to execute                                           
-   ///   @param c - the charge of the do/undo                                 
-   ///   @param state - the verb state                                        
+   
+   ///                                                                        
+   ///   Static verb implementation                                           
+   ///                                                                        
    template<class VERB>
-   template<CT::Data T>
-   StaticVerb<VERB>::StaticVerb(const T& a, const Charge& c, const VerbState state)
-      : Verb {MetaOf<VERB>(), a, c, state} {}
+   LANGULUS(ALWAYSINLINE)
+   StaticVerb<VERB>::StaticVerb() {
+      SetVerb<VERB>();
+   }
 
    template<class VERB>
-   template<CT::Data T>
-   StaticVerb<VERB>::StaticVerb(T& a, const Charge& c, const VerbState state)
-      : Verb {MetaOf<VERB>(), a, c, state} {}
+   LANGULUS(ALWAYSINLINE)
+   StaticVerb<VERB>::StaticVerb(const StaticVerb& other)
+      : Verb {Langulus::Copy(other)} {}
 
-   /// Do/Undo verb construction via move                                     
-   ///   @param a - what to execute                                           
-   ///   @param c - the charge of the do/undo                                 
-   ///   @param state - the verb state                                        
    template<class VERB>
-   template<CT::Data T>
-   StaticVerb<VERB>::StaticVerb(T&& a, const Charge& c, const VerbState state)
-      : Verb {MetaOf<VERB>(), Forward<T>(a), c, state} {}
+   LANGULUS(ALWAYSINLINE)
+   StaticVerb<VERB>::StaticVerb(StaticVerb&& other)
+      : Verb {Langulus::Move(other)} {}
+
+   template<class VERB>
+   template<CT::NotSemantic T>
+   LANGULUS(ALWAYSINLINE)
+   StaticVerb<VERB>::StaticVerb(const T& other)
+      : Verb {Langulus::Copy(other)} {
+      SetVerb<VERB>();
+   }
+
+   template<class VERB>
+   template<CT::NotSemantic T>
+   LANGULUS(ALWAYSINLINE)
+   StaticVerb<VERB>::StaticVerb(T& other)
+      : Verb {Langulus::Copy(other)} {
+      SetVerb<VERB>();
+   }
+
+   template<class VERB>
+   template<CT::NotSemantic T>
+   LANGULUS(ALWAYSINLINE)
+   StaticVerb<VERB>::StaticVerb(T&& other)
+      : Verb {Langulus::Move(other)} {
+      SetVerb<VERB>();
+   }
+
+   template<class VERB>
+   template<CT::Semantic S>
+   LANGULUS(ALWAYSINLINE)
+   StaticVerb<VERB>::StaticVerb(S&& other)
+      : Verb {other.Forward()} {
+      SetVerb<VERB>();
+   }
+
+   template<class VERB>
+   template<CT::Data HEAD, CT::Data... TAIL>
+   LANGULUS(ALWAYSINLINE)
+   StaticVerb<VERB>::StaticVerb(HEAD&& head, TAIL&&... tail) requires (sizeof...(TAIL) >= 1)
+      : Verb {Forward<HEAD>(head), Forward<TAIL>(tail)...} {
+      SetVerb<VERB>();
+   }
+
+   template<class VERB>
+   LANGULUS(ALWAYSINLINE)
+   StaticVerb<VERB>& StaticVerb<VERB>::operator = (const StaticVerb& rhs) {
+      return operator = (Langulus::Copy(rhs));
+   }
+
+   template<class VERB>
+   LANGULUS(ALWAYSINLINE)
+   StaticVerb<VERB>& StaticVerb<VERB>::operator = (StaticVerb&& rhs) {
+      return operator = (Langulus::Move(rhs));
+   }
+
+   template<class VERB>
+   template<CT::Semantic S>
+   LANGULUS(ALWAYSINLINE)
+   StaticVerb<VERB>& StaticVerb<VERB>::operator = (S&& rhs) requires Related<TypeOf<S>> {
+      Any::operator = (rhs.template Forward<Any>());
+      mSuccesses = rhs.mValue.mSuccesses;
+      mState = rhs.mValue.mState;
+      mSource = S::Nest(rhs.mValue.mSource);
+      mOutput = S::Nest(rhs.mValue.mOutput);
+      return *this;
+   }
 
 } // namespace Langulus::Flow

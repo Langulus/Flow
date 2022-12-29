@@ -56,7 +56,8 @@ namespace Langulus::Verbs
    template<CT::Data T>
    bool Interpret::ExecuteIn(T& context, Verb& verb) {
       static_assert(Interpret::AvailableFor<T>(),
-         "Verb is not available for this context, this shouldn't be reached by flow");
+         "Verb is not available for this context"
+         "(this shouldn't be reached by flow)");
       context.Interpret(verb);
       return verb.IsDone();
    }
@@ -111,7 +112,7 @@ namespace Langulus::Verbs
          // Always interpreted as deserialization                       
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             if constexpr (CT::SameAsOneOf<FROM, Code, Bytes>)
-               return Deserialize(from);
+               return Serializer::Deserialize(from);
             else
                LANGULUS_ERROR("No deserializer exists between these types");
          #else
@@ -128,7 +129,7 @@ namespace Langulus::Verbs
          // No constructor/conversion operator exists, that would do    
          // the conversion, but we can rely on the serializer,          
          // if TO is   supported                                        
-         return Serialize<TO>(from);
+         return Serializer::Serialize<TO>(from);
       }
       else LANGULUS_ERROR(
          "No static conversion routine, or dynamic serializer "
@@ -146,8 +147,8 @@ namespace Langulus
    ///   @param rhs - the meta to stringify                                   
    ///   @return a reference to the logger for chaining                       
    template<CT::Meta T>
-   LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
-      Logger::A::Interface& lhs, const T& rhs) noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs) noexcept {
       if constexpr (CT::Sparse<T>)
          return lhs.operator << (rhs ? rhs->mToken : Decay<T>::DefaultToken);
       else
@@ -159,8 +160,8 @@ namespace Langulus
    ///   @param rhs - the block to stringify                                  
    ///   @return a reference to the logger for chaining                       
    template<CT::Deep T>
-   LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
-      Logger::A::Interface& lhs, const T& rhs) {
+   LANGULUS(ALWAYSINLINE)
+   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs) {
       return lhs.operator << (Token {
          Verbs::Interpret::To<Flow::Debug>(DenseCast(rhs))
       });
@@ -172,8 +173,10 @@ namespace Langulus
    ///   @param rhs - the verb to stringify                                   
    ///   @return a reference to the logger for chaining                       
    template<CT::Flat T>
-   LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
-      Logger::A::Interface& lhs, const T& rhs) requires (CT::Convertible<T, Flow::Debug> && !Logger::Formattable<T>) {
+   LANGULUS(ALWAYSINLINE)
+   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs)
+      requires (CT::Convertible<T, Flow::Debug> && !Logger::Formattable<T>)
+   {
       return lhs.operator << (Token {
          Verbs::Interpret::To<Flow::Debug>(DenseCast(rhs))
       });
@@ -184,8 +187,8 @@ namespace Langulus
    ///   @param rhs - the pointer                                             
    ///   @return a reference to the logger for chaining                       
    template<CT::Data T>
-   LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
-      Logger::A::Interface& lhs, const Anyness::TOwned<T>& rhs) {
+   LANGULUS(ALWAYSINLINE)
+   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const Anyness::TOwned<T>& rhs) {
       if constexpr (CT::Sparse<T>) {
          if (rhs == nullptr) {
             lhs << rhs.GetType();
@@ -202,8 +205,8 @@ namespace Langulus
    ///   @param rhs - the trait to stringify                                  
    ///   @return a reference to the logger for chaining                       
    template<CT::Trait T>
-   LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
-      Logger::A::Interface& lhs, const T& rhs) {
+   LANGULUS(ALWAYSINLINE)
+   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs) {
       lhs << DenseCast(rhs).GetTrait();
       lhs << '(';
       lhs << static_cast<const Anyness::Any&>(DenseCast(rhs));
@@ -215,8 +218,8 @@ namespace Langulus
    ///   @param lhs - the logger interface                                    
    ///   @param rhs - the time duration to stringify                          
    ///   @return a reference to the logger for chaining                       
-   LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
-      Logger::A::Interface& lhs, const Flow::Time& rhs) {
+   LANGULUS(ALWAYSINLINE)
+   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const Flow::Time& rhs) {
       return lhs << fmt::format("{}", static_cast<const Flow::Time::Base&>(rhs));
    }
 
@@ -224,9 +227,24 @@ namespace Langulus
    ///   @param lhs - the logger interface                                    
    ///   @param rhs - the time point to stringify                             
    ///   @return a reference to the logger for chaining                       
-   LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
-      Logger::A::Interface& lhs, const Flow::TimePoint& rhs) {
+   LANGULUS(ALWAYSINLINE)
+   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const Flow::TimePoint& rhs) {
       return lhs << fmt::format("{}", rhs.time_since_epoch());
+   }
+
+   /// Extend the logger to be capable of logging pairs                       
+   ///   @param lhs - the logger interface                                    
+   ///   @param rhs - the pair to stringify                                   
+   ///   @return a reference to the logger for chaining                       
+   template<CT::Pair T>
+   LANGULUS(ALWAYSINLINE)
+   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs) {
+      lhs << "Pair(";
+      lhs << DenseCast(rhs.mKey);
+      lhs << ", ";
+      lhs << DenseCast(rhs.mValue);
+      lhs << ')';
+      return lhs;
    }
 
    /// Extend the logger to be capable of logging maps                        
@@ -234,19 +252,15 @@ namespace Langulus
    ///   @param rhs - the map to stringify                                    
    ///   @return a reference to the logger for chaining                       
    template<CT::Map T>
-   LANGULUS(ALWAYSINLINE) Logger::A::Interface& operator << (
-      Logger::A::Interface& lhs, const T& rhs) {
-      lhs << MetaOf<T>()->mToken;
+   LANGULUS(ALWAYSINLINE)
+   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs) {
+      lhs << RTTI::MetaData::Of<T>()->mToken;
       lhs << '(';
       bool first = true;
       for (auto pair : rhs) {
          if (!first)
             lhs << ", ";
-         lhs << '(';
-         lhs << pair.mKey;
-         lhs << ", ";
-         lhs << pair.mValue;
-         lhs << ')';
+         lhs << pair;
          first = true;
       }
       lhs << ')';

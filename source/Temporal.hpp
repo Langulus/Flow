@@ -39,7 +39,9 @@ namespace Langulus::Flow
    /// complete your scripts at runtime.                                      
    ///                                                                        
    class Temporal final {
-   friend struct Inner::Missing;
+      LANGULUS_CONVERSIONS(Code, Debug);
+      friend struct Inner::Missing;
+
    private:
       struct State {
          TimePoint mStart;
@@ -67,14 +69,12 @@ namespace Langulus::Flow
       Scope mPriorityStack;
 
       // Verb temporal stack, i.e. things that happen at specific time  
-      TMap<Time, Temporal> mTimeStack;
+      TMap<Time, Temporal*> mTimeStack;
 
       // Verb frequency stack, i.e. things that happen periodically     
-      TUnorderedMap<Time, Temporal> mFrequencyStack;
+      TUnorderedMap<Time, Temporal*> mFrequencyStack;
 
    protected:
-      Temporal(Temporal*, const State&);
-
       static Scope Collapse(const Block&);
       static Scope Compile(const Block&, Real priority);
 
@@ -82,6 +82,8 @@ namespace Langulus::Flow
       bool Link(const Scope&, Inner::MissingFuture&) const;
 
    public:
+      Temporal(Temporal*, const State&);
+
       Temporal(const Any& environment = {});
       Temporal(const Temporal&) = delete;
       Temporal(Temporal&&) noexcept = default;
@@ -90,6 +92,9 @@ namespace Langulus::Flow
       Temporal& operator = (const Temporal&) = delete;
 
    public:
+      NOD() explicit operator Code() const;
+      NOD() explicit operator Debug() const;
+
       NOD() bool operator == (const Temporal&) const;
 
       NOD() Temporal Clone() const;
@@ -101,7 +106,6 @@ namespace Langulus::Flow
       void Reset();
       void Update(Time);
 
-      NOD() operator Debug() const;
       void Dump() const;
    };
 

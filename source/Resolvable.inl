@@ -265,7 +265,7 @@ namespace Langulus::Flow
    template<CT::Data D>
    bool Resolvable::GetValue(D& data) const {
       auto found = GetBlock().GetMember(RTTI::MetaData::Of<D>());
-      data = found.As<D>();
+      data = found.template As<D>();
       return true;
    }
 
@@ -287,7 +287,31 @@ namespace Langulus::Flow
          return found.Copy(Block::From(data)) > 0;
       }
       else {
-         Verbs::Associate verb {T{data}};
+         Verbs::Associate verb {T {data}};
+         Run(verb);
+         return verb.IsDone();
+      }
+   }
+
+   /// Set a statically typed trait by move                                   
+   ///   @tparam T - the trait to search for                                  
+   ///   @tparam DIRECT - if true, will directly set the trait, without       
+   ///                    using a dynamically dispatched Verbs::Associate;    
+   ///                    this will not notify the context of the change, but 
+   ///                    is considerably faster (false by default)           
+   ///   @tparam D - the data to set (deducible)                              
+   ///   @param data - [out] the data to move                                 
+   ///   @return true if trait was found and overwritten                      
+   template<CT::Trait T, bool DIRECT, CT::Data D>
+   bool Resolvable::SetTrait(D&& data) {
+      if constexpr (DIRECT) {
+         auto found = GetBlock().GetMember(RTTI::MetaTrait::Of<T>());
+         if (found.IsEmpty())
+            return false;
+         return found.Copy(Block::From(data)) > 0;
+      }
+      else {
+         Verbs::Associate verb {T {Forward<D>(data)}};
          Run(verb);
          return verb.IsDone();
       }
@@ -316,30 +340,6 @@ namespace Langulus::Flow
       }
    }
 
-   /// Set a statically typed trait by move                                   
-   ///   @tparam T - the trait to search for                                  
-   ///   @tparam DIRECT - if true, will directly set the trait, without       
-   ///                    using a dynamically dispatched Verbs::Associate;    
-   ///                    this will not notify the context of the change, but 
-   ///                    is considerably faster (false by default)           
-   ///   @tparam D - the data to set (deducible)                              
-   ///   @param data - [out] the data to move                                 
-   ///   @return true if trait was found and overwritten                      
-   template<CT::Trait T, bool DIRECT, CT::Data D>
-   bool Resolvable::SetTrait(D&& data) {
-      if constexpr (DIRECT) {
-         auto found = GetBlock().GetMember(RTTI::MetaTrait::Of<T>());
-         if (found.IsEmpty())
-            return false;
-         return found.Copy(Block::From(data)) > 0;
-      }
-      else {
-         Verbs::Associate verb {T{Forward<D>(data)}};
-         Run(verb);
-         return verb.IsDone();
-      }
-   }
-
    /// Set a statically typed data by move                                    
    ///   @tparam DIRECT - if true, will directly set the trait, without       
    ///                    using a dynamically dispatched Verbs::Associate;    
@@ -350,7 +350,17 @@ namespace Langulus::Flow
    ///   @return true if data was found and overwritten                       
    template<bool DIRECT, CT::Data D>
    bool Resolvable::SetValue(D&&) {
-
+      if constexpr (DIRECT) {
+         auto found = GetBlock().GetMember(RTTI::MetaData::Of<D>());
+         if (found.IsEmpty())
+            return false;
+         return found.Copy(Block::From(data)) > 0;
+      }
+      else {
+         Verbs::Associate verb {data};
+         Run(verb);
+         return verb.IsDone();
+      }
    }
 
 } // namespace Langulus::Flow

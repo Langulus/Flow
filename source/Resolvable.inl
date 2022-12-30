@@ -349,7 +349,7 @@ namespace Langulus::Flow
    ///   @param data - [out] the data to move                                 
    ///   @return true if data was found and overwritten                       
    template<bool DIRECT, CT::Data D>
-   bool Resolvable::SetValue(D&&) {
+   bool Resolvable::SetValue(D&& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember(RTTI::MetaData::Of<D>());
          if (found.IsEmpty())

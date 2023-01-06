@@ -13,12 +13,8 @@ if (PROJECT_IS_TOP_LEVEL)
         set(LANGULUS_LIBRARY_TYPE STATIC)
     endif()
 
-    find_package(Git REQUIRED)
-    execute_process(
-        COMMAND ${GIT_EXECUTABLE} submodule update --init -- cmake 
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMAND_ERROR_IS_FATAL ANY
-    )
+    include(LangulusUtilities.cmake)
+    langulus_init_git_submodule(cmake)
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
     include(FetchLangulusModule)
     include(HandleLangulusFeatures)
@@ -37,10 +33,10 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 # Build and install Flow library                                            
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source SOURCE_FILES)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/verbs SOURCE_FILES)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/inner SOURCE_FILES)
-add_library(Langulus.Flow ${LANGULUS_LIBRARY_TYPE} ${SOURCE_FILES})
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source LANGULUS_FLOW_SOURCES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/verbs LANGULUS_FLOW_SOURCES)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/inner LANGULUS_FLOW_SOURCES)
+add_library(Langulus.Flow ${LANGULUS_LIBRARY_TYPE} ${LANGULUS_FLOW_SOURCES})
 
 target_include_directories(Langulus.Flow PUBLIC include)
 target_link_libraries(Langulus.Flow

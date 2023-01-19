@@ -17,28 +17,28 @@
 
 #define ENABLE_VERBOSE() 0//1
 
-#define VERBOSE_INNER(a) \
-      Logger::Verbose() << "Flow::Code: " << Logger::Push << Logger::Cyan << a << Logger::Pop << " at " << progress << ": " << \
-      Logger::NewLine << Logger::DarkYellow << "+-- [" \
-         << input.LeftOf(progress) << Logger::Push << Logger::Red << Logger::Underline \
-         << input.RightOf(progress) << Logger::Pop << ']'
+#define VERBOSE_INNER(...) \
+      Logger::Verbose("Flow::Code: ", Logger::Push, Logger::Cyan, __VA_ARGS__, Logger::Pop, " at ", progress, ": ", \
+      Logger::NewLine, Logger::DarkYellow, "+-- [", \
+         input.LeftOf(progress), Logger::Push, Logger::Red, Logger::Underline, \
+         input.RightOf(progress), Logger::Pop, ']')
 
-#define PRETTY_ERROR(a) { \
-      Logger::Error() << "Flow::Code: " << Logger::Push << Logger::DarkYellow << a << Logger::Pop << " at " << progress << ": " << \
-      Logger::NewLine << Logger::DarkYellow << "+-- [" \
-         << input.LeftOf(progress) << Logger::Push << Logger::Red << Logger::Underline \
-         << input.RightOf(progress) << Logger::Pop << ']'; \
+#define PRETTY_ERROR(...) { \
+      Logger::Error("Flow::Code: ", Logger::Push, Logger::DarkYellow, __VA_ARGS__, Logger::Pop, " at ", progress, ": ", \
+      Logger::NewLine, Logger::DarkYellow, "+-- [", \
+         input.LeftOf(progress), Logger::Push, Logger::Red, Logger::Underline, \
+         input.RightOf(progress), Logger::Pop, ']'); \
       LANGULUS_THROW(Flow, "Parse error"); \
    }
 
 #if ENABLE_VERBOSE()
-   #define VERBOSE(a)      VERBOSE_INNER(a)
-   #define VERBOSE_TAB(a)  auto tab = VERBOSE_INNER(a) << Logger::Tabs{}
-   #define VERBOSE_ALT(a)  Logger::Verbose() << a
+   #define VERBOSE(...)      VERBOSE_INNER(__VA_ARGS__)
+   #define VERBOSE_TAB(...)  auto tab = VERBOSE_INNER(__VA_ARGS__, Logger::Tabs{})
+   #define VERBOSE_ALT(...)  Logger::Verbose(__VA_ARGS__)
 #else
-   #define VERBOSE(a)      
-   #define VERBOSE_TAB(a)  
-   #define VERBOSE_ALT(a)  
+   #define VERBOSE(...)      
+   #define VERBOSE_TAB(...)  
+   #define VERBOSE_ALT(...)  
 #endif
 
 
@@ -361,28 +361,28 @@ namespace Langulus::Flow
          // Search for ambiguous token in meta definitions              
          auto& symbols = RTTI::Database.GetAmbiguousMeta(keyword);
          if (symbols.empty()) {
-            PRETTY_ERROR("Unknown keyword: " << keyword);
+            PRETTY_ERROR("Unknown keyword: ", keyword);
          }
          else if (symbols.size() > 1) {
             // Ambiguity, report error                                  
             //TODO attempt disambiguating by partially comparing keyword with the provided variants
-            auto tab = Logger::Error()
-               << "Ambiguous symbol: " << keyword
-               << "; Could be one of: " << Logger::Tabs {};
+            auto tab = Logger::Error(
+               "Ambiguous symbol: ", keyword, 
+               "; Could be one of: ", Logger::Tabs {});
 
             for (auto& meta : symbols) {
                switch (meta->GetMetaType()) {
                case RTTI::Meta::Data:
-                  Logger::Verbose() << Logger::Red << static_cast<DMeta>(meta) << " (";
-                  Logger::Append() << "meta data)";
+                  Logger::Verbose(Logger::Red, static_cast<DMeta>(meta),
+                     " (meta data)");
                   break;
                case RTTI::Meta::Trait:
-                  Logger::Verbose() << Logger::Red << static_cast<TMeta>(meta) << " (";
-                  Logger::Append() << "meta trait)";
+                  Logger::Verbose(Logger::Red, static_cast<TMeta>(meta),
+                     " (meta trait)");
                   break;
                case RTTI::Meta::Constant:
-                  Logger::Verbose() << Logger::Red << static_cast<CMeta>(meta) << " (";
-                  Logger::Append() << "meta constant)";
+                  Logger::Verbose(Logger::Red, static_cast<CMeta>(meta),
+                     " (meta constant)");
                   break;
                default:
                   PRETTY_ERROR("Unhandled meta type");
@@ -636,7 +636,7 @@ namespace Langulus::Flow
 
       // Can define contents for one element at a time                  
       if (lhs.GetCount() > 1)
-         PRETTY_ERROR("Content scope for multiple elements is not allowed: " << lhs);
+         PRETTY_ERROR("Content scope for multiple elements is not allowed: ", lhs);
 
       // We don't know what to expect, so we attempt blind parse        
       Any rhs;
@@ -667,7 +667,7 @@ namespace Langulus::Flow
          lhs.ResetState();
          lhs.SmartPush(Move(rhs));
          lhs.AddState(stateBackup);
-         VERBOSE_ALT("Untyped content: " << Logger::Cyan << lhs);
+         VERBOSE_ALT("Untyped content: ", Logger::Cyan, lhs);
       }
       else if (lhs.Is<DMeta>()) {
          // The content is for an uninstantiated data scope             
@@ -678,44 +678,43 @@ namespace Langulus::Flow
             // Precompiled successfully, append it to LHS               
             lhs.RemoveIndex(-1);
             lhs.SmartPush(Abandon(precompiled));
-            VERBOSE_ALT("Statically constructed from DMeta: "
-               << Logger::Cyan << lhs);
+            VERBOSE_ALT("Statically constructed from DMeta: ", Logger::Cyan, lhs);
             return;
          }
 
          lhs.RemoveIndex(-1);
          lhs.SmartPush(Abandon(outputConstruct));
-         VERBOSE_ALT("Constructed from DMeta: " << Logger::Cyan << lhs);
+         VERBOSE_ALT("Constructed from DMeta: ", Logger::Cyan, lhs);
       }
       else if (lhs.Is<VMeta>()) {
          // The content is for an uninstantiated verb scope             
          auto verb = Verb::FromMeta(lhs.As<VMeta>(-1), Move(rhs));
          lhs.RemoveIndex(-1);
          lhs.SmartPush(Abandon(verb));
-         VERBOSE_ALT("Constructed from VMeta: " << Logger::Cyan << lhs);
+         VERBOSE_ALT("Constructed from VMeta: ", Logger::Cyan, lhs);
       }
       else if (lhs.Is<TMeta>()) {
          // The content is for an uninstantiated trait scope            
          auto trait = Trait::From(lhs.As<TMeta>(-1), Move(rhs));
          lhs.RemoveIndex(-1);
          lhs.SmartPush(Abandon(trait));
-         VERBOSE_ALT("Constructed from TMeta: " << Logger::Cyan << lhs);
+         VERBOSE_ALT("Constructed from TMeta: ", Logger::Cyan, lhs);
       }
       else if (lhs.Is<Verb>()) {
          // The content is for an instantiated verb scope               
          auto& verb = lhs.As<Verb>(-1);
          verb.GetArgument().SmartPush(Move(rhs));
-         VERBOSE_ALT("Constructed from Verb " << Logger::Cyan << lhs);
+         VERBOSE_ALT("Constructed from Verb ", Logger::Cyan, lhs);
       }
       else if (lhs.Is<Construct>()) {
          // The content is for an instantiated data scope               
          auto& construct = lhs.As<Construct>(-1);
          construct.GetArgument().SmartPush(Move(rhs));
-         VERBOSE_ALT("Constructed from Construct " << Logger::Cyan << lhs);
+         VERBOSE_ALT("Constructed from Construct ", Logger::Cyan, lhs);
       }
       else {
-         Logger::Error() << "Bad scope for " << lhs << " (" << lhs.GetToken() << ")";
-         Logger::Error() << "Content to insert is: " << rhs << " (" << rhs.GetToken() << ")";
+         Logger::Error("Bad scope for ", lhs, " (", lhs.GetToken(), ')');
+         Logger::Error("Content to insert is: ", rhs, " (", rhs.GetToken(), ')');
          LANGULUS_THROW(Flow, "Syntax error - bad scope");
       }
    }
@@ -742,7 +741,7 @@ namespace Langulus::Flow
             if (relevant.StartsWithOperator(closer)) {
                const auto tokenSize = GlobalOperators[closer].mToken.size();
                lhs << Text {input.LeftOf(progress)};
-               VERBOSE("String parsed: " << lhs);
+               VERBOSE("String parsed: ", lhs);
                return tokenSize + progress;
             }
             break;
@@ -753,7 +752,7 @@ namespace Langulus::Flow
             if (relevant.StartsWithOperator(CloseCharacter)) {
                const auto tokenSize = GlobalOperators[CloseCharacter].mToken.size();
                lhs << input[0];
-               VERBOSE("Character parsed: " << lhs);
+               VERBOSE("Character parsed: ", lhs);
                return tokenSize + progress;
             }
             break;
@@ -768,7 +767,7 @@ namespace Langulus::Flow
                if (0 == depth) {
                   const auto tokenSize = GlobalOperators[CloseCode].mToken.size();
                   lhs << input.LeftOf(progress);
-                  VERBOSE("Code parsed: " << lhs);
+                  VERBOSE("Code parsed: ", lhs);
                   return tokenSize + progress;
                }
             }
@@ -937,7 +936,7 @@ namespace Langulus::Flow
 
          progress += GlobalOperators[op].mToken.size();
          relevant = input.RightOf(progress);
-         VERBOSE("Parsing charge operator: [" << mOperators[op].mToken << ']');
+         VERBOSE("Parsing charge operator: [", mOperators[op].mToken, ']');
 
          // Skip and spacing and consume '-' operators here             
          bool reverse = false;
@@ -990,7 +989,7 @@ namespace Langulus::Flow
             charge.mPriority = asReal;
             break;
          default:
-            PRETTY_ERROR("Invalid charge operator: " << GlobalOperators[op].mToken);
+            PRETTY_ERROR("Invalid charge operator: ", GlobalOperators[op].mToken);
          }
       }
 

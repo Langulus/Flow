@@ -23,6 +23,7 @@ namespace Langulus::Flow
    ///   @param descriptor - the normalized element descriptor,               
    ///                       used for hashing and match compare               
    TEMPLATE()
+   LANGULUS(ALWAYSINLINE)
    FACTORY()::Element::Element(TFactory* factory, Hash hash, const Any& messyDescriptor, const Normalized& descriptor)
       : mFactory {factory}
       , mHash {hash}
@@ -32,6 +33,7 @@ namespace Langulus::Flow
    /// Construction of a factory                                              
    ///   @param owner - the factory owner                                     
    TEMPLATE()
+   LANGULUS(ALWAYSINLINE)
    FACTORY()::TFactory(Producer* owner)
       : mFactoryOwner {owner} {}
 
@@ -39,10 +41,13 @@ namespace Langulus::Flow
    ///   @attention notice how mFactoryOwner never changes on both sides      
    ///   @param other - the factory to move                                   
    TEMPLATE()
+   LANGULUS(ALWAYSINLINE)
    FACTORY()& FACTORY()::operator = (TFactory&& other) noexcept {
       mData = Move(other.mData);
       mHashmap = Move(other.mHashmap);
       mReusable = other.mReusable;
+      mCount = other.mCount;
+      other.mCount = 0;
       other.mReusable = nullptr;
       for (auto& item : mData)
          item.mFactory = this;
@@ -51,10 +56,18 @@ namespace Langulus::Flow
 
    /// Reset the factory                                                      
    TEMPLATE()
+   LANGULUS(ALWAYSINLINE)
    void FACTORY()::Reset() {
       mData.Reset();
       mHashmap.Reset();
       mReusable = nullptr;
+   }
+
+   /// Reset the factory                                                      
+   TEMPLATE()
+   LANGULUS(ALWAYSINLINE)
+   bool FACTORY()::IsEmpty() const noexcept {
+      return mCount == 0;
    }
 
    /// Find an element with the provided hash and descriptor                  
@@ -62,6 +75,7 @@ namespace Langulus::Flow
    ///   @param descriptor - the normalized descriptor for the element        
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE()
+   LANGULUS(ALWAYSINLINE)
    typename FACTORY()::Element* FACTORY()::Find(Hash hash, const Normalized& descriptor) const {
       const auto found = mHashmap.FindKeyIndex(hash);
       if (found) {
@@ -109,7 +123,8 @@ namespace Langulus::Flow
    /// Compile a descriptor, by removing Traits::Parent, and grouping elements
    /// in predictable ways, ensuring further comparisons are fast & orderless 
    ///   @param messy - the messy descriptor to normalize                     
-   inline Normalized::Normalized(const Any& messy) {
+   LANGULUS(ALWAYSINLINE)
+   Normalized::Normalized(const Any& messy) {
       messy.ForEachDeep([this](const Any& group) {
          if (group.IsOr())
             TODO();
@@ -163,32 +178,33 @@ namespace Langulus::Flow
 
    /// Get the hash of a normalized descriptor                                
    ///   @return the hash                                                     
-   inline Hash Normalized::GetHash() const {
+   LANGULUS(ALWAYSINLINE)
+   Hash Normalized::GetHash() const {
       if (mHash)
          return mHash;
 
       // Cache hash so we don't recompute it all the time               
       mHash = HashData(
-         mVerbs.GetHash(),
-         mTraits.GetHash(),
-         mMetaDatas.GetHash(),
-         mMetaTraits.GetHash(),
-         mMetaConstants.GetHash(),
-         mMetaVerbs.GetHash(),
-         mConstructs.GetHash(),
-         mAnythingElse.GetHash()
+         mVerbs,
+         mTraits,
+         mMetaDatas,
+         mMetaTraits,
+         mMetaConstants,
+         mMetaVerbs,
+         mConstructs,
+         mAnythingElse
       );
       return mHash;
    }
 
    /// Get the hash of a normalized descriptor                                
    ///   @return the hash                                                     
-   inline bool Normalized::operator == (const Normalized& rhs) const {
+   LANGULUS(ALWAYSINLINE)
+   bool Normalized::operator == (const Normalized& rhs) const {
       if (GetHash() != rhs.GetHash())
          return false;
 
-      return 
-            mVerbs == rhs.mVerbs
+      return mVerbs == rhs.mVerbs
          && mTraits == rhs.mTraits
          && mMetaDatas == rhs.mMetaDatas
          && mMetaTraits == rhs.mMetaTraits
@@ -299,12 +315,14 @@ namespace Langulus::Flow
             this, hash, messyDescriptor, descriptor
          };
          mHashmap[hash] << result;
+         ++mCount;
          return &result->mData;
       }
 
       // If this is reached, then a reallocation is required            
       mData.Emplace(this, hash, messyDescriptor, descriptor);
       mHashmap[hash] << &mData.Last();
+      ++mCount;
       return &mData.Last().mData;
    }
 
@@ -329,6 +347,7 @@ namespace Langulus::Flow
       item->~Element();
       item->mNextFreeElement = mReusable;
       mReusable = item;
+      --mCount;
    }
 
 
@@ -339,6 +358,7 @@ namespace Langulus::Flow
    /// Get iterator to first element                                          
    ///   @return an iterator to the first element, or end if empty            
    TEMPLATE()
+   LANGULUS(ALWAYSINLINE)
    typename FACTORY()::Iterator FACTORY()::begin() noexcept {
       static_assert(sizeof(Iterator) == sizeof(ConstIterator),
          "Size mismatch - types must be binary-compatible");
@@ -349,6 +369,7 @@ namespace Langulus::Flow
    /// Get iterator to end                                                    
    ///   @return an iterator to the end element                               
    TEMPLATE()
+   LANGULUS(ALWAYSINLINE)
    typename FACTORY()::Iterator FACTORY()::end() noexcept {
       static_assert(sizeof(Iterator) == sizeof(ConstIterator),
          "Size mismatch - types must be binary-compatible");
@@ -359,6 +380,7 @@ namespace Langulus::Flow
    /// Get iterator to the last element                                       
    ///   @return an iterator to the last element, or end if empty             
    TEMPLATE()
+   LANGULUS(ALWAYSINLINE)
    typename FACTORY()::Iterator FACTORY()::last() noexcept {
       static_assert(sizeof(Iterator) == sizeof(ConstIterator),
          "Size mismatch - types must be binary-compatible");
@@ -369,8 +391,9 @@ namespace Langulus::Flow
    /// Get iterator to first element                                          
    ///   @return a constant iterator to the first element, or end if empty    
    TEMPLATE()
+   LANGULUS(ALWAYSINLINE)
    typename FACTORY()::ConstIterator FACTORY()::begin() const noexcept {
-      if (mData.IsEmpty())
+      if (IsEmpty())
          return end();
 
       // Seek first valid slot, or hit sentinel at the end              
@@ -385,6 +408,7 @@ namespace Langulus::Flow
    /// Get iterator to end                                                    
    ///   @return a constant iterator to the end element                       
    TEMPLATE()
+   LANGULUS(ALWAYSINLINE)
    typename FACTORY()::ConstIterator FACTORY()::end() const noexcept {
       const auto ender = mData.GetRawEnd();
       return {ender, ender};
@@ -393,8 +417,9 @@ namespace Langulus::Flow
    /// Get iterator to the last valid element                                 
    ///   @return a constant iterator to the last element, or end if empty     
    TEMPLATE()
+   LANGULUS(ALWAYSINLINE)
    typename FACTORY()::ConstIterator FACTORY()::last() const noexcept {
-      if (mData.IsEmpty())
+      if (IsEmpty())
          return end();
 
       // Seek first valid slot, or hit sentinel at the end              

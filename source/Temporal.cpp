@@ -9,10 +9,10 @@
 #include "inner/Missing.hpp"
 #include "inner/Fork.hpp"
 
-#define VERBOSE_TEMPORAL(a) \
-   Logger::Verbose() << *this << ": " << a
-#define VERBOSE_TEMPORAL_TAB(a) \
-   const auto tab = Logger::Verbose() << *this << ": " << a << Logger::Tabs{}
+#define VERBOSE_TEMPORAL(...) \
+   Logger::Verbose(*this, ": ", __VA_ARGS__)
+#define VERBOSE_TEMPORAL_TAB(...) \
+   const auto tab = Logger::Verbose(*this, ": ", __VA_ARGS__, Logger::Tabs{})
 
 namespace Langulus::Flow
 {
@@ -80,9 +80,9 @@ namespace Langulus::Flow
 
    /// Dump the contents of the flow to the log                               
    void Temporal::Dump() const {
-      Logger::Verbose() << mPriorityStack;
-      Logger::Verbose() << mTimeStack;
-      Logger::Verbose() << mFrequencyStack;
+      Logger::Verbose(mPriorityStack);
+      Logger::Verbose(mTimeStack);
+      Logger::Verbose(mFrequencyStack);
    }
 
    /// Advance the flow - moves time forward, executes stacks                 
@@ -105,8 +105,8 @@ namespace Langulus::Flow
             .SetSource(Abandon(output))
             .SetPriority(8);
 
-         VERBOSE_TEMPORAL(Logger::Purple << 
-            "Flow after execution " << mPriorityStack);
+         VERBOSE_TEMPORAL(Logger::Purple,
+            "Flow after execution ", mPriorityStack);
       }
 
       if (!dt) {
@@ -214,15 +214,15 @@ namespace Langulus::Flow
    ///   @param scope - the scope to analyze and push                         
    ///   @return true if the flow changed                                     
    bool Temporal::Push(Any scope) {
-      VERBOSE_TEMPORAL_TAB("Pushing: " << scope);
+      VERBOSE_TEMPORAL_TAB("Pushing: ", scope);
 
       // Compile pushed scope to an intermediate format                 
       auto compiled = Compile(scope, Inner::NoPriority);
-      VERBOSE_TEMPORAL("Compiled to: " << compiled);
+      VERBOSE_TEMPORAL("Compiled to: ", compiled);
 
       // Link new scope with the available stacks                       
       const bool done = Link(compiled, mPriorityStack);
-      VERBOSE_TEMPORAL(Logger::Purple << "Flow state: " << mPriorityStack);
+      VERBOSE_TEMPORAL(Logger::Purple, "Flow state: ", mPriorityStack);
       return done;
    }
 
@@ -383,7 +383,7 @@ namespace Langulus::Flow
       //                                                                
       // If reached, then future point is flat and boring, fallback by  
       // directly linking against it                                    
-      VERBOSE_TEMPORAL_TAB("Linking to: " << future);
+      VERBOSE_TEMPORAL_TAB("Linking to: ", future);
       return future.Push(scope, mEnvironment);
    }
 

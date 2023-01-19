@@ -21,7 +21,8 @@ namespace Langulus::Flow
    /// The type must have a producer defined, not be abstract, be dense, and  
    /// be referencable                                                        
    template<class T>
-   concept FactoryProducible = CT::Producible<T> && !CT::Abstract<T> && CT::Dense<T> && CT::Referencable<T>;
+   concept FactoryProducible = CT::Producible<T>
+      && !CT::Abstract<T> && CT::Dense<T> && CT::Referencable<T>;
 
 
    ///                                                                        
@@ -112,6 +113,9 @@ namespace Langulus::Flow
       // A hash map for fast retrieval of elements                      
       TUnorderedMap<Hash, TAny<Element*>> mHashmap;
 
+      // Number of initialized elements                                 
+      Count mCount {};
+
       NOD() T* Produce(Hash, const Any&, const Normalized&);
       void CreateInner(Verb&, int, const Any& = {});
       void Destroy(Element*);
@@ -132,6 +136,7 @@ namespace Langulus::Flow
 
    public:
       void Reset();
+      NOD() bool IsEmpty() const noexcept;
 
       void Create(Verb&);
       void Select(Verb&);

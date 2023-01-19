@@ -11,11 +11,11 @@
 #include "../verbs/Do.inl"
 #include "../verbs/Interpret.inl"
 
-#define VERBOSE_MISSING_POINT(a) \
-   Logger::Verbose() << a
-#define VERBOSE_MISSING_POINT_TAB(a) \
-   const auto tabs = Logger::Verbose() << a << Logger::Tabs{}
-#define VERBOSE_FUTURE(a) 
+#define VERBOSE_MISSING_POINT(...) \
+   Logger::Verbose(__VA_ARGS__)
+#define VERBOSE_MISSING_POINT_TAB(...) \
+   const auto tabs = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
+#define VERBOSE_FUTURE(...) 
 
 namespace Langulus::Flow::Inner
 {
@@ -143,7 +143,7 @@ namespace Langulus::Flow::Inner
                mContent << Abandon(linked);
             }
 
-            VERBOSE_MISSING_POINT("Resulting contents: " << mContent);
+            VERBOSE_MISSING_POINT("Resulting contents: ", mContent);
             return true;
          }
          else return false;
@@ -152,8 +152,8 @@ namespace Langulus::Flow::Inner
       //                                                                
       // Filters are available, interpret source as requested           
       //TODO Always add an interpretation to verbs? deprecated?
-      VERBOSE_MISSING_POINT_TAB("Satisfying filter " << mFilter
-         << " by interpreting " << content);
+      VERBOSE_MISSING_POINT_TAB("Satisfying filter ", mFilter,
+         " by interpreting ", content);
 
       Verbs::Interpret interpreter {mFilter};
       interpreter.ShortCircuit(false);
@@ -164,14 +164,13 @@ namespace Langulus::Flow::Inner
          //TODO is this really required? removed for now
          const auto compiled = Temporal::Compile(
             interpreter.GetOutput(), NoPriority);
-         VERBOSE_MISSING_POINT(Logger::Green
-            << "Interpreted as: " << compiled);
+         VERBOSE_MISSING_POINT(Logger::Green, "Interpreted as: ", compiled);
          return Push(compiled, environment);
       }
 
       // Nothing pushed to this point                                   
-      VERBOSE_MISSING_POINT(Logger::DarkYellow
-         << "Nothing viable remained after interpretation");
+      VERBOSE_MISSING_POINT(Logger::DarkYellow,
+         "Nothing viable remained after interpretation");
       return false;
    }
 
@@ -197,8 +196,8 @@ namespace Langulus::Flow::Inner
             catch (const Except::Link&) {
                if (!scope.IsOr())
                   throw;
-               VERBOSE_MISSING_POINT(Logger::DarkYellow
-                  << "Skipped branch: " << subscope);
+               VERBOSE_MISSING_POINT(Logger::DarkYellow,
+                  "Skipped branch: ", subscope);
             }
          });
 
@@ -222,8 +221,8 @@ namespace Langulus::Flow::Inner
             catch (const Except::Link&) {
                if (!scope.IsOr())
                   throw;
-               VERBOSE_MISSING_POINT(Logger::DarkYellow
-                  << "Skipped branch: " << trait);
+               VERBOSE_MISSING_POINT(Logger::DarkYellow,
+                  "Skipped branch: ", trait);
             }
          },
          [&](const Construct& construct) {
@@ -236,8 +235,8 @@ namespace Langulus::Flow::Inner
             catch (const Except::Link&) {
                if (!scope.IsOr())
                   throw;
-               VERBOSE_MISSING_POINT(Logger::DarkYellow
-                  << "Skipped branch: " << construct);
+               VERBOSE_MISSING_POINT(Logger::DarkYellow,
+                  "Skipped branch: ", construct);
             }
          },
          [&](const Verb& verb) {
@@ -254,17 +253,17 @@ namespace Langulus::Flow::Inner
             catch (const Except::Link&) {
                if (!scope.IsOr())
                   throw;
-               VERBOSE_MISSING_POINT(Logger::DarkYellow
-                  << "Skipped branch: " << verb);
+               VERBOSE_MISSING_POINT(Logger::DarkYellow,
+                  "Skipped branch: ", verb);
             }
          },
          [&](const Inner::MissingPast& past) {
             VERBOSE_MISSING_POINT_TAB(
-               "Linking future point " << *this << " to past point " << past);
+               "Linking future point ", *this, " to past point ", past);
 
             if (mPriority != NoPriority && mPriority <= past.mPriority) {
-               VERBOSE_MISSING_POINT(Logger::DarkYellow
-                  << "Skipped past point with higher priority: " << past);
+               VERBOSE_MISSING_POINT(Logger::DarkYellow,
+                  "Skipped past point with higher priority: ", past);
                LANGULUS_THROW(Link, "Past point of higher priority");
             }
 
@@ -275,7 +274,7 @@ namespace Langulus::Flow::Inner
                   LANGULUS_THROW(Link, "No environment provided for temporal flow");
 
                VERBOSE_MISSING_POINT(
-                  "(empty future point, so falling back to environment: " << environment << ")");
+                  "(empty future point, so falling back to environment: ", environment, ')');
 
                if (!pastShallowCopy.Push(environment, {})) {
                   if (!scope.IsOr())

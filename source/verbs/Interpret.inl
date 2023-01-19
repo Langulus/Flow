@@ -138,137 +138,185 @@ namespace Langulus::Verbs
 
 } // namespace Langulus::Verbs
 
-
-namespace Langulus
+namespace fmt
 {
 
-   /// Extend the logger to be capable of logging any meta                    
-   ///   @param lhs - the logger interface                                    
-   ///   @param rhs - the meta to stringify                                   
-   ///   @return a reference to the logger for chaining                       
-   template<CT::Meta T>
-   LANGULUS(ALWAYSINLINE)
-   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs) noexcept {
-      if constexpr (CT::Sparse<T>)
-         return lhs.operator << (rhs ? rhs->mToken : Decay<T>::DefaultToken);
-      else
-         return lhs.operator << (rhs.mToken);
-   }
-
-   /// Extend the logger to be capable of logging anything considered deep    
-   ///   @param lhs - the logger interface                                    
-   ///   @param rhs - the block to stringify                                  
-   ///   @return a reference to the logger for chaining                       
-   template<CT::Deep T>
-   LANGULUS(ALWAYSINLINE)
-   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs) {
-      return lhs.operator << (Token {
-         Verbs::Interpret::To<Flow::Debug>(DenseCast(rhs))
-      });
-   }
-
-   /// Extend the logger to be capable of logging anything statically         
-   /// convertible to Debug string                                            
-   ///   @param lhs - the logger interface                                    
-   ///   @param rhs - the verb to stringify                                   
-   ///   @return a reference to the logger for chaining                       
-   template<CT::Flat T>
-   LANGULUS(ALWAYSINLINE)
-   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs)
-      requires (CT::Convertible<T, Flow::Debug> && !Logger::Formattable<T>)
-   {
-      return lhs.operator << (Token {
-         Verbs::Interpret::To<Flow::Debug>(DenseCast(rhs))
-      });
-   }
-
-   /// Extend the logger to be capable of logging any shared pointer          
-   ///   @param lhs - the logger interface                                    
-   ///   @param rhs - the pointer                                             
-   ///   @return a reference to the logger for chaining                       
-   template<CT::Data T>
-   LANGULUS(ALWAYSINLINE)
-   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const Anyness::TOwned<T>& rhs) {
-      if constexpr (CT::Sparse<T>) {
-         if (rhs == nullptr) {
-            lhs << rhs.GetType();
-            lhs << "(null)";
-            return lhs;
-         }
-         else return lhs << (*rhs.Get());
+   ///                                                                        
+   /// Extend FMT to be capable of logging Flow::Time                         
+   ///                                                                        
+   template<>
+   struct formatter<::Langulus::Flow::Time> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
       }
-      else return lhs << (rhs.Get());
-   }
+
+      template<class CONTEXT>
+      LANGULUS(ALWAYSINLINE)
+      auto format(::Langulus::Flow::Time const& element, CONTEXT& ctx) {
+         using namespace ::Langulus;
+         return format_to(ctx.out(), "{}",
+            static_cast<const Flow::Time::Base&>(element));
+      }
+   };
+
+   ///                                                                        
+   /// Extend FMT to be capable of logging anything CT::Deep                  
+   ///                                                                        
+   template<::Langulus::CT::Deep T>
+   struct formatter<T> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(ALWAYSINLINE)
+      auto format(T const& element, CONTEXT& ctx) {
+         using namespace ::Langulus;
+         const auto asText = Verbs::Interpret::To<Flow::Debug>(element);
+         return format_to(ctx.out(), "{}", static_cast<Logger::TextView>(asText));
+      }
+   };
    
-   /// Extend the logger to be capable of logging traits                      
-   ///   @param lhs - the logger interface                                    
-   ///   @param rhs - the trait to stringify                                  
-   ///   @return a reference to the logger for chaining                       
-   template<CT::Trait T>
-   LANGULUS(ALWAYSINLINE)
-   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs) {
-      lhs << DenseCast(rhs).GetTrait();
-      lhs << '(';
-      lhs << static_cast<const Anyness::Any&>(DenseCast(rhs));
-      lhs << ')';
-      return lhs;
-   }
+   ///                                                                        
+   /// Extend FMT to be capable of logging anything CT::Flat, that is         
+   /// statically convertible to a Debug string                               
+   ///                                                                        
+   template<class T>
+   concept FlatAndDebuggable = ::Langulus::CT::Flat<T>
+      && !::Langulus::CT::Fundamental<T>
+      &&  ::Langulus::CT::Convertible<T, ::Langulus::Flow::Debug>;
 
-   /// Extend the logger to be capable of logging time                        
-   ///   @param lhs - the logger interface                                    
-   ///   @param rhs - the time duration to stringify                          
-   ///   @return a reference to the logger for chaining                       
-   LANGULUS(ALWAYSINLINE)
-   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const Flow::Time& rhs) {
-      return lhs << fmt::format("{}", static_cast<const Flow::Time::Base&>(rhs));
-   }
-
-   /// Extend the logger to be capable of logging time point                  
-   ///   @param lhs - the logger interface                                    
-   ///   @param rhs - the time point to stringify                             
-   ///   @return a reference to the logger for chaining                       
-   LANGULUS(ALWAYSINLINE)
-   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const Flow::TimePoint& rhs) {
-      return lhs << fmt::format("{}", rhs.time_since_epoch());
-   }
-
-   /// Extend the logger to be capable of logging pairs                       
-   ///   @param lhs - the logger interface                                    
-   ///   @param rhs - the pair to stringify                                   
-   ///   @return a reference to the logger for chaining                       
-   template<CT::Pair T>
-   LANGULUS(ALWAYSINLINE)
-   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs) {
-      lhs << "Pair(";
-      lhs << DenseCast(rhs.mKey);
-      lhs << ", ";
-      lhs << DenseCast(rhs.mValue);
-      lhs << ')';
-      return lhs;
-   }
-
-   /// Extend the logger to be capable of logging maps                        
-   ///   @param lhs - the logger interface                                    
-   ///   @param rhs - the map to stringify                                    
-   ///   @return a reference to the logger for chaining                       
-   template<CT::Map T>
-   LANGULUS(ALWAYSINLINE)
-   Logger::A::Interface& operator << (Logger::A::Interface& lhs, const T& rhs) {
-      lhs << RTTI::MetaData::Of<T>()->mToken;
-      lhs << '(';
-      bool first = true;
-      for (auto pair : rhs) {
-         if (!first)
-            lhs << ", ";
-         lhs << pair;
-         first = true;
+   template<FlatAndDebuggable T>
+   struct formatter<T> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
       }
-      lhs << ')';
-      return lhs;
-   }
 
-} // namespace Langulus
+      template<class CONTEXT>
+      LANGULUS(ALWAYSINLINE)
+      auto format(T const& element, CONTEXT& ctx) {
+         using namespace ::Langulus;
+         const auto asText = static_cast<Flow::Debug>(element);
+         return format_to(ctx.out(), "{}", static_cast<Logger::TextView>(asText));
+      }
+   };
 
+   ///                                                                        
+   /// Extend FMT to be capable of logging any shared pointer/owned value     
+   ///                                                                        
+   template<::Langulus::CT::Data T>
+   struct formatter<::Langulus::Anyness::TOwned<T>> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(ALWAYSINLINE)
+      auto format(T const& element, CONTEXT& ctx) {
+         using namespace ::Langulus;
+         if constexpr (CT::Sparse<T>) {
+            if (element == nullptr) {
+               const auto type = element.GetType();
+               if (type)
+                  return format_to(ctx.out(), "{}(null)", static_cast<Logger::TextView>(type->mToken));
+               else
+                  return format_to(ctx.out(), "null");
+            }
+            else return format_to(ctx.out(), "{}", *element.Get());
+         }
+         else return format_to(ctx.out(), "{}", element.Get());
+      }
+   };
+   
+   ///                                                                        
+   /// Extend FMT to be capable of logging any trait                          
+   ///                                                                        
+   template<::Langulus::CT::Trait T>
+   struct formatter<T> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(ALWAYSINLINE)
+      auto format(T const& element, CONTEXT& ctx) {
+         using namespace ::Langulus;
+         const auto type = element.GetTrait();
+         format_to(ctx.out(), "{}(",
+            static_cast<Logger::TextView>(type
+               ? type->mToken
+               : RTTI::MetaTrait::DefaultToken));
+         formatter<Anyness::Any>{}.format(element, ctx);
+         return format_to(ctx.out(), ")");
+      }
+   };
+      
+   ///                                                                        
+   /// Extend FMT to be capable of logging any pair                           
+   ///                                                                        
+   template<::Langulus::CT::Pair T>
+   struct formatter<T> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(ALWAYSINLINE)
+      auto format(T const& element, CONTEXT& ctx) {
+         using namespace ::Langulus;
+         return format_to(ctx.out(), "{}({}, {})",
+            static_cast<Logger::TextView>(
+               RTTI::MetaData::Of<Decay<T>>()->mToken),
+            DenseCast(element.mKey), 
+            DenseCast(element.mValue)
+         );
+      }
+   };
+   
+   ///                                                                        
+   /// Extend FMT to be capable of logging any map                            
+   ///                                                                        
+   template<::Langulus::CT::Map T>
+   struct formatter<T> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(ALWAYSINLINE)
+      auto format(T const& element, CONTEXT& ctx) {
+         using namespace ::Langulus;
+         format_to(ctx.out(), "{}(", static_cast<Logger::TextView>(
+            RTTI::MetaData::Of<Decay<T>>()->mToken)
+         );
+
+         bool first = true;
+         for (auto pair : element) {
+            if (!first)
+               format_to(ctx.out(), ", ");
+            first = false;
+
+            format_to(ctx.out(), "(");
+            formatter<Decay<decltype(DenseCast(pair.mKey))>>{}
+               .format(DenseCast(pair.mKey), ctx);
+            format_to(ctx.out(), ", ");
+            formatter<Decay<decltype(DenseCast(pair.mValue))>>{}
+               .format(DenseCast(pair.mValue), ctx);
+            format_to(ctx.out(), ")");
+         }
+
+         return format_to(ctx.out(), ")");
+      }
+   };
+
+} // namespace fmt
 
 namespace Langulus::Anyness
 {
@@ -284,7 +332,7 @@ namespace Langulus::Anyness
       // Attempt pointer arithmetic conversion first                    
       try { return As<T>(); }
       catch (const Except::Access&) {}
-
+         
       // If this is reached, we attempt runtime conversion by           
       // dispatching Verbs::Interpret to the first element              
       const auto meta = MetaData::Of<T>();
@@ -307,3 +355,5 @@ namespace Langulus::Anyness
    }
 
 } // namespace Langulus::Anyness
+
+

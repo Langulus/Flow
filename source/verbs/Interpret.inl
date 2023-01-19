@@ -155,8 +155,8 @@ namespace fmt
       LANGULUS(ALWAYSINLINE)
       auto format(::Langulus::Flow::Time const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
-         return format_to(ctx.out(), "{}",
-            static_cast<const Flow::Time::Base&>(element));
+         return vformat_to(ctx.out(), "{}", 
+            fmt::make_format_args(static_cast<const Flow::Time::Base&>(element)));
       }
    };
 
@@ -175,7 +175,8 @@ namespace fmt
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          const auto asText = Verbs::Interpret::To<Flow::Debug>(element);
-         return format_to(ctx.out(), "{}", static_cast<Logger::TextView>(asText));
+         return vformat_to(ctx.out(), "{}",
+            fmt::make_format_args(static_cast<Logger::TextView>(asText)));
       }
    };
    
@@ -186,6 +187,7 @@ namespace fmt
    template<class T>
    concept FlatAndDebuggable = ::Langulus::CT::Flat<T>
       && !::Langulus::CT::Fundamental<T>
+      && !::Langulus::CT::Same<T, ::Langulus::Logger::TextView>
       &&  ::Langulus::CT::Convertible<T, ::Langulus::Flow::Debug>;
 
    template<FlatAndDebuggable T>
@@ -200,7 +202,8 @@ namespace fmt
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          const auto asText = static_cast<Flow::Debug>(element);
-         return format_to(ctx.out(), "{}", static_cast<Logger::TextView>(asText));
+         return vformat_to(ctx.out(), "{}",
+            fmt::make_format_args(static_cast<Logger::TextView>(asText)));
       }
    };
 
@@ -247,12 +250,12 @@ namespace fmt
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          const auto type = element.GetTrait();
-         format_to(ctx.out(), "{}(",
-            static_cast<Logger::TextView>(type
-               ? type->mToken
-               : RTTI::MetaTrait::DefaultToken));
+         vformat_to(ctx.out(), "{}(", fmt::make_format_args(type
+            ? type->mToken
+            : RTTI::MetaTrait::DefaultToken));
+
          formatter<Anyness::Any>{}.format(element, ctx);
-         return format_to(ctx.out(), ")");
+         return vformat_to(ctx.out(), ")", fmt::make_format_args());
       }
    };
       
@@ -293,26 +296,30 @@ namespace fmt
       LANGULUS(ALWAYSINLINE)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
-         format_to(ctx.out(), "{}(", static_cast<Logger::TextView>(
-            RTTI::MetaData::Of<Decay<T>>()->mToken)
-         );
+         vformat_to(ctx.out(), "{}", 
+            fmt::make_format_args(RTTI::MetaData::Of<Decay<T>>()->mToken));
 
          bool first = true;
          for (auto pair : element) {
             if (!first)
-               format_to(ctx.out(), ", ");
+               vformat_to(ctx.out(), ", ", fmt::make_format_args());
+
             first = false;
 
-            format_to(ctx.out(), "(");
+            vformat_to(ctx.out(), "(", fmt::make_format_args());
+
             formatter<Decay<decltype(DenseCast(pair.mKey))>>{}
                .format(DenseCast(pair.mKey), ctx);
-            format_to(ctx.out(), ", ");
+
+            vformat_to(ctx.out(), ", ", fmt::make_format_args());
+
             formatter<Decay<decltype(DenseCast(pair.mValue))>>{}
                .format(DenseCast(pair.mValue), ctx);
-            format_to(ctx.out(), ")");
+
+            vformat_to(ctx.out(), ")", fmt::make_format_args());
          }
 
-         return format_to(ctx.out(), ")");
+         return vformat_to(ctx.out(), ")", fmt::make_format_args());
       }
    };
 

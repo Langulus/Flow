@@ -187,6 +187,7 @@ namespace fmt
    template<class T>
    concept FlatAndDebuggable = ::Langulus::CT::Flat<T>
       && !::Langulus::CT::Fundamental<T>
+      && !::Langulus::CT::Same<T, ::Langulus::Logger::TextView>
       &&  ::Langulus::CT::Convertible<T, ::Langulus::Flow::Debug>;
 
    template<FlatAndDebuggable T>

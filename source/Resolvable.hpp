@@ -16,10 +16,11 @@ namespace Langulus::Flow
    ///                                                                        
    /// Holds a reflected class type and context state                         
    ///                                                                        
-   struct Resolvable : public Referenced {
+   struct Resolvable : Referenced {
       LANGULUS(ABSTRACT) true;
       LANGULUS(UNINSERTABLE) true;
       LANGULUS_CONVERSIONS(Debug);
+
    protected:
       DMeta mClassType;
       Offset mClassOffset;

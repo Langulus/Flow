@@ -85,7 +85,7 @@ namespace Langulus::Flow
       static_assert(CT::Data<T>, "T can't be void");
       static_assert(CT::Referencable<T>, "T must be referencable");
       static_assert(CT::Producible<T>, "T must have a producer");
-      static_assert(CT::DescriptorMakable<T>, "T must have a descriptor-constructor");
+      //static_assert(CT::DescriptorMakable<T>, "T must have a descriptor-constructor");
       static_assert(!CT::Abstract<T>, "T can't be abstract");
 
       /// Makes the factory CT::Typed                                         
@@ -93,33 +93,28 @@ namespace Langulus::Flow
       using Producer = CT::ProducerOf<T>;
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
 
-   protected:
-   TESTING(public:)
+   protected: TESTING(public:)
       struct Element;
 
       // Each factory is bound to a producer instance                   
       // Every produced T will also be bound to that instance           
       // If factory moved, all contents will be remapped to the new     
       // instance                                                       
-      Producer* const mFactoryOwner;
-      
+      Producer* const mFactoryOwner {};
       // Elements are allocated here, so they are cache-friendly and    
       // iterated fast, rarely ever moving                              
       TAny<Element> mData;
-
       // The start of the reusable chain                                
       Element* mReusable {};
-
       // A hash map for fast retrieval of elements                      
       TUnorderedMap<Hash, TAny<Element*>> mHashmap;
-
       // Number of initialized elements                                 
       Count mCount {};
 
-      NOD() T* Produce(Hash, const Any&, const Normalized&);
+      NOD() T* Produce(const Any&);
       void CreateInner(Verb&, int, const Any& = {});
       void Destroy(Element*);
-      NOD() Element* Find(Hash, const Normalized&) const;
+      NOD() Element* Find(const Normalized&) const;
 
    public:
       /// Factories can't be default-, move- or copy-constructed              
@@ -163,29 +158,44 @@ namespace Langulus::Flow
 
 
    ///                                                                        
+   /// An element, that is factory produced (used as CRTP)                    
+   ///                                                                        
+   template<class T>
+   class ProducedFrom {
+      LANGULUS(PRODUCER) T;
+   protected:
+      // The descriptor used for hashing, and element identification    
+      Normalized mDescriptor;
+      // The producer of the element                                    
+      T* const mProducer {};
+
+   public:
+      ProducedFrom() = delete;
+      ProducedFrom(const ProducedFrom&) = delete;
+      ProducedFrom(ProducedFrom&&);
+      ProducedFrom(T*, const Any&);
+
+      const Normalized& GetDescriptor() const noexcept;
+      Hash GetHash() const noexcept;
+      T* GetProducer() const noexcept;
+   };
+
+
+   ///                                                                        
    ///   Factory element (for internal usage)                                 
    ///                                                                        
    template<class T, FactoryUsage USAGE>
    struct TFactory<T, USAGE>::Element {
-   protected:
-   TESTING(public:)
+   protected: TESTING(public:)
       friend class TFactory<T, USAGE>;
       union {
          // When element is in use, this pointer points to the          
          // factory who produced, and owns the element                  
          TFactory* mFactory;
-
          // When element is not in use, this pointer points to the      
          // next free entry in the factory                              
          Element* mNextFreeElement;
       };
-
-      // Precomputed hash of the descriptor                             
-      Hash mHash;
-
-      // The descriptor used for hashing, and element identification    
-      // Not valid if mReferences is zero                               
-      Normalized mDescriptor;
 
       // Counts the uses of a factory element, because T should be      
       // referencable. If references are zero, element is unused, and   
@@ -196,9 +206,8 @@ namespace Langulus::Flow
 
    public:
       Element() = delete;
-      Element(TFactory*, Hash, const Any&, const Normalized&);
+      Element(TFactory*, const Any&);
       Element(Element&&) = default;
-      ~Element() noexcept = default;
    };
 
 

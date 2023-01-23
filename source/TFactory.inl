@@ -15,20 +15,53 @@
 namespace Langulus::Flow
 {
 
+   /// Move a produced item                                                   
+   ///   @param other - the item to move                                      
+   template<class T>
+   ProducedFrom<T>::ProducedFrom(ProducedFrom&& other)
+      // mProducer producer intentionally not overwritten               
+      : mDescriptor {Move(other.mDescriptor)} {}
+
+   /// Construct a produced item                                              
+   ///   @param producer - the item's producer                                
+   ///   @param descriptor - the item's messy descriptor                      
+   template<class T>
+   ProducedFrom<T>::ProducedFrom(T* producer, const Any& descriptor)
+      : mDescriptor {descriptor}
+      , mProducer {producer} {}
+
+   /// Get the normalized descriptor of the produced item                     
+   ///   @return the normalized descriptor                                    
+   template<class T>
+   const Normalized& ProducedFrom<T>::GetDescriptor() const noexcept {
+      return mDescriptor;
+   }
+
+   /// Get the hash of the normalized descriptor (cached and efficient)       
+   ///   @return the hash                                                     
+   template<class T>
+   Hash ProducedFrom<T>::GetHash() const noexcept {
+      return mDescriptor.GetHash();
+   }
+
+   /// Return the producer of the item (a.k.a. the owner of the factory)      
+   ///   @return a pointer to the producer instance                           
+   template<class T>
+   T* ProducedFrom<T>::GetProducer() const noexcept {
+      return mProducer;
+   }
+
+
    /// Constructor for descriptor-constructible element                       
    ///   @param factory - the factory who owns the T instance                 
-   ///   @param hash - precomputed descriptor hash (optimization)             
-   ///   @param messyDescriptor - the messy element descriptor, used          
-   ///                            to construct the element                    
-   ///   @param descriptor - the normalized element descriptor,               
-   ///                       used for hashing and match compare               
+   ///   @param descriptor - the messy element descriptor, used               
+   ///                       to construct the element                         
    TEMPLATE()
    LANGULUS(ALWAYSINLINE)
-   FACTORY()::Element::Element(TFactory* factory, Hash hash, const Any& messyDescriptor, const Normalized& descriptor)
+   FACTORY()::Element::Element(TFactory* factory, const Any& descriptor)
       : mFactory {factory}
-      , mHash {hash}
-      , mDescriptor {descriptor}
-      , mData {messyDescriptor} {}
+      , mData {factory->mFactoryOwner, descriptor} {}
+
 
    /// Construction of a factory                                              
    ///   @param owner - the factory owner                                     
@@ -71,25 +104,22 @@ namespace Langulus::Flow
    }
 
    /// Find an element with the provided hash and descriptor                  
-   ///   @param hash - precomputed normalized descriptor hash (optimization)  
    ///   @param descriptor - the normalized descriptor for the element        
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE()
    LANGULUS(ALWAYSINLINE)
-   typename FACTORY()::Element* FACTORY()::Find(Hash hash, const Normalized& descriptor) const {
+   typename FACTORY()::Element* FACTORY()::Find(const Normalized& descriptor) const {
+      const auto hash = descriptor.GetHash();
       const auto found = mHashmap.FindKeyIndex(hash);
       if (found) {
          for (auto candidate : mHashmap.GetValue(found)) {
-            if (candidate->mDescriptor != descriptor)
+            if (candidate->mData.GetDescriptor() != descriptor)
                continue;
-
-            // Found                                                    
-            return candidate;
+            return candidate;    // Found                               
          }
       }
       
-      // Not found                                                      
-      return nullptr;
+      return nullptr;            // Not found                           
    }
 
    /// Create/Destroy element(s) inside the factory                           
@@ -139,7 +169,7 @@ namespace Langulus::Flow
                mVerbs << Abandon(normalizedVerb);
             },
             [this](const Trait& trait) {
-               // Always skip parent trait                              
+               // Always skip parent traits                             
                if (trait.TraitIs<Traits::Parent>())
                   return;
                
@@ -221,12 +251,11 @@ namespace Langulus::Flow
    TEMPLATE()
    void FACTORY()::CreateInner(Verb& verb, int count, const Any& messyDescriptor) {
       Normalized descriptor {messyDescriptor};
-      const auto hash = descriptor.GetHash();
       if (count > 0) {
          // Produce amount of compatible constructs                     
          if constexpr (IsUnique) {
             // Check if descriptor matches any of the available         
-            const auto found = Find(hash, descriptor);
+            const auto found = Find(descriptor);
             if (found) {
                // The unique construct was found, just return it.       
                // Mass will be ignored, it makes no sense to            
@@ -239,12 +268,12 @@ namespace Langulus::Flow
             // Produce exactly one element with this descriptor         
             // Mass will be ignored, it makes no sense to create        
             // multiple instances if unique                             
-            verb << Produce(hash, messyDescriptor, descriptor);
+            verb << Produce(messyDescriptor);
          }
          else {
             // Satisfy the required count                               
             while (count >= 1) {
-               verb << Produce(hash, messyDescriptor, descriptor);
+               verb << Produce(messyDescriptor);
                --count;
             }
          }
@@ -253,7 +282,7 @@ namespace Langulus::Flow
          // Destroy amount of compatible constructs                     
          if constexpr (IsUnique) {
             // Check if descriptor matches any of the available         
-            const auto found = Find(hash, descriptor);
+            const auto found = Find(descriptor);
             if (found) {
                // The unique construct was found, destroy it            
                // Mass is ignored, there should be exactly one          
@@ -264,7 +293,7 @@ namespace Langulus::Flow
          else {
             // Destroy the required amount of matching items            
             do {
-               const auto found = Find(hash, descriptor);
+               const auto found = Find(descriptor);
                if (!found)
                   break;
                Destroy(found);
@@ -301,29 +330,28 @@ namespace Langulus::Flow
    }
 
    /// Produce a single T with the given descriptor and arguments             
-   ///   @param hash - precomputed descriptor hash (optimization)             
    ///   @param messyDescriptor - the original, messy element descriptor      
-   ///   @param descriptor - the normalized element descriptor                
    ///   @return the produced instance                                        
    TEMPLATE()
-   T* FACTORY()::Produce(Hash hash, const Any& messyDescriptor, const Normalized& descriptor) {
+   T* FACTORY()::Produce(const Any& descriptor) {
       if (mReusable) {
          // Reuse a slot                                                
          auto memory = mReusable;
          mReusable = mReusable->mNextFreeElement;
          auto result = new (memory) Element {
-            this, hash, messyDescriptor, descriptor
+            this, descriptor
          };
-         mHashmap[hash] << result;
+         mHashmap[result->mData.GetHash()] << result;
          ++mCount;
          return &result->mData;
       }
-
-      // If this is reached, then a reallocation is required            
-      mData.Emplace(this, hash, messyDescriptor, descriptor);
-      mHashmap[hash] << &mData.Last();
-      ++mCount;
-      return &mData.Last().mData;
+      else {
+         // If this is reached, then a reallocation is required         
+         mData.Emplace(this, descriptor);
+         mHashmap[mData.Last().mData.GetHash()] << &mData.Last();
+         ++mCount;
+         return &mData.Last().mData;
+      }
    }
 
    /// Destroys an element inside factory                                     
@@ -338,10 +366,11 @@ namespace Langulus::Flow
          "Pointer is not owned by factory");
 
       // Remove from hashmap                                            
-      auto& list = mHashmap[item->mHash];
+      const auto hash = item->mData.GetHash();
+      auto& list = mHashmap[hash];
       list.template RemoveValue<false, true>(item);
       if (list.IsEmpty())
-         mHashmap.RemoveKey(item->mHash);
+         mHashmap.RemoveKey(hash);
 
       // Destroy the element                                            
       item->~Element();

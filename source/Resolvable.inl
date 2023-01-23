@@ -249,7 +249,7 @@ namespace Langulus::Flow
    ///   @return true if trait was found, and data was set                    
    template<CT::Trait T, CT::Data D>
    bool Resolvable::GetTrait(D& data) const {
-      auto found = GetBlock().GetMember(RTTI::MetaTrait::Of<T>());
+      auto found = GetBlock().GetMember<T>();
       try {
          data = found.template AsCast<D>();
          return true;
@@ -264,7 +264,7 @@ namespace Langulus::Flow
    ///   @return true if trait was found, and data was set                    
    template<CT::Data D>
    bool Resolvable::GetValue(D& data) const {
-      auto found = GetBlock().GetMember(RTTI::MetaData::Of<D>());
+      auto found = GetBlock().GetMember<D>();
       data = found.template As<D>();
       return true;
    }
@@ -281,7 +281,7 @@ namespace Langulus::Flow
    template<CT::Trait T, bool DIRECT, CT::Data D>
    bool Resolvable::SetTrait(const D& data) {
       if constexpr (DIRECT) {
-         auto found = GetBlock().GetMember(RTTI::MetaTrait::Of<T>());
+         auto found = GetBlock().GetMember<T>();
          if (found.IsEmpty())
             return false;
          return found.Copy(Block::From(data)) > 0;
@@ -305,7 +305,7 @@ namespace Langulus::Flow
    template<CT::Trait T, bool DIRECT, CT::Data D>
    bool Resolvable::SetTrait(D&& data) {
       if constexpr (DIRECT) {
-         auto found = GetBlock().GetMember(RTTI::MetaTrait::Of<T>());
+         auto found = GetBlock().GetMember<T>();
          if (found.IsEmpty())
             return false;
          return found.Copy(Block::From(data)) > 0;
@@ -328,7 +328,7 @@ namespace Langulus::Flow
    template<bool DIRECT, CT::Data D>
    bool Resolvable::SetValue(const D& data) {
       if constexpr (DIRECT) {
-         auto found = GetBlock().GetMember(RTTI::MetaData::Of<D>());
+         auto found = GetBlock().GetMember<D>();
          if (found.IsEmpty())
             return false;
          return found.Copy(Block::From(data)) > 0;
@@ -351,7 +351,7 @@ namespace Langulus::Flow
    template<bool DIRECT, CT::Data D>
    bool Resolvable::SetValue(D&& data) {
       if constexpr (DIRECT) {
-         auto found = GetBlock().GetMember(RTTI::MetaData::Of<D>());
+         auto found = GetBlock().GetMember<D>();
          if (found.IsEmpty())
             return false;
          return found.Copy(Block::From(data)) > 0;

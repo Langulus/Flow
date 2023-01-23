@@ -28,8 +28,7 @@ namespace Langulus::Flow
    ///                                                                        
    /// Normalized data container                                              
    ///                                                                        
-   class Normalized {
-   private:
+   struct Normalized {
       // Verbs will always be ordered in the order they appear          
       // Their contents will be normalized all the way through          
       TAny<Verb> mVerbs;

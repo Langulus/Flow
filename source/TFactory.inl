@@ -28,7 +28,9 @@ namespace Langulus::Flow
    template<class T>
    ProducedFrom<T>::ProducedFrom(T* producer, const Any& descriptor)
       : mDescriptor {descriptor}
-      , mProducer {producer} {}
+      , mProducer {producer} {
+      LANGULUS_ASSUME(DevAssumes, producer != nullptr, "Invalid producer");
+   }
 
    /// Get the normalized descriptor of the produced item                     
    ///   @return the normalized descriptor                                    

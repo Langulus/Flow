@@ -55,17 +55,21 @@ namespace Langulus::Flow
 
       NOD() Block GetMember(TMeta) noexcept;
       NOD() Block GetMember(TMeta) const noexcept;
-      NOD() Block GetMember(const Token&) noexcept;
-      NOD() Block GetMember(const Token&) const noexcept;
 
       template<CT::Index INDEX>
       NOD() Block GetMember(TMeta, const INDEX&) noexcept;
       template<CT::Index INDEX>
       NOD() Block GetMember(TMeta, const INDEX&) const noexcept;
-      template<CT::Index INDEX>
-      NOD() Block GetMember(const Token&, const INDEX&) noexcept;
-      template<CT::Index INDEX>
-      NOD() Block GetMember(const Token&, const INDEX&) const noexcept;
+
+      #if LANGULUS_FEATURE(MANAGED_MEMORY)
+         NOD() Block GetMember(const Token&) noexcept;
+         NOD() Block GetMember(const Token&) const noexcept;
+
+         template<CT::Index INDEX>
+         NOD() Block GetMember(const Token&, const INDEX&) noexcept;
+         template<CT::Index INDEX>
+         NOD() Block GetMember(const Token&, const INDEX&) const noexcept;
+      #endif
 
       template<CT::Trait, CT::Data D>
       bool GetTrait(D&) const;

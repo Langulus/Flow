@@ -46,6 +46,7 @@ namespace Langulus
    ///   @param instance - the instance to stringify                          
    ///   @return text containing the generated identity                       
    template<class T>
+   LANGULUS(ALWAYSINLINE)
    Anyness::Text IdentityOf(const T& instance) {
       return IdentityOf(MetaOf<Decay<T>>(), instance);
    }
@@ -59,7 +60,8 @@ namespace Langulus::Flow
    /// Constructor                                                            
    ///   @attention type is assumed derived from Resolvable                   
    ///   @param type - type of the resolvable                                 
-   inline Resolvable::Resolvable(DMeta type) SAFETY_NOEXCEPT()
+   LANGULUS(ALWAYSINLINE)
+   Resolvable::Resolvable(DMeta type) SAFETY_NOEXCEPT()
       : mClassType {type}
       , mClassOffset {0} {
       // Precalculate offset, no need to do it at runtime               
@@ -72,20 +74,23 @@ namespace Langulus::Flow
 
    /// Get the class meta                                                     
    ///   @return the meta data for the class type                             
+   LANGULUS(ALWAYSINLINE)
    constexpr DMeta Resolvable::GetType() const noexcept {
       return mClassType;
    }
 
    /// Get the class name token                                               
    ///   @return the token                                                    
-   inline Token Resolvable::GetToken() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Token Resolvable::GetToken() const noexcept {
       return mClassType->mToken;
    }
 
    /// Check if context interprets as a type                                  
    ///   @param type - the type to check for                                  
    ///   @return true if this context can be dynamically interpreted to type  
-   inline bool Resolvable::CastsTo(DMeta type) const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   bool Resolvable::CastsTo(DMeta type) const noexcept {
       return mClassType->CastsTo(type);
    }
 
@@ -93,6 +98,7 @@ namespace Langulus::Flow
    ///   @tparam T - the type to check for                                    
    ///   @return true if this context can be dynamically interpreted as T     
    template<CT::Data T>
+   LANGULUS(ALWAYSINLINE)
    bool Resolvable::CastsTo() const {
       return mClassType->template CastsTo<T>();
    }
@@ -100,7 +106,8 @@ namespace Langulus::Flow
    /// Check if context is an exact type                                      
    ///   @param type - the type to check for                                  
    ///   @return true if this context can be dynamically interpreted to type  
-   inline bool Resolvable::Is(DMeta type) const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   bool Resolvable::Is(DMeta type) const noexcept {
       return mClassType->Is(type);
    }
 
@@ -108,18 +115,21 @@ namespace Langulus::Flow
    ///   @tparam T - the type to check for                                    
    ///   @return true if this context can be dynamically interpreted as T     
    template<CT::Data T>
-   inline bool Resolvable::Is() const {
+   LANGULUS(ALWAYSINLINE)
+   bool Resolvable::Is() const {
       return mClassType->template Is<T>();
    }
 
    /// Stringify the context (shows class type and an identifier)             
-   inline Resolvable::operator Debug() const {
+   LANGULUS(ALWAYSINLINE)
+   Resolvable::operator Debug() const {
       return IdentityOf(mClassType, this);
    }
 
    /// Convenience function that logs this's identity and suffixes with ": "  
    /// Useful when used like: Logger::Verbose() << Self() << "etc..."         
-   inline Debug Resolvable::Self() const {
+   LANGULUS(ALWAYSINLINE)
+   Debug Resolvable::Self() const {
       auto temp = operator Debug();
       temp += ": ";
       return Abandon(temp);
@@ -129,7 +139,8 @@ namespace Langulus::Flow
    /// The availability of this function is reflected via CT::Resolvable      
    /// You can invoke this function via Block::GetElementResolved()           
    ///   @return the static memory block representing this instance           
-   inline Block Resolvable::GetBlock() const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Block Resolvable::GetBlock() const noexcept {
       // 'this' pointer points to Resolvable object, so we need to      
       // compensate this, by offsetting 'this' by the relative class    
       // type offset. I like to live dangerously <3                     
@@ -146,6 +157,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb to execute in this resolved type              
    ///   @return a reference to the verb's output                             
    template<bool DISPATCH, bool DEFAULT, CT::Verb V>
+   LANGULUS(ALWAYSINLINE)
    const Any& Resolvable::Run(const V& verb) {
       return Run<DISPATCH, DEFAULT, V>(const_cast<V&>(verb));
    }
@@ -157,6 +169,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb to execute in this resolved type              
    ///   @return a reference to the verb's output                             
    template<bool DISPATCH, bool DEFAULT, CT::Verb V>
+   LANGULUS(ALWAYSINLINE)
    Any& Resolvable::Run(V& verb) {
       auto environment = GetBlock();
       DispatchFlat<false, DISPATCH, DEFAULT>(environment, verb);
@@ -170,6 +183,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb to execute in this resolved type              
    ///   @return a reference to the verb's output                             
    template<bool DISPATCH, bool DEFAULT, CT::Verb V>
+   LANGULUS(ALWAYSINLINE)
    Any& Resolvable::Run(V&& verb) requires (CT::Mutable<V>) {
       return Run<DISPATCH, DEFAULT, V>(verb);
    }
@@ -177,29 +191,17 @@ namespace Langulus::Flow
    /// Get the first member matching a runtime trait definition               
    ///   @param trait - the trait to search for                               
    ///   @return the static mutable memory block representing the member      
-   inline Block Resolvable::GetMember(TMeta trait) noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Block Resolvable::GetMember(TMeta trait) noexcept {
       return GetBlock().GetMember(trait);
    }
 
    /// Get the first member matching a runtime trait definition (const)       
    ///   @param trait - the trait to search for                               
    ///   @return the static constant memory block representing the member     
-   inline Block Resolvable::GetMember(TMeta trait) const noexcept {
+   LANGULUS(ALWAYSINLINE)
+   Block Resolvable::GetMember(TMeta trait) const noexcept {
       return GetBlock().GetMember(trait);
-   }
-
-   /// Get the first member matching a runtime trait token                    
-   ///   @param trait - the trait to search for                               
-   ///   @return the static mutable memory block representing the member      
-   inline Block Resolvable::GetMember(const Token& trait) noexcept {
-      return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait));
-   }
-
-   /// Get the first member matching a runtime trait token (const)            
-   ///   @param trait - the trait to search for                               
-   ///   @return the static constant memory block representing the member     
-   inline Block Resolvable::GetMember(const Token& trait) const noexcept {
-      return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait));
    }
 
    /// Get Nth reflected member by trait definition                           
@@ -208,6 +210,7 @@ namespace Langulus::Flow
    ///   @param offset - the index of the match to return                     
    ///   @return the static mutable memory block representing the member      
    template<CT::Index INDEX>
+   LANGULUS(ALWAYSINLINE)
    Block Resolvable::GetMember(TMeta trait, const INDEX& offset) noexcept {
       return GetBlock().GetMember(trait, offset);
    }
@@ -218,8 +221,26 @@ namespace Langulus::Flow
    ///   @param offset - the index of the match to return                     
    ///   @return the static constant memory block representing the member     
    template<CT::Index INDEX>
+   LANGULUS(ALWAYSINLINE)
    Block Resolvable::GetMember(TMeta trait, const INDEX& offset) const noexcept {
       return GetBlock().GetMember(trait, offset);
+   }
+
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
+   /// Get the first member matching a runtime trait token                    
+   ///   @param trait - the trait to search for                               
+   ///   @return the static mutable memory block representing the member      
+   LANGULUS(ALWAYSINLINE)
+      Block Resolvable::GetMember(const Token& trait) noexcept {
+      return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait));
+   }
+
+   /// Get the first member matching a runtime trait token (const)            
+   ///   @param trait - the trait to search for                               
+   ///   @return the static constant memory block representing the member     
+   LANGULUS(ALWAYSINLINE)
+      Block Resolvable::GetMember(const Token& trait) const noexcept {
+      return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait));
    }
 
    /// Get Nth reflected member by trait token                                
@@ -228,6 +249,7 @@ namespace Langulus::Flow
    ///   @param offset - the index of the match to return                     
    ///   @return the static mutable memory block representing the member      
    template<CT::Index INDEX>
+   LANGULUS(ALWAYSINLINE)
    Block Resolvable::GetMember(const Token& trait, const INDEX& offset) noexcept {
       return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait), offset);
    }
@@ -238,9 +260,11 @@ namespace Langulus::Flow
    ///   @param offset - the index of the match to return                     
    ///   @return the static constant memory block representing the member     
    template<CT::Index INDEX>
+   LANGULUS(ALWAYSINLINE)
    Block Resolvable::GetMember(const Token& trait, const INDEX& offset) const noexcept {
       return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait), offset);
    }
+#endif
 
    /// Get a statically typed trait member and cast it to the desired type    
    ///   @tparam T - the trait to search for                                  
@@ -248,6 +272,7 @@ namespace Langulus::Flow
    ///   @param data - [out] the data to set                                  
    ///   @return true if trait was found, and data was set                    
    template<CT::Trait T, CT::Data D>
+   LANGULUS(ALWAYSINLINE)
    bool Resolvable::GetTrait(D& data) const {
       auto found = GetBlock().GetMember<T>();
       try {
@@ -263,6 +288,7 @@ namespace Langulus::Flow
    ///   @param data - [out] the data to set                                  
    ///   @return true if trait was found, and data was set                    
    template<CT::Data D>
+   LANGULUS(ALWAYSINLINE)
    bool Resolvable::GetValue(D& data) const {
       auto found = GetBlock().GetMember<D>();
       data = found.template As<D>();
@@ -279,6 +305,7 @@ namespace Langulus::Flow
    ///   @param data - [out] the data to copy                                 
    ///   @return true if trait was found and overwritten                      
    template<CT::Trait T, bool DIRECT, CT::Data D>
+   LANGULUS(ALWAYSINLINE)
    bool Resolvable::SetTrait(const D& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<T>();
@@ -303,6 +330,7 @@ namespace Langulus::Flow
    ///   @param data - [out] the data to move                                 
    ///   @return true if trait was found and overwritten                      
    template<CT::Trait T, bool DIRECT, CT::Data D>
+   LANGULUS(ALWAYSINLINE)
    bool Resolvable::SetTrait(D&& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<T>();
@@ -326,6 +354,7 @@ namespace Langulus::Flow
    ///   @param data - [out] the data to copy                                 
    ///   @return true if data was found and overwritten                       
    template<bool DIRECT, CT::Data D>
+   LANGULUS(ALWAYSINLINE)
    bool Resolvable::SetValue(const D& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<D>();
@@ -349,6 +378,7 @@ namespace Langulus::Flow
    ///   @param data - [out] the data to move                                 
    ///   @return true if data was found and overwritten                       
    template<bool DIRECT, CT::Data D>
+   LANGULUS(ALWAYSINLINE)
    bool Resolvable::SetValue(D&& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<D>();

@@ -79,11 +79,9 @@ struct Fraction : public Resolvable {
 struct Producer {};
 
 /// A mockup of a producible                                                  
-struct Producible : public Referenced {
-   LANGULUS(PRODUCER) Producer;
-
-   Producible(const Any& d = {})
-      : mDescriptor {d} {}
+struct Producible : Referenced, ProducedFrom<Producer> {
+   Producible(Producer* producer, const Any& d = {})
+      : ProducedFrom {producer, d} {}
 
    Any mDescriptor;
 

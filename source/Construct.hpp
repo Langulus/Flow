@@ -26,9 +26,9 @@ namespace Langulus::Flow
       // Seek everywhere                                                
       Everywhere = Duplex | Here,
       // Seek parents and this context included                         
-      UpToHere = Above | Here,
+      HereAndAbove = Above | Here,
       // Seek children and this context included                        
-      DownFromHere = Below | Here
+      HereAndBelow = Below | Here
    };
 
    constexpr bool operator & (const SeekStyle& lhs, const SeekStyle& rhs) {
@@ -74,15 +74,15 @@ namespace Langulus::Flow
       template<CT::Data T = Any>
       Construct(DMeta, T&&, const Charge& = {});
 
-#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      Construct(const Token&);
-      template<CT::Data T = Any>
-      Construct(const Token&, const T&, const Charge& = {});
-      template<CT::Data T = Any>
-      Construct(const Token&, T&, const Charge& = {});
-      template<CT::Data T = Any>
-      Construct(const Token&, T&&, const Charge& = {});
-#endif
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         Construct(const Token&);
+         template<CT::Data T = Any>
+         Construct(const Token&, const T&, const Charge& = {});
+         template<CT::Data T = Any>
+         Construct(const Token&, T&, const Charge& = {});
+         template<CT::Data T = Any>
+         Construct(const Token&, T&&, const Charge& = {});
+      #endif
 
       Construct& operator = (const Construct&) = default;
       Construct& operator = (Construct&&) noexcept = default;
@@ -103,11 +103,11 @@ namespace Langulus::Flow
       template<CT::Data T>
       NOD() static Construct From();
 
-#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      template<CT::Data HEAD, CT::Data... TAIL>
-      NOD() static Construct FromToken(const Token&, HEAD&&, TAIL&&...);
-      NOD() static Construct FromToken(const Token&);
-#endif
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         template<CT::Data HEAD, CT::Data... TAIL>
+         NOD() static Construct FromToken(const Token&, HEAD&&, TAIL&&...);
+         NOD() static Construct FromToken(const Token&);
+      #endif
 
       // Omit these inherited from Any                                  
       Any FromMeta() = delete;

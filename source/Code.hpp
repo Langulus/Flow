@@ -35,7 +35,6 @@ namespace Langulus::Flow
          Future,
          Past,
          Constant,
-         Sparse,
          Mass,
          Frequency,
          Time,
@@ -121,7 +120,6 @@ namespace Langulus::Flow
          NOD() static Offset ParseBytes(const Code&, Any&);
          NOD() static Offset ParsePhase(Code::Operator, Any&);
          NOD() static Offset ParseConst(Any&);
-         NOD() static Offset ParseSparse(Any&);
          NOD() static Offset ParseReflected(Verb&, const Code&, Any&, bool optimize);
 
          static void InsertContent(Any&, Any&);

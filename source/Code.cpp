@@ -69,7 +69,6 @@ namespace Langulus::Flow
       { "??", 0, false },     // Future
       { "?", 0, false },      // Past
       { "const", 0, false },  // Constant
-      { "sparse", 0, false }, // Sparse
       { "*", 0, true },       // Mass
       { "^", 0, true },       // Frequency
       { "@", 0, true },       // Time
@@ -569,8 +568,6 @@ namespace Langulus::Flow
             return progress + ParsePhase(op, lhs);
          case Constant:
             return progress + ParseConst(lhs);
-         case Sparse:
-            return progress + ParseSparse(lhs);
          default:
             PRETTY_ERROR("Unhandled built-in operator");
          }
@@ -850,15 +847,6 @@ namespace Langulus::Flow
    ///   @return number of parsed characters                                  
    Offset Code::OperatorParser::ParseConst(Any& lhs) {
       lhs.MakeConst();
-      return 0;
-   }
-
-   /// Sparse contents                                                        
-   ///   @param input - the code to parse                                     
-   ///   @param lhs - [in/out] sparse content goes here                       
-   ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseSparse(Any& lhs) {
-      lhs.MakeSparse();
       return 0;
    }
 

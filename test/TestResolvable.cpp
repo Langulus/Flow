@@ -13,8 +13,8 @@ SCENARIO("Test resolvables", "[resolvable]") {
 			THEN("When resolving the block, the correct data offset should be applied") {
 				REQUIRE(concreteptr != abstractptr);
 				REQUIRE(pack.IsSparse());
-				REQUIRE(pack.GetType() == MetaOf<Resolvable>());
-				REQUIRE(pack.GetResolved().GetType() == MetaOf<Thing2>());
+				REQUIRE(pack.IsExact<Resolvable*>());
+				REQUIRE(pack.GetResolved().IsExact<Thing2>());
 				REQUIRE(pack.GetResolved().Get<Thing2>().mMember == 777);
 				REQUIRE(pack.GetResolved().Get<Thing>().mMember == 666);
 				REQUIRE(pack.GetResolved().As<Resolvable>().CastsTo<Thing>());
@@ -29,8 +29,8 @@ SCENARIO("Test resolvables", "[resolvable]") {
 			THEN("When resolving the block, the correct data offset should be applied") {
 				REQUIRE(concreteptr != abstractptr);
 				REQUIRE(pack.IsSparse());
-				REQUIRE(pack.GetType() == MetaOf<Thing>());
-				REQUIRE(pack.GetResolved().GetType() == MetaOf<Thing2>());
+				REQUIRE(pack.IsExact<Thing*>());
+				REQUIRE(pack.GetResolved().IsExact<Thing2>());
 				REQUIRE(pack.GetResolved().Get<Thing2>().mMember == 777);
 				REQUIRE(pack.GetResolved().As<Thing>().mMember == 666);
 				REQUIRE(pack.GetResolved().As<Resolvable>().CastsTo<Thing>());

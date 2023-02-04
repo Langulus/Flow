@@ -370,7 +370,7 @@ namespace Langulus::Flow
       // Remove from hashmap                                            
       const auto hash = item->mData.GetHash();
       auto& list = mHashmap[hash];
-      list.template RemoveValue<false, true>(item);
+      list.template Remove<false, true>(item);
       if (list.IsEmpty())
          mHashmap.RemoveKey(hash);
 

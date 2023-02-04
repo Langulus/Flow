@@ -685,7 +685,8 @@ namespace Langulus::Flow
                const auto pEnd = p + result.GetCount();
                const auto size = result.GetType()->mSize;
                while (p != pEnd) {
-                  new (p++) Block::KnownPointer {start, temporary};
+                  p->mPointer = reinterpret_cast<Byte*>(start);
+                  p->mEntry = temporary;
                   start += size;
                }
             }
@@ -712,41 +713,48 @@ namespace Langulus::Flow
          else if (result.CastsTo<RTTI::Meta>()) {
             // Deserialize meta definitions                             
             // The resulting container should be always const & sparse  
-            result.MakeSparse();
-
             if constexpr (HEADER)
                result.New(deserializedCount);
 
             auto p = result.GetRawSparse();
             const auto pEnd = p + result.GetCount();
-            if (result.Is<MetaData>()) {
+            if (result.IsExact<DMeta>()) {
                while (p != pEnd) {
                   DMeta ptr;
                   read = DeserializeMeta(source, ptr, read, header, loader);
-                  new (p++) Block::KnownPointer {ptr, nullptr};
+                  p->mPointer = reinterpret_cast<Byte*>(
+                     const_cast<MetaData*>(ptr));
+                  p->mEntry = nullptr;
                }
             }
-            else if (result.Is<MetaTrait>()) {
+            else if (result.IsExact<TMeta>()) {
                while (p != pEnd) {
                   TMeta ptr;
                   read = DeserializeMeta(source, ptr, read, header, loader);
-                  new (p++) Block::KnownPointer {ptr, nullptr};
+                  p->mPointer = reinterpret_cast<Byte*>(
+                     const_cast<MetaTrait*>(ptr));
+                  p->mEntry = nullptr;
                }
             }
-            else if (result.Is<MetaVerb>()) {
+            else if (result.IsExact<VMeta>()) {
                while (p != pEnd) {
                   VMeta ptr;
                   read = DeserializeMeta(source, ptr, read, header, loader);
-                  new (p++) Block::KnownPointer {ptr, nullptr};
+                  p->mPointer = reinterpret_cast<Byte*>(
+                     const_cast<MetaVerb*>(ptr));
+                  p->mEntry = nullptr;
                }
             }
-            else if (result.Is<MetaConst>()) {
+            else if (result.IsExact<CMeta>()) {
                while (p != pEnd) {
                   CMeta ptr;
                   read = DeserializeMeta(source, ptr, read, header, loader);
-                  new (p++) Block::KnownPointer {ptr, nullptr};
+                  p->mPointer = reinterpret_cast<Byte*>(
+                     const_cast<MetaConst*>(ptr));
+                  p->mEntry = nullptr;
                }
             }
+            else LANGULUS_THROW(Convert, "Bad meta container");
 
             return read;
          }

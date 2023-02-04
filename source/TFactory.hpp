@@ -87,8 +87,7 @@ namespace Langulus::Flow
       //static_assert(CT::DescriptorMakable<T>, "T must have a descriptor-constructor");
       static_assert(!CT::Abstract<T>, "T can't be abstract");
 
-      /// Makes the factory CT::Typed                                         
-      using MemberType = T;
+      LANGULUS(TYPED) T;
       using Producer = CT::ProducerOf<T>;
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
 

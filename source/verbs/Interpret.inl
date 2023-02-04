@@ -275,7 +275,7 @@ namespace fmt
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          return fmt::vformat_to(ctx.out(), "{}({}, {})", fmt::make_format_args(
-            RTTI::MetaData::Of<Decay<T>>()->mToken,
+            RTTI::MetaData::Of<T>()->mToken,
             DenseCast(element.mKey), 
             DenseCast(element.mValue)
          ));
@@ -297,7 +297,7 @@ namespace fmt
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          fmt::vformat_to(ctx.out(), "{}(", fmt::make_format_args(
-            RTTI::MetaData::Of<Decay<T>>()->mToken));
+            RTTI::MetaData::Of<T>()->mToken));
 
          bool first = true;
          for (auto pair : element) {

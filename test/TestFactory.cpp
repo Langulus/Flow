@@ -28,7 +28,7 @@ SCENARIO("Test factories", "[factory]") {
 			THEN("Requirements should be met") {
 				REQUIRE(creator.IsDone());
 				REQUIRE(output.GetCount() == 1);
-				REQUIRE(output.GetType() == MetaOf<Producible>());
+				REQUIRE(output.IsExact<Producible*>());
 				REQUIRE(output.IsSparse());
 
 				REQUIRE(factory.mReusable == nullptr);

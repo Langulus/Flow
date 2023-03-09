@@ -54,6 +54,7 @@ namespace Langulus::Flow
       LANGULUS(DEEP) false;
       LANGULUS_CONVERSIONS(Code, Debug);
       LANGULUS_BASES(Any, Charge);
+
    private:
       DMeta mType {};
       Hash mHash;
@@ -136,10 +137,10 @@ namespace Langulus::Flow
       NOD() DMeta GetProducer() const noexcept;
 
       void Clear();
-      NOD() Construct Clone(DMeta = nullptr) const;
+      /*NOD() Construct Clone(DMeta = nullptr) const;
 
       template<CT::Data T>
-      NOD() Construct CloneAs() const;
+      NOD() Construct CloneAs() const;*/
 
       template<CT::Data T>
       Construct& operator << (const T&);

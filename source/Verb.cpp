@@ -109,16 +109,6 @@ namespace Langulus::Flow
       return Verb::FromMeta(mVerb, GetCharge(), mState);
    }
 
-   /// Clone the verb                                                         
-   ///   @return the cloned verb                                              
-   Verb Verb::Clone() const {
-      auto clone = FromMeta(mVerb, Any::Clone(), GetCharge(), mState);
-      clone.mSource = mSource.Clone();
-      clone.mOutput = mOutput.Clone();
-      clone.mSuccesses = mSuccesses;
-      return clone;
-   }
-
    /// Reset all verb members and energy                                      
    void Verb::Reset() {
       mVerb = {};

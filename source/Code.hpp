@@ -53,7 +53,7 @@ namespace Langulus::Flow
       Code(Abandoned<Code>&&) noexcept;
 
       NOD() Scope Parse(bool optimize = true) const;
-      NOD() Code Clone() const;
+      //NOD() Code Clone() const;
 
       NOD() Code RightOf(Offset) const;
       NOD() Code LeftOf(Offset) const;

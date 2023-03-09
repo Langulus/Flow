@@ -173,10 +173,10 @@ namespace Langulus::Flow
    /// Clone the construct, substituting the construct type with another      
    ///   @tparam T - the new type of the construct                            
    ///   @return the new construct                                            
-   template<CT::Data T>
+   /*template<CT::Data T>
    Construct Construct::CloneAs() const {
       return Clone(MetaData::Of<T>());
-   }
+   }*/
 
    /// Push arguments to the back by copy                                     
    ///   @param whatever - the thing you wish to copy and push                

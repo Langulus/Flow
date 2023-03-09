@@ -74,15 +74,18 @@ namespace Langulus::Verbs
       else if (lhs.IsExecutableDeep() || rhs.IsExecutableDeep())
          // Can't associate unexecuted verbs                            
          return false;
-      else if (!lhs.Is(rhs.GetType()))
+      else if (!lhs.IsExact(rhs.GetType()))
          // Can't associate unrelated types                             
          return false;
 
       // Attempt directly copying, if possible                          
       // This will happen only if types are exactly the same            
       // This is a default (fallback) routine, let's keep things simple 
-      try { verb.Copy(context); }
-      catch (const Except::Copy&) {
+      try {
+         reinterpret_cast<Associate&>(verb)
+            .CallUnknownSemanticAssignment(context.GetCount(), Copy(context));
+      }
+      catch (...) {
          return false;
       }
 

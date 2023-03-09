@@ -681,12 +681,11 @@ namespace Langulus::Flow
                temporary->Keep(deserializedCount - 1);
 
                // Write a pointer to each element                       
-               auto p = result.GetRawSparse();
+               auto p = result.template GetHandle<Byte*>(0);
                const auto pEnd = p + result.GetCount();
                const auto size = result.GetType()->mSize;
                while (p != pEnd) {
-                  p->mPointer = reinterpret_cast<Byte*>(start);
-                  p->mEntry = temporary;
+                  p.New(start, temporary);
                   start += size;
                }
             }
@@ -716,42 +715,46 @@ namespace Langulus::Flow
             if constexpr (HEADER)
                result.New(deserializedCount);
 
-            auto p = result.GetRawSparse();
+            auto p = result.template GetHandle<Byte*>(0);
             const auto pEnd = p + result.GetCount();
             if (result.IsExact<DMeta>()) {
                while (p != pEnd) {
                   DMeta ptr;
                   read = DeserializeMeta(source, ptr, read, header, loader);
-                  p->mPointer = reinterpret_cast<Byte*>(
-                     const_cast<MetaData*>(ptr));
-                  p->mEntry = nullptr;
+                  p.New(
+                     reinterpret_cast<Byte*>(const_cast<MetaData*>(ptr)),
+                     nullptr
+                  );
                }
             }
             else if (result.IsExact<TMeta>()) {
                while (p != pEnd) {
                   TMeta ptr;
                   read = DeserializeMeta(source, ptr, read, header, loader);
-                  p->mPointer = reinterpret_cast<Byte*>(
-                     const_cast<MetaTrait*>(ptr));
-                  p->mEntry = nullptr;
+                  p.New(
+                     reinterpret_cast<Byte*>(const_cast<MetaTrait*>(ptr)),
+                     nullptr
+                  );
                }
             }
             else if (result.IsExact<VMeta>()) {
                while (p != pEnd) {
                   VMeta ptr;
                   read = DeserializeMeta(source, ptr, read, header, loader);
-                  p->mPointer = reinterpret_cast<Byte*>(
-                     const_cast<MetaVerb*>(ptr));
-                  p->mEntry = nullptr;
+                  p.New(
+                     reinterpret_cast<Byte*>(const_cast<MetaVerb*>(ptr)),
+                     nullptr
+                  );
                }
             }
             else if (result.IsExact<CMeta>()) {
                while (p != pEnd) {
                   CMeta ptr;
                   read = DeserializeMeta(source, ptr, read, header, loader);
-                  p->mPointer = reinterpret_cast<Byte*>(
-                     const_cast<MetaConst*>(ptr));
-                  p->mEntry = nullptr;
+                  p.New(
+                     reinterpret_cast<Byte*>(const_cast<MetaConst*>(ptr)),
+                     nullptr
+                  );
                }
             }
             else LANGULUS_THROW(Convert, "Bad meta container");

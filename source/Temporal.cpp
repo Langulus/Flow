@@ -42,7 +42,7 @@ namespace Langulus::Flow
 
    /// Clone the flow, but fork the parent flow, if any                       
    ///   @return the cloned flow                                              
-   Temporal Temporal::Clone() const {
+   /*Temporal Temporal::Clone() const {
       Temporal clone;
       // Note, that the parent flow is never cloned                     
       clone.mFrequencyStack = mFrequencyStack.Clone();
@@ -53,7 +53,7 @@ namespace Langulus::Flow
       clone.mDuration = mDuration;
       clone.mState = mState;
       return clone;
-   }
+   }*/
 
    /// Reset progress for the priority stack                                  
    void Temporal::Reset() {

@@ -78,8 +78,10 @@ namespace Langulus::Flow
       LANGULUS(DEEP) false;
       LANGULUS_CONVERSIONS(Code, Debug);
       LANGULUS_BASES(Any, Charge);
-   friend class Scope;
+
    protected:
+      friend class Scope;
+
       // Verb meta, mass, frequency, time and priority                  
       VMeta mVerb {};
       // The number of successful executions                            
@@ -102,23 +104,12 @@ namespace Langulus::Flow
       Verb(const Verb&);
       Verb(Verb&&);
 
-      template<CT::NotSemantic T>
-      Verb(const T&) requires Related<T>;
-      template<CT::NotSemantic T>
-      Verb(T&) requires Related<T>;
-      template<CT::NotSemantic T>
-      Verb(T&&) requires Related<T>;
+      Verb(const CT::NotSemantic auto&);
+      Verb(CT::NotSemantic auto&);
+      Verb(CT::NotSemantic auto&&);
 
       template<CT::Semantic S>
       Verb(S&&) requires Related<TypeOf<S>>;
-
-      template<CT::NotSemantic T>
-      Verb(const T&) requires NotRelated<T>;
-      template<CT::NotSemantic T>
-      Verb(T&) requires NotRelated<T>;
-      template<CT::NotSemantic T>
-      Verb(T&&) requires NotRelated<T>;
-
       template<CT::Semantic S>
       Verb(S&&) requires NotRelated<TypeOf<S>>;
 
@@ -161,7 +152,6 @@ namespace Langulus::Flow
 
       NOD() Hash GetHash() const;
       NOD() Verb PartialCopy() const noexcept;
-      NOD() Verb Clone() const;
       void Reset();
 
       NOD() bool VerbIs(VMeta) const noexcept;
@@ -270,7 +260,7 @@ namespace Langulus::Flow
    /// Statically typed verb, used as CRTP for all specific verbs             
    ///                                                                        
    template<class VERB>
-   struct StaticVerb : public Verb {
+   struct StaticVerb : Verb {
       LANGULUS_BASES(Verb);
 
       StaticVerb();
@@ -367,7 +357,7 @@ namespace Langulus::Verbs
    /// Create/Destroy verb                                                    
    /// Used for allocating new elements. If the type you're creating has      
    /// a producer, you need to execute the verb in the correct context        
-   struct Create : public StaticVerb<Create> {
+   struct Create : StaticVerb<Create> {
       LANGULUS(POSITIVE_VERB) "Create";
       LANGULUS(NEGATIVE_VERB) "Destroy";
       LANGULUS(PRECEDENCE) 1000;
@@ -396,7 +386,7 @@ namespace Langulus::Verbs
 
    /// Select/Deselect verb                                                   
    /// Used to focus on a part of a container, or access members              
-   struct Select : public StaticVerb<Select> {
+   struct Select : StaticVerb<Select> {
       LANGULUS(POSITIVE_VERB) "Select";
       LANGULUS(NEGATIVE_VERB) "Deselect";
       LANGULUS(POSITIVE_OPERATOR) ".";
@@ -430,7 +420,7 @@ namespace Langulus::Verbs
 
    /// Catenate/Split verb                                                    
    /// Catenates anything catenable, or split stuff apart using a mask        
-   struct Catenate : public StaticVerb<Catenate> {
+   struct Catenate : StaticVerb<Catenate> {
       LANGULUS(POSITIVE_VERB) "Catenate";
       LANGULUS(NEGATIVE_VERB) "Split";
       LANGULUS(POSITIVE_OPERATOR) " >< ";
@@ -455,7 +445,7 @@ namespace Langulus::Verbs
 
    /// Exponent/Root verb                                                     
    /// Performs exponentiation or root                                        
-   struct Exponent : public ArithmeticVerb<Exponent, true> {
+   struct Exponent : ArithmeticVerb<Exponent, true> {
       LANGULUS(POSITIVE_VERB) "Exponent";
       LANGULUS(NEGATIVE_VERB) "Root";
       LANGULUS(POSITIVE_OPERATOR) "^";
@@ -485,7 +475,7 @@ namespace Langulus::Verbs
    /// Multiply/Divide verb                                                   
    /// Performs arithmetic multiplication or division                         
    /// If context is no specified, it is always 1                             
-   struct Multiply : public ArithmeticVerb<Multiply, false> {
+   struct Multiply : ArithmeticVerb<Multiply, false> {
       LANGULUS(POSITIVE_VERB) "Multiply";
       LANGULUS(NEGATIVE_VERB) "Divide";
       LANGULUS(POSITIVE_OPERATOR) "*";
@@ -519,7 +509,7 @@ namespace Langulus::Verbs
 
    /// Add/Subtract verb                                                      
    /// Performs arithmetic addition or subtraction                            
-   struct Add : public ArithmeticVerb<Add, true> {
+   struct Add : ArithmeticVerb<Add, true> {
       LANGULUS(POSITIVE_VERB) "Add";
       LANGULUS(NEGATIVE_VERB) "Subtract";
       LANGULUS(POSITIVE_OPERATOR) " + ";
@@ -553,7 +543,7 @@ namespace Langulus::Verbs
    /// Associate/Disassociate verb                                            
    /// Either performs a shallow copy, or aggregates associations,            
    /// depending on the context's complexity                                  
-   struct Associate : public StaticVerb<Associate> {
+   struct Associate : StaticVerb<Associate> {
       LANGULUS(POSITIVE_VERB) "Associate";
       LANGULUS(NEGATIVE_VERB) "Disassocate";
       LANGULUS(POSITIVE_OPERATOR) " = ";
@@ -579,7 +569,7 @@ namespace Langulus::Verbs
    /// Conjunct/Disjunct verb                                                 
    /// Either combines LHS and RHS as one AND container, or separates them    
    /// as one OR container - does only shallow copying                        
-   struct Conjunct : public StaticVerb<Conjunct> {
+   struct Conjunct : StaticVerb<Conjunct> {
       LANGULUS(POSITIVE_VERB) "Conjunct";
       LANGULUS(NEGATIVE_VERB) "Disjunct";
       LANGULUS(POSITIVE_OPERATOR) ", ";
@@ -605,7 +595,7 @@ namespace Langulus::Verbs
 
    /// Interpret                                                              
    /// Performs conversion                                                    
-   struct Interpret : public StaticVerb<Interpret> {
+   struct Interpret : StaticVerb<Interpret> {
       LANGULUS(VERB) "Interpret";
       LANGULUS(OPERATOR) " => ";
       LANGULUS(INFO) "Performs conversion";
@@ -629,7 +619,7 @@ namespace Langulus::Verbs
    /// Interact                                                               
    /// Used for processing user events, such as mouse movement, keyboard,     
    /// joystick and any other input                                           
-   struct Interact : public StaticVerb<Interact> {
+   struct Interact : StaticVerb<Interact> {
       LANGULUS(VERB) "Interact";
       LANGULUS(INFO) 
          "Used for processing user events, such as mouse movement, "
@@ -649,7 +639,7 @@ namespace Langulus::Verbs
    /// Statically optimized interpret verb                                    
    ///   @tparam TO - what are we converting to?                              
    template<class TO>
-   struct InterpretTo : public Interpret {
+   struct InterpretTo : Interpret {
       LANGULUS_BASES(Interpret);
       using Interpret::Interpret;
       using Type = TO;
@@ -659,7 +649,7 @@ namespace Langulus::Verbs
 
    /// Do/Undo verb                                                           
    /// Used as a runtime dispatcher of composite types                        
-   struct Do : public StaticVerb<Do> {
+   struct Do : StaticVerb<Do> {
       LANGULUS(POSITIVE_VERB) "Do";
       LANGULUS(NEGATIVE_VERB) "Undo";
       LANGULUS(INFO) "Used as a runtime dispatcher of composite types";

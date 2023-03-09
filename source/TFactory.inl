@@ -340,9 +340,7 @@ namespace Langulus::Flow
          // Reuse a slot                                                
          auto memory = mReusable;
          mReusable = mReusable->mNextFreeElement;
-         auto result = new (memory) Element {
-            this, descriptor
-         };
+         auto result = new (memory) Element {this, descriptor};
          mHashmap[result->mData.GetHash()] << result;
          ++mCount;
          return &result->mData;
@@ -370,7 +368,7 @@ namespace Langulus::Flow
       // Remove from hashmap                                            
       const auto hash = item->mData.GetHash();
       auto& list = mHashmap[hash];
-      list.template Remove<false, true>(item);
+      list.Remove(item);
       if (list.IsEmpty())
          mHashmap.RemoveKey(hash);
 

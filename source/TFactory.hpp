@@ -84,7 +84,6 @@ namespace Langulus::Flow
       static_assert(CT::Data<T>, "T can't be void");
       static_assert(CT::Referencable<T>, "T must be referencable");
       static_assert(CT::Producible<T>, "T must have a producer");
-      //static_assert(CT::DescriptorMakable<T>, "T must have a descriptor-constructor");
       static_assert(!CT::Abstract<T>, "T can't be abstract");
 
       LANGULUS(TYPED) T;

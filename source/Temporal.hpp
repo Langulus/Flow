@@ -97,7 +97,6 @@ namespace Langulus::Flow
 
       NOD() bool operator == (const Temporal&) const;
 
-      NOD() Temporal Clone() const;
       NOD() bool IsValid() const;
 
       void Merge(const Temporal&);

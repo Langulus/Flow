@@ -24,7 +24,7 @@ namespace Langulus::Flow
       //TODO once vulkan module is available, lock and replace the ExecuteDefault in
       // MVulkan to incorporate compute shader for even batcher batching!!1
       //TODO detect underflows and overflows
-      TAny<T> result;
+      auto result = Block::From<T>();
       result.AllocateFresh(result.RequestSize(lhs.GetCount()));
       result.mCount = lhs.GetCount();
       const T* ilhs = lhs.GetRawAs<T>();
@@ -35,7 +35,8 @@ namespace Langulus::Flow
          *(ires++) = o(ilhs++, irhs++);
 
       // Interpret back to the original and push to verb output         
-      rhs << Any {result.ReinterpretAs(original)};
+      rhs << result.ReinterpretAs(original);
+      result.Free();
       return true;
    }
 

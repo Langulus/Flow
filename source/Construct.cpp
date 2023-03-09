@@ -65,7 +65,7 @@ namespace Langulus::Flow
    /// Clone construct                                                        
    ///   @param override - whether or not to change header of the cloned      
    ///   @return a construct with cloned arguments                            
-   Construct Construct::Clone(DMeta overrride) const {
+   /*Construct Construct::Clone(DMeta overrride) const {
       Construct clone {
          overrride ? overrride : mType,
          Any::Clone(), *this
@@ -74,7 +74,7 @@ namespace Langulus::Flow
       if (!overrride || overrride == mType)
          clone.mHash = GetHash();
       return Abandon(clone);
-   }
+   }*/
 
    /// Compare constructs                                                     
    ///   @param rhs - descriptor to compare with                              

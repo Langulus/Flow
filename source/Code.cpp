@@ -107,9 +107,9 @@ namespace Langulus::Flow
 
    /// Clone the Code container retaining type                                
    ///   @return the cloned code                                              
-   Code Code::Clone() const {
+   /*Code Code::Clone() const {
       return Text::Clone();
-   }
+   }*/
    
    /// Check if the Code code container begins with an operator               
    ///   @param i - the operator to check for                                 
@@ -352,9 +352,10 @@ namespace Langulus::Flow
          lhs << tmeta;
       }
       else if (!dmeta && !tmeta && cmeta) {
-         lhs.SmartPush(Any {
-            Block {{}, cmeta->mValueType, 1, cmeta->mPtrToValue, nullptr}
-         }.Clone());
+         const Block constant {
+            {}, cmeta->mValueType, 1, cmeta->mPtrToValue, nullptr
+         };
+         lhs.SmartPush(Clone(constant));
       }
       else {
          // Search for ambiguous token in meta definitions              
@@ -415,9 +416,10 @@ namespace Langulus::Flow
             
             case RTTI::Meta::Constant: {
                const auto metaConst = static_cast<CMeta>(meta);
-               lhs.SmartPush(Any {
-                  Block {{}, metaConst->mValueType, 1, metaConst->mPtrToValue, nullptr}
-               }.Clone());
+               const Block constant {
+                  {}, metaConst->mValueType, 1, metaConst->mPtrToValue, nullptr
+               };
+               lhs.SmartPush(Clone(constant));
                break;
             }
             default:

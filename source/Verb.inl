@@ -164,19 +164,16 @@ namespace Langulus::Flow
    Verb::Verb(Verb&& other)
       : Verb {Langulus::Move(other)} {}
 
-   template<CT::NotSemantic T>
    LANGULUS(ALWAYSINLINE)
-   Verb::Verb(const T& other) requires Related<T>
+   Verb::Verb(const CT::NotSemantic auto& other)
       : Verb {Langulus::Copy(other)} {}
 
-   template<CT::NotSemantic T>
    LANGULUS(ALWAYSINLINE)
-   Verb::Verb(T& other) requires Related<T>
+   Verb::Verb(CT::NotSemantic auto& other)
       : Verb {Langulus::Copy(other)} {}
 
-   template<CT::NotSemantic T>
    LANGULUS(ALWAYSINLINE)
-   Verb::Verb(T&& other) requires Related<T>
+   Verb::Verb(CT::NotSemantic auto&& other)
       : Verb {Langulus::Copy(other)} {}
 
    template<CT::Semantic S>
@@ -188,21 +185,6 @@ namespace Langulus::Flow
       , mState {other.mValue.mState}
       , mSource {S::Nest(other.mValue.mSource)}
       , mOutput {S::Nest(other.mValue.mOutput)} {}
-
-   template<CT::NotSemantic T>
-   LANGULUS(ALWAYSINLINE)
-   Verb::Verb(const T& other) requires NotRelated<T>
-      : Verb {Langulus::Copy(other)} {}
-
-   template<CT::NotSemantic T>
-   LANGULUS(ALWAYSINLINE)
-   Verb::Verb(T& other) requires NotRelated<T>
-      : Verb {Langulus::Copy(other)} {}
-
-   template<CT::NotSemantic T>
-   LANGULUS(ALWAYSINLINE)
-   Verb::Verb(T&& other) requires NotRelated<T>
-      : Verb {Langulus::Copy(other)} {}
 
    template<CT::Semantic S>
    LANGULUS(ALWAYSINLINE)
@@ -807,11 +789,12 @@ namespace Langulus::Flow
             if (!found)
                return false;
 
-            TAny<TO> result;
+            auto result = Block::From<TO>();
             result.AllocateFresh(result.RequestSize(1));
             result.mCount = 1;
             found(context.GetRaw(), result.GetRaw());
             verb << Abandon(result);
+            result.Free();
          }
          else {
             // Find ability at runtime                                  
@@ -822,11 +805,12 @@ namespace Langulus::Flow
                if (!found)
                   return false;
 
-               Any result = Any::FromMeta(to);
+               Block result {to};
                result.AllocateFresh(result.RequestSize(1));
                result.mCount = 1;
                found(context.GetRaw(), result.GetRaw());
                verb << Abandon(result);
+               result.Free();
             }
             else {
                // Scan for any other ability                            

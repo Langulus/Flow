@@ -14,7 +14,7 @@ namespace Langulus::Flow
    ///                                                                        
    ///   Bits for seek functions                                              
    ///                                                                        
-   enum class SeekStyle : uint8_t {
+   enum class Seek : uint8_t {
       // Seek entities that are children of the context                 
       Below = 1,
       // Seek entities that are parents of the context                  
@@ -31,7 +31,7 @@ namespace Langulus::Flow
       HereAndBelow = Below | Here
    };
 
-   constexpr bool operator & (const SeekStyle& lhs, const SeekStyle& rhs) {
+   constexpr bool operator & (const Seek& lhs, const Seek& rhs) {
       return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
    }
 
@@ -57,39 +57,44 @@ namespace Langulus::Flow
 
    private:
       DMeta mType {};
-      Hash mHash;
+      Hash mHash {};
 
    public:
-      Construct() = default;
-      Construct(const Construct&) = default;
-      Construct(Construct&&) noexcept = default;
-
-      Construct(Disowned<Construct>&&) noexcept;
-      Construct(Abandoned<Construct>&&) noexcept;
+      constexpr Construct() noexcept = default;
+      Construct(const Construct&) noexcept;
+      Construct(Construct&&) noexcept;
+      template<CT::Semantic S>
+      Construct(S&&) requires (CT::Exact<TypeOf<S>, Construct>);
 
       Construct(DMeta);
-      template<CT::Data T = Any>
+
+      template<CT::NotSemantic T = Any>
       Construct(DMeta, const T&, const Charge& = {});
-      template<CT::Data T = Any>
+      template<CT::NotSemantic T = Any>
       Construct(DMeta, T&, const Charge& = {});
-      template<CT::Data T = Any>
+      template<CT::NotSemantic T = Any>
       Construct(DMeta, T&&, const Charge& = {});
+
+      template<CT::Semantic S>
+      Construct(DMeta, S&&, const Charge& = {});
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          Construct(const Token&);
-         template<CT::Data T = Any>
+         template<CT::NotSemantic T = Any>
          Construct(const Token&, const T&, const Charge& = {});
-         template<CT::Data T = Any>
+         template<CT::NotSemantic T = Any>
          Construct(const Token&, T&, const Charge& = {});
-         template<CT::Data T = Any>
+         template<CT::NotSemantic T = Any>
          Construct(const Token&, T&&, const Charge& = {});
+
+         template<CT::Semantic S>
+         Construct(const Token&, S&&, const Charge& = {});
       #endif
 
-      Construct& operator = (const Construct&) = default;
-      Construct& operator = (Construct&&) noexcept = default;
-
-      Construct& operator = (Disowned<Construct>&&) noexcept;
-      Construct& operator = (Abandoned<Construct>&&) noexcept;
+      Construct& operator = (const Construct&) noexcept;
+      Construct& operator = (Construct&&) noexcept;
+      template<CT::Semantic S>
+      Construct& operator = (S&&) requires (CT::Exact<TypeOf<S>, Construct>);
 
       NOD() explicit operator Code() const;
       NOD() explicit operator Debug() const;
@@ -97,8 +102,6 @@ namespace Langulus::Flow
    public:
       NOD() Hash GetHash() const;
 
-      template<CT::Data T, CT::Data HEAD, CT::Data... TAIL>
-      NOD() static Construct From(const HEAD&, const TAIL&...);
       template<CT::Data T, CT::Data HEAD, CT::Data... TAIL>
       NOD() static Construct From(HEAD&&, TAIL&&...);
       template<CT::Data T>
@@ -110,11 +113,13 @@ namespace Langulus::Flow
          NOD() static Construct FromToken(const Token&);
       #endif
 
+   private:
       // Omit these inherited from Any                                  
-      Any FromMeta() = delete;
-      Any FromBlock() = delete;
-      Any FromState() = delete;
+      using Any::FromMeta;
+      using Any::FromBlock;
+      using Any::FromState;
 
+   public:
       NOD() bool operator == (const Construct&) const;
 
       NOD() bool StaticCreation(Any&) const;
@@ -137,10 +142,6 @@ namespace Langulus::Flow
       NOD() DMeta GetProducer() const noexcept;
 
       void Clear();
-      /*NOD() Construct Clone(DMeta = nullptr) const;
-
-      template<CT::Data T>
-      NOD() Construct CloneAs() const;*/
 
       template<CT::Data T>
       Construct& operator << (const T&);

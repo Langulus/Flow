@@ -38,7 +38,14 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/verbs LANGULUS_FLOW_SOUR
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/inner LANGULUS_FLOW_SOURCES)
 add_library(Langulus.Flow ${LANGULUS_LIBRARY_TYPE} ${LANGULUS_FLOW_SOURCES})
 
-target_include_directories(Langulus.Flow PUBLIC include)
+if (MSVC)
+    target_compile_options(Langulus.Flow PRIVATE /bigobj)
+endif()
+
+target_include_directories(Langulus.Flow
+    PUBLIC      include
+)
+
 target_link_libraries(Langulus.Flow
     PUBLIC      Langulus.Core
                 Langulus.Logger

@@ -17,34 +17,6 @@
 namespace Langulus::Flow
 {
 
-   /// Construct via a disowned copy                                          
-   ///   @param other - the disowned construct to copy without referencing    
-   Construct::Construct(Disowned<Construct>&& other) noexcept
-      : Any {other.Forward<Any>()}
-      , Charge {other.mValue}
-      , mType {other.mValue.mType}
-      , mHash {other.mValue.mHash} { }
-
-   /// Construct via an abandoned move                                        
-   ///   @param other - the disowned construct to move                        
-   Construct::Construct(Abandoned<Construct>&& other) noexcept
-      : Any {other.Forward<Any>()}
-      , Charge {other.mValue}
-      , mType {other.mValue.mType}
-      , mHash {other.mValue.mHash} { }
-
-   /// Construct from a type                                                  
-   ///   @param type - the type of the content                                
-   Construct::Construct(DMeta type)
-      : mType {type} {}
-
-#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-   /// Construct from a type name                                             
-   ///   @param type - the type of the content                                
-   Construct::Construct(const Token& token)
-      : mType {RTTI::Database.GetMetaData(token)} {}
-#endif
-
    /// Hash the construct                                                     
    ///   @return the hash of the content                                      
    Hash Construct::GetHash() const {

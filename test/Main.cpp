@@ -14,6 +14,7 @@ int main(int argc, char* argv[]) {
    (void)MetaData::Of<Window>();
    (void)MetaData::Of<User>();
    (void)MetaData::Of<Fraction>();
+   (void)MetaData::Of<Construct>();
 
    // For reflection of all verbs                                       
    (void)MetaVerb::Of<Verbs::Add>();

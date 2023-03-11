@@ -111,9 +111,8 @@ namespace Langulus::Flow
    template<CT::Block FROM>
    Any Serializer::Deserialize(const FROM& item) {
       if constexpr (CT::Same<FROM, Debug>) {
-         LANGULUS_ERROR(
-            "You can't deserialize debug containers "
-            " - debug serialization is a one-way process");
+         LANGULUS_ERROR("You can't deserialize debug containers "
+                        " - debug serialization is a one-way process");
       }
       else if constexpr (CT::Same<FROM, Code>) {
          return item.Parse();
@@ -223,9 +222,9 @@ namespace Langulus::Flow
             else if (from.CastsTo<int64_t, true>())
                SerializeNumber<int64_t>(from, to);
             else {
-               Logger::Error() << "Can't serialize block of "
-                  << from.GetToken() << " to " << MetaData::Of<TO>()->mToken
-                  << " - the number type is not implemented";
+               Logger::Error("Can't serialize block of ",
+                  from.GetToken(), " to ", RTTI::NameOf<TO>(),
+                  " - the number type is not implemented");
                LANGULUS_THROW(Convert, "Can't serialize numbers to text");
             }
          }
@@ -279,7 +278,7 @@ namespace Langulus::Flow
             // Contained type is meta definitions, write the token      
             for (Offset i = 0; i < from.GetCount(); ++i) {
                auto& meta = from.As<RTTI::Meta>(i);
-               to += meta.mToken;
+               to += TO {meta};
                if (i < from.GetCount() - 1)
                   to += Separator(from.IsOr());
             }
@@ -323,8 +322,8 @@ namespace Langulus::Flow
                });
             }
             else {
-               Logger::Error() << "Can't serialize block of type "
-                  << from.GetToken() << " to " << MetaData::Of<TO>()->mToken;
+               Logger::Error("Can't serialize block of type ",
+                  from.GetToken(), " to ", RTTI::NameOf<TO>());
                LANGULUS_THROW(Convert, "Can't serialize block to text");
             }
          }
@@ -355,11 +354,8 @@ namespace Langulus::Flow
    ///   @param from - the member block to serialize                          
    ///   @param to - [out] the serialized data                                
    ///   @param member - reflection data about the member                     
-   template<class META, CT::Text TO>
+   template<CT::Meta META, CT::Text TO>
    void Serializer::SerializeMeta(const Block& from, TO& to, const RTTI::Member* member) {
-      static_assert(CT::DerivedFrom<META, RTTI::Meta>,
-         "META has to be an RTTI::Meta derivative");
-
       auto meta = member->template As<META>(from.GetRaw());
       if (meta)   to += meta->GetToken();
       else        to += Decay<META>::DefaultToken;

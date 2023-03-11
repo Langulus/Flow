@@ -245,7 +245,11 @@ namespace Langulus::Flow
    ///   @return the token, if type is set, or default token if not           
    LANGULUS(ALWAYSINLINE)
    Token Construct::GetToken() const noexcept {
-      return mType ? mType->mToken : MetaData::DefaultToken;
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         return mType ? mType->GetShortestUnambiguousToken() : MetaData::DefaultToken;
+      #else
+         return mType ? mType->mToken : MetaData::DefaultToken;
+      #endif
    }
 
    /// Get the producer of the construct                                      

@@ -35,7 +35,7 @@ namespace Langulus::Flow
       template<CT::Number T, CT::Text TO>
       static void SerializeNumber(const Block&, TO&);
 
-      template<class META, CT::Text TO>
+      template<CT::Meta META, CT::Text TO>
       static void SerializeMeta(const Block&, TO&, const RTTI::Member*);
 
       template<CT::Text TO>

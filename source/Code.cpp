@@ -78,17 +78,7 @@ namespace Langulus::Flow
    /// Generate code from operator                                            
    ///   @param op - the operator to stringify                                
    Code::Code(Operator op)
-      : Text {Disowned(GlobalOperators[op].mToken.data())} { }
-
-   /// Disown-construct a code container                                      
-   ///   @param other - the container to shallow-copy                         
-   Code::Code(Disowned<Code>&& other) noexcept
-      : Text {other.Forward<Text>()} {}
-
-   /// Abandon-construct a code container                                     
-   ///   @param other - the container to move                                 
-   Code::Code(Abandoned<Code>&& other) noexcept
-      : Text {other.Forward<Text>()} {}
+      : Text {Disown(GlobalOperators[op].mToken.data())} { }
 
    /// Parse code                                                             
    ///   @param optimize - whether or not to precompile                       
@@ -104,12 +94,6 @@ namespace Langulus::Flow
       }
       return output;
    }
-
-   /// Clone the Code container retaining type                                
-   ///   @return the cloned code                                              
-   /*Code Code::Clone() const {
-      return Text::Clone();
-   }*/
    
    /// Check if the Code code container begins with an operator               
    ///   @param i - the operator to check for                                 
@@ -358,19 +342,98 @@ namespace Langulus::Flow
          lhs.SmartPush(Clone(constant));
       }
       else {
-         // Search for ambiguous token in meta definitions              
-         auto& symbols = RTTI::Database.GetAmbiguousMeta(keyword);
-         if (symbols.empty()) {
+         // If this is reached, then exactly one match in symbols       
+         // Push found meta data, if any                                
+         const auto meta = Disambiguate(progress, input, keyword);
+         switch (meta->GetMetaType()) {
+         case RTTI::Meta::Data:
+            if (allowCharge) {
+               const auto relevant = input.RightOf(progress);
+               if (ChargeParser::Peek(relevant) != NoOperator) {
+                  // Parse charge for the keyword                       
+                  Charge charge;
+                  progress += ChargeParser::Parse(relevant, charge);
+                  lhs << Construct {static_cast<DMeta>(meta), {}, charge};
+               }
+               else lhs << static_cast<DMeta>(meta);
+            }
+            else lhs << static_cast<DMeta>(meta);
+            break;
+
+         case RTTI::Meta::Trait:
+            lhs << static_cast<TMeta>(meta);
+            break;
+            
+         case RTTI::Meta::Constant: {
+            const auto metaConst = static_cast<CMeta>(meta);
+            const Block constant {
+               {}, metaConst->mValueType, 1, metaConst->mPtrToValue, nullptr
+            };
+            lhs.SmartPush(Clone(constant));
+            break;
+         }
+         default:
+            PRETTY_ERROR("Unhandled meta type");
+         }
+      }
+
+      VERBOSE("Keyword parsed: `" << keyword << "` as " << lhs << " (" << lhs.GetToken() << ")");
+      return progress;
+   #else    // LANGULUS_FEATURE(MANAGED_REFLECTION)
+      (void)lhs;
+      (void)allowCharge;
+      PRETTY_ERROR("Can't parse keyword, managed reflection feature is disabled");
+   #endif   // LANGULUS_FEATURE(MANAGED_REFLECTION)
+   }
+
+   /// Disambiguate a keyword                                                 
+   ///   @param progress - current position in input                          
+   ///   @param input - the input code (used only for debugging)              
+   ///   @param keyword - the keyword we'll be disambiguating                 
+   ///   @return the disambiguated definition                                 
+   const RTTI::Meta* Code::KeywordParser::Disambiguate(
+      const Offset progress, const Code& input, const Token& keyword
+   ) {
+      auto& symbols = RTTI::Database.GetAmbiguousMeta(keyword);
+      if (symbols.empty()) {
+         PRETTY_ERROR("Unknown keyword: ", keyword);
+      }
+      else if (symbols.size() > 1) {
+         // Collect all origin types, and work with those               
+         // Also, GetAmbiguousMeta works only with the last part of the 
+         // keyword, but the keyword might contain hints as to which    
+         // ambiguous meta to pick. Discard symbols that do not         
+         // contain the provided keyword (not case sensitive)           
+         const auto lowercased = Text {keyword}.Lowercase();
+         ::std::unordered_set<const RTTI::Meta*> origins;
+         for (auto& meta : symbols) {
+            if (!Text {meta->mToken}.Lowercase().Find(lowercased))
+               continue;
+
+            const auto dmeta = dynamic_cast<DMeta>(meta);
+            if (dmeta) {
+               if (dmeta->mOrigin)
+                  origins.insert(dmeta->mOrigin);
+               else
+                  origins.insert(dmeta);
+            }
+            else origins.insert(dmeta);
+         }
+
+         if (origins.empty()) {
             PRETTY_ERROR("Unknown keyword: ", keyword);
          }
-         else if (symbols.size() > 1) {
-            // Ambiguity, report error                                  
-            //TODO attempt disambiguating by partially comparing keyword with the provided variants
+         else if (origins.size() == 1) {
+            return *origins.begin();
+         }
+
+         // Ambiguity, report error                                     
+         {
             auto tab = Logger::Error(
-               "Ambiguous symbol: ", keyword, 
+               "Ambiguous symbol: ", keyword,
                "; Could be one of: ", Logger::Tabs {});
 
-            for (auto& meta : symbols) {
+            for (auto& meta : origins) {
                switch (meta->GetMetaType()) {
                case RTTI::Meta::Data:
                   Logger::Verbose(Logger::Red, static_cast<DMeta>(meta),
@@ -388,53 +451,12 @@ namespace Langulus::Flow
                   PRETTY_ERROR("Unhandled meta type");
                }
             }
-
-            PRETTY_ERROR("Ambiguous symbol");
          }
 
-         // If this is reached, then exactly one match in symbols       
-         // Push found meta data, if any                                
-         for (auto& meta : symbols) {
-            switch (meta->GetMetaType()) {
-            case RTTI::Meta::Data:
-               if (allowCharge) {
-                  const auto relevant = input.RightOf(progress);
-                  if (ChargeParser::Peek(relevant) != NoOperator) {
-                     // Parse charge for the keyword                    
-                     Charge charge;
-                     progress += ChargeParser::Parse(relevant, charge);
-                     lhs << Construct {static_cast<DMeta>(meta), {}, charge};
-                  }
-                  else lhs << static_cast<DMeta>(meta);
-               }
-               else lhs << static_cast<DMeta>(meta);
-               break;
-
-            case RTTI::Meta::Trait:
-               lhs << static_cast<TMeta>(meta);
-               break;
-            
-            case RTTI::Meta::Constant: {
-               const auto metaConst = static_cast<CMeta>(meta);
-               const Block constant {
-                  {}, metaConst->mValueType, 1, metaConst->mPtrToValue, nullptr
-               };
-               lhs.SmartPush(Clone(constant));
-               break;
-            }
-            default:
-               PRETTY_ERROR("Unhandled meta type");
-            }
-         }
+         PRETTY_ERROR("Ambiguous symbol");
       }
 
-      VERBOSE("Keyword parsed: `" << keyword << "` as " << lhs << " (" << lhs.GetToken() << ")");
-      return progress;
-   #else    // LANGULUS_FEATURE(MANAGED_REFLECTION)
-      (void)lhs;
-      (void)allowCharge;
-      PRETTY_ERROR("Can't parse keyword, managed reflection feature is disabled");
-   #endif   // LANGULUS_FEATURE(MANAGED_REFLECTION)
+      return *symbols.begin();
    }
 
    /// Peek inside input, and return true if first symbol is a digit, or a    

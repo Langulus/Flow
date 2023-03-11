@@ -89,7 +89,11 @@ namespace Langulus::Flow
    ///   @return the token                                                    
    LANGULUS(ALWAYSINLINE)
    Token Resolvable::GetToken() const noexcept {
-      return mClassType->mToken;
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         return mClassType->GetShortestUnambiguousToken();
+      #else
+         return mClassType->mToken;
+      #endif
    }
 
    /// Check if context interprets as a type                                  

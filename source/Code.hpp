@@ -49,11 +49,7 @@ namespace Langulus::Flow
       
       explicit Code(Operator);
 
-      Code(Disowned<Code>&&) noexcept;
-      Code(Abandoned<Code>&&) noexcept;
-
       NOD() Scope Parse(bool optimize = true) const;
-      //NOD() Code Clone() const;
 
       NOD() Code RightOf(Offset) const;
       NOD() Code LeftOf(Offset) const;
@@ -88,6 +84,7 @@ namespace Langulus::Flow
          NOD() static Offset Parse(const Code&, Any&, bool allowCharge = true);
          NOD() static bool Peek(const Code&) noexcept;
          NOD() static Token Isolate(const Code&) noexcept;
+         NOD() static const RTTI::Meta* Disambiguate(Offset, const Code&, const Token&);
       };
 
       /// Parser for skipping expressions                                     

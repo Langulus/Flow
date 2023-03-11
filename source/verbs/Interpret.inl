@@ -90,7 +90,7 @@ namespace Langulus::Verbs
          // Stringify context, if it matches any of its named values    
          for (auto& named : from->mNamedValues) {
             if (from->mComparer(named->mPtrToValue, context.GetRaw())) {
-               verb << Text {named->mToken};
+               verb << Text {*named};
                return true;
             }
          }

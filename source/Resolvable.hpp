@@ -21,7 +21,7 @@ namespace Langulus::Flow
       LANGULUS(UNINSERTABLE) true;
       LANGULUS_CONVERSIONS(Debug);
 
-   protected:
+   private:
       DMeta mClassType;
       Offset mClassOffset;
 

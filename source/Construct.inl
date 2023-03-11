@@ -34,9 +34,9 @@ namespace Langulus::Flow
       , mType {other.mValue.mType}
       , mHash {other.mValue.mHash} {
       if constexpr (S::Move && S::Keep) {
-         Charge::Reset();
-         mType = nullptr;
-         mHash = {};
+         other.mValue.ResetCharge();
+         other.mValue.mType = nullptr;
+         other.mValue.mHash = {};
       }
    }
 
@@ -239,6 +239,13 @@ namespace Langulus::Flow
    LANGULUS(ALWAYSINLINE)
    DMeta Construct::GetType() const noexcept {
       return mType;
+   }
+   
+   /// Get the token of the construct's type                                  
+   ///   @return the token, if type is set, or default token if not           
+   LANGULUS(ALWAYSINLINE)
+   Token Construct::GetToken() const noexcept {
+      return mType ? mType->mToken : MetaData::DefaultToken;
    }
 
    /// Get the producer of the construct                                      

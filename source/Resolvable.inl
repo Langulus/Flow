@@ -20,9 +20,10 @@ namespace Langulus
    ///   @return text containing the generated identity                       
    template<class T>
    Anyness::Text IdentityOf(RTTI::DMeta type, const T& instance) {
-      Flow::Code result;
+      using Flow::Code;
+      Code result;
       result += type->mToken;
-      result += Flow::Code::OpenScope;
+      result += Code::OpenScope;
       #if !LANGULUS(PARANOID) && LANGULUS(DEBUG)
          // We're not paranoid, so directly dump the memory address     
          result += Anyness::Text {
@@ -36,7 +37,7 @@ namespace Langulus
             HashNumber(reinterpret_cast<intptr_t>(SparseCast(instance))).mHash)
          };
       #endif
-      result += Flow::Code::CloseScope;
+      result += Code::CloseScope;
       return Abandon(static_cast<Anyness::Text&>(result));
    }
 
@@ -58,17 +59,22 @@ namespace Langulus::Flow
 {
 
    /// Constructor                                                            
+   ///   @attention type is assumed valid and complete                        
    ///   @attention type is assumed derived from Resolvable                   
    ///   @param type - type of the resolvable                                 
    LANGULUS(ALWAYSINLINE)
    Resolvable::Resolvable(DMeta type) SAFETY_NOEXCEPT()
       : mClassType {type}
       , mClassOffset {0} {
+      LANGULUS_ASSUME(DevAssumes, type,
+         "Bad resolvable type");
+      LANGULUS_ASSUME(DevAssumes, type->mOrigin,
+         "Resolvable type is incomplete");
+
       // Precalculate offset, no need to do it at runtime               
       RTTI::Base base;
-      UNUSED() bool found = mClassType->template GetBase<Resolvable>(0, base);
-      SAFETY(if (!found)
-         LANGULUS_THROW(Construct, "Unrelated type provided to Resolvable"));
+      SAFETY(bool found =) type->template GetBase<Resolvable>(0, base);
+      LANGULUS_ASSUME(DevAssumes, found, "Unrelated type provided to Resolvable");
       const_cast<Offset&>(mClassOffset) = base.mOffset;
    }
 

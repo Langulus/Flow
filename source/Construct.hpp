@@ -57,7 +57,7 @@ namespace Langulus::Flow
 
    private:
       DMeta mType {};
-      Hash mHash {};
+      mutable Hash mHash {};
 
    public:
       constexpr Construct() noexcept = default;
@@ -139,9 +139,11 @@ namespace Langulus::Flow
       NOD() Charge& GetCharge() noexcept;
 
       NOD() DMeta GetType() const noexcept;
+      NOD() Token GetToken() const noexcept;
       NOD() DMeta GetProducer() const noexcept;
 
       void Clear();
+      void ResetCharge() noexcept;
 
       template<CT::Data T>
       Construct& operator << (const T&);

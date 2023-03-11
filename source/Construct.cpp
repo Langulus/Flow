@@ -17,13 +17,18 @@
 namespace Langulus::Flow
 {
 
-   /// Hash the construct                                                     
+   /// Rehash the construct                                                   
+   /// The hash is cached, so this is a cheap function                        
    ///   @return the hash of the content                                      
    Hash Construct::GetHash() const {
       if (mHash.mHash)
          return mHash;
 
-      const_cast<Hash&>(mHash) = HashData(mType->mHash, Any::GetHash());
+      if (mType)
+         mHash = HashData(mType->mHash, Any::GetHash());
+      else
+         mHash = Any::GetHash();
+
       return mHash;
    }
 
@@ -34,26 +39,17 @@ namespace Langulus::Flow
       mHash = {};
    }
 
-   /// Clone construct                                                        
-   ///   @param override - whether or not to change header of the cloned      
-   ///   @return a construct with cloned arguments                            
-   /*Construct Construct::Clone(DMeta overrride) const {
-      Construct clone {
-         overrride ? overrride : mType,
-         Any::Clone(), *this
-      };
-
-      if (!overrride || overrride == mType)
-         clone.mHash = GetHash();
-      return Abandon(clone);
-   }*/
+   /// Reset charge                                                           
+   void Construct::ResetCharge() noexcept {
+      Charge::Reset();
+   }
 
    /// Compare constructs                                                     
    ///   @param rhs - descriptor to compare with                              
    ///   @return true if both constructs are the same                         
    bool Construct::operator == (const Construct& rhs) const {
       return GetHash() == rhs.GetHash()
-         && mType == rhs.mType
+         && (mType == rhs.mType || (mType && mType->IsExact(rhs.mType)))
          && Any::operator == (rhs.GetArgument());
    }
 
@@ -144,7 +140,7 @@ namespace Langulus::Flow
    /// Serialize a construct to code                                          
    Construct::operator Code() const {
       Code result;
-      result += mType->mToken;
+      result += GetToken();
       if (!Charge::IsDefault() || !IsEmpty()) {
          result += Verbs::Interpret::To<Code>(GetCharge());
          result += Code::OpenScope;
@@ -158,7 +154,7 @@ namespace Langulus::Flow
    /// Stringify a construct for logging                                      
    Construct::operator Debug() const {
       Code result;
-      result += mType->mToken;
+      result += GetToken();
       if (!Charge::IsDefault() || !IsEmpty()) {
          result += Verbs::Interpret::To<Debug>(GetCharge());
          result += Code::OpenScope;

@@ -73,7 +73,7 @@ namespace Langulus::Flow
 
       // Precalculate offset, no need to do it at runtime               
       RTTI::Base base;
-      SAFETY(bool found =) type->template GetBase<Resolvable>(0, base);
+      UNUSED() bool found = type->template GetBase<Resolvable>(0, base);
       LANGULUS_ASSUME(DevAssumes, found, "Unrelated type provided to Resolvable");
       const_cast<Offset&>(mClassOffset) = base.mOffset;
    }

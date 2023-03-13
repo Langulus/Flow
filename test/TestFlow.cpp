@@ -10,11 +10,11 @@ CATCH_TRANSLATE_EXCEPTION(::Langulus::Exception const& ex) {
 /// Dump parse results and requirements													
 template<class INPUT, class OUTPUT, class REQUIRED>
 void DumpResults(const INPUT& in, const OUTPUT& out, const REQUIRED& required) {
-	Logger::Special() << "-------------";
-	Logger::Special() << "Script:   " << in;
-	Logger::Special() << "Parsed:   " << out;
-	Logger::Special() << "Required: " << required;
-	Logger::Special() << "-------------";
+	Logger::Special("-------------");
+	Logger::Special("Script:   ", in);
+	Logger::Special("Parsed:   ", out);
+	Logger::Special("Required: ", required);
+	Logger::Special("-------------");
 }
 
 

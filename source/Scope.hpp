@@ -8,6 +8,11 @@
 #pragma once
 #include "Common.hpp"
 
+namespace Langulus::Verbs
+{
+   struct Associate;
+}
+
 namespace Langulus::Flow
 {
 
@@ -20,8 +25,6 @@ namespace Langulus::Flow
       using Any::Any;
       using Any::operator ==;
 
-      //NOD() Scope Clone() const;
-
       NOD() bool IsExecutable() const noexcept;
       NOD() bool IsExecutableDeep() const noexcept;
 
@@ -33,6 +36,10 @@ namespace Langulus::Flow
 
       static bool ExecuteVerb(Any&, Verb&);
       static bool IntegrateVerb(Any&, Verb&);
+
+   protected:
+      friend struct Langulus::Verbs::Associate;
+      using Block::CallUnknownSemanticAssignment;
    };
 
 } // namespace Langulus::Flow

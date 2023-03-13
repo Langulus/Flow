@@ -65,7 +65,7 @@ namespace Langulus::Verbs
    inline bool Associate::ExecuteDefault(Block& context, Verb& verb) {
       auto& lhs = ReinterpretCast<Scope>(context);
       auto& rhs = ReinterpretCast<Scope>(verb.GetArgument());
-      if (lhs.IsConstant())
+      if (lhs.IsConstant() || lhs.GetCount() != rhs.GetCount())
          // Can't overwrite a constant context                          
          return false;
       else if (lhs.IsMissing() || rhs.IsMissing())
@@ -82,8 +82,7 @@ namespace Langulus::Verbs
       // This will happen only if types are exactly the same            
       // This is a default (fallback) routine, let's keep things simple 
       try {
-         reinterpret_cast<Associate&>(verb)
-            .CallUnknownSemanticAssignment(context.GetCount(), Copy(context));
+         lhs.CallUnknownSemanticAssignment(lhs.GetCount(), Copy(rhs));
       }
       catch (...) {
          return false;

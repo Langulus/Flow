@@ -343,7 +343,7 @@ namespace Langulus
       else if constexpr (CT::Verb<T>)
          return RTTI::MetaVerb::Of<Decay<T>>();
       else
-         return RTTI::MetaData::Of<Decay<T>>();
+         return RTTI::MetaData::Of<T>();
    }
 
 } // namespace Langulus

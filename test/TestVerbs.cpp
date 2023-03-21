@@ -66,4 +66,17 @@ SCENARIO("Text capsulation in verbs", "[verbs]") {
 			}
 		}
 	}
+
+	GIVEN("A default-initialized verb") {
+		Verb test;
+
+		WHEN("Wrapped stringified") {
+			auto toDebug = static_cast<Debug>(test);
+			auto toCode = static_cast<Code>(test);
+
+			THEN("The block's reference count must increase") {
+				REQUIRE(toDebug == toCode);
+			}
+		}
+	}
 }

@@ -404,12 +404,4 @@ namespace Langulus::Flow
       return true;
    }
 
-   /// Clone the scope                                                        
-   ///   @return the cloned scope                                             
-   /*Scope Scope::Clone() const {
-      Scope result;
-      static_cast<Any&>(result) = Any::Clone();
-      return Abandon(result);
-   }*/
-
 } // namespace Langulus::Flow

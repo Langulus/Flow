@@ -241,7 +241,7 @@ namespace fmt
    ///                                                                        
    /// Extend FMT to be capable of logging any trait                          
    ///                                                                        
-   template<::Langulus::CT::Trait T>
+   /*template<::Langulus::CT::Trait T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -258,7 +258,7 @@ namespace fmt
             static_cast<const Anyness::Any&>(element)
          ));
       }
-   };
+   };*/
       
    ///                                                                        
    /// Extend FMT to be capable of logging any pair                           

@@ -28,6 +28,15 @@ int main(int argc, char* argv[]) {
    (void)MetaVerb::Of<Verbs::Multiply>();
    (void)MetaVerb::Of<Verbs::Select>();
 
+   static_assert(CT::Convertible<Verb, Debug>,
+      "Verb must be convertible to Debug string");
+   static_assert(CT::Convertible<Verb, Code>,
+      "Verb must be convertible to Code string");
+   static_assert(CT::Convertible<Construct, Debug>,
+      "Verb must be convertible to Debug string");
+   static_assert(CT::Convertible<Construct, Code>,
+      "Verb must be convertible to Code string");
+
    Catch::Session session;
    return session.run(argc, argv);
 }

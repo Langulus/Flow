@@ -28,13 +28,17 @@ namespace Langulus
          // We're not paranoid, so directly dump the memory address     
          result += Anyness::Text {
             fmt::format("{:X}",
-            reinterpret_cast<intptr_t>(SparseCast(instance)))
+               reinterpret_cast<intptr_t>(&DenseCast(instance))
+            )
          };
       #else
          // Obfuscate the pointer, by hashing it                        
          result += Anyness::Text {
             fmt::format("{:X}",
-            HashNumber(reinterpret_cast<intptr_t>(SparseCast(instance))).mHash)
+               HashNumber(
+                  reinterpret_cast<intptr_t>(&DenseCast(instance))
+               ).mHash
+            )
          };
       #endif
       result += Code::CloseScope;

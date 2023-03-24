@@ -178,18 +178,18 @@ namespace Langulus::Flow
 
    template<CT::Semantic S>
    LANGULUS(ALWAYSINLINE)
-   Verb::Verb(S&& other) requires Related<TypeOf<S>>
-      : Any {other.template Forward<Any>()}
-      , Charge {other.mValue}
-      , mVerb {other.mValue.mVerb}
-      , mState {other.mValue.mState}
-      , mSource {S::Nest(other.mValue.mSource)}
-      , mOutput {S::Nest(other.mValue.mOutput)} {}
-
-   template<CT::Semantic S>
-   LANGULUS(ALWAYSINLINE)
-   Verb::Verb(S&& other) requires NotRelated<TypeOf<S>>
-      : Any {other.Forward()} {}
+   Verb::Verb(S&& other)
+      : Any {CT::Verb<TypeOf<S>>
+         ? Any {other.template Forward<Any>()}
+         : Any {other.Forward()}} {
+      if constexpr (CT::Verb<TypeOf<S>>) {
+         Charge::operator = (other.mValue);
+         mVerb = other.mValue.mVerb;
+         mState = other.mValue.mState;
+         mSource = S::Nest(other.mValue.mSource);
+         mOutput = S::Nest(other.mValue.mOutput);
+      }
+   }
 
    template<CT::Data HEAD, CT::Data... TAIL>
    LANGULUS(ALWAYSINLINE)
@@ -208,13 +208,16 @@ namespace Langulus::Flow
 
    template<CT::Semantic S>
    LANGULUS(ALWAYSINLINE)
-   Verb& Verb::operator = (S&& rhs) requires Related<TypeOf<S>> {
-      Any::operator = (rhs.template Forward<Any>());
-      Charge::operator = (rhs.mValue);
-      mVerb = rhs.mValue.mVerb;
-      mState = rhs.mValue.mState;
-      mSource = S::Nest(rhs.mValue.mSource);
-      mOutput = S::Nest(rhs.mValue.mOutput);
+   Verb& Verb::operator = (S&& rhs) {
+      if constexpr (CT::Verb<TypeOf<S>>) {
+         Any::operator = (rhs.template Forward<Any>());
+         Charge::operator = (rhs.mValue);
+         mVerb = rhs.mValue.mVerb;
+         mState = rhs.mValue.mState;
+         mSource = S::Nest(rhs.mValue.mSource);
+         mOutput = S::Nest(rhs.mValue.mOutput);
+      }
+      else LANGULUS_ERROR("Bad verb assignment");
       return *this;
    }
 
@@ -1074,12 +1077,15 @@ namespace Langulus::Flow
    template<class VERB>
    template<CT::Semantic S>
    LANGULUS(ALWAYSINLINE)
-   StaticVerb<VERB>& StaticVerb<VERB>::operator = (S&& rhs) requires Related<TypeOf<S>> {
-      Any::operator = (rhs.template Forward<Any>());
-      mSuccesses = rhs.mValue.mSuccesses;
-      mState = rhs.mValue.mState;
-      mSource = S::Nest(rhs.mValue.mSource);
-      mOutput = S::Nest(rhs.mValue.mOutput);
+   StaticVerb<VERB>& StaticVerb<VERB>::operator = (S&& rhs) {
+      if constexpr (CT::Verb<TypeOf<S>>) {
+         Any::operator = (rhs.template Forward<Any>());
+         mSuccesses = rhs.mValue.mSuccesses;
+         mState = rhs.mValue.mState;
+         mSource = S::Nest(rhs.mValue.mSource);
+         mOutput = S::Nest(rhs.mValue.mOutput);
+      }
+      else LANGULUS_ERROR("Bad verb assignment");
       return *this;
    }
 

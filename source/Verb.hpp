@@ -6,7 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "Common.hpp"
+#include "Construct.hpp"
 
 namespace Langulus::Flow
 {
@@ -36,7 +36,7 @@ namespace Langulus::Flow
          Monocast = 2
       };
 
-      using Type = ::std::underlying_type_t<Enum>;
+      using Type = TypeOf<Enum>;
 
       Type mState {Default};
 
@@ -93,11 +93,6 @@ namespace Langulus::Flow
       // The container where output goes                                
       Any mOutput;
 
-      template<class T>
-      static constexpr bool NotRelated = CT::Sparse<T> || !CT::DerivedFrom<T, Verb>;
-      template<class T>
-      static constexpr bool Related = CT::Dense<T> && CT::DerivedFrom<T, Verb>;
-
    public:
       constexpr Verb() noexcept = default;
 
@@ -109,9 +104,7 @@ namespace Langulus::Flow
       Verb(CT::NotSemantic auto&&);
 
       template<CT::Semantic S>
-      Verb(S&&) requires Related<TypeOf<S>>;
-      template<CT::Semantic S>
-      Verb(S&&) requires NotRelated<TypeOf<S>>;
+      Verb(S&&);
 
       template<CT::Data HEAD, CT::Data... TAIL>
       Verb(HEAD&&, TAIL&&...) requires (sizeof...(TAIL) >= 1);
@@ -119,7 +112,7 @@ namespace Langulus::Flow
       Verb& operator = (const Verb&);
       Verb& operator = (Verb&&);
       template<CT::Semantic S>
-      Verb& operator = (S&&) requires Related<TypeOf<S>>;
+      Verb& operator = (S&&);
 
       Verb operator * (const Real&) const;
       Verb operator ^ (const Real&) const;
@@ -283,7 +276,7 @@ namespace Langulus::Flow
       StaticVerb& operator = (const StaticVerb&);
       StaticVerb& operator = (StaticVerb&&);
       template<CT::Semantic S>
-      StaticVerb& operator = (S&&) requires Related<TypeOf<S>>;
+      StaticVerb& operator = (S&&);
    };
 
 
@@ -317,7 +310,7 @@ namespace Langulus::Flow
       static bool Scalar(const Block&, Block&, Verb&, OperatorMutable<T>) noexcept(NOEXCEPT);
    };
 
-} // namespace Langulus::Flowv
+} // namespace Langulus::Flow
 
 
 namespace Langulus

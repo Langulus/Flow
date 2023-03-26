@@ -47,41 +47,6 @@
 namespace Langulus::Flow
 {
 
-   struct OperatorProperties {
-      Token mToken;
-      Real mPrecedence;
-      bool mCharge;
-   };
-
-   /// Built-in operator properties                                           
-   constexpr OperatorProperties GlobalOperators[Code::OpCounter] = {
-      { "(", 0, false },      // OpenScope
-      { ")", 0, false },      // CloseScope
-      { "[", 0, false },      // OpenCode
-      { "]", 0, false },      // CloseCode
-      { "|", 0, false },      // OpenComment
-      { "|", 0, false },      // CloseComment
-      { "\"", 0, false },     // OpenString
-      { "\"", 0, false },     // CloseString
-      { "`", 0, false },      // OpenStringAlt
-      { "`", 0, false },      // CloseStringAlt
-      { "'", 0, false },      // OpenCharacter
-      { "'", 0, false },      // CloseCharacter
-      { "0x", 0, false },     // OpenByte
-      { "??", 0, false },     // Future
-      { "?", 0, false },      // Past
-      { "const", 0, false },  // Constant
-      { "*", 0, true },       // Mass
-      { "^", 0, true },       // Frequency
-      { "@", 0, true },       // Time
-      { "!", 0, true }        // Priority
-   };
-   
-   /// Generate code from operator                                            
-   ///   @param op - the operator to stringify                                
-   Code::Code(Operator op)
-      : Text {Disown(GlobalOperators[op].mToken.data())} { }
-
    /// Parse code                                                             
    ///   @param optimize - whether or not to precompile                       
    ///   @returned the parsed flow                                            

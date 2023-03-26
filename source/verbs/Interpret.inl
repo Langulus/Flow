@@ -122,8 +122,17 @@ namespace Langulus::Verbs
          #endif
       }
       else if constexpr (CT::Convertible<FROM, TO>) {
-         // Directly convert if constructs/conversion operators exist   
-         return static_cast<TO>(from);
+         // Directly convert if static conversion exists                
+         if constexpr (requires { TO {from}; }) {
+            return TO {from};
+         }
+         else if constexpr (requires { TO {from.operator TO()}; }) {
+            return TO {from.operator TO()};
+         }
+         else if constexpr (requires { static_cast<Debug>(from); }) {
+            return static_cast<TO>(from);
+         }
+         else LANGULUS_ERROR("Unhandled conversion route");
       }
       else if constexpr (CT::SameAsOneOf<TO, Code, Text, Debug, Bytes>) {
          // No constructor/conversion operator exists, that would do    
@@ -181,16 +190,21 @@ namespace fmt
    };
    
    ///                                                                        
-   /// Extend FMT to be capable of logging anything CT::Flat, that is         
+   /// Extend FMT to be capable of logging anything flat, that is             
    /// statically convertible to a Debug string                               
    ///                                                                        
    template<class T>
-   concept FlatAndDebuggable = ::Langulus::CT::Flat<T>
-      && !::Langulus::CT::Fundamental<T>
-      && !::Langulus::CT::Same<T, ::Langulus::Logger::TextView>
-      &&  ::Langulus::CT::Convertible<T, ::Langulus::Flow::Debug>;
+   concept Debuggable = 
+     !::Langulus::CT::Fundamental<T> &&
+     !::Langulus::CT::Same<T, ::Langulus::Token> &&
+     !::Langulus::CT::Same<T, basic_string_view<::Langulus::Letter>> &&
+      ::Langulus::CT::Convertible<T, ::Langulus::Flow::Debug> &&
+     !::Langulus::CT::Deep<T> &&
+     !::Langulus::CT::Pair<T> &&
+     !::Langulus::CT::Map<T> &&
+     !::Langulus::CT::Trait<T>;
 
-   template<FlatAndDebuggable T>
+   template<Debuggable T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -201,7 +215,20 @@ namespace fmt
       LANGULUS(ALWAYSINLINE)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
-         const auto asText = static_cast<Flow::Debug>(element);
+         using namespace ::Langulus::Flow;
+
+         Debug asText;
+         if constexpr (requires { Debug {element}; }) {
+            new (&asText) Debug {element};
+         }
+         else if constexpr (requires { Debug {element.operator Debug()}; }) {
+            new (&asText) Debug {element.operator Debug()};
+         }
+         else if constexpr (requires { static_cast<Debug>(element); }) {
+            asText = static_cast<Debug>(element);
+         }
+         else LANGULUS_ERROR("Unhandled conversion route");
+
          return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
             static_cast<Logger::TextView>(asText)));
       }
@@ -210,7 +237,7 @@ namespace fmt
    ///                                                                        
    /// Extend FMT to be capable of logging any shared pointer/owned value     
    ///                                                                        
-   template<::Langulus::CT::Data T>
+   /*template<::Langulus::CT::Data T>
    struct formatter<::Langulus::Anyness::TOwned<T>> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -236,12 +263,12 @@ namespace fmt
          else return fmt::vformat_to(ctx.out(), "{}",
             fmt::make_format_args(element.Get()));
       }
-   };
+   };*/
    
    ///                                                                        
    /// Extend FMT to be capable of logging any trait                          
    ///                                                                        
-   /*template<::Langulus::CT::Trait T>
+   template<::Langulus::CT::Trait T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -258,7 +285,7 @@ namespace fmt
             static_cast<const Anyness::Any&>(element)
          ));
       }
-   };*/
+   };
       
    ///                                                                        
    /// Extend FMT to be capable of logging any pair                           

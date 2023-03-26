@@ -37,7 +37,7 @@ namespace Langulus::Flow
 
    /// Serialize charge as debug (same as code)                               
    Charge::operator Debug() const {
-      return Debug {Charge::operator Code()};
+      return Charge::operator Code();
    }
 
    /// Scale the mass of a charge                                             

@@ -92,8 +92,8 @@ namespace Langulus::Flow
       Temporal& operator = (const Temporal&) = delete;
 
    public:
-      NOD() explicit operator Code() const;
-      NOD() explicit operator Debug() const;
+      NOD() operator Code() const;
+      NOD() operator Debug() const;
 
       NOD() bool operator == (const Temporal&) const;
 

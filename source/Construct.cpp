@@ -162,7 +162,7 @@ namespace Langulus::Flow
          result += Code::CloseScope;
       }
 
-      return result;
+      return Debug {result};
    }
 
 } // namespace Langulus::Flow

@@ -15,9 +15,9 @@ namespace Langulus::Flow
    ///                                                                        
    ///   Langulus code container and parser, as well as keyword database      
    ///                                                                        
-   class Code : public Text {
+   struct Code : Text {
       LANGULUS_BASES(Text);
-   public:
+
       enum Operator {
          OpenScope = 0,
          CloseScope,
@@ -39,14 +39,48 @@ namespace Langulus::Flow
          Frequency,
          Time,
          Priority,
+
          OpCounter,
          NoOperator = OpCounter,
          ReflectedOperator,
          ReflectedVerb
       };
 
+      struct OperatorProperties {
+         Token mToken;
+         Real mPrecedence;
+         bool mCharge;
+      };
+
+      /// Built-in operator properties                                        
+      static constexpr OperatorProperties GlobalOperators[Code::OpCounter] = {
+         { "(", 0, false },      // OpenScope
+         { ")", 0, false },      // CloseScope
+         { "[", 0, false },      // OpenCode
+         { "]", 0, false },      // CloseCode
+         { "|", 0, false },      // OpenComment
+         { "|", 0, false },      // CloseComment
+         { "\"", 0, false },     // OpenString
+         { "\"", 0, false },     // CloseString
+         { "`", 0, false },      // OpenStringAlt
+         { "`", 0, false },      // CloseStringAlt
+         { "'", 0, false },      // OpenCharacter
+         { "'", 0, false },      // CloseCharacter
+         { "0x", 0, false },     // OpenByte
+         { "??", 0, false },     // Future
+         { "?", 0, false },      // Past
+         { "const", 0, false },  // Constant
+         { "*", 0, true },       // Mass
+         { "^", 0, true },       // Frequency
+         { "@", 0, true },       // Time
+         { "!", 0, true }        // Priority
+      };
+
       using Text::Text;
-      
+
+      Code(const Text&);
+      Code(Text&&);
+
       explicit Code(Operator);
 
       NOD() Scope Parse(bool optimize = true) const;

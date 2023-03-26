@@ -67,15 +67,17 @@ SCENARIO("Text capsulation in verbs", "[verbs]") {
 		}
 	}
 
-	GIVEN("A default-initialized verb") {
-		Verb test;
+	GIVEN("A default-initialized select verb") {
+		Verbs::Select test;
 
-		WHEN("Wrapped stringified") {
-			auto toDebug = static_cast<Debug>(test);
-			auto toCode = static_cast<Code>(test);
+		WHEN("Stringified") {
+			// Calling static_cast here produces errors due to MSVC bug		
+			const auto toDebug = test.operator Debug();
+			const auto toCode = test.operator Code();
 
 			THEN("The block's reference count must increase") {
 				REQUIRE(toDebug == toCode);
+				REQUIRE(toDebug == ".");
 			}
 		}
 	}

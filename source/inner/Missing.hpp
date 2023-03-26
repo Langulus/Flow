@@ -22,6 +22,8 @@ namespace Langulus::Flow::Inner
    ///   A missing point inside a flow                                        
    ///                                                                        
    struct Missing {
+      LANGULUS_CONVERSIONS(Debug);
+
       TAny<DMeta> mFilter;
       Any mContent;
       Real mPriority {NoPriority};
@@ -37,15 +39,15 @@ namespace Langulus::Flow::Inner
       Any Link(const Block&, const Block& environment, bool& consumedPast) const;
       Any Collapse() const;
 
+      // Needs to be implicit, so that inherited structs use converters 
       operator Debug() const;
-      LANGULUS_CONVERSIONS(Missing, Debug);
    };
 
 
    ///                                                                        
    ///   A missing past point inside a flow                                   
    ///                                                                        
-   struct MissingPast : public Missing {
+   struct MissingPast : Missing {
       LANGULUS_BASES(Missing);
       using Missing::Missing;
       MissingPast();
@@ -55,7 +57,7 @@ namespace Langulus::Flow::Inner
    ///                                                                        
    ///   A missing future point inside a flow                                 
    ///                                                                        
-   struct MissingFuture : public Missing {
+   struct MissingFuture : Missing {
       LANGULUS_BASES(Missing);
       using Missing::Missing;
       MissingFuture();

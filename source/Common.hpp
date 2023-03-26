@@ -34,7 +34,7 @@ namespace Langulus::Flow
 
    class Charge;
    class Construct;
-   class Code;
+   struct Code;
    class Verb;
 
    

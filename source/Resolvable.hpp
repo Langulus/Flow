@@ -85,7 +85,10 @@ namespace Langulus::Flow
       template<bool DIRECT = false, CT::Data D>
       bool SetValue(D&&);
 
-      NOD() explicit operator Debug() const;
+      // All inheritances of Resolvable will become convertible to Debug
+      // and will share the reflected conversions list, but with one    
+      // condition: the conversion operator must remain implicit.       
+      NOD() operator Debug() const;
 
       Debug Self() const;
    };
@@ -96,10 +99,10 @@ namespace Langulus
 {
 
    template<class T>
-   NOD() LANGULUS(ALWAYSINLINE) Anyness::Text IdentityOf(const T&);
+   NOD() Anyness::Text IdentityOf(const T&);
 
    template<class T>
-   NOD() LANGULUS(ALWAYSINLINE) Anyness::Text IdentityOf(RTTI::DMeta, const T&);
+   NOD() Anyness::Text IdentityOf(RTTI::DMeta, const T&);
 
 } // namespace Langulus
 

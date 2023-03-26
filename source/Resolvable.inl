@@ -19,6 +19,7 @@ namespace Langulus
    ///   @param instance - the instance to stringify                          
    ///   @return text containing the generated identity                       
    template<class T>
+   LANGULUS(ALWAYSINLINE)
    Anyness::Text IdentityOf(RTTI::DMeta type, const T& instance) {
       using Flow::Code;
       Code result;
@@ -42,7 +43,7 @@ namespace Langulus
          };
       #endif
       result += Code::CloseScope;
-      return Abandon(static_cast<Anyness::Text&>(result));
+      return Abandon(result);
    }
 
    /// Get a string representing an instance in memory                        

@@ -119,7 +119,7 @@ namespace Langulus::Verbs
 
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Data T, CT::Data... A>
+   template<CT::Dense T, CT::Data... A>
    constexpr bool Catenate::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Catenate(v); };
@@ -129,12 +129,9 @@ namespace Langulus::Verbs
 
    /// Get the verb functor for the given type and arguments                  
    ///   @return the function, or nullptr if not available                    
-   template<CT::Data T, CT::Data... A>
+   template<CT::Dense T, CT::Data... A>
    constexpr auto Catenate::Of() noexcept {
-      if constexpr (!Catenate::AvailableFor<T, A...>()) {
-         return nullptr;
-      }
-      else if constexpr (CT::Constant<T>) {
+      if constexpr (CT::Constant<T>) {
          return [](const void* context, Flow::Verb& verb, A... args) {
             auto typedContext = static_cast<const T*>(context);
             typedContext->Catenate(verb, args...);
@@ -152,7 +149,7 @@ namespace Langulus::Verbs
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb has been satisfied                              
-   template<CT::Data T>
+   template<CT::Dense T>
    bool Catenate::ExecuteIn(T& context, Verb& verb) {
       static_assert(Catenate::AvailableFor<T>(),
          "Verb is not available for this context, this shouldn't be reached by flow");

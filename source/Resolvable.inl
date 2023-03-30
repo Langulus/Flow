@@ -289,7 +289,7 @@ namespace Langulus::Flow
    template<CT::Trait T, CT::Data D>
    LANGULUS(ALWAYSINLINE)
    bool Resolvable::GetTrait(D& data) const {
-      auto found = GetBlock().GetMember<T>();
+      auto found = GetBlock().GetMember(MetaOf<T>());
       try {
          data = found.template AsCast<D>();
          return true;

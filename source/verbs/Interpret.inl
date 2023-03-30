@@ -20,7 +20,7 @@ namespace Langulus::Verbs
    
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Data T, CT::Data... A>
+   template<CT::Dense T, CT::Data... A>
    constexpr bool Interpret::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Interpret(v); };
@@ -30,12 +30,9 @@ namespace Langulus::Verbs
 
    /// Get the verb functor for the given type and arguments                  
    ///   @return the function, or nullptr if not available                    
-   template<CT::Data T, CT::Data... A>
+   template<CT::Dense T, CT::Data... A>
    constexpr auto Interpret::Of() noexcept {
-      if constexpr (!Interpret::AvailableFor<T, A...>()) {
-         return nullptr;
-      }
-      else if constexpr (CT::Constant<T>) {
+      if constexpr (CT::Constant<T>) {
          return [](const void* context, Flow::Verb& verb, A... args) {
             auto typedContext = static_cast<const T*>(context);
             typedContext->Interpret(verb, args...);
@@ -53,7 +50,7 @@ namespace Langulus::Verbs
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb has been satisfied                              
-   template<CT::Data T>
+   template<CT::Dense T>
    bool Interpret::ExecuteIn(T& context, Verb& verb) {
       static_assert(Interpret::AvailableFor<T>(),
          "Verb is not available for this context"
@@ -90,7 +87,7 @@ namespace Langulus::Verbs
          // Stringify context, if it matches any of its named values    
          for (auto& named : from->mNamedValues) {
             if (from->mComparer(named->mPtrToValue, context.GetRaw())) {
-               verb << Text {*named};
+               verb << Text {named};
                return true;
             }
          }
@@ -197,6 +194,8 @@ namespace fmt
    concept Debuggable = 
      !::Langulus::CT::Fundamental<T> &&
      !::Langulus::CT::Same<T, ::Langulus::Token> &&
+     !::Langulus::CT::Same<T, std::basic_string<::Langulus::Letter>> &&
+     !::Langulus::CT::Same<T, std::basic_string_view<::Langulus::Letter>> &&
      !::Langulus::CT::Same<T, basic_string_view<::Langulus::Letter>> &&
       ::Langulus::CT::Convertible<T, ::Langulus::Flow::Debug> &&
      !::Langulus::CT::Deep<T> &&

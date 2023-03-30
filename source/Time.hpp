@@ -9,6 +9,13 @@
 #include "Common.hpp"
 #include <chrono>
 
+namespace Langulus::A
+{
+   struct Time {
+      LANGULUS(ABSTRACT) true;
+   };
+}
+
 namespace Langulus::Flow
 {
 
@@ -21,8 +28,10 @@ namespace Langulus::Flow
    ///                                                                        
    ///   A time point                                                         
    ///                                                                        
-   class TimePoint : public SteadyClock::time_point {
-   public:
+   struct TimePoint : SteadyClock::time_point {
+      LANGULUS(POD) true;
+      LANGULUS_BASES(A::Time);
+
       using Base = SteadyClock::time_point;
       using Base::time_point;
 
@@ -48,8 +57,10 @@ namespace Langulus::Flow
    ///                                                                        
    ///   A time duration (difference between two time points)                 
    ///                                                                        
-   class Time : public SteadyClock::duration {
-   public:
+   struct Time : SteadyClock::duration {
+      LANGULUS(POD) true;
+      LANGULUS_BASES(A::Time);
+
       using Base = SteadyClock::duration;
       using Base::duration;
       using Base::operator +;
@@ -70,6 +81,20 @@ namespace Langulus::Flow
             "Size mismatch");
          return HashNumber(reinterpret_cast<const Representation&>(*this));
       }
+
+      template<CT::DenseBuiltinNumber T = Real>
+      NOD() Real Seconds() const noexcept {
+         auto& asBase = static_cast<const Base&>(*this);
+         return std::chrono::duration<T, std::chrono::seconds> {asBase}.count();
+      }
    };
 
 } // namespace Langulus::Flow
+
+namespace Langulus::CT
+{
+
+   template<class T>
+   concept Time = SameAsOneOf<T, Flow::TimePoint, Flow::Time>;
+
+}

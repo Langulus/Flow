@@ -123,9 +123,9 @@ namespace Langulus::Flow
       NOD() explicit operator Code() const;
       NOD() explicit operator Debug() const;
 
-      template<CT::Data T>
+      template<CT::Dense T>
       bool GenericAvailableFor() const noexcept;
-      template<CT::Data T, CT::Data V>
+      template<CT::Dense T, CT::Data V>
       static bool GenericExecuteIn(T&, V&);
       template<CT::Data V>
       static bool GenericExecuteDefault(const Block&, V&);
@@ -362,12 +362,12 @@ namespace Langulus::Verbs
 
       using StaticVerb::StaticVerb;
 
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr auto Of() noexcept;
 
-      template<CT::Data T>
+      template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
       static bool ExecuteDefault(Block&, Verb&);
@@ -390,12 +390,12 @@ namespace Langulus::Verbs
 
       using StaticVerb::StaticVerb;
 
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr auto Of() noexcept;
 
-      template<CT::Data T>
+      template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
       static bool ExecuteDefault(const Block&, Verb&);
@@ -423,12 +423,12 @@ namespace Langulus::Verbs
 
       using StaticVerb::StaticVerb;
 
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr auto Of() noexcept;
 
-      template<CT::Data T>
+      template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
       static bool ExecuteDefault(const Block&, Verb&);
@@ -448,12 +448,12 @@ namespace Langulus::Verbs
 
       using ArithmeticVerb::ArithmeticVerb;
 
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr auto Of() noexcept;
 
-      template<CT::Data T>
+      template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
       static bool ExecuteDefault(const Block&, Verb&);
@@ -480,12 +480,12 @@ namespace Langulus::Verbs
 
       using ArithmeticVerb::ArithmeticVerb;
 
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr auto Of() noexcept;
 
-      template<CT::Data T>
+      template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
       static bool ExecuteDefault(const Block&, Verb&);
@@ -513,12 +513,12 @@ namespace Langulus::Verbs
 
       using ArithmeticVerb::ArithmeticVerb;
 
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr auto Of() noexcept;
 
-      template<CT::Data T>
+      template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
       static bool ExecuteDefault(const Block&, Verb&);
@@ -548,12 +548,12 @@ namespace Langulus::Verbs
 
       using StaticVerb::StaticVerb;
 
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr auto Of() noexcept;
 
-      template<CT::Data T>
+      template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
       static bool ExecuteDefault(Block&, Verb&);
@@ -574,12 +574,12 @@ namespace Langulus::Verbs
 
       using StaticVerb::StaticVerb;
 
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr auto Of() noexcept;
 
-      template<CT::Data T>
+      template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
       static bool ExecuteDefault(const Block&, Verb&);
@@ -595,15 +595,15 @@ namespace Langulus::Verbs
 
       using StaticVerb::StaticVerb;
 
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr auto Of() noexcept;
 
       template<class TO, class FROM>
       static TO To(const FROM&);
 
-      template<CT::Data T>
+      template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
       static bool ExecuteDefault(const Block&, Verb&);
@@ -620,12 +620,12 @@ namespace Langulus::Verbs
 
       using StaticVerb::StaticVerb;
 
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr auto Of() noexcept;
 
-      template<CT::Data T>
+      template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
    };
 
@@ -649,12 +649,12 @@ namespace Langulus::Verbs
 
       using StaticVerb::StaticVerb;
 
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Data T, CT::Data... A>
+      template<CT::Dense T, CT::Data... A>
       static constexpr auto Of() noexcept;
 
-      template<CT::Data T>
+      template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
       static bool ExecuteDefault(const Block&, Verb&);

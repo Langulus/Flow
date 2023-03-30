@@ -277,7 +277,7 @@ namespace Langulus::Flow
          else if (from.CastsTo<RTTI::Meta>()) {
             // Contained type is meta definitions, write the token      
             for (Offset i = 0; i < from.GetCount(); ++i) {
-               auto& meta = from.As<RTTI::Meta>(i);
+               auto meta = from.As<const RTTI::Meta*>(i);
                to += TO {meta};
                if (i < from.GetCount() - 1)
                   to += Separator(from.IsOr());

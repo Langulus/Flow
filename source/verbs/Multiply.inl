@@ -15,7 +15,7 @@ namespace Langulus::Verbs
 
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Data T, CT::Data... A>
+   template<CT::Dense T, CT::Data... A>
    constexpr bool Multiply::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0) {
          return
@@ -38,12 +38,9 @@ namespace Langulus::Verbs
 
    /// Get the verb functor for the given type and arguments                  
    ///   @return the function, or nullptr if not available                    
-   template<CT::Data T, CT::Data... A>
+   template<CT::Dense T, CT::Data... A>
    constexpr auto Multiply::Of() noexcept {
-      if constexpr (!Multiply::AvailableFor<T, A...>()) {
-         return nullptr;
-      }
-      else if constexpr (CT::Constant<T>) {
+      if constexpr (CT::Constant<T>) {
          return [](const void* context, Flow::Verb& verb, A... args) {
             auto typedContext = static_cast<const T*>(context);
             typedContext->Multiply(verb, args...);
@@ -61,7 +58,7 @@ namespace Langulus::Verbs
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb has been satisfied                              
-   template<CT::Data T>
+   template<CT::Dense T>
    bool Multiply::ExecuteIn(T& context, Verb& verb) {
       static_assert(Multiply::AvailableFor<T>(),
          "Verb is not available for this context, this shouldn't be reached by flow");

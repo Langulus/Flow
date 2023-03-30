@@ -756,7 +756,7 @@ namespace Langulus::Flow
    /// This is a slow runtime check, use statically optimized variants inside 
    /// specific verbs if you know them at compile time                        
    ///   @return true if the ability exists                                   
-   template<CT::Data T>
+   template<CT::Dense T>
    LANGULUS(ALWAYSINLINE)
    bool Verb::GenericAvailableFor() const noexcept {
       const auto meta = MetaData::Of<Decay<T>>();
@@ -770,7 +770,7 @@ namespace Langulus::Flow
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb was executed                                    
-   template<CT::Data T, CT::Data V>
+   template<CT::Dense T, CT::Data V>
    LANGULUS(ALWAYSINLINE)
    bool Verb::GenericExecuteIn(T& context, V& verb) {
       static_assert(CT::Verb<V>, "V must be a verb");

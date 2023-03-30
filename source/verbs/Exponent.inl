@@ -15,7 +15,7 @@ namespace Langulus::Verbs
 
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Data T, CT::Data... A>
+   template<CT::Dense T, CT::Data... A>
    constexpr bool Exponent::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Exponent(v); };
@@ -25,12 +25,9 @@ namespace Langulus::Verbs
 
    /// Get the verb functor for the given type and arguments                  
    ///   @return the function, or nullptr if not available                    
-   template<CT::Data T, CT::Data... A>
+   template<CT::Dense T, CT::Data... A>
    constexpr auto Exponent::Of() noexcept {
-      if constexpr (!Exponent::AvailableFor<T, A...>()) {
-         return nullptr;
-      }
-      else if constexpr (CT::Constant<T>) {
+      if constexpr (CT::Constant<T>) {
          return [](const void* context, Flow::Verb& verb, A... args) {
             auto typedContext = static_cast<const T*>(context);
             typedContext->Exponent(verb, args...);
@@ -48,7 +45,7 @@ namespace Langulus::Verbs
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb has been satisfied                              
-   template<CT::Data T>
+   template<CT::Dense T>
    bool Exponent::ExecuteIn(T& context, Verb& verb) {
       static_assert(Exponent::AvailableFor<T>(),
          "Verb is not available for this context, this shouldn't be reached by flow");

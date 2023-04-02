@@ -80,7 +80,7 @@ namespace Langulus::Flow
       LANGULUS_BASES(Any, Charge);
 
    protected:
-      friend class Scope;
+      friend struct Scope;
 
       // Verb meta, mass, frequency, time and priority                  
       VMeta mVerb {};

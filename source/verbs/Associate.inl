@@ -62,6 +62,7 @@ namespace Langulus::Verbs
    inline bool Associate::ExecuteDefault(Block& context, Verb& verb) {
       auto& lhs = ReinterpretCast<Scope>(context);
       auto& rhs = ReinterpretCast<Scope>(verb.GetArgument());
+
       if (lhs.IsConstant() || lhs.GetCount() != rhs.GetCount())
          // Can't overwrite a constant context                          
          return false;

@@ -30,7 +30,7 @@ namespace Langulus::Flow
          // They are deep only in respect to execution                  
          [&result](const Trait& trait) noexcept {
             const auto& scope = ReinterpretCast<Scope>(
-               static_cast<const Block&>(trait));
+               static_cast<const Any&>(trait));
             result = scope.IsExecutable();
             return !result;
          },

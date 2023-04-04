@@ -340,6 +340,38 @@ namespace fmt
          return fmt::vformat_to(ctx.out(), ")", make_format_args());
       }
    };
+   
+   ///                                                                        
+   /// Extend FMT to be capable of logging any set                            
+   ///                                                                        
+   template<::Langulus::CT::Set T>
+   struct formatter<T> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(ALWAYSINLINE)
+      auto format(T const& element, CONTEXT& ctx) {
+         using namespace ::Langulus;
+         fmt::vformat_to(ctx.out(), "{}(", fmt::make_format_args(
+            RTTI::MetaData::Of<T>()->mToken));
+
+         bool first = true;
+         for (auto key : element) {
+            if (!first)
+               fmt::vformat_to(ctx.out(), ", ", fmt::make_format_args());
+            first = false;
+
+            fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
+               DenseCast(key)
+            ));
+         }
+
+         return fmt::vformat_to(ctx.out(), ")", make_format_args());
+      }
+   };
 
 } // namespace fmt
 

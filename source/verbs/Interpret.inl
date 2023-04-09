@@ -158,7 +158,7 @@ namespace fmt
       }
 
       template<class CONTEXT>
-      LANGULUS(ALWAYSINLINE)
+      LANGULUS(INLINED)
       auto format(::Langulus::Flow::Time const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
@@ -177,7 +177,7 @@ namespace fmt
       }
 
       template<class CONTEXT>
-      LANGULUS(ALWAYSINLINE)
+      LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          const auto asText = Verbs::Interpret::To<Flow::Debug>(element);
@@ -211,7 +211,7 @@ namespace fmt
       }
 
       template<class CONTEXT>
-      LANGULUS(ALWAYSINLINE)
+      LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          using namespace ::Langulus::Flow;
@@ -244,7 +244,7 @@ namespace fmt
       }
 
       template<class CONTEXT>
-      LANGULUS(ALWAYSINLINE)
+      LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          if constexpr (CT::Sparse<T>) {
@@ -275,7 +275,7 @@ namespace fmt
       }
 
       template<class CONTEXT>
-      LANGULUS(ALWAYSINLINE)
+      LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          const auto type = element.GetTrait();
@@ -297,7 +297,7 @@ namespace fmt
       }
 
       template<class CONTEXT>
-      LANGULUS(ALWAYSINLINE)
+      LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          return fmt::vformat_to(ctx.out(), "{}({}, {})", fmt::make_format_args(
@@ -319,7 +319,7 @@ namespace fmt
       }
 
       template<class CONTEXT>
-      LANGULUS(ALWAYSINLINE)
+      LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          fmt::vformat_to(ctx.out(), "{}(", fmt::make_format_args(
@@ -352,7 +352,7 @@ namespace fmt
       }
 
       template<class CONTEXT>
-      LANGULUS(ALWAYSINLINE)
+      LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          fmt::vformat_to(ctx.out(), "{}(", fmt::make_format_args(

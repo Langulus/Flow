@@ -59,7 +59,7 @@ namespace Langulus::Flow
    ///   @param descriptor - the messy element descriptor, used               
    ///                       to construct the element                         
    TEMPLATE()
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    FACTORY()::Element::Element(TFactory* factory, const Any& descriptor)
       : mFactory {factory}
       , mData {factory->mFactoryOwner, descriptor} {}
@@ -68,7 +68,7 @@ namespace Langulus::Flow
    /// Construction of a factory                                              
    ///   @param owner - the factory owner                                     
    TEMPLATE()
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    FACTORY()::TFactory(Producer* owner)
       : mFactoryOwner {owner} {}
 
@@ -76,7 +76,7 @@ namespace Langulus::Flow
    ///   @attention notice how mFactoryOwner never changes on both sides      
    ///   @param other - the factory to move                                   
    TEMPLATE()
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    FACTORY()& FACTORY()::operator = (TFactory&& other) noexcept {
       mData = Move(other.mData);
       mHashmap = Move(other.mHashmap);
@@ -91,7 +91,7 @@ namespace Langulus::Flow
 
    /// Reset the factory                                                      
    TEMPLATE()
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    void FACTORY()::Reset() {
       mData.Reset();
       mHashmap.Reset();
@@ -100,7 +100,7 @@ namespace Langulus::Flow
 
    /// Reset the factory                                                      
    TEMPLATE()
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    bool FACTORY()::IsEmpty() const noexcept {
       return mCount == 0;
    }
@@ -109,7 +109,7 @@ namespace Langulus::Flow
    ///   @param descriptor - the normalized descriptor for the element        
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE()
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    typename FACTORY()::Element* FACTORY()::Find(const Normalized& descriptor) const {
       const auto hash = descriptor.GetHash();
       const auto found = mHashmap.FindKeyIndex(hash);
@@ -155,7 +155,7 @@ namespace Langulus::Flow
    /// Compile a descriptor, by removing Traits::Parent, and grouping elements
    /// in predictable ways, ensuring further comparisons are fast & orderless 
    ///   @param messy - the messy descriptor to normalize                     
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    Normalized::Normalized(const Any& messy) {
       messy.ForEachDeep([this](const Any& group) {
          if (group.IsOr())
@@ -210,7 +210,7 @@ namespace Langulus::Flow
 
    /// Get the hash of a normalized descriptor                                
    ///   @return the hash                                                     
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    Hash Normalized::GetHash() const {
       if (mHash)
          return mHash;
@@ -231,7 +231,7 @@ namespace Langulus::Flow
 
    /// Get the hash of a normalized descriptor                                
    ///   @return the hash                                                     
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    bool Normalized::operator == (const Normalized& rhs) const {
       if (GetHash() != rhs.GetHash())
          return false;
@@ -387,7 +387,7 @@ namespace Langulus::Flow
    /// Get iterator to first element                                          
    ///   @return an iterator to the first element, or end if empty            
    TEMPLATE()
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    typename FACTORY()::Iterator FACTORY()::begin() noexcept {
       static_assert(sizeof(Iterator) == sizeof(ConstIterator),
          "Size mismatch - types must be binary-compatible");
@@ -398,7 +398,7 @@ namespace Langulus::Flow
    /// Get iterator to end                                                    
    ///   @return an iterator to the end element                               
    TEMPLATE()
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    typename FACTORY()::Iterator FACTORY()::end() noexcept {
       static_assert(sizeof(Iterator) == sizeof(ConstIterator),
          "Size mismatch - types must be binary-compatible");
@@ -409,7 +409,7 @@ namespace Langulus::Flow
    /// Get iterator to the last element                                       
    ///   @return an iterator to the last element, or end if empty             
    TEMPLATE()
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    typename FACTORY()::Iterator FACTORY()::last() noexcept {
       static_assert(sizeof(Iterator) == sizeof(ConstIterator),
          "Size mismatch - types must be binary-compatible");
@@ -420,7 +420,7 @@ namespace Langulus::Flow
    /// Get iterator to first element                                          
    ///   @return a constant iterator to the first element, or end if empty    
    TEMPLATE()
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    typename FACTORY()::ConstIterator FACTORY()::begin() const noexcept {
       if (IsEmpty())
          return end();
@@ -437,7 +437,7 @@ namespace Langulus::Flow
    /// Get iterator to end                                                    
    ///   @return a constant iterator to the end element                       
    TEMPLATE()
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    typename FACTORY()::ConstIterator FACTORY()::end() const noexcept {
       const auto ender = mData.GetRawEnd();
       return {ender, ender};
@@ -446,7 +446,7 @@ namespace Langulus::Flow
    /// Get iterator to the last valid element                                 
    ///   @return a constant iterator to the last element, or end if empty     
    TEMPLATE()
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    typename FACTORY()::ConstIterator FACTORY()::last() const noexcept {
       if (IsEmpty())
          return end();
@@ -472,7 +472,7 @@ namespace Langulus::Flow
    ///   @param sentinel - the sentinel (equivalent to factory::end())        
    TEMPLATE()
    template<bool MUTABLE>
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    TFactory<T, USAGE>::TIterator<MUTABLE>::TIterator(const Element* element, const Element* sentinel) noexcept
       : mElement {element}
       , mSentinel {sentinel} {}
@@ -482,7 +482,7 @@ namespace Langulus::Flow
    ///   @return the modified iterator                                        
    TEMPLATE()
    template<bool MUTABLE>
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    typename ITERATOR()& TFactory<T, USAGE>::TIterator<MUTABLE>::operator ++ () noexcept {
       ++mElement;
       // Skip all invalid entries, until a valid one/sentinel is hit    
@@ -496,7 +496,7 @@ namespace Langulus::Flow
    ///   @return the previous value of the iterator                           
    TEMPLATE()
    template<bool MUTABLE>
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    typename ITERATOR() TFactory<T, USAGE>::TIterator<MUTABLE>::operator ++ (int) noexcept {
       const auto backup = *this;
       operator ++ ();
@@ -508,7 +508,7 @@ namespace Langulus::Flow
    ///   @return true if entries match                                        
    TEMPLATE()
    template<bool MUTABLE>
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    bool TFactory<T, USAGE>::TIterator<MUTABLE>::operator == (const TIterator& rhs) const noexcept {
       return mElement == rhs.mElement;
    }
@@ -517,7 +517,7 @@ namespace Langulus::Flow
    ///   @return a reference to the element at the current iterator position  
    TEMPLATE()
    template<bool MUTABLE>
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    T& TFactory<T, USAGE>::TIterator<MUTABLE>::operator * () const noexcept requires (MUTABLE) {
       return const_cast<T&>(mElement->mData);
    }
@@ -526,7 +526,7 @@ namespace Langulus::Flow
    ///   @return a reference to the element at the current iterator position  
    TEMPLATE()
    template<bool MUTABLE>
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    const T& TFactory<T, USAGE>::TIterator<MUTABLE>::operator * () const noexcept requires (!MUTABLE) {
       return mElement->mData;
    }
@@ -535,7 +535,7 @@ namespace Langulus::Flow
    ///   @return a reference to the element at the current iterator position  
    TEMPLATE()
    template<bool MUTABLE>
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    T& TFactory<T, USAGE>::TIterator<MUTABLE>::operator -> () const noexcept requires (MUTABLE) {
       return const_cast<T&>(mElement->mData);
    }
@@ -544,7 +544,7 @@ namespace Langulus::Flow
    ///   @return a reference to the element at the current iterator position  
    TEMPLATE()
    template<bool MUTABLE>
-   LANGULUS(ALWAYSINLINE)
+   LANGULUS(INLINED)
    const T& TFactory<T, USAGE>::TIterator<MUTABLE>::operator -> () const noexcept requires (!MUTABLE) {
       return mElement->mData;
    }

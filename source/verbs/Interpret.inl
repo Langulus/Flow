@@ -300,11 +300,15 @@ namespace fmt
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
-         return fmt::vformat_to(ctx.out(), "{}({}, {})", fmt::make_format_args(
-            RTTI::MetaData::Of<T>()->mToken,
+         return fmt::vformat_to(ctx.out(), "Pair({}, {})", fmt::make_format_args(
             DenseCast(element.mKey), 
             DenseCast(element.mValue)
          ));
+         /*return fmt::vformat_to(ctx.out(), "{}({}, {})", fmt::make_format_args(
+            RTTI::MetaData::Of<T>()->mToken,
+            DenseCast(element.mKey), 
+            DenseCast(element.mValue)
+         ));*/
       }
    };
    
@@ -322,8 +326,9 @@ namespace fmt
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
-         fmt::vformat_to(ctx.out(), "{}(", fmt::make_format_args(
-            RTTI::MetaData::Of<T>()->mToken));
+         fmt::vformat_to(ctx.out(), "Map(", make_format_args());
+         //fmt::vformat_to(ctx.out(), "{}(", fmt::make_format_args(
+         //   RTTI::MetaData::Of<T>()->mToken));
 
          bool first = true;
          for (auto pair : element) {
@@ -355,8 +360,9 @@ namespace fmt
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
-         fmt::vformat_to(ctx.out(), "{}(", fmt::make_format_args(
-            RTTI::MetaData::Of<T>()->mToken));
+         fmt::vformat_to(ctx.out(), "Set(", make_format_args());
+         //fmt::vformat_to(ctx.out(), "{}(", fmt::make_format_args(
+         //   RTTI::MetaData::Of<T>()->mToken));
 
          bool first = true;
          for (auto key : element) {

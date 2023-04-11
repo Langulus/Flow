@@ -148,6 +148,34 @@ namespace fmt
 {
 
    ///                                                                        
+   /// Extend FMT to be capable of logging any meta definition                
+   ///                                                                        
+   template<::Langulus::CT::Meta T>
+   struct formatter<T> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(INLINED)
+         auto format(T const& meta, CONTEXT& ctx) {
+         using namespace ::Langulus;
+         using namespace ::Langulus::Flow;
+
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
+               meta.GetShortestUnambiguousToken()
+            ));
+         #else
+            return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
+               meta.mToken
+            ));
+         #endif
+      }
+   };
+
+   ///                                                                        
    /// Extend FMT to be capable of logging Flow::Time                         
    ///                                                                        
    template<>
@@ -186,53 +214,6 @@ namespace fmt
       }
    };
    
-   ///                                                                        
-   /// Extend FMT to be capable of logging anything flat, that is             
-   /// statically convertible to a Debug string                               
-   ///                                                                        
-   template<class T>
-   concept Debuggable = 
-     !::Langulus::CT::Fundamental<T> &&
-     !::Langulus::CT::Same<T, ::Langulus::Token> &&
-     !::Langulus::CT::Same<T, std::basic_string<::Langulus::Letter>> &&
-     !::Langulus::CT::Same<T, std::basic_string_view<::Langulus::Letter>> &&
-     !::Langulus::CT::Same<T, basic_string_view<::Langulus::Letter>> &&
-      ::Langulus::CT::Convertible<T, ::Langulus::Flow::Debug> &&
-     !::Langulus::CT::Deep<T> &&
-     !::Langulus::CT::Pair<T> &&
-     !::Langulus::CT::Map<T> &&
-     !::Langulus::CT::Trait<T>;
-
-   template<Debuggable T>
-   struct formatter<T> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT>
-      LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) {
-         using namespace ::Langulus;
-         using namespace ::Langulus::Flow;
-
-         Debug asText;
-         if constexpr (requires { Debug {element}; }) {
-            new (&asText) Debug {element};
-         }
-         else if constexpr (requires { Debug {element.operator Debug()}; }) {
-            new (&asText) Debug {element.operator Debug()};
-         }
-         else if constexpr (requires { static_cast<Debug>(element); }) {
-            asText = static_cast<Debug>(element);
-         }
-         else LANGULUS_ERROR("Unhandled conversion route");
-
-         return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
-            static_cast<Logger::TextView>(asText)));
-      }
-   };
-
    ///                                                                        
    /// Extend FMT to be capable of logging any shared pointer/owned value     
    ///                                                                        
@@ -304,11 +285,6 @@ namespace fmt
             DenseCast(element.mKey), 
             DenseCast(element.mValue)
          ));
-         /*return fmt::vformat_to(ctx.out(), "{}({}, {})", fmt::make_format_args(
-            RTTI::MetaData::Of<T>()->mToken,
-            DenseCast(element.mKey), 
-            DenseCast(element.mValue)
-         ));*/
       }
    };
    
@@ -327,8 +303,6 @@ namespace fmt
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          fmt::vformat_to(ctx.out(), "Map(", make_format_args());
-         //fmt::vformat_to(ctx.out(), "{}(", fmt::make_format_args(
-         //   RTTI::MetaData::Of<T>()->mToken));
 
          bool first = true;
          for (auto pair : element) {
@@ -361,8 +335,6 @@ namespace fmt
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          fmt::vformat_to(ctx.out(), "Set(", make_format_args());
-         //fmt::vformat_to(ctx.out(), "{}(", fmt::make_format_args(
-         //   RTTI::MetaData::Of<T>()->mToken));
 
          bool first = true;
          for (auto key : element) {
@@ -376,6 +348,36 @@ namespace fmt
          }
 
          return fmt::vformat_to(ctx.out(), ")", make_format_args());
+      }
+   };
+
+   
+   template<class... T>
+   concept Debuggable = ((
+         requires (T& a) { a.operator ::Langulus::Flow::Debug (); }
+      ) && ...);
+
+   ///                                                                        
+   /// Extend FMT to be capable of logging anything that is statically        
+   /// convertible to a Debug string by an explicit or implicit conversion    
+   /// operator.                                                              
+   ///                                                                        
+   template<Debuggable T>
+   struct formatter<T> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(INLINED)
+      auto format(T const& element, CONTEXT& ctx) {
+         using namespace ::Langulus;
+         using namespace ::Langulus::Flow;
+
+         Debug asText {element.operator Debug()};
+         return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
+            static_cast<Logger::TextView>(asText)));
       }
    };
 

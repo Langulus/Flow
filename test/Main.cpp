@@ -39,6 +39,13 @@ int main(int argc, char* argv[]) {
    static_assert(CT::Convertible<Construct, Code>,
       "Construct must be convertible to Code string");
 
+   static_assert(CT::Debuggable<Thing>,
+      "Thing must be convertible to Debug string");
+   static_assert(CT::Debuggable<Verb>,
+      "Verb must be convertible to Debug string");
+   static_assert(CT::Debuggable<Construct>,
+      "Construct must be convertible to Debug string");
+
    Catch::Session session;
    return session.run(argc, argv);
 }

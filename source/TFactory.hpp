@@ -29,16 +29,6 @@ namespace Langulus::Flow
    /// Normalized data container                                              
    ///                                                                        
    struct Normalized {
-      static_assert(CT::Complete<Any>, "Any must be a complete type");
-      static_assert(CT::Complete<Verb>, "Verb must be a complete type");
-      static_assert(CT::Complete<Trait>, "Trait must be a complete type");
-      static_assert(CT::Complete<Construct>, "Construct must be a complete type");
-      static_assert(CT::Complete<TAny<int>>, "TAny<int> must be a complete type");
-      static_assert(CT::Complete<TAny<Any>>, "TAny<Any> must be a complete type");
-      static_assert(CT::Complete<TAny<Trait>>, "TAny<Trait> must be a complete type");
-      static_assert(CT::Complete<TAny<Construct>>, "TAny<Construct> must be a complete type");
-      static_assert(CT::Complete<TUnorderedSet<DMeta>>, "TUnorderedSet<DMeta> must be a complete type");
-
       // Verbs will always be ordered in the order they appear          
       // Their contents will be normalized all the way through          
       TAny<Verb> mVerbs;

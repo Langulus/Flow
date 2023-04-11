@@ -134,7 +134,7 @@ namespace Langulus::Verbs
       else if constexpr (CT::SameAsOneOf<TO, Code, Text, Debug, Bytes>) {
          // No constructor/conversion operator exists, that would do    
          // the conversion, but we can rely on the serializer,          
-         // if TO is   supported                                        
+         // if TO is supported                                          
          return Serializer::Serialize<TO>(from);
       }
       else LANGULUS_ERROR(
@@ -143,6 +143,23 @@ namespace Langulus::Verbs
    }
 
 } // namespace Langulus::Verbs
+
+namespace Langulus::CT
+{
+
+   namespace Inner
+   {
+      template<class T>
+      concept Debuggable = requires (T& a) { a.operator ::Langulus::Flow::Debug(); };
+   }
+
+   /// A debuggable type is one that has either an implicit or explicit cast  
+   /// operator to Debug type. Reverse conversion through constructors is     
+   /// avoided to mitigate ambiguity problems.                                
+   template<class... T>
+   concept Debuggable = (Inner::Debuggable<T> && ...);
+
+} // namespace Langulus::CT
 
 namespace fmt
 {
@@ -351,18 +368,12 @@ namespace fmt
       }
    };
 
-   
-   template<class... T>
-   concept Debuggable = ((
-         requires (T& a) { a.operator ::Langulus::Flow::Debug (); }
-      ) && ...);
-
    ///                                                                        
    /// Extend FMT to be capable of logging anything that is statically        
    /// convertible to a Debug string by an explicit or implicit conversion    
    /// operator.                                                              
    ///                                                                        
-   template<Debuggable T>
+   template<::Langulus::CT::Debuggable T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {

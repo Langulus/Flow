@@ -137,7 +137,14 @@ namespace Langulus::Flow
             auto count = static_cast<int>(
                ::std::floor(construct.GetCharge().mMass * verb.GetMass())
             );
-            CreateInner(verb, count, construct);
+
+            try {
+               CreateInner(verb, count, construct);
+            }
+            catch (const Exception& e) {
+               Logger::Error("Unable to create ", construct, " due to exception: ", e);
+               return;
+            }
          },
          [&](const MetaData* type) {
             // For each type...                                         
@@ -147,7 +154,14 @@ namespace Langulus::Flow
             auto count = static_cast<int>(
                ::std::floor(verb.GetMass())
             );
-            CreateInner(verb, count);
+
+            try {
+               CreateInner(verb, count);
+            }
+            catch (const Exception& e) {
+               Logger::Error("Unable to create ", type, " due to exception: ", e);
+               return;
+            }
          }
       );
    }

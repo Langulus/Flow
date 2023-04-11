@@ -150,7 +150,9 @@ namespace Langulus::CT
    namespace Inner
    {
       template<class T>
-      concept Debuggable = requires (T& a) { a.operator ::Langulus::Flow::Debug(); };
+      concept Debuggable = 
+         requires (      T& a) { a.operator Anyness::Debug(); } ||
+         requires (const T& a) { a.operator Anyness::Debug(); };
    }
 
    /// A debuggable type is one that has either an implicit or explicit cast  

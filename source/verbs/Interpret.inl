@@ -407,6 +407,18 @@ namespace Langulus::Anyness
    ///   @return the first element, converted to T                            
    template<CT::Data T, bool FATAL_FAILURE>
    T Block::AsCast() const {
+      if (IsEmpty()) {
+         if constexpr (FATAL_FAILURE)
+            LANGULUS_THROW(Convert, "Unable to AsCast, container is empty");
+         else if constexpr (CT::Defaultable<T>)
+            return {};
+         else {
+            LANGULUS_ERROR(
+               "Unable to AsCast to non-default-constructible type, "
+               "when lack of FATAL_FAILURE demands it");
+         }
+      }
+
       // Attempt pointer arithmetic conversion first                    
       try { return As<T>(); }
       catch (const Except::Access&) {}

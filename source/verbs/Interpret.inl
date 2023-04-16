@@ -212,6 +212,30 @@ namespace fmt
             static_cast<const Flow::Time::Base&>(element)));
       }
    };
+   
+   ///                                                                        
+   /// Extend FMT to be capable of logging anything that is statically        
+   /// convertible to a Debug string by an explicit or implicit conversion    
+   /// operator.                                                              
+   ///                                                                        
+   template<::Langulus::CT::Debuggable T>
+   struct formatter<T> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(INLINED)
+      auto format(T const& element, CONTEXT& ctx) {
+         using namespace ::Langulus;
+         using namespace ::Langulus::Flow;
+
+         Debug asText {element.operator Debug()};
+         return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
+            static_cast<Logger::TextView>(asText)));
+      }
+   };
 
    ///                                                                        
    /// Extend FMT to be capable of logging anything CT::Deep                  
@@ -232,38 +256,7 @@ namespace fmt
             static_cast<Logger::TextView>(asText)));
       }
    };
-   
-   ///                                                                        
-   /// Extend FMT to be capable of logging any shared pointer/owned value     
-   ///                                                                        
-   /*template<::Langulus::CT::Data T>
-   struct formatter<::Langulus::Anyness::TOwned<T>> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT>
-      LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) {
-         using namespace ::Langulus;
-         if constexpr (CT::Sparse<T>) {
-            if (element == nullptr) {
-               const auto type = element.GetType();
-               if (type) {
-                  return fmt::vformat_to(ctx.out(), "{}(null)",
-                     fmt::make_format_args(type->mToken));
-               }
-               else return fmt::vformat_to(ctx.out(), "null");
-            }
-            else return fmt::vformat_to(ctx.out(), "{}",
-               fmt::make_format_args(*element.Get()));
-         }
-         else return fmt::vformat_to(ctx.out(), "{}",
-            fmt::make_format_args(element.Get()));
-      }
-   };*/
-   
+      
    ///                                                                        
    /// Extend FMT to be capable of logging any trait                          
    ///                                                                        
@@ -371,11 +364,9 @@ namespace fmt
    };
 
    ///                                                                        
-   /// Extend FMT to be capable of logging anything that is statically        
-   /// convertible to a Debug string by an explicit or implicit conversion    
-   /// operator.                                                              
+   /// Extend FMT to be capable of logging any shared pointers/owned values   
    ///                                                                        
-   template<::Langulus::CT::Debuggable T>
+   template<::Langulus::CT::Owned T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -386,11 +377,24 @@ namespace fmt
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
-         using namespace ::Langulus::Flow;
-
-         Debug asText {element.operator Debug()};
-         return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
-            static_cast<Logger::TextView>(asText)));
+         if constexpr (CT::Sparse<TypeOf<T>>) {
+            if (element == nullptr) {
+               const auto type = element.GetType();
+               if (type) {
+                  return fmt::vformat_to(ctx.out(), "{}(null)",
+                     fmt::make_format_args(*type));
+               }
+               else return fmt::vformat_to(ctx.out(), "null",
+                  fmt::make_format_args());
+            }
+            else return fmt::vformat_to(ctx.out(), "{}",
+               fmt::make_format_args(*element.Get()));
+         }
+         else {
+            static_assert(CT::Dense<decltype(element.Get())>, "T not dense, but not sparse either????");
+            return fmt::vformat_to(ctx.out(), "{}",
+               fmt::make_format_args(element.Get()));
+         }
       }
    };
 

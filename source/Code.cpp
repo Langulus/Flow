@@ -361,69 +361,12 @@ namespace Langulus::Flow
    const RTTI::Meta* Code::KeywordParser::Disambiguate(
       const Offset progress, const Code& input, const Token& keyword
    ) {
-      auto& symbols = RTTI::Database.GetAmbiguousMeta(keyword);
-      if (symbols.empty()) {
+      try {
+         return RTTI::Database.DisambiguateMeta(keyword);
+      }
+      catch (...) {
          PRETTY_ERROR("Unknown keyword: ", keyword);
       }
-      else if (symbols.size() > 1) {
-         // Collect all origin types, and work with those               
-         // Also, GetAmbiguousMeta works only with the last part of the 
-         // keyword, but the keyword might contain hints as to which    
-         // ambiguous meta to pick. Discard symbols that do not         
-         // contain the provided keyword (not case sensitive)           
-         const auto lowercased = Text {keyword}.Lowercase();
-         ::std::unordered_set<const RTTI::Meta*> origins;
-         for (auto& meta : symbols) {
-            if (!Text {meta->mToken}.Lowercase().Find(lowercased))
-               continue;
-
-            const auto dmeta = dynamic_cast<DMeta>(meta);
-            if (dmeta) {
-               if (dmeta->mOrigin)
-                  origins.insert(dmeta->mOrigin);
-               else
-                  origins.insert(dmeta);
-            }
-            else origins.insert(dmeta);
-         }
-
-         if (origins.empty()) {
-            PRETTY_ERROR("Unknown keyword: ", keyword);
-         }
-         else if (origins.size() == 1) {
-            return *origins.begin();
-         }
-
-         // Ambiguity, report error                                     
-         {
-            auto tab = Logger::Error(
-               "Ambiguous symbol: ", keyword,
-               "; Could be one of: ", Logger::Tabs {});
-
-            for (auto& meta : origins) {
-               switch (meta->GetMetaType()) {
-               case RTTI::Meta::Data:
-                  Logger::Verbose(Logger::Red, static_cast<DMeta>(meta),
-                     " (meta data)");
-                  break;
-               case RTTI::Meta::Trait:
-                  Logger::Verbose(Logger::Red, static_cast<TMeta>(meta),
-                     " (meta trait)");
-                  break;
-               case RTTI::Meta::Constant:
-                  Logger::Verbose(Logger::Red, static_cast<CMeta>(meta),
-                     " (meta constant)");
-                  break;
-               default:
-                  PRETTY_ERROR("Unhandled meta type");
-               }
-            }
-         }
-
-         PRETTY_ERROR("Ambiguous symbol");
-      }
-
-      return *symbols.begin();
    }
 
    /// Peek inside input, and return true if first symbol is a digit, or a    

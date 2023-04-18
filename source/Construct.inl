@@ -174,7 +174,10 @@ namespace Langulus::Flow
    template<CT::Data HEAD, CT::Data... TAIL>
    LANGULUS(INLINED)
    Construct Construct::FromToken(const Token& token, HEAD&& head, TAIL&&... tail) {
-      const auto meta = RTTI::Database.GetMetaData(token);
+      const auto meta = dynamic_cast<DMeta>(
+         RTTI::Database.DisambiguateMeta(token)
+      );
+
       if constexpr (sizeof...(tail) == 0)
          return Construct {meta, Forward<HEAD>(head)};
       else
@@ -186,7 +189,10 @@ namespace Langulus::Flow
    ///   @return the request                                                  
    LANGULUS(INLINED)
    Construct Construct::FromToken(const Token& token) {
-      return Construct {RTTI::Database.GetMetaData(token)};
+      const auto meta = dynamic_cast<DMeta>(
+         RTTI::Database.DisambiguateMeta(token)
+      );
+      return Construct {meta};
    }
 #endif
    

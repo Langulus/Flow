@@ -364,7 +364,7 @@ namespace fmt
    };
 
    ///                                                                        
-   /// Extend FMT to be capable of logging any shared pointers/owned values   
+   /// Extend FMT to be capable of logging any owned values                   
    ///                                                                        
    template<::Langulus::CT::Owned T>
    struct formatter<T> {
@@ -395,6 +395,34 @@ namespace fmt
             return fmt::vformat_to(ctx.out(), "{}",
                fmt::make_format_args(element.Get()));
          }
+      }
+   };
+   
+   ///                                                                        
+   /// Extend FMT to be capable of logging any shared pointers                
+   ///                                                                        
+   template<::Langulus::CT::Pointer T>
+   struct formatter<T> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(INLINED)
+      auto format(T const& element, CONTEXT& ctx) {
+         using namespace ::Langulus;
+         if (element == nullptr) {
+            const auto type = element.GetType();
+            if (type) {
+               return fmt::vformat_to(ctx.out(), "{}(null)",
+                  fmt::make_format_args(*type));
+            }
+            else return fmt::vformat_to(ctx.out(), "null",
+               fmt::make_format_args());
+         }
+         else return fmt::vformat_to(ctx.out(), "{}",
+            fmt::make_format_args(*element.Get()));
       }
    };
 

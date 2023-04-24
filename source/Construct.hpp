@@ -48,7 +48,7 @@ namespace Langulus::Flow
    /// various characteristics, to finally the additional raw data in case    
    /// of very specific custom contents.                                      
    ///                                                                        
-   class Construct : public Any, public Charge {
+   class LANGULUS_API(FLOW) Construct : public Any, public Charge {
       LANGULUS(POD) false;
       LANGULUS(NULLIFIABLE) false;
       LANGULUS(DEEP) false;

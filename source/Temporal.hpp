@@ -38,7 +38,7 @@ namespace Langulus::Flow
    /// that actively seeks the past and future inputs for suitable data to    
    /// complete your scripts at runtime.                                      
    ///                                                                        
-   class Temporal final {
+   class LANGULUS_API(FLOW) Temporal final {
       LANGULUS_CONVERSIONS(Code, Debug);
       friend struct Inner::Missing;
 

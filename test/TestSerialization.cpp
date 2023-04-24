@@ -106,7 +106,7 @@ SCENARIO("Serialization", "[serialization]") {
 	}
 
 	GIVEN("An Any instance containing various kinds of numbers") {
-		auto pack = Any::Wrap(10, 5, 20.0f, 40.0);
+		Any pack {10, 5, 20.0f, 40.0};
 
 		WHEN("Pack is serialized as binary") {
 			auto serialized = Verbs::Interpret::To<Bytes>(pack);
@@ -121,13 +121,13 @@ SCENARIO("Serialization", "[serialization]") {
 	}
 
 	GIVEN("A complex pack with various kinds of data") {
-		auto pack = Any::Wrap(
+		Any pack {
 			"some text"_text,
 			10, 5, 20.0f, 40.0,
 			Verbs::Do(10).SetSource(5),
 			Verbs::Do(10).SetSource("some other text"_text),
 			Verbs::Do("even more text"_text).SetSource(Verbs::Do(10).SetSource(5))
-		);
+		};
 
 		WHEN("Serialize and then deserialize container in binary") {
 			auto serialized = Verbs::Interpret::To<Bytes>(pack);

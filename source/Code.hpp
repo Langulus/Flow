@@ -15,7 +15,7 @@ namespace Langulus::Flow
    ///                                                                        
    ///   Langulus code container and parser, as well as keyword database      
    ///                                                                        
-   struct Code : Text {
+   struct LANGULUS_API(FLOW) Code : Text {
       LANGULUS_BASES(Text);
 
       enum Operator {

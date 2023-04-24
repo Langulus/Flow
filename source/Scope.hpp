@@ -20,7 +20,7 @@ namespace Langulus::Flow
    /// A scope is simply an Any container (binary compatible, too)            
    /// It has some additional interface for executing flows                   
    ///                                                                        
-   struct Scope : Any {
+   struct LANGULUS_API(FLOW) Scope : Any {
       using Any::Any;
       using Any::operator ==;
 

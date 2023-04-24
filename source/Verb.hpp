@@ -72,7 +72,7 @@ namespace Langulus::Flow
    /// in a code flow. Langulus is based around natural language processing   
    /// theory based around verbs, so this is the natural name for such thing  
    ///                                                                        
-   class Verb : public Any, public Charge {
+   class LANGULUS_API(FLOW) Verb : public Any, public Charge {
       LANGULUS(POD) false;
       LANGULUS(NULLIFIABLE) false;
       LANGULUS(DEEP) false;

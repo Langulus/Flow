@@ -6,7 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../../include/Flow/Verbs/Catenate.hpp"
+#include <Flow/Verbs/Catenate.hpp>
 
 namespace Langulus
 {

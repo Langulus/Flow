@@ -6,8 +6,8 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../../include/Flow/Verbs/Multiply.hpp"
 #include "Arithmetic.inl"
+#include <Flow/Verbs/Multiply.hpp>
 
 #define VERBOSE_MUL(a) //Logger::Verbose() << a
 

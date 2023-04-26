@@ -8,6 +8,7 @@
 #include "Code.hpp"
 #include "Serial.hpp"
 #include "Verb.hpp"
+
 #include "verbs/Do.inl"
 #include "verbs/Select.inl"
 #include "verbs/Associate.inl"

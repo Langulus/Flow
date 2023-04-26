@@ -7,9 +7,9 @@
 ///                                                                           
 #pragma once
 #include "Serial.hpp"
-#include "verbs/Do.inl"
-#include "verbs/Conjunct.inl"
-#include "verbs/Interpret.inl"
+#include <Flow/Verbs/Do.hpp>
+#include <Flow/Verbs/Conjunct.hpp>
+#include <Flow/Verbs/Interpret.hpp>
 
 #define LGLS_VERBOSE_SERIALIZATION(a)
 

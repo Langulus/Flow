@@ -6,7 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../../include/Flow/Verbs/Do.hpp"
+#include <Flow/Verbs/Do.hpp>
 
 namespace Langulus::Verbs
 {

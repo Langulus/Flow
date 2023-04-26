@@ -6,7 +6,6 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../../include/Flow/Verbs/Interpret.hpp"
 #include "../Scope.hpp"
 #include "../Serial.hpp"
 #include "../Time.hpp"
@@ -19,6 +18,7 @@
 #include <Anyness/Own.hpp>
 #include <Anyness/Ref.hpp>
 #include <fmt/chrono.h>
+#include <Flow/Verbs/Interpret.hpp>
 
 #define VERBOSE_CONVERSION(a) //Logger::Verbose() << a
 
@@ -464,9 +464,8 @@ namespace Langulus::Anyness
          
       // If this is reached, we attempt runtime conversion by           
       // dispatching Verbs::Interpret to the first element              
-      const auto meta = MetaData::Of<T>();
-      Verbs::Interpret interpreter {meta};
-      if (!Flow::DispatchDeep(GetElementResolved(0), interpreter)) {
+      Verbs::Interpret interpreter {MetaOf<T>()};
+      if (!::Langulus::Flow::DispatchDeep(GetElementResolved(0), interpreter)) {
          // Failure                                                     
          if constexpr (FATAL_FAILURE)
             LANGULUS_THROW(Convert, "Unable to AsCast");

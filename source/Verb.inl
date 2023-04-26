@@ -8,7 +8,6 @@
 #pragma once
 #include "Verb.hpp"
 #include "Code.hpp"
-#include "verbs/Interpret.inl"
 
 namespace Langulus::Flow
 {

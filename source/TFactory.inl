@@ -231,7 +231,7 @@ namespace Langulus::Flow
          return mHash;
 
       // Cache hash so we don't recompute it all the time               
-      mHash = HashData(
+      mHash = HashOf(
          mVerbs,
          mTraits,
          mMetaDatas,

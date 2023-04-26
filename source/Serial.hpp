@@ -67,7 +67,7 @@ namespace Langulus::Flow
       template<bool HEADER>
       static void SerializeBlock(const Block&, Bytes&);
 
-      using Loader = TFunctor<void(Bytes&, Size)>;
+      using Loader = void(*)(Bytes&, Size);
 
       static void RequestMoreBytes(const Bytes&, Offset, Size, const Loader&);
 

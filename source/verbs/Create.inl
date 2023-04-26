@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Associate.inl"
+#include <Anyness/TUnorderedMap.hpp>
 
 #define VERBOSE_CREATION(a) //Logger::Verbose() << a
 #define VERBOSE_SCOPES(a) Logger::Verbose() << a

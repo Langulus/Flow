@@ -55,7 +55,7 @@ namespace Langulus::Flow
    ///   @return the hash of the charge                                       
    LANGULUS(INLINED)
    Hash Charge::GetHash() const noexcept {
-      return HashData(mMass, mFrequency, mTime, mPriority);
+      return HashOf(mMass, mFrequency, mTime, mPriority);
    }
 
    /// Reset the charge to the default                                        

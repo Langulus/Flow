@@ -25,7 +25,7 @@ namespace Langulus::Flow
          return mHash;
 
       if (mType)
-         mHash = HashData(mType->mHash, Any::GetHash());
+         mHash = HashOf(mType->mHash, Any::GetHash());
       else
          mHash = Any::GetHash();
 

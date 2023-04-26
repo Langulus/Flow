@@ -12,31 +12,6 @@ namespace Langulus::Flow
 {
 
    ///                                                                        
-   ///   Bits for seek functions                                              
-   ///                                                                        
-   enum class Seek : uint8_t {
-      // Seek entities that are children of the context                 
-      Below = 1,
-      // Seek entities that are parents of the context                  
-      Above = 2,
-      // Seek objects in both directions - in parents and children      
-      Duplex = Below | Above,
-      // Include the current entity in the seek operation               
-      Here = 4,
-      // Seek everywhere                                                
-      Everywhere = Duplex | Here,
-      // Seek parents and this context included                         
-      HereAndAbove = Above | Here,
-      // Seek children and this context included                        
-      HereAndBelow = Below | Here
-   };
-
-   constexpr bool operator & (const Seek& lhs, const Seek& rhs) {
-      return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
-   }
-
-
-   ///                                                                        
    ///   CONSTRUCT                                                            
    ///                                                                        
    ///   Useful to describe complex (non-pod) content construction. This      
@@ -48,7 +23,7 @@ namespace Langulus::Flow
    /// various characteristics, to finally the additional raw data in case    
    /// of very specific custom contents.                                      
    ///                                                                        
-   class LANGULUS_API(FLOW) Construct : public Any, public Charge {
+   class Construct : public Any, public Charge {
       LANGULUS(POD) false;
       LANGULUS(NULLIFIABLE) false;
       LANGULUS(DEEP) false;
@@ -61,12 +36,13 @@ namespace Langulus::Flow
 
    public:
       constexpr Construct() noexcept = default;
-      Construct(const Construct&) noexcept;
-      Construct(Construct&&) noexcept;
+      LANGULUS_API(FLOW) Construct(const Construct&) noexcept;
+      LANGULUS_API(FLOW) Construct(Construct&&) noexcept;
+
       template<CT::Semantic S>
       Construct(S&&) requires (CT::Exact<TypeOf<S>, Construct>);
 
-      Construct(DMeta);
+      LANGULUS_API(FLOW) Construct(DMeta);
 
       template<CT::NotSemantic T = Any>
       Construct(DMeta, const T&, const Charge& = {});
@@ -79,7 +55,7 @@ namespace Langulus::Flow
       Construct(DMeta, S&&, const Charge& = {});
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         Construct(const Token&);
+         LANGULUS_API(FLOW) Construct(const Token&);
          template<CT::NotSemantic T = Any>
          Construct(const Token&, const T&, const Charge& = {});
          template<CT::NotSemantic T = Any>
@@ -91,16 +67,16 @@ namespace Langulus::Flow
          Construct(const Token&, S&&, const Charge& = {});
       #endif
 
-      Construct& operator = (const Construct&) noexcept;
-      Construct& operator = (Construct&&) noexcept;
+      LANGULUS_API(FLOW) Construct& operator = (const Construct&) noexcept;
+      LANGULUS_API(FLOW) Construct& operator = (Construct&&) noexcept;
       template<CT::Semantic S>
       Construct& operator = (S&&) requires (CT::Exact<TypeOf<S>, Construct>);
 
-      NOD() explicit operator Code() const;
-      NOD() explicit operator Debug() const;
+      NOD() LANGULUS_API(FLOW) explicit operator Code() const;
+      NOD() LANGULUS_API(FLOW) explicit operator Debug() const;
 
    public:
-      NOD() Hash GetHash() const;
+      NOD() LANGULUS_API(FLOW) Hash GetHash() const;
 
       template<CT::Data T, CT::Data HEAD, CT::Data... TAIL>
       NOD() static Construct From(HEAD&&, TAIL&&...);
@@ -110,7 +86,7 @@ namespace Langulus::Flow
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          template<CT::Data HEAD, CT::Data... TAIL>
          NOD() static Construct FromToken(const Token&, HEAD&&, TAIL&&...);
-         NOD() static Construct FromToken(const Token&);
+         NOD() LANGULUS_API(FLOW) static Construct FromToken(const Token&);
       #endif
 
    private:
@@ -120,30 +96,30 @@ namespace Langulus::Flow
       using Any::FromState;
 
    public:
-      NOD() bool operator == (const Construct&) const;
+      NOD() LANGULUS_API(FLOW) bool operator == (const Construct&) const;
 
-      NOD() bool StaticCreation(Any&) const;
+      NOD() LANGULUS_API(FLOW) bool StaticCreation(Any&) const;
 
-      NOD() bool CastsTo(DMeta type) const;
+      NOD() LANGULUS_API(FLOW) bool CastsTo(DMeta type) const;
       template<CT::Data T>
       NOD() bool CastsTo() const;
 
-      NOD() bool Is(DMeta) const;
+      NOD() LANGULUS_API(FLOW) bool Is(DMeta) const;
       template<CT::Data T>
       NOD() bool Is() const;
 
-      NOD() const Any& GetArgument() const noexcept;
-      NOD() Any& GetArgument() noexcept;
+      NOD() LANGULUS_API(FLOW) const Any& GetArgument() const noexcept;
+      NOD() LANGULUS_API(FLOW) Any& GetArgument() noexcept;
 
-      NOD() const Charge& GetCharge() const noexcept;
-      NOD() Charge& GetCharge() noexcept;
+      NOD() LANGULUS_API(FLOW) const Charge& GetCharge() const noexcept;
+      NOD() LANGULUS_API(FLOW) Charge& GetCharge() noexcept;
 
-      NOD() DMeta GetType() const noexcept;
-      NOD() Token GetToken() const noexcept;
-      NOD() DMeta GetProducer() const noexcept;
+      NOD() LANGULUS_API(FLOW) DMeta GetType() const noexcept;
+      NOD() LANGULUS_API(FLOW) Token GetToken() const noexcept;
+      NOD() LANGULUS_API(FLOW) DMeta GetProducer() const noexcept;
 
-      void Clear();
-      void ResetCharge() noexcept;
+      LANGULUS_API(FLOW) void Clear();
+      LANGULUS_API(FLOW) void ResetCharge() noexcept;
 
       template<CT::Data T>
       Construct& operator << (const T&);
@@ -163,8 +139,8 @@ namespace Langulus::Flow
       template<CT::Data T>
       Construct& operator >>= (T&&);
 
-      Construct& Set(const Trait&, const Offset& = 0);
-      const Trait* Get(TMeta, const Offset& = 0) const;
+      LANGULUS_API(FLOW) Construct& Set(const Trait&, const Offset& = 0);
+      LANGULUS_API(FLOW) const Trait* Get(TMeta, const Offset& = 0) const;
 
       template<CT::Trait T>
       const Trait* Get(const Offset& = 0) const;

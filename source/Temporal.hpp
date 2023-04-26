@@ -8,6 +8,8 @@
 #pragma once
 #include "Resolvable.hpp"
 #include "Time.hpp"
+#include <Anyness/TMap.hpp>
+#include <Anyness/TUnorderedMap.hpp>
 
 namespace Langulus::Flow
 {
@@ -38,7 +40,7 @@ namespace Langulus::Flow
    /// that actively seeks the past and future inputs for suitable data to    
    /// complete your scripts at runtime.                                      
    ///                                                                        
-   class LANGULUS_API(FLOW) Temporal final {
+   class Temporal final {
       LANGULUS_CONVERSIONS(Code, Debug);
       friend struct Inner::Missing;
 
@@ -75,37 +77,37 @@ namespace Langulus::Flow
       TUnorderedMap<Time, Temporal*> mFrequencyStack;
 
    protected:
-      static Scope Collapse(const Block&);
-      static Scope Compile(const Block&, Real priority);
+      LANGULUS_API(FLOW) static Scope Collapse(const Block&);
+      LANGULUS_API(FLOW) static Scope Compile(const Block&, Real priority);
 
-      bool Link(const Scope&, Block&) const;
-      bool Link(const Scope&, Inner::MissingFuture&) const;
+      LANGULUS_API(FLOW) bool Link(const Scope&, Block&) const;
+      LANGULUS_API(FLOW) bool Link(const Scope&, Inner::MissingFuture&) const;
 
    public:
-      Temporal(Temporal*, const State&);
-
-      Temporal(const Any& environment = {});
       Temporal(const Temporal&) = delete;
-      Temporal(Temporal&&) noexcept = default;
-
-      Temporal& operator = (Temporal&&) noexcept = default;
       Temporal& operator = (const Temporal&) = delete;
 
+      LANGULUS_API(FLOW) Temporal(Temporal*, const State&);
+      LANGULUS_API(FLOW) Temporal(const Any& environment = {});
+      LANGULUS_API(FLOW) Temporal(Temporal&&) noexcept = default;
+
+      LANGULUS_API(FLOW) Temporal& operator = (Temporal&&) noexcept = default;
+
    public:
-      NOD() operator Code() const;
-      NOD() operator Debug() const;
+      NOD() LANGULUS_API(FLOW) operator Code() const;
+      NOD() LANGULUS_API(FLOW) operator Debug() const;
 
-      NOD() bool operator == (const Temporal&) const;
+      NOD() LANGULUS_API(FLOW) bool operator == (const Temporal&) const;
 
-      NOD() bool IsValid() const;
+      NOD() LANGULUS_API(FLOW) bool IsValid() const;
 
-      void Merge(const Temporal&);
-      bool Push(Any);
+      LANGULUS_API(FLOW) void Merge(const Temporal&);
+      LANGULUS_API(FLOW) bool Push(Any);
 
-      void Reset();
-      void Update(Time);
+      LANGULUS_API(FLOW) void Reset();
+      LANGULUS_API(FLOW) void Update(Time);
 
-      void Dump() const;
+      LANGULUS_API(FLOW) void Dump() const;
    };
 
 } // namespace Langulus::Flow

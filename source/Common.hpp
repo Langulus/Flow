@@ -6,7 +6,10 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include <LangulusAnyness.hpp>
+#include <Core/Exceptions.hpp>
+#include <RTTI/Reflect.hpp>
+#include <Anyness/Trait.hpp>
+#include <Anyness/Text.hpp>
 
 #if defined(LANGULUS_EXPORT_ALL) || defined(LANGULUS_EXPORT_FLOW)
    #define LANGULUS_API_FLOW() LANGULUS_EXPORT()
@@ -32,10 +35,40 @@ namespace Langulus::Flow
    using RTTI::MetaTrait;
    using RTTI::MetaConst;
 
+
+   ///                                                                        
+   ///   Bits for seek functions                                              
+   ///                                                                        
+   enum class Seek : uint8_t {
+      // Seek entities that are children of the context                 
+      Below = 1,
+      // Seek entities that are parents of the context                  
+      Above = 2,
+      // Seek objects in both directions - in parents and children      
+      Duplex = Below | Above,
+      // Include the current entity in the seek operation               
+      Here = 4,
+      // Seek everywhere                                                
+      Everywhere = Duplex | Here,
+      // Seek parents and this context included                         
+      HereAndAbove = Above | Here,
+      // Seek children and this context included                        
+      HereAndBelow = Below | Here
+   };
+
+   constexpr bool operator & (const Seek& lhs, const Seek& rhs) {
+      return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
+   }
+
    class Charge;
    class Construct;
    struct Code;
    class Verb;
+   struct Resolvable;
+   class Temporal;
+   struct TimePoint;
+   struct Time;
+   struct Scope;
 
    
    ///                                                                        
@@ -89,7 +122,6 @@ namespace Langulus::Flow
 
 } // namespace Langulus::Flow
 
-
 LANGULUS_DEFINE_TRAIT(Mass,
    "Mass of anything with charge, or with physical mass");
 LANGULUS_DEFINE_TRAIT(Frequency,
@@ -98,3 +130,6 @@ LANGULUS_DEFINE_TRAIT(Time,
    "Time of anything with charge, or with a temporal component");
 LANGULUS_DEFINE_TRAIT(Priority,
    "Priority of anything with charge, or some kind of priority");
+
+/// Make the rest of the code aware, that Langulus::Flow has been included    
+#define LANGULUS_LIBRARY_FLOW() 1

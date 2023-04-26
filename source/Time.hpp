@@ -97,4 +97,4 @@ namespace Langulus::CT
    template<class T>
    concept Time = SameAsOneOf<T, Flow::TimePoint, Flow::Time>;
 
-}
+} // namespace Langulus::CT

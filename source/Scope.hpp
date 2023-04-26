@@ -20,20 +20,29 @@ namespace Langulus::Flow
    /// A scope is simply an Any container (binary compatible, too)            
    /// It has some additional interface for executing flows                   
    ///                                                                        
-   struct LANGULUS_API(FLOW) Scope : Any {
+   struct Scope : Any {
       using Any::Any;
       using Any::operator ==;
 
-      NOD() bool IsExecutable() const noexcept;
-      NOD() bool IsExecutableDeep() const noexcept;
+      NOD() LANGULUS_API(FLOW)
+      bool IsExecutable() const noexcept;
+      NOD() LANGULUS_API(FLOW)
+      bool IsExecutableDeep() const noexcept;
 
+      LANGULUS_API(FLOW)
       bool Execute(Any&) const;
+      LANGULUS_API(FLOW)
       bool Execute(Any&, Any& output) const;
+      LANGULUS_API(FLOW)
       bool Execute(Any&, Any& output, bool& skipVerbs) const;
+      LANGULUS_API(FLOW)
       bool ExecuteAND(Any&, Any& output, bool& skipVerbs) const;
+      LANGULUS_API(FLOW)
       bool ExecuteOR(Any&, Any& output, bool& skipVerbs) const;
 
+      LANGULUS_API(FLOW)
       static bool ExecuteVerb(Any&, Verb&);
+      LANGULUS_API(FLOW)
       static bool IntegrateVerb(Any&, Verb&);
 
    protected:

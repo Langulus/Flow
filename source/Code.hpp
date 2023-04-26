@@ -15,7 +15,7 @@ namespace Langulus::Flow
    ///                                                                        
    ///   Langulus code container and parser, as well as keyword database      
    ///                                                                        
-   struct LANGULUS_API(FLOW) Code : Text {
+   struct Code : Text {
       LANGULUS_BASES(Text);
 
       enum Operator {
@@ -78,43 +78,43 @@ namespace Langulus::Flow
 
       using Text::Text;
 
-      Code(const Text&);
-      Code(Text&&);
+      LANGULUS_API(FLOW) Code(const Text&);
+      LANGULUS_API(FLOW) Code(Text&&);
 
-      explicit Code(Operator);
+      LANGULUS_API(FLOW) explicit Code(Operator);
 
-      NOD() Scope Parse(bool optimize = true) const;
+      NOD() LANGULUS_API(FLOW) Scope Parse(bool optimize = true) const;
 
-      NOD() Code RightOf(Offset) const;
-      NOD() Code LeftOf(Offset) const;
-      NOD() bool StartsWithSpecial() const noexcept;
-      NOD() bool StartsWithSkippable() const noexcept;
-      NOD() bool EndsWithSkippable() const noexcept;
-      NOD() bool StartsWithLetter() const noexcept;
-      NOD() bool EndsWithLetter() const noexcept;
-      NOD() bool StartsWithDigit() const noexcept;
-      NOD() bool EndsWithDigit() const noexcept;
-      NOD() bool StartsWithOperator(Offset) const noexcept;
+      NOD() LANGULUS_API(FLOW) Code RightOf(Offset) const;
+      NOD() LANGULUS_API(FLOW) Code LeftOf(Offset) const;
+      NOD() LANGULUS_API(FLOW) bool StartsWithSpecial() const noexcept;
+      NOD() LANGULUS_API(FLOW) bool StartsWithSkippable() const noexcept;
+      NOD() LANGULUS_API(FLOW) bool EndsWithSkippable() const noexcept;
+      NOD() LANGULUS_API(FLOW) bool StartsWithLetter() const noexcept;
+      NOD() LANGULUS_API(FLOW) bool EndsWithLetter() const noexcept;
+      NOD() LANGULUS_API(FLOW) bool StartsWithDigit() const noexcept;
+      NOD() LANGULUS_API(FLOW) bool EndsWithDigit() const noexcept;
+      NOD() LANGULUS_API(FLOW) bool StartsWithOperator(Offset) const noexcept;
 
       using Text::operator +=;
-      Code& operator += (Operator);
+      LANGULUS_API(FLOW) Code& operator += (Operator);
 
       template<class T>
       Code& TypeSuffix();
 
-      NOD() static bool IsReserved(const Text&);
-      NOD() static bool IsValidKeyword(const Text&);
+      NOD() LANGULUS_API(FLOW) static bool IsReserved(const Text&);
+      NOD() LANGULUS_API(FLOW) static bool IsValidKeyword(const Text&);
 
    protected:
       /// Parser for unknown expressions                                      
       /// An unknown-expressions will be scanned to figure what it contains   
-      struct UnknownParser {
+      struct LANGULUS_API(FLOW) UnknownParser {
          NOD() static Offset Parse(const Code&, Any&, Real, bool optimize);
       };
 
       /// Parser for keyword expressions                                      
       /// A key-expression is any expression that begins with a letter        
-      struct KeywordParser {
+      struct LANGULUS_API(FLOW) KeywordParser {
          NOD() static Offset Parse(const Code&, Any&, bool allowCharge = true);
          NOD() static bool Peek(const Code&) noexcept;
          NOD() static Token Isolate(const Code&) noexcept;
@@ -123,7 +123,7 @@ namespace Langulus::Flow
 
       /// Parser for skipping expressions                                     
       /// A skip-expression is any that begins with escapes, tabs, or spaces  
-      struct SkippedParser {
+      struct LANGULUS_API(FLOW) SkippedParser {
          NOD() static Offset Parse(const Code&);
          NOD() static bool Peek(const Code&) noexcept;
       };
@@ -131,7 +131,7 @@ namespace Langulus::Flow
       /// Parser for number expressions                                       
       /// A num-expression is any that begins with a digit, a minus           
       /// followed by a digit, or a dot followed by a digit                   
-      struct NumberParser {
+      struct LANGULUS_API(FLOW) NumberParser {
          NOD() static Offset Parse(const Code&, Any&);
          NOD() static bool Peek(const Code&) noexcept;
       };
@@ -139,7 +139,7 @@ namespace Langulus::Flow
       /// Parser for operators                                                
       /// An op-expression is one matching the built-in ones, or one matching 
       /// one in reflected verb database, where LHS is not DMeta or VMeta     
-      struct OperatorParser {
+      struct LANGULUS_API(FLOW) OperatorParser {
          NOD() static Offset Parse(Operator, const Code&, Any&, Real, bool optimize);
          NOD() static Operator PeekBuiltin(const Code&) noexcept;
          NOD() static Operator Peek(const Code&) noexcept;
@@ -158,7 +158,7 @@ namespace Langulus::Flow
 
       /// Parser for chargers                                                 
       /// A charge-expression is any operator *^@! after a DMeta or VMeta     
-      struct ChargeParser {
+      struct LANGULUS_API(FLOW) ChargeParser {
          NOD() static Offset Parse(const Code&, Charge&);
          NOD() static Operator Peek(const Code&) noexcept;
       };
@@ -171,8 +171,8 @@ namespace Langulus::Flow
 namespace Langulus::Verbs
 {
 
-   using ::Langulus::Flow::Scope;
-   using ::Langulus::Flow::Construct;
+   using Flow::Scope;
+   using Flow::Construct;
 
 } // namespace Langulus::Verbs
 

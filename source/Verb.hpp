@@ -72,7 +72,7 @@ namespace Langulus::Flow
    /// in a code flow. Langulus is based around natural language processing   
    /// theory based around verbs, so this is the natural name for such thing  
    ///                                                                        
-   class LANGULUS_API(FLOW) Verb : public Any, public Charge {
+   class Verb : public Any, public Charge {
       LANGULUS(POD) false;
       LANGULUS(NULLIFIABLE) false;
       LANGULUS(DEEP) false;
@@ -96,8 +96,8 @@ namespace Langulus::Flow
    public:
       constexpr Verb() noexcept = default;
 
-      Verb(const Verb&);
-      Verb(Verb&&);
+      LANGULUS_API(FLOW) Verb(const Verb&);
+      LANGULUS_API(FLOW) Verb(Verb&&);
 
       Verb(const CT::NotSemantic auto&);
       Verb(CT::NotSemantic auto&);
@@ -109,19 +109,19 @@ namespace Langulus::Flow
       template<CT::Data HEAD, CT::Data... TAIL>
       Verb(HEAD&&, TAIL&&...) requires (sizeof...(TAIL) >= 1);
 
-      Verb& operator = (const Verb&);
-      Verb& operator = (Verb&&);
+      LANGULUS_API(FLOW) Verb& operator = (const Verb&);
+      LANGULUS_API(FLOW) Verb& operator = (Verb&&);
       template<CT::Semantic S>
       Verb& operator = (S&&);
 
-      Verb operator * (const Real&) const;
-      Verb operator ^ (const Real&) const;
+      LANGULUS_API(FLOW) Verb operator * (const Real&) const;
+      LANGULUS_API(FLOW) Verb operator ^ (const Real&) const;
 
-      Verb& operator *= (const Real&) noexcept;
-      Verb& operator ^= (const Real&) noexcept;
+      LANGULUS_API(FLOW) Verb& operator *= (const Real&) noexcept;
+      LANGULUS_API(FLOW) Verb& operator ^= (const Real&) noexcept;
 
-      NOD() explicit operator Code() const;
-      NOD() explicit operator Debug() const;
+      NOD() LANGULUS_API(FLOW) explicit operator Code() const;
+      NOD() LANGULUS_API(FLOW) explicit operator Debug() const;
 
       template<CT::Dense T>
       bool GenericAvailableFor() const noexcept;
@@ -141,58 +141,58 @@ namespace Langulus::Flow
       NOD() static Verb From(DATA&&, const Charge& = {}, const VerbState& = {});
       template<CT::Data DATA>
       NOD() static Verb FromMeta(VMeta, DATA&&, const Charge& = {}, const VerbState& = {});
-      NOD() static Verb FromMeta(VMeta, const Charge& = {}, const VerbState& = {});
+      NOD() LANGULUS_API(FLOW) static Verb FromMeta(VMeta, const Charge& = {}, const VerbState& = {});
 
-      NOD() Hash GetHash() const;
-      NOD() Verb PartialCopy() const noexcept;
-      void Reset();
+      NOD() LANGULUS_API(FLOW) Hash GetHash() const;
+      NOD() LANGULUS_API(FLOW) Verb PartialCopy() const noexcept;
+      LANGULUS_API(FLOW) void Reset();
 
-      NOD() bool VerbIs(VMeta) const noexcept;
+      NOD() LANGULUS_API(FLOW) bool VerbIs(VMeta) const noexcept;
       template<CT::Data... T>
       NOD() bool VerbIs() const noexcept;
 
-      NOD() const Charge& GetCharge() const noexcept;
-      NOD() VMeta GetVerb() const noexcept;
-      NOD() Real GetMass() const noexcept;
-      NOD() Real GetFrequency() const noexcept;
-      NOD() Real GetTime() const noexcept;
-      NOD() Real GetPriority() const noexcept;
+      NOD() LANGULUS_API(FLOW) const Charge& GetCharge() const noexcept;
+      NOD() LANGULUS_API(FLOW) VMeta GetVerb() const noexcept;
+      NOD() LANGULUS_API(FLOW) Real GetMass() const noexcept;
+      NOD() LANGULUS_API(FLOW) Real GetFrequency() const noexcept;
+      NOD() LANGULUS_API(FLOW) Real GetTime() const noexcept;
+      NOD() LANGULUS_API(FLOW) Real GetPriority() const noexcept;
 
-      NOD() Any& GetSource() noexcept;
-      NOD() const Any& GetSource() const noexcept;
-      NOD() Any& GetArgument() noexcept;
-      NOD() const Any& GetArgument() const noexcept;
-      NOD() Any& GetOutput() noexcept;
-      NOD() const Any& GetOutput() const noexcept;
+      NOD() LANGULUS_API(FLOW) Any& GetSource() noexcept;
+      NOD() LANGULUS_API(FLOW) const Any& GetSource() const noexcept;
+      NOD() LANGULUS_API(FLOW) Any& GetArgument() noexcept;
+      NOD() LANGULUS_API(FLOW) const Any& GetArgument() const noexcept;
+      NOD() LANGULUS_API(FLOW) Any& GetOutput() noexcept;
+      NOD() LANGULUS_API(FLOW) const Any& GetOutput() const noexcept;
 
-      NOD() bool Validate(const Index&) const noexcept;
-      Verb& ShortCircuit(bool) noexcept;
-      Verb& Multicast(bool) noexcept;
-      Verb& SetVerbState(const VerbState&) noexcept;
-      NOD() Token GetToken() const;
-      NOD() bool IsDone() const noexcept;
+      NOD() LANGULUS_API(FLOW) bool Validate(const Index&) const noexcept;
+      LANGULUS_API(FLOW) Verb& ShortCircuit(bool) noexcept;
+      LANGULUS_API(FLOW) Verb& Multicast(bool) noexcept;
+      LANGULUS_API(FLOW) Verb& SetVerbState(const VerbState&) noexcept;
+      NOD() LANGULUS_API(FLOW) Token GetToken() const;
+      NOD() LANGULUS_API(FLOW) bool IsDone() const noexcept;
       NOD() constexpr bool IsMulticast() const noexcept;
       NOD() constexpr bool IsMonocast() const noexcept;
       NOD() constexpr bool IsShortCircuited() const noexcept;
       NOD() constexpr bool IsLongCircuited() const noexcept;
-      NOD() const VerbState& GetVerbState() const noexcept;
-      NOD() Count GetSuccesses() const noexcept;
-      NOD() bool IsMissing() const noexcept;
-      NOD() bool IsMissingDeep() const noexcept;
+      NOD() LANGULUS_API(FLOW) const VerbState& GetVerbState() const noexcept;
+      NOD() LANGULUS_API(FLOW) Count GetSuccesses() const noexcept;
+      NOD() LANGULUS_API(FLOW) bool IsMissing() const noexcept;
+      NOD() LANGULUS_API(FLOW) bool IsMissingDeep() const noexcept;
 
-      void Done(Count) noexcept;
-      void Done() noexcept;
-      void Undo() noexcept;
-      Verb& Invert() noexcept;
+      LANGULUS_API(FLOW) void Done(Count) noexcept;
+      LANGULUS_API(FLOW) void Done() noexcept;
+      LANGULUS_API(FLOW) void Undo() noexcept;
+      LANGULUS_API(FLOW) Verb& Invert() noexcept;
 
       template<CT::Data>
       Verb& SetVerb();
-      Verb& SetVerb(VMeta) noexcept;
-      Verb& SetMass(Real) noexcept;
-      Verb& SetFrequency(Real) noexcept;
-      Verb& SetTime(Real) noexcept;
-      Verb& SetPriority(Real) noexcept;
-      Verb& SetCharge(const Charge&) noexcept;
+      LANGULUS_API(FLOW) Verb& SetVerb(VMeta) noexcept;
+      LANGULUS_API(FLOW) Verb& SetMass(Real) noexcept;
+      LANGULUS_API(FLOW) Verb& SetFrequency(Real) noexcept;
+      LANGULUS_API(FLOW) Verb& SetTime(Real) noexcept;
+      LANGULUS_API(FLOW) Verb& SetPriority(Real) noexcept;
+      LANGULUS_API(FLOW) Verb& SetCharge(const Charge&) noexcept;
 
       template<CT::Data T>
       Verb& SetSource(const T&);
@@ -211,13 +211,13 @@ namespace Langulus::Flow
       template<CT::Data T>
       Verb& SetOutput(T&&) requires CT::Mutable<T>;
 
-      NOD() bool operator == (const Verb&) const;
-      NOD() bool operator == (VMeta) const noexcept;
-      NOD() bool operator == (bool) const noexcept;
-      NOD() bool operator <  (const Verb&) const noexcept;
-      NOD() bool operator >  (const Verb&) const noexcept;
-      NOD() bool operator >= (const Verb&) const noexcept;
-      NOD() bool operator <= (const Verb&) const noexcept;
+      NOD() LANGULUS_API(FLOW) bool operator == (const Verb&) const;
+      NOD() LANGULUS_API(FLOW) bool operator == (VMeta) const noexcept;
+      NOD() LANGULUS_API(FLOW) bool operator == (bool) const noexcept;
+      NOD() LANGULUS_API(FLOW) bool operator <  (const Verb&) const noexcept;
+      NOD() LANGULUS_API(FLOW) bool operator >  (const Verb&) const noexcept;
+      NOD() LANGULUS_API(FLOW) bool operator >= (const Verb&) const noexcept;
+      NOD() LANGULUS_API(FLOW) bool operator <= (const Verb&) const noexcept;
 
       template<CT::Data T>
       Verb& operator << (const T&);
@@ -370,11 +370,11 @@ namespace Langulus::Verbs
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
-      static bool ExecuteDefault(Block&, Verb&);
-      static bool ExecuteStateless(Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteStateless(Verb&);
 
    protected:
-      static void SetMembers(Any&, const Any&);
+      LANGULUS_API(FLOW) static void SetMembers(Any&, const Any&);
    };
 
    /// Select/Deselect verb                                                   
@@ -398,9 +398,9 @@ namespace Langulus::Verbs
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
-      static bool ExecuteDefault(const Block&, Verb&);
-      static bool ExecuteDefault(Block&, Verb&);
-      static bool ExecuteStateless(Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(const Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteStateless(Verb&);
 
    protected:
       template<bool MUTABLE>
@@ -431,9 +431,9 @@ namespace Langulus::Verbs
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
-      static bool ExecuteDefault(const Block&, Verb&);
-      static bool ExecuteDefault(Block&, Verb&);
-      static bool ExecuteStateless(Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(const Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteStateless(Verb&);
    };
 
    /// Exponent/Root verb                                                     
@@ -456,8 +456,8 @@ namespace Langulus::Verbs
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
-      static bool ExecuteDefault(const Block&, Verb&);
-      static bool ExecuteDefault(Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(const Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(Block&, Verb&);
 
       template<CT::Data... T>
       static bool OperateOnTypes(const Block&, const Block&, Verb&);
@@ -488,9 +488,9 @@ namespace Langulus::Verbs
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
-      static bool ExecuteDefault(const Block&, Verb&);
-      static bool ExecuteDefault(Block&, Verb&);
-      static bool ExecuteStateless(Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(const Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteStateless(Verb&);
 
       template<CT::Data... T>
       static bool OperateOnTypes(const Block&, const Block&, Verb&);
@@ -521,9 +521,9 @@ namespace Langulus::Verbs
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
-      static bool ExecuteDefault(const Block&, Verb&);
-      static bool ExecuteDefault(Block&, Verb&);
-      static bool ExecuteStateless(Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(const Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteStateless(Verb&);
 
       template<CT::Data... T>
       static bool OperateOnTypes(const Block&, const Block&, Verb&);
@@ -556,7 +556,7 @@ namespace Langulus::Verbs
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
-      static bool ExecuteDefault(Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(Block&, Verb&);
    };
 
    /// Conjunct/Disjunct verb                                                 
@@ -582,8 +582,8 @@ namespace Langulus::Verbs
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
-      static bool ExecuteDefault(const Block&, Verb&);
-      static bool ExecuteStateless(Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(const Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteStateless(Verb&);
    };
 
    /// Interpret                                                              
@@ -606,7 +606,7 @@ namespace Langulus::Verbs
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
-      static bool ExecuteDefault(const Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(const Block&, Verb&);
    };
 
    /// Interact                                                               
@@ -657,9 +657,9 @@ namespace Langulus::Verbs
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
-      static bool ExecuteDefault(const Block&, Verb&);
-      static bool ExecuteDefault(Block&, Verb&);
-      static bool ExecuteStateless(Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(const Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteDefault(Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteStateless(Verb&);
    };
 
 } // namespace Langulus::Verbs

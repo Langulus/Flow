@@ -151,22 +151,104 @@ namespace Langulus::Verbs
 
 } // namespace Langulus::Verbs
 
-namespace Langulus::CT
+namespace Langulus
 {
-
-   namespace Inner
+   namespace CT
    {
-      template<class T>
-      concept Debuggable = 
-         requires (      T& a) { a.operator Anyness::Debug(); } ||
-         requires (const T& a) { a.operator Anyness::Debug(); };
+      namespace Inner
+      {
+         template<class T>
+         concept Debuggable =
+            requires (T& a) { a.operator Anyness::Debug(); } ||
+            requires (const T& a) { a.operator Anyness::Debug(); };
+      }
+
+      /// A debuggable type is one that has either an implicit or explicit    
+      /// cast operator to Debug type. Reverse conversion through             
+      /// constructors is avoided to mitigate ambiguity problems.             
+      template<class... T>
+      concept Debuggable = (Inner::Debuggable<T> && ...);
    }
 
-   /// A debuggable type is one that has either an implicit or explicit cast  
-   /// operator to Debug type. Reverse conversion through constructors is     
-   /// avoided to mitigate ambiguity problems.                                
-   template<class... T>
-   concept Debuggable = (Inner::Debuggable<T> && ...);
+   namespace Flow
+   {
+      
+      /// Serialize verb to any form of text                                  
+      ///   @tparam T - the type of text to serialize to                      
+      ///   @return the serialized verb                                       
+      template<CT::Text T>
+      LANGULUS(INLINED)
+      T Verb::SerializeVerb() const {
+         Code result;
+
+         if (mSuccesses) {
+            // If verb has been executed, just dump the output          
+            result += Verbs::Interpret::To<T>(mOutput);
+            return result;
+         }
+
+         // If reached, then verb hasn't been executed yet              
+         // Let's check if there's a source in which verb is executed   
+         if (mSource.IsValid())
+            result += Verbs::Interpret::To<T>(mSource);
+
+         // After the source, we decide whether to write verb token or  
+         // verb operator, depending on the verb definition, state and  
+         // charge                                                      
+         bool enscope = true;
+         if (!mVerb) {
+            // An invalid verb is always written as token               
+            result += MetaVerb::DefaultToken;
+         }
+         else {
+            // A valid verb is written either as token, or as operator  
+            if (mMass < 0) {
+               if (!mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault() && mState.IsDefault()) {
+                  // Write as operator                                  
+                  result += mVerb->mOperatorReverse;
+                  enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
+               }
+               else {
+                  // Write as token                                     
+                  if (mSource.IsValid())
+                     result += Text {' '};
+                  result += mVerb->mTokenReverse;
+                  result += Verbs::Interpret::To<T>(GetCharge() * -1);
+               }
+            }
+            else {
+               if (!mVerb->mOperator.empty() && GetCharge().IsDefault() && mState.IsDefault()) {
+                  // Write as operator                                  
+                  result += mVerb->mOperator;
+                  enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
+               }
+               else {
+                  // Write as token                                     
+                  if (mSource.IsValid())
+                     result += Text {' '};
+                  result += mVerb->mToken;
+                  result += Verbs::Interpret::To<T>(GetCharge());
+               }
+            }
+         }
+
+         if (IsLongCircuited())
+            result += " long ";
+         if (IsMonocast())
+            result += " mono ";
+
+         if (enscope)
+            result += Code::OpenScope;
+
+         if (IsValid())
+            result += Verbs::Interpret::To<T>(GetArgument());
+
+         if (enscope)
+            result += Code::CloseScope;
+
+         return result;
+      }
+   }
 
 } // namespace Langulus::CT
 

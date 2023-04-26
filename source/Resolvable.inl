@@ -7,7 +7,8 @@
 ///                                                                           
 #pragma once
 #include "Resolvable.hpp"
-#include "verbs/Do.inl"
+#include <Flow/Verbs/Do.hpp>
+#include <Flow/Verbs/Associate.hpp>
 
 namespace Langulus
 {

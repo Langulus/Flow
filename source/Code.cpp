@@ -312,6 +312,10 @@ namespace Langulus::Flow
          // If this is reached, then exactly one match in symbols       
          // Push found meta data, if any                                
          const auto meta = Disambiguate(progress, input, keyword);
+         if (!meta) {
+            PRETTY_ERROR("Disambiguation of `", keyword, "` failed");
+         }
+
          switch (meta->GetMetaType()) {
          case RTTI::Meta::Data:
             if (allowCharge) {

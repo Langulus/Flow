@@ -6,10 +6,11 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "Do.inl"
+#include "../../include/Flow/Verbs/Associate.hpp"
+/*#include "Do.inl"
 #include "Interpret.inl"
 #include "Catenate.inl"
-
+*/
 #define VERBOSE_ASSOCIATE(a) //Logger::Verbose() << a
 
 namespace Langulus::Verbs

@@ -1,4 +1,5 @@
 #include "Main.hpp"
+#include <Flow/Verbs/Select.hpp>
 #include <catch2/catch.hpp>
 
 SCENARIO("Text capsulation in verbs", "[verbs]") {

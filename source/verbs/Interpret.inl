@@ -6,7 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../Verb.hpp"
+#include "../../include/Flow/Verbs/Interpret.hpp"
 #include "../Scope.hpp"
 #include "../Serial.hpp"
 #include "../Time.hpp"

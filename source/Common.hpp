@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include <Core/Exceptions.hpp>
-#include <RTTI/Reflect.hpp>
+#include <RTTI/MetaData.hpp>
 #include <Anyness/Trait.hpp>
 #include <Anyness/Text.hpp>
 

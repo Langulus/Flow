@@ -6,6 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
+#include "../../include/Flow/Verbs/Add.hpp"
 #include "Arithmetic.inl"
 
 #define VERBOSE_ADD(a) //Logger::Verbose() << a

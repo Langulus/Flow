@@ -6,4 +6,41 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
+#include "../Verb.hpp"
+
+namespace Langulus::Verbs
+{
+   using namespace Flow;
+
+   /// Create/Destroy verb                                                    
+   /// Used for allocating new elements. If the type you're creating has      
+   /// a producer, you need to execute the verb in the correct context        
+   struct Create : StaticVerb<Create> {
+      LANGULUS(POSITIVE_VERB) "Create";
+      LANGULUS(NEGATIVE_VERB) "Destroy";
+      LANGULUS(PRECEDENCE) 1000;
+      LANGULUS(INFO)
+         "Used for allocating new elements. "
+         "If the type you're creating has   a producer, "
+         "you need to execute the verb in a matching producer, "
+         "or that producer will be created automatically for you, if possible";
+
+      using StaticVerb::StaticVerb;
+
+      template<CT::Dense T, CT::Data... A>
+      static constexpr bool AvailableFor() noexcept;
+      template<CT::Dense T, CT::Data... A>
+      static constexpr auto Of() noexcept;
+
+      template<CT::Dense T>
+      static bool ExecuteIn(T&, Verb&);
+
+      LANGULUS_API(FLOW) static bool ExecuteDefault(Block&, Verb&);
+      LANGULUS_API(FLOW) static bool ExecuteStateless(Verb&);
+
+   protected:
+      LANGULUS_API(FLOW) static void SetMembers(Any&, const Any&);
+   };
+}
+
 #include "../../../source/verbs/Create.inl"

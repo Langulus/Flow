@@ -1,4 +1,5 @@
 #include "Main.hpp"
+#include <Flow/Verbs/Create.hpp>
 #include <catch2/catch.hpp>
 
 SCENARIO("Test factories", "[factory]") {

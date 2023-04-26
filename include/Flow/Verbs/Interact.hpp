@@ -12,17 +12,16 @@ namespace Langulus::Verbs
 {
    using namespace Flow;
 
-   /// Exponent/Root verb                                                     
-   /// Performs exponentiation or root                                        
-   struct Exponent : ArithmeticVerb<Exponent, true> {
-      LANGULUS(POSITIVE_VERB) "Exponent";
-      LANGULUS(NEGATIVE_VERB) "Root";
-      LANGULUS(POSITIVE_OPERATOR) "^";
-      LANGULUS(NEGATIVE_OPERATOR) "^^";
-      LANGULUS(PRECEDENCE) 6;
-      LANGULUS(INFO) "Performs exponentiation or root";
+   /// Interact                                                               
+   /// Used for processing user events, such as mouse movement, keyboard,     
+   /// joystick and any other input                                           
+   struct Interact : StaticVerb<Interact> {
+      LANGULUS(VERB) "Interact";
+      LANGULUS(INFO) 
+         "Used for processing user events, such as mouse movement, "
+         "keyboard, joystick and any other input";
 
-      using ArithmeticVerb::ArithmeticVerb;
+      using StaticVerb::StaticVerb;
 
       template<CT::Dense T, CT::Data... A>
       static constexpr bool AvailableFor() noexcept;
@@ -31,15 +30,8 @@ namespace Langulus::Verbs
 
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
-
-      LANGULUS_API(FLOW) static bool ExecuteDefault(const Block&, Verb&);
-      LANGULUS_API(FLOW) static bool ExecuteDefault(Block&, Verb&);
-
-      template<CT::Data... T>
-      static bool OperateOnTypes(const Block&, const Block&, Verb&);
-      template<CT::Data... T>
-      static bool OperateOnTypes(const Block&, Block&, Verb&);
    };
+
 }
 
-#include "../../../source/verbs/Exponent.inl"
+#include "../../../source/verbs/Interpret.inl"

@@ -6,6 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
+#include "../../include/Flow/Verbs/Exponent.hpp"
 #include "Arithmetic.inl"
 
 #define VERBOSE_MUL(a) //Logger::Verbose() << a

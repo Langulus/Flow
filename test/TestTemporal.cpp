@@ -1,4 +1,5 @@
 #include "Main.hpp"
+#include <Flow/Temporal.hpp>
 #include <catch2/catch.hpp>
 
 SCENARIO("Temporal flow", "[temporal]") {

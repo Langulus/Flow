@@ -1,5 +1,6 @@
 #pragma once
-#include <LangulusFlow.hpp>
+#include <Flow/Resolvable.hpp>
+#include <Flow/Factory.hpp>
 
 using namespace Langulus;
 using namespace Langulus::Flow;

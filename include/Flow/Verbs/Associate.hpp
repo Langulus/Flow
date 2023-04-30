@@ -17,7 +17,7 @@ namespace Langulus::Verbs
    /// depending on the context's complexity                                  
    struct Associate : StaticVerb<Associate> {
       LANGULUS(POSITIVE_VERB) "Associate";
-      LANGULUS(NEGATIVE_VERB) "Disassocate";
+      LANGULUS(NEGATIVE_VERB) "Disassociate";
       LANGULUS(POSITIVE_OPERATOR) " = ";
       LANGULUS(NEGATIVE_OPERATOR) " ~ ";
       LANGULUS(PRECEDENCE) 2;

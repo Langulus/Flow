@@ -7,6 +7,7 @@
 ///                                                                           
 #include "Verb.hpp"
 #include "verbs/Interpret.inl"
+#include "Resolvable.hpp" //todo remove this
 
 #define DELEGATION_VERBOSE(a) pcLogSelfVerbose << a
 
@@ -60,6 +61,11 @@ namespace Langulus::Flow
    constexpr Charge& Charge::operator ^= (const Real& scalar) noexcept {
       mFrequency *= scalar;
       return *this;
+   }
+
+   /// Verb destructor                                                        
+   Verb::~Verb() {
+
    }
 
    /// Hash the verb                                                          

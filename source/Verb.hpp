@@ -109,6 +109,8 @@ namespace Langulus::Flow
       template<CT::Data HEAD, CT::Data... TAIL>
       Verb(HEAD&&, TAIL&&...) requires (sizeof...(TAIL) >= 1);
 
+      LANGULUS_API(FLOW) ~Verb();
+
       LANGULUS_API(FLOW) Verb& operator = (const Verb&);
       LANGULUS_API(FLOW) Verb& operator = (Verb&&);
       template<CT::Semantic S>
@@ -120,8 +122,11 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) Verb& operator *= (const Real&) noexcept;
       LANGULUS_API(FLOW) Verb& operator ^= (const Real&) noexcept;
 
-      NOD() LANGULUS_API(FLOW) explicit operator Code() const;
-      NOD() LANGULUS_API(FLOW) explicit operator Debug() const;
+      NOD() LANGULUS_API(FLOW)
+      explicit operator Code() const;
+
+      NOD() LANGULUS_API(FLOW)
+      explicit operator Debug() const;
 
       template<CT::Dense T>
       bool GenericAvailableFor() const noexcept;
@@ -141,13 +146,21 @@ namespace Langulus::Flow
       NOD() static Verb From(DATA&&, const Charge& = {}, const VerbState& = {});
       template<CT::Data DATA>
       NOD() static Verb FromMeta(VMeta, DATA&&, const Charge& = {}, const VerbState& = {});
-      NOD() LANGULUS_API(FLOW) static Verb FromMeta(VMeta, const Charge& = {}, const VerbState& = {});
 
-      NOD() LANGULUS_API(FLOW) Hash GetHash() const;
-      NOD() LANGULUS_API(FLOW) Verb PartialCopy() const noexcept;
+      NOD() LANGULUS_API(FLOW)
+      static Verb FromMeta(VMeta, const Charge& = {}, const VerbState& = {});
+
+      NOD() LANGULUS_API(FLOW)
+      Hash GetHash() const;
+
+      NOD() LANGULUS_API(FLOW)
+      Verb PartialCopy() const noexcept;
+
       LANGULUS_API(FLOW) void Reset();
 
-      NOD() LANGULUS_API(FLOW) bool VerbIs(VMeta) const noexcept;
+      NOD() LANGULUS_API(FLOW)
+      bool VerbIs(VMeta) const noexcept;
+
       template<CT::Data... T>
       NOD() bool VerbIs() const noexcept;
 

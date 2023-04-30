@@ -24,8 +24,6 @@ namespace Langulus::Flow
 {
 
    using namespace Anyness;
-   using Anyness::Inner::Allocator;
-
    using RTTI::VMeta;
    using RTTI::TMeta;
    using RTTI::DMeta;

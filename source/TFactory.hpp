@@ -28,7 +28,7 @@ namespace Langulus::Flow
 
 
    ///                                                                        
-   /// Normalized data container                                              
+   ///   Normalized data container                                            
    ///                                                                        
    struct Normalized {
       // Verbs will always be ordered in the order they appear          
@@ -128,6 +128,7 @@ namespace Langulus::Flow
 
       TFactory(Producer*);
       TFactory& operator = (TFactory&&) noexcept;
+      ~TFactory() SAFETY_NOEXCEPT();
 
    public:
       void Reset();
@@ -151,6 +152,8 @@ namespace Langulus::Flow
       NOD() ConstIterator begin() const noexcept;
       NOD() ConstIterator end() const noexcept;
       NOD() ConstIterator last() const noexcept;
+
+      DEBUGGERY(void Dump() const);
    };
 
    template<class T>
@@ -158,7 +161,7 @@ namespace Langulus::Flow
 
 
    ///                                                                        
-   /// An element, that is factory produced (used as CRTP)                    
+   ///   An element, that is factory produced (used as CRTP)                  
    ///                                                                        
    template<class T>
    class ProducedFrom {
@@ -206,8 +209,10 @@ namespace Langulus::Flow
 
    public:
       Element() = delete;
+
       Element(TFactory*, const Any&);
       Element(Element&&) = default;
+      ~Element() SAFETY_NOEXCEPT();
    };
 
 

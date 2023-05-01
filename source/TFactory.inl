@@ -7,9 +7,7 @@
 ///                                                                           
 #pragma once
 #include "TFactory.hpp"
-#ifdef LANGULUS_ENABLE_SAFE_MODE
-   #include "verbs/Interpret.inl"
-#endif
+#include "verbs/Interpret.inl"
 
 #define TEMPLATE()   template<class T, FactoryUsage USAGE>
 #define FACTORY()    TFactory<T, USAGE>

@@ -89,4 +89,8 @@ struct Producible : Referenced, ProducedFrom<Producer> {
    bool operator == (const Producible& rhs) const {
       return mDescriptor == rhs.mDescriptor;
    }
+
+   operator Debug () const {
+      return "Producible";
+   }
 };

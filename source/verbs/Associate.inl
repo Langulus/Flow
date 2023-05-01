@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include <Flow/Verbs/Associate.hpp>
+#include "../Verb.inl"
 
 #define VERBOSE_ASSOCIATE(a) //Logger::Verbose() << a
 

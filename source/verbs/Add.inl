@@ -8,6 +8,7 @@
 #pragma once
 #include "Arithmetic.inl"
 #include <Flow/Verbs/Add.hpp>
+#include "../Verb.inl"
 
 #define VERBOSE_ADD(a) //Logger::Verbose() << a
 

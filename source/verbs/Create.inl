@@ -10,6 +10,8 @@
 #include "Select.inl"
 #include <Anyness/TUnorderedMap.hpp>
 #include <Flow/Verbs/Create.hpp>
+#include <Flow/Verbs/Interpret.hpp>
+#include "../Verb.inl"
 
 #define VERBOSE_CREATION(a) //Logger::Verbose() << a
 #define VERBOSE_SCOPES(a) Logger::Verbose() << a

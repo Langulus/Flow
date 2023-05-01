@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include <Flow/Verbs/Select.hpp>
+#include "../Verb.inl"
 
 #define VERBOSE_SELECT(a) //Logger::Verbose() << a
 

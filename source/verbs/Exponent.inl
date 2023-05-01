@@ -8,6 +8,7 @@
 #pragma once
 #include "Arithmetic.inl"
 #include <Flow/Verbs/Exponent.hpp>
+#include "../Verb.inl"
 
 #define VERBOSE_MUL(a) //Logger::Verbose() << a
 

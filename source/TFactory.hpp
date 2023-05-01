@@ -153,7 +153,7 @@ namespace Langulus::Flow
       NOD() ConstIterator end() const noexcept;
       NOD() ConstIterator last() const noexcept;
 
-      DEBUGGERY(void Dump() const);
+      SAFETY(void Dump() const);
    };
 
    template<class T>

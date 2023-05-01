@@ -672,7 +672,7 @@ namespace Langulus::Flow
 
             if (result.IsSparse()) {
                // Allocate a separate block for the elements            
-               const auto temporary = Allocator::Allocate(byteSize);
+               const auto temporary = Fractalloc.Allocate(nullptr, byteSize);
                auto start = temporary->GetBlockStart();
                ::std::memcpy(start, source.At(read), byteSize);
                read += byteSize;

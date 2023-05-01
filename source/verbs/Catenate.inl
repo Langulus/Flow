@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include <Flow/Verbs/Catenate.hpp>
+#include "../Verb.inl"
 
 namespace Langulus
 {

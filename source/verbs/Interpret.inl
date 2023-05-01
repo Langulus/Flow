@@ -19,6 +19,7 @@
 #include <Anyness/Ref.hpp>
 #include <fmt/chrono.h>
 #include <Flow/Verbs/Interpret.hpp>
+#include "../Verb.inl"
 
 #define VERBOSE_CONVERSION(a) //Logger::Verbose() << a
 

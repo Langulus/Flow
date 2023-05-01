@@ -358,6 +358,7 @@ namespace Langulus::Flow
    #endif   // LANGULUS_FEATURE(MANAGED_REFLECTION)
    }
 
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
    /// Disambiguate a keyword                                                 
    ///   @param progress - current position in input                          
    ///   @param input - the input code (used only for debugging)              
@@ -373,6 +374,7 @@ namespace Langulus::Flow
          PRETTY_ERROR("Unknown keyword: ", keyword);
       }
    }
+#endif
 
    /// Peek inside input, and return true if first symbol is a digit, or a    
    /// minus followed by a digit                                              

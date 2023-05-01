@@ -372,5 +372,3 @@ namespace Langulus::Verbs
    struct Do;
 
 } // namespace Langulus::Verbs
-
-#include "Verb.inl"

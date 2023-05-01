@@ -118,7 +118,9 @@ namespace Langulus::Flow
          NOD() static Offset Parse(const Code&, Any&, bool allowCharge = true);
          NOD() static bool Peek(const Code&) noexcept;
          NOD() static Token Isolate(const Code&) noexcept;
-         NOD() static const RTTI::Meta* Disambiguate(Offset, const Code&, const Token&);
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            NOD() static const RTTI::Meta* Disambiguate(Offset, const Code&, const Token&);
+         #endif
       };
 
       /// Parser for skipping expressions                                     

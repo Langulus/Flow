@@ -4,6 +4,7 @@
 #include <Flow/Verbs/Create.hpp>
 #include <Flow/Verbs/Select.hpp>
 #include <Flow/Verbs/Catenate.hpp>
+#include <Flow/Verbs/Conjunct.hpp>
 #include <Flow/Verbs/Add.hpp>
 #include <Flow/Verbs/Exponent.hpp>
 #include <Flow/Verbs/Multiply.hpp>

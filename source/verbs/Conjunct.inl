@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include <Flow/Verbs/Conjunct.hpp>
+#include "../Verb.inl"
 
 namespace Langulus::Verbs
 {

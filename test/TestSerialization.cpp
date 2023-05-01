@@ -1,4 +1,5 @@
 #include "Main.hpp"
+#include <Flow/Verbs/Interpret.hpp>
 #include <catch2/catch.hpp>
 
 SCENARIO("Serialization", "[serialization]") {

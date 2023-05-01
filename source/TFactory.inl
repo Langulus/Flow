@@ -7,7 +7,9 @@
 ///                                                                           
 #pragma once
 #include "TFactory.hpp"
-#include "verbs/Interpret.inl"
+#ifdef LANGULUS_ENABLE_SAFE_MODE
+   #include "verbs/Interpret.inl"
+#endif
 
 #define TEMPLATE()   template<class T, FactoryUsage USAGE>
 #define FACTORY()    TFactory<T, USAGE>
@@ -67,12 +69,14 @@ namespace Langulus::Flow
    /// Destructor for descriptor-constructible element                        
    TEMPLATE() LANGULUS(INLINED)
    FACTORY()::Element::~Element() SAFETY_NOEXCEPT() {
-      if (mData.GetReferences() != 1) {
-         Logger::Error("Unable to destroy ", mData,
-            ", it has ", mData.GetReferences(), " uses instead of 1"
-         );
-         LANGULUS_THROW(Destruct, "Unable to destroy factory element");
-      }
+      #ifdef LANGULUS_ENABLE_SAFE_MODE
+         if (mData.GetReferences() != 1) {
+            Logger::Error("Unable to destroy ", mData,
+               ", it has ", mData.GetReferences(), " uses instead of 1"
+            );
+            LANGULUS_THROW(Destruct, "Unable to destroy factory element");
+         }
+      #endif
    }
 
 
@@ -114,28 +118,29 @@ namespace Langulus::Flow
 
       mHashmap.Reset();
 
-      auto raw = mData.GetRaw();
-      const auto rawEnd = mData.GetRawEnd();
-      Count count = 0;
-      while (raw != rawEnd) {
-         if (!raw->mData.GetReferences())
-            continue;
+      #ifdef LANGULUS_ENABLE_SAFE_MODE
+         auto raw = mData.GetRaw();
+         const auto rawEnd = mData.GetRawEnd();
+         Count count = 0;
+         while (raw != rawEnd) {
+            if (!raw->mData.GetReferences())
+               continue;
 
-         if (raw->mData.GetReferences() > 1) {
-            Logger::Error("Unable to destroy ", raw->mData,
-               ", it has ", raw->mData.GetReferences(), " uses instead of 1"
-            );
-            LANGULUS_THROW(Destruct,"Unable to destroy factory");
+            if (raw->mData.GetReferences() > 1) {
+               Logger::Error("Unable to destroy ", raw->mData, ", it has ", 
+                  raw->mData.GetReferences(), " uses instead of 1");
+               LANGULUS_THROW(Destruct,"Unable to destroy factory");
+            }
+
+            ++count;
+            ++raw;
          }
 
-         ++count;
-         ++raw;
-      }
-
-      LANGULUS_ASSUME(DevAssumes, count == mCount, 
-         "Factory element(s) unaccounted for");
-      LANGULUS_ASSUME(DevAssumes, mData.GetUses() == 1, 
-         "Factory bank has ", mData.GetUses(), " uses instead of 1");
+         LANGULUS_ASSUME(DevAssumes, count == mCount, 
+            "Factory element(s) unaccounted for");
+         LANGULUS_ASSUME(DevAssumes, mData.GetUses() == 1, 
+            "Factory bank has ", mData.GetUses(), " uses instead of 1");
+      #endif
 
       mData.Reset();
       mReusable = nullptr;
@@ -148,12 +153,14 @@ namespace Langulus::Flow
       return mCount == 0;
    }
    
-#ifdef LANGULUS_ENABLE_DEBUGGING
+#ifdef LANGULUS_ENABLE_SAFE_MODE
    /// Dump the factory to the log                                            
    TEMPLATE()
    void FACTORY()::Dump() const {
       const auto scope = Logger::Special("--------- FACTORY DUMP FOR ", 
-         MetaOf<FACTORY()>(), " (", mData.GetUses(), " references): ", Logger::Tabs {});
+         MetaOf<FACTORY()>(), " (", mData.GetUses(), " references): ",
+         Logger::Tabs {}
+      );
 
       Count counter {};
       auto raw = mData.GetRaw();
@@ -201,9 +208,7 @@ namespace Langulus::Flow
                ::std::floor(construct.GetCharge().mMass * verb.GetMass())
             );
 
-            try {
-               CreateInner(verb, count, construct);
-            }
+            try { CreateInner(verb, count, construct); }
             catch (const Exception& e) {
                Logger::Error("Unable to create ", construct, " due to exception: ", e);
                return;
@@ -218,9 +223,7 @@ namespace Langulus::Flow
                ::std::floor(verb.GetMass())
             );
 
-            try {
-               CreateInner(verb, count);
-            }
+            try { CreateInner(verb, count); }
             catch (const Exception& e) {
                Logger::Error("Unable to create ", type, " due to exception: ", e);
                return;

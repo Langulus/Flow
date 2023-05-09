@@ -98,13 +98,12 @@ namespace Langulus::Flow
 
       LANGULUS_API(FLOW) Verb(const Verb&);
       LANGULUS_API(FLOW) Verb(Verb&&);
+      LANGULUS_API(FLOW) Verb(const Descriptor&);
 
       Verb(const CT::NotSemantic auto&);
       Verb(CT::NotSemantic auto&);
       Verb(CT::NotSemantic auto&&);
-
-      template<CT::Semantic S>
-      Verb(S&&);
+      Verb(CT::Semantic auto&&);
 
       template<CT::Data HEAD, CT::Data... TAIL>
       Verb(HEAD&&, TAIL&&...) requires (sizeof...(TAIL) >= 1);
@@ -113,8 +112,7 @@ namespace Langulus::Flow
 
       LANGULUS_API(FLOW) Verb& operator = (const Verb&);
       LANGULUS_API(FLOW) Verb& operator = (Verb&&);
-      template<CT::Semantic S>
-      Verb& operator = (S&&);
+      Verb& operator = (CT::Semantic auto&&);
 
       LANGULUS_API(FLOW) Verb operator * (const Real&) const;
       LANGULUS_API(FLOW) Verb operator ^ (const Real&) const;
@@ -164,34 +162,71 @@ namespace Langulus::Flow
       template<CT::Data... T>
       NOD() bool VerbIs() const noexcept;
 
-      NOD() LANGULUS_API(FLOW) const Charge& GetCharge() const noexcept;
-      NOD() LANGULUS_API(FLOW) VMeta GetVerb() const noexcept;
-      NOD() LANGULUS_API(FLOW) Real GetMass() const noexcept;
-      NOD() LANGULUS_API(FLOW) Real GetFrequency() const noexcept;
-      NOD() LANGULUS_API(FLOW) Real GetTime() const noexcept;
-      NOD() LANGULUS_API(FLOW) Real GetPriority() const noexcept;
+      NOD() LANGULUS_API(FLOW)
+      const Charge& GetCharge() const noexcept;
 
-      NOD() LANGULUS_API(FLOW) Any& GetSource() noexcept;
-      NOD() LANGULUS_API(FLOW) const Any& GetSource() const noexcept;
-      NOD() LANGULUS_API(FLOW) Any& GetArgument() noexcept;
-      NOD() LANGULUS_API(FLOW) const Any& GetArgument() const noexcept;
-      NOD() LANGULUS_API(FLOW) Any& GetOutput() noexcept;
-      NOD() LANGULUS_API(FLOW) const Any& GetOutput() const noexcept;
+      NOD() LANGULUS_API(FLOW)
+      VMeta GetVerb() const noexcept;
 
-      NOD() LANGULUS_API(FLOW) bool Validate(const Index&) const noexcept;
+      NOD() LANGULUS_API(FLOW)
+      Real GetMass() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      Real GetFrequency() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      Real GetTime() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      Real GetPriority() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      Any& GetSource() noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      const Any& GetSource() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      Any& GetArgument() noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      const Any& GetArgument() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      Any& GetOutput() noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      const Any& GetOutput() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      bool Validate(const Index&) const noexcept;
+
       LANGULUS_API(FLOW) Verb& ShortCircuit(bool) noexcept;
       LANGULUS_API(FLOW) Verb& Multicast(bool) noexcept;
       LANGULUS_API(FLOW) Verb& SetVerbState(const VerbState&) noexcept;
-      NOD() LANGULUS_API(FLOW) Token GetToken() const;
-      NOD() LANGULUS_API(FLOW) bool IsDone() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      Token GetToken() const;
+
+      NOD() LANGULUS_API(FLOW)
+      bool IsDone() const noexcept;
+
       NOD() constexpr bool IsMulticast() const noexcept;
       NOD() constexpr bool IsMonocast() const noexcept;
       NOD() constexpr bool IsShortCircuited() const noexcept;
       NOD() constexpr bool IsLongCircuited() const noexcept;
-      NOD() LANGULUS_API(FLOW) const VerbState& GetVerbState() const noexcept;
-      NOD() LANGULUS_API(FLOW) Count GetSuccesses() const noexcept;
-      NOD() LANGULUS_API(FLOW) bool IsMissing() const noexcept;
-      NOD() LANGULUS_API(FLOW) bool IsMissingDeep() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      const VerbState& GetVerbState() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      Count GetSuccesses() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      bool IsMissing() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      bool IsMissingDeep() const noexcept;
 
       LANGULUS_API(FLOW) void Done(Count) noexcept;
       LANGULUS_API(FLOW) void Done() noexcept;
@@ -224,13 +259,26 @@ namespace Langulus::Flow
       template<CT::Data T>
       Verb& SetOutput(T&&) requires CT::Mutable<T>;
 
-      NOD() LANGULUS_API(FLOW) bool operator == (const Verb&) const;
-      NOD() LANGULUS_API(FLOW) bool operator == (VMeta) const noexcept;
-      NOD() LANGULUS_API(FLOW) bool operator == (bool) const noexcept;
-      NOD() LANGULUS_API(FLOW) bool operator <  (const Verb&) const noexcept;
-      NOD() LANGULUS_API(FLOW) bool operator >  (const Verb&) const noexcept;
-      NOD() LANGULUS_API(FLOW) bool operator >= (const Verb&) const noexcept;
-      NOD() LANGULUS_API(FLOW) bool operator <= (const Verb&) const noexcept;
+      NOD() LANGULUS_API(FLOW)
+      bool operator == (const Verb&) const;
+
+      NOD() LANGULUS_API(FLOW)
+      bool operator == (VMeta) const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      bool operator == (bool) const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      bool operator <  (const Verb&) const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      bool operator >  (const Verb&) const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      bool operator >= (const Verb&) const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      bool operator <= (const Verb&) const noexcept;
 
       template<CT::Data T>
       Verb& operator << (const T&);
@@ -272,24 +320,20 @@ namespace Langulus::Flow
       StaticVerb();
       StaticVerb(const StaticVerb&);
       StaticVerb(StaticVerb&&);
+      StaticVerb(const Descriptor&);
 
-      template<CT::NotSemantic T>
-      StaticVerb(const T&);
-      template<CT::NotSemantic T>
-      StaticVerb(T&);
-      template<CT::NotSemantic T>
-      StaticVerb(T&&);
+      StaticVerb(const CT::NotSemantic auto&);
+      StaticVerb(CT::NotSemantic auto&);
+      StaticVerb(CT::NotSemantic auto&&);
 
-      template<CT::Semantic S>
-      StaticVerb(S&&);
+      StaticVerb(CT::Semantic auto&&);
 
       template<CT::Data HEAD, CT::Data... TAIL>
       StaticVerb(HEAD&&, TAIL&&...) requires (sizeof...(TAIL) >= 1);
 
       StaticVerb& operator = (const StaticVerb&);
       StaticVerb& operator = (StaticVerb&&);
-      template<CT::Semantic S>
-      StaticVerb& operator = (S&&);
+      StaticVerb& operator = (CT::Semantic auto&&);
    };
 
 

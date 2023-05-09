@@ -63,10 +63,13 @@ namespace Langulus::Flow
       return *this;
    }
 
+   /// Dedicated descriptor constructor                                       
+   ///   @param descriptor - the descriptor to use for argument               
+   Verb::Verb(const Descriptor& descriptor)
+      : Verb {static_cast<const Any&>(descriptor)} {}
+   
    /// Verb destructor                                                        
-   Verb::~Verb() {
-
-   }
+   Verb::~Verb() { }
 
    /// Hash the verb                                                          
    ///   @return the hash of the content                                      

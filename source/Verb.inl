@@ -158,30 +158,30 @@ namespace Langulus::Flow
 
    LANGULUS(INLINED)
    Verb::Verb(const Verb& other)
-      : Verb {Langulus::Copy(other)} {}
+      : Verb {Copy(other)} {}
 
    LANGULUS(INLINED)
    Verb::Verb(Verb&& other)
-      : Verb {Langulus::Move(other)} {}
+      : Verb {Move(other)} {}
 
    LANGULUS(INLINED)
    Verb::Verb(const CT::NotSemantic auto& other)
-      : Verb {Langulus::Copy(other)} {}
+      : Verb {Copy(other)} {}
 
    LANGULUS(INLINED)
    Verb::Verb(CT::NotSemantic auto& other)
-      : Verb {Langulus::Copy(other)} {}
+      : Verb {Copy(other)} {}
 
    LANGULUS(INLINED)
    Verb::Verb(CT::NotSemantic auto&& other)
-      : Verb {Langulus::Copy(other)} {}
+      : Verb {Copy(other)} {}
 
-   template<CT::Semantic S>
    LANGULUS(INLINED)
-   Verb::Verb(S&& other)
-      : Any {CT::Verb<TypeOf<S>>
+   Verb::Verb(CT::Semantic auto&& other)
+      : Any {CT::Verb<TypeOf<Decay<decltype(other)>>>
          ? Any {other.template Forward<Any>()}
          : Any {other.Forward()}} {
+      using S = Decay<decltype(other)>;
       if constexpr (CT::Verb<TypeOf<S>>) {
          Charge::operator = (other.mValue);
          mVerb = other.mValue.mVerb;
@@ -198,17 +198,17 @@ namespace Langulus::Flow
 
    LANGULUS(INLINED)
    Verb& Verb::operator = (const Verb& rhs) {
-      return operator = (Langulus::Copy(rhs));
+      return operator = (Copy(rhs));
    }
 
    LANGULUS(INLINED)
    Verb& Verb::operator = (Verb&& rhs) {
-      return operator = (Langulus::Move(rhs));
+      return operator = (Move(rhs));
    }
 
-   template<CT::Semantic S>
    LANGULUS(INLINED)
-   Verb& Verb::operator = (S&& rhs) {
+   Verb& Verb::operator = (CT::Semantic auto&& rhs) {
+      using S = Decay<decltype(rhs)>;
       if constexpr (CT::Verb<TypeOf<S>>) {
          Any::operator = (rhs.template Forward<Any>());
          Charge::operator = (rhs.mValue);
@@ -932,41 +932,44 @@ namespace Langulus::Flow
    template<class VERB>
    LANGULUS(INLINED)
    StaticVerb<VERB>::StaticVerb(const StaticVerb& other)
-      : Verb {Langulus::Copy(other)} {}
+      : Verb {Copy(other)} {}
 
    template<class VERB>
    LANGULUS(INLINED)
    StaticVerb<VERB>::StaticVerb(StaticVerb&& other)
-      : Verb {Langulus::Move(other)} {}
-
+      : Verb {Move(other)} {}
+   
    template<class VERB>
-   template<CT::NotSemantic T>
    LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb(const T& other)
-      : Verb {Langulus::Copy(other)} {
+   StaticVerb<VERB>::StaticVerb(const Descriptor& other)
+      : Verb {other} {
       SetVerb<VERB>();
    }
 
    template<class VERB>
-   template<CT::NotSemantic T>
    LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb(T& other)
-      : Verb {Langulus::Copy(other)} {
+   StaticVerb<VERB>::StaticVerb(const CT::NotSemantic auto& other)
+      : Verb {Copy(other)} {
       SetVerb<VERB>();
    }
 
    template<class VERB>
-   template<CT::NotSemantic T>
    LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb(T&& other)
-      : Verb {Langulus::Move(other)} {
+   StaticVerb<VERB>::StaticVerb(CT::NotSemantic auto& other)
+      : Verb {Copy(other)} {
       SetVerb<VERB>();
    }
 
    template<class VERB>
-   template<CT::Semantic S>
    LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb(S&& other)
+   StaticVerb<VERB>::StaticVerb(CT::NotSemantic auto&& other)
+      : Verb {Move(other)} {
+      SetVerb<VERB>();
+   }
+
+   template<class VERB>
+   LANGULUS(INLINED)
+   StaticVerb<VERB>::StaticVerb(CT::Semantic auto&& other)
       : Verb {other.Forward()} {
       SetVerb<VERB>();
    }
@@ -982,19 +985,19 @@ namespace Langulus::Flow
    template<class VERB>
    LANGULUS(INLINED)
    StaticVerb<VERB>& StaticVerb<VERB>::operator = (const StaticVerb& rhs) {
-      return operator = (Langulus::Copy(rhs));
+      return operator = (Copy(rhs));
    }
 
    template<class VERB>
    LANGULUS(INLINED)
    StaticVerb<VERB>& StaticVerb<VERB>::operator = (StaticVerb&& rhs) {
-      return operator = (Langulus::Move(rhs));
+      return operator = (Move(rhs));
    }
 
    template<class VERB>
-   template<CT::Semantic S>
    LANGULUS(INLINED)
-   StaticVerb<VERB>& StaticVerb<VERB>::operator = (S&& rhs) {
+   StaticVerb<VERB>& StaticVerb<VERB>::operator = (CT::Semantic auto&& rhs) {
+      using S = Decay<decltype(rhs)>;
       if constexpr (CT::Verb<TypeOf<S>>) {
          Any::operator = (rhs.template Forward<Any>());
          mSuccesses = rhs.mValue.mSuccesses;

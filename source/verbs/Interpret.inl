@@ -548,7 +548,7 @@ namespace Langulus::Anyness
       // If this is reached, we attempt runtime conversion by           
       // dispatching Verbs::Interpret to the first element              
       Verbs::Interpret interpreter {MetaOf<T>()};
-      if (!::Langulus::Flow::DispatchDeep(GetElementResolved(0), interpreter)) {
+      if (!Flow::DispatchDeep(GetElementResolved(0), interpreter)) {
          // Failure                                                     
          if constexpr (FATAL_FAILURE)
             LANGULUS_THROW(Convert, "Unable to AsCast");

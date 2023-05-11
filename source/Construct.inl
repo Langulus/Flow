@@ -30,13 +30,13 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    Construct::Construct(S&& other) requires (CT::Exact<TypeOf<S>, Construct>)
       : Any {other.template Forward<Any>()}
-      , Charge {other.mValue}
-      , mType {other.mValue.mType}
-      , mHash {other.mValue.mHash} {
+      , Charge {*other}
+      , mType {other->mType}
+      , mHash {other->mHash} {
       if constexpr (S::Move && S::Keep) {
-         other.mValue.ResetCharge();
-         other.mValue.mType = nullptr;
-         other.mValue.mHash = {};
+         other->ResetCharge();
+         other->mType = nullptr;
+         other->mHash = {};
       }
    }
 

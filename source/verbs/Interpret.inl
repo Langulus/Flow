@@ -9,6 +9,7 @@
 #include "../Scope.hpp"
 #include "../Serial.hpp"
 #include "../Time.hpp"
+#include "../Construct.hpp"
 #include "Do.inl"
 
 #include <Anyness/View/Any.hpp>
@@ -21,7 +22,7 @@
 #include <Flow/Verbs/Interpret.hpp>
 #include "../Verb.inl"
 
-#define VERBOSE_CONVERSION(a) //Logger::Verbose() << a
+#define VERBOSE_CONVERSION(...) // Logger::Verbose(__VA_ARGS__)
 
 namespace Langulus::Verbs
 {
@@ -518,53 +519,4 @@ namespace fmt
 
 } // namespace fmt
 
-namespace Langulus::Anyness
-{
-
-   /// Define the otherwise undefined Langulus::Anyness::Block::AsCast        
-   /// to use the interpret verb pipeline for runtime conversion              
-   ///   @tparam T - the type to convert to                                   
-   ///   @tparam FATAL_FAILURE - true to throw on failure, otherwise          
-   ///                           return a default-initialized T on fail       
-   ///   @return the first element, converted to T                            
-   template<CT::Data T, bool FATAL_FAILURE>
-   T Block::AsCast() const {
-      if (IsEmpty()) {
-         if constexpr (FATAL_FAILURE)
-            LANGULUS_THROW(Convert, "Unable to AsCast, container is empty");
-         else if constexpr (CT::Defaultable<T>)
-            return {};
-         else {
-            LANGULUS_ERROR(
-               "Unable to AsCast to non-default-constructible type, "
-               "when lack of FATAL_FAILURE demands it");
-         }
-      }
-
-      // Attempt pointer arithmetic conversion first                    
-      try { return As<T>(); }
-      catch (const Except::Access&) {}
-         
-      // If this is reached, we attempt runtime conversion by           
-      // dispatching Verbs::Interpret to the first element              
-      Verbs::Interpret interpreter {MetaOf<T>()};
-      if (!Flow::DispatchDeep(GetElementResolved(0), interpreter)) {
-         // Failure                                                     
-         if constexpr (FATAL_FAILURE)
-            LANGULUS_THROW(Convert, "Unable to AsCast");
-         else if constexpr (CT::Defaultable<T>)
-            return {};
-         else {
-            LANGULUS_ERROR(
-               "Unable to AsCast to non-default-constructible type, "
-               "when lack of FATAL_FAILURE demands it");
-         }
-      }
-
-      // Success                                                        
-      return interpreter.GetOutput().As<T>();
-   }
-
-} // namespace Langulus::Anyness
-
-
+#undef VERBOSE_CONVERSION

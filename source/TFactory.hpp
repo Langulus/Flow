@@ -6,9 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "Verb.hpp"
-#include <Anyness/TUnorderedSet.hpp>
-#include <Anyness/TUnorderedMap.hpp>
+#include "Normalized.hpp"
 
 namespace Langulus::Flow
 {
@@ -25,42 +23,6 @@ namespace Langulus::Flow
    template<class T>
    concept FactoryProducible = CT::Producible<T>
       && !CT::Abstract<T> && CT::Dense<T> && CT::Referencable<T>;
-
-
-   ///                                                                        
-   ///   Normalized data container                                            
-   ///                                                                        
-   struct Normalized {
-      // Verbs will always be ordered in the order they appear          
-      // Their contents will be normalized all the way through          
-      TAny<Verb> mVerbs;
-      // Traits are ordered first by their trait type, then by their    
-      // order of appearance. Duplicate trait types are allowed         
-      // Trait contents are also normalized all the way through         
-      TUnorderedMap<TMeta, TAny<Trait>> mTraits;
-      // Metas are ordered by their hash, duplicates are discarded      
-      TUnorderedSet<DMeta> mMetaDatas;
-      TUnorderedSet<TMeta> mMetaTraits;
-      TUnorderedSet<CMeta> mMetaConstants;
-      TUnorderedSet<VMeta> mMetaVerbs;
-      // Subconstructs are sorted first by the construct type, and then 
-      // by their order of appearance. Their contents are also          
-      // nest-normalized all the way through                            
-      TUnorderedMap<DMeta, TAny<Construct>> mConstructs;
-      // Any other block type that doesn't fit in the above is sorted   
-      // first by the block type, then by the order of appearance       
-      // All sub-blocks are normalized all the way through              
-      TUnorderedMap<DMeta, TAny<Any>> mAnythingElse;
-
-      mutable Hash mHash;
-
-   public:
-      Normalized(const Any&);
-
-      NOD() Hash GetHash() const;
-
-      bool operator == (const Normalized&) const;
-   };
 
 
    ///                                                                        

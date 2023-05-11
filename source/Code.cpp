@@ -15,6 +15,7 @@
 #include "verbs/Add.inl"
 #include "verbs/Multiply.inl"
 #include "verbs/Exponent.inl"
+#include "verbs/Create.inl"
 
 #define ENABLE_VERBOSE() 0
 

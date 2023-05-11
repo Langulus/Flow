@@ -13,8 +13,7 @@
 #include <Flow/Verbs/Interpret.hpp>
 #include "../Verb.inl"
 
-#define VERBOSE_CREATION(a) //Logger::Verbose() << a
-#define VERBOSE_SCOPES(a) Logger::Verbose() << a
+#define VERBOSE_CREATION(...) //Logger::Verbose(__VA_ARGS__)
 
 namespace Langulus::Verbs
 {
@@ -125,13 +124,61 @@ namespace Langulus::Verbs
    /// Stateless creation of any type without a producer                      
    ///   @param verb - the creation verb                                      
    ///   @return true if verb was satisfied                                   
-   inline bool Create::ExecuteStateless(Verb&) {
-      /*if (verb.IsEmpty() || verb.GetMass() < 0)
+   inline bool Create::ExecuteStateless(Verb& verb) {
+      if (verb.IsEmpty() || verb.GetMass() <= 0)
          return false;
 
-      //TODO create only
-      return true;*/
-      return false;
+      const auto createInner = [&](const Construct& descriptor) {
+         // Charged creation of a type                                  
+         const auto type = descriptor.GetType();
+         const auto count = static_cast<Count>(descriptor.GetCharge().mMass * verb.GetMass());
+         auto result = Any::FromMeta(type);
+
+         if (type->mDescriptorConstructor && !descriptor.IsEmpty()) {
+            for (Offset i = 0; i < count; ++i) {
+               if (count != 1) {
+                  VERBOSE_CREATION(Logger::Yellow,
+                     "Charged creation (descriptor-constructed) - creating ",
+                     i + 1, " of ", count
+                  );
+               }
+               result.Emplace(descriptor.GetArgument());
+            }
+         }
+         else if (type->mDefaultConstructor) {
+            for (Offset i = 0; i < count; ++i) {
+               if (count != 1) {
+                  VERBOSE_CREATION(Logger::Yellow,
+                     "Charged creation (default-constructed) - creating ",
+                     i + 1, " of ", count
+                  );
+               }
+               result.Emplace();
+            }
+         }
+         else LANGULUS_THROW(Construct,
+            "Requested data is not default- nor descriptor-constructible");
+
+         verb << Abandon(result);
+      };
+
+      // Scan the request                                               
+      verb.ForEachDeep([&](const Block& group) {
+         group.ForEach(
+            [&](const Construct& construct) {
+               if (construct.GetCharge().mMass > 0) {
+                  VERBOSE_CREATION("Creating: ", Logger::Yellow, construct);
+                  createInner(construct);
+               }
+            },
+            [&](const MetaData* type) {
+               VERBOSE_CREATION("Creating: ", Logger::Yellow, type->mToken);
+               createInner(Construct {type});
+            }
+         );
+      });
+
+      return verb.IsDone();
    }
 
    /// Set members in all elements inside context to the provided data        
@@ -240,3 +287,64 @@ namespace Langulus::Verbs
    }
 
 } // namespace Langulus::Verbs
+
+namespace Langulus::Anyness
+{
+
+   /// Define the otherwise undefined Langulus::Anyness::Block::AsCast        
+   /// to use the interpret verb pipeline for runtime conversion              
+   ///   @tparam T - the type to convert to                                   
+   ///   @tparam FATAL_FAILURE - true to throw on failure, otherwise          
+   ///                           return a default-initialized T on fail       
+   ///   @return the first element, converted to T                            
+   template<CT::Data T, bool FATAL_FAILURE>
+   T Block::AsCast() const {
+      // Attempt pointer arithmetic conversion first                    
+      try { return As<T>(); }
+      catch (const Except::Access&) {}
+
+      // If this is reached, we attempt runtime conversion by           
+      // invoking descriptor constructor of T, with this container      
+      // as the set of arguments                                        
+      const auto meta = MetaData::Of<T>();
+      Verbs::Create creator {Flow::Construct {meta, *this}};
+      if (Verbs::Create::ExecuteStateless(creator)) {
+         // Success                                                     
+         return creator.GetOutput().As<T>();
+      }
+
+      if (IsEmpty()) {
+         if constexpr (FATAL_FAILURE)
+            LANGULUS_THROW(Convert, "Unable to AsCast, container is empty");
+         else if constexpr (CT::Defaultable<T>)
+            return {};
+         else {
+            LANGULUS_ERROR(
+               "Unable to AsCast to non-default-constructible type, "
+               "when lack of FATAL_FAILURE demands it");
+         }
+      }
+
+      // Alternatively, we attempt runtime conversion by                
+      // dispatching Verbs::Interpret to the first element              
+      Verbs::Interpret interpreter {meta};
+      if (Flow::DispatchDeep(GetElementResolved(0), interpreter)) {
+         // Success                                                     
+         return interpreter.GetOutput().As<T>();
+      }
+
+      // Failure if reached                                             
+      if constexpr (FATAL_FAILURE)
+         LANGULUS_THROW(Convert, "Unable to AsCast");
+      else if constexpr (CT::Defaultable<T>)
+         return {};
+      else {
+         LANGULUS_ERROR(
+            "Unable to AsCast to non-default-constructible type, "
+            "when lack of FATAL_FAILURE demands it");
+      }
+   }
+
+} // namespace Langulus::Anyness
+
+#undef VERBOSE_CREATION

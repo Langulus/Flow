@@ -9,7 +9,7 @@
 #include <Flow/Verbs/Associate.hpp>
 #include "../Verb.inl"
 
-#define VERBOSE_ASSOCIATE(a) //Logger::Verbose() << a
+#define VERBOSE_ASSOCIATE(...) //Logger::Verbose(__VA_ARGS__)
 
 namespace Langulus::Verbs
 {
@@ -93,3 +93,4 @@ namespace Langulus::Verbs
 
 } // namespace Langulus::Verbs
 
+#undef VERBOSE_ASSOCIATE

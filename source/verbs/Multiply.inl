@@ -10,7 +10,7 @@
 #include <Flow/Verbs/Multiply.hpp>
 #include "../Verb.inl"
 
-#define VERBOSE_MUL(a) //Logger::Verbose() << a
+#define VERBOSE_MUL(...) //Logger::Verbose(__VA_ARGS__)
 
 namespace Langulus::Verbs
 {
@@ -189,3 +189,4 @@ namespace Langulus::Verbs
 
 } // namespace Langulus::Verbs
 
+#undef VERBOSE_MUL

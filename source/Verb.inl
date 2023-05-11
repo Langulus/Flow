@@ -183,11 +183,11 @@ namespace Langulus::Flow
          : Any {other.Forward()}} {
       using S = Decay<decltype(other)>;
       if constexpr (CT::Verb<TypeOf<S>>) {
-         Charge::operator = (other.mValue);
-         mVerb = other.mValue.mVerb;
-         mState = other.mValue.mState;
-         mSource = S::Nest(other.mValue.mSource);
-         mOutput = S::Nest(other.mValue.mOutput);
+         Charge::operator = (*other);
+         mVerb = other->mVerb;
+         mState = other->mState;
+         mSource = S::Nest(other->mSource);
+         mOutput = S::Nest(other->mOutput);
       }
    }
 
@@ -211,11 +211,11 @@ namespace Langulus::Flow
       using S = Decay<decltype(rhs)>;
       if constexpr (CT::Verb<TypeOf<S>>) {
          Any::operator = (rhs.template Forward<Any>());
-         Charge::operator = (rhs.mValue);
-         mVerb = rhs.mValue.mVerb;
-         mState = rhs.mValue.mState;
-         mSource = S::Nest(rhs.mValue.mSource);
-         mOutput = S::Nest(rhs.mValue.mOutput);
+         Charge::operator = (*rhs);
+         mVerb = rhs->mVerb;
+         mState = rhs->mState;
+         mSource = S::Nest(rhs->mSource);
+         mOutput = S::Nest(rhs->mOutput);
       }
       else LANGULUS_ERROR("Bad verb assignment");
       return *this;
@@ -1000,10 +1000,10 @@ namespace Langulus::Flow
       using S = Decay<decltype(rhs)>;
       if constexpr (CT::Verb<TypeOf<S>>) {
          Any::operator = (rhs.template Forward<Any>());
-         mSuccesses = rhs.mValue.mSuccesses;
-         mState = rhs.mValue.mState;
-         mSource = S::Nest(rhs.mValue.mSource);
-         mOutput = S::Nest(rhs.mValue.mOutput);
+         mSuccesses = rhs->mSuccesses;
+         mState = rhs->mState;
+         mSource = S::Nest(rhs->mSource);
+         mOutput = S::Nest(rhs->mOutput);
       }
       else LANGULUS_ERROR("Bad verb assignment");
       return *this;

@@ -10,7 +10,7 @@
 #include <Flow/Verbs/Add.hpp>
 #include "../Verb.inl"
 
-#define VERBOSE_ADD(a) //Logger::Verbose() << a
+#define VERBOSE_ADD(...) // Logger::Verbose(__VA_ARGS__)
 
 namespace Langulus::Verbs
 {
@@ -193,3 +193,4 @@ namespace Langulus::Verbs
 
 } // namespace Langulus::Verbs
 
+#undef VERBOSE_ADD

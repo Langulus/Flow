@@ -9,7 +9,7 @@
 #include <Flow/Verbs/Select.hpp>
 #include "../Verb.inl"
 
-#define VERBOSE_SELECT(a) //Logger::Verbose() << a
+#define VERBOSE_SELECT(...) //Logger::Verbose(__VA_ARGS__)
 
 namespace Langulus::Verbs
 {
@@ -220,3 +220,5 @@ namespace Langulus::Verbs
    };
 
 } // namespace Langulus::Verbs
+
+#undef VERBOSE_SELECT

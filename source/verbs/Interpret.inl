@@ -269,19 +269,14 @@ namespace fmt
 
       template<class CONTEXT>
       LANGULUS(INLINED)
-         auto format(T const& meta, CONTEXT& ctx) {
-         using namespace ::Langulus;
-         using namespace ::Langulus::Flow;
-
+      auto format(T const& meta, CONTEXT& ctx) {
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
-               meta.GetShortestUnambiguousToken()
-            ));
+            auto asView = meta.GetShortestUnambiguousToken();
          #else
-            return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
-               meta.mToken
-            ));
+            auto asView = meta.mToken;
          #endif
+
+         return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(asView));
       }
    };
 
@@ -322,9 +317,9 @@ namespace fmt
          using namespace ::Langulus;
          using namespace ::Langulus::Flow;
 
-         Debug asText {element.operator Debug()};
-         return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
-            static_cast<Logger::TextView>(asText)));
+         auto asText = element.operator Debug();
+         auto asView = static_cast<Logger::TextView>(asText);
+         return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(asView));
       }
    };
 
@@ -343,8 +338,8 @@ namespace fmt
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
          const auto asText = Verbs::Interpret::To<Flow::Debug>(element);
-         return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
-            static_cast<Logger::TextView>(asText)));
+         auto asView = static_cast<Logger::TextView>(asText);
+         return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(asView));
       }
    };
       

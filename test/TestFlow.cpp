@@ -217,7 +217,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "Create!-1(Verb(?, ??))";
       TAny<Any> package {pastMissing, futureMissing};
       const Any required = Verbs::Create {
-         Construct::From<Verb>(package)
+         Any {Verb{package}}
       }.SetPriority(-1);
 
       WHEN("Parsed") {

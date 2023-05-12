@@ -129,6 +129,11 @@ namespace Langulus::Verbs
          return false;
 
       const auto createInner = [&](const Construct& descriptor) {
+         if (descriptor.IsMissingDeep()) {
+            // Creation of missing stuff is not allowed                 
+            return;
+         }
+
          // Charged creation of a type                                  
          const auto type = descriptor.GetType();
          const auto count = static_cast<Count>(descriptor.GetCharge().mMass * verb.GetMass());
@@ -164,6 +169,11 @@ namespace Langulus::Verbs
 
       // Scan the request                                               
       verb.ForEachDeep([&](const Block& group) {
+         if (group.IsMissing()) {
+            // Creation of missing stuff is not allowed                 
+            return;
+         }
+
          group.ForEach(
             [&](const Construct& construct) {
                if (construct.GetCharge().mMass > 0) {

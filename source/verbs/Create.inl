@@ -150,7 +150,7 @@ namespace Langulus::Verbs
                result.Emplace(descriptor.GetArgument());
             }
          }
-         else if (type->mDefaultConstructor) {
+         else if (type->mDefaultConstructor && descriptor.IsEmpty()) {
             for (Offset i = 0; i < count; ++i) {
                if (count != 1) {
                   VERBOSE_CREATION(Logger::Yellow,
@@ -161,8 +161,10 @@ namespace Langulus::Verbs
                result.Emplace();
             }
          }
-         else LANGULUS_THROW(Construct,
-            "Requested data is not default- nor descriptor-constructible");
+         else {
+            Logger::Error("Can't statelessly produce ", descriptor);
+            return;
+         }
 
          verb << Abandon(result);
       };

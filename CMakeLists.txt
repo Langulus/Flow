@@ -49,6 +49,6 @@ target_compile_definitions(LangulusFlow
 )
 
 if(LANGULUS_ENABLE_TESTING)
+    enable_testing()
 	add_subdirectory(test)
-    langulus_copy_dlls(LangulusFlowTest ON LangulusFlow)
 endif()

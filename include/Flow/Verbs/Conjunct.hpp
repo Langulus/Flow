@@ -35,8 +35,8 @@ namespace Langulus::Verbs
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
-      LANGULUS_API(FLOW) static bool ExecuteDefault(const Block&, Verb&);
-      LANGULUS_API(FLOW) static bool ExecuteStateless(Verb&);
+      static bool ExecuteDefault(const Block&, Verb&);
+      static bool ExecuteStateless(Verb&);
    };
 }
 

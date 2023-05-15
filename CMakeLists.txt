@@ -1,55 +1,54 @@
-cmake_minimum_required(VERSION 3.22)
-project(Langulus.Flow)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+cmake_minimum_required(VERSION 3.24)
+project(LangulusFlow)
 
 # Check if this project is built as standalone, or a part of something else 
-if (PROJECT_IS_TOP_LEVEL)
-    if(LANGULUS_BUILD_SHARED_LIBRARIES)
-        add_compile_definitions(LANGULUS_EXPORT_ALL)
-        set(LANGULUS_LIBRARY_TYPE SHARED)
-    else()
-        set(LANGULUS_LIBRARY_TYPE STATIC)
-    endif()
-
+if(PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
+    # Populate the cmake directory											
     include(LangulusUtilities.cmake)
-    langulus_init_git_submodule(cmake)
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-    include(FetchLangulusModule)
-    include(HandleLangulusFeatures)
+    langulus_fetch_cmake()
 
+    # Handle feature flags and global definitions/requirements				
+    include(HandleLangulusFeatures)
     handle_langulus_features()
 
+    # Add Langulus::Core/Logger/RTTI/SIMD/Anyness libraries                 
+    include(FetchLangulusModule)
 	fetch_langulus_module(Core)
 	fetch_langulus_module(Logger)
 	fetch_langulus_module(RTTI)
 	fetch_langulus_module(SIMD)
 	fetch_langulus_module(Anyness)
-
-    add_compile_definitions(LANGULUS_ENABLE_TESTING)
-    enable_testing()
-	add_subdirectory(test)
 endif()
 
 # Build and install Flow library                                            
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source LANGULUS_FLOW_SOURCES)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/verbs LANGULUS_FLOW_SOURCES)
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/inner LANGULUS_FLOW_SOURCES)
-add_library(Langulus.Flow ${LANGULUS_LIBRARY_TYPE} ${LANGULUS_FLOW_SOURCES})
+add_library(LangulusFlow ${LANGULUS_LIBRARY_TYPE}
+    $<TARGET_OBJECTS:LangulusLogger>
+    $<TARGET_OBJECTS:LangulusRTTI>
+    $<TARGET_OBJECTS:LangulusAnyness>
+    source/Code.cpp
+    source/Construct.cpp
+    source/Scope.cpp
+    source/Temporal.cpp
+    source/Verb.cpp
+)
 
-if (MSVC)
-    target_compile_options(Langulus.Flow PRIVATE /bigobj)
-endif()
-
-target_include_directories(Langulus.Flow
+target_include_directories(LangulusFlow
     PUBLIC      include
+                $<TARGET_PROPERTY:LangulusLogger,INTERFACE_INCLUDE_DIRECTORIES>
+                $<TARGET_PROPERTY:LangulusRTTI,INTERFACE_INCLUDE_DIRECTORIES>
+                $<TARGET_PROPERTY:LangulusAnyness,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-target_link_libraries(Langulus.Flow
-    PUBLIC      Langulus.Core
-                Langulus.Logger
-                Langulus.RTTI
-                Langulus.SIMD
-                Langulus.Anyness
+target_link_libraries(LangulusFlow
+    PUBLIC      LangulusCore
+                fmt
 )
+
+target_compile_definitions(LangulusFlow
+    PRIVATE     LANGULUS_EXPORT_ALL
+)
+
+if(LANGULUS_ENABLE_TESTING)
+	add_subdirectory(test)
+    langulus_copy_dlls(LangulusFlowTest ON LangulusFlow)
+endif()

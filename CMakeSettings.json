@@ -21,6 +21,16 @@
           "name": "LANGULUS_FEATURE_MANAGED_REFLECTION",
           "value": "ON",
           "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_ENABLE_TESTING",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_BUILD_SHARED_LIBRARIES",
+          "value": "ON",
+          "type": "BOOL"
         }
       ]
     },
@@ -45,6 +55,16 @@
           "name": "LANGULUS_FEATURE_MANAGED_REFLECTION",
           "value": "OFF",
           "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_ENABLE_TESTING",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_BUILD_SHARED_LIBRARIES",
+          "value": "ON",
+          "type": "BOOL"
         }
       ]
     },
@@ -66,6 +86,16 @@
         },
         {
           "name": "LANGULUS_FEATURE_MANAGED_REFLECTION",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_ENABLE_TESTING",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_BUILD_SHARED_LIBRARIES",
           "value": "ON",
           "type": "BOOL"
         }
@@ -93,6 +123,16 @@
           "name": "LANGULUS_FEATURE_MANAGED_REFLECTION",
           "value": "ON",
           "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_ENABLE_TESTING",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_BUILD_SHARED_LIBRARIES",
+          "value": "ON",
+          "type": "BOOL"
         }
       ]
     },
@@ -114,6 +154,16 @@
         },
         {
           "name": "LANGULUS_FEATURE_MANAGED_REFLECTION",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_ENABLE_TESTING",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_BUILD_SHARED_LIBRARIES",
           "value": "ON",
           "type": "BOOL"
         }
@@ -139,6 +189,16 @@
           "name": "LANGULUS_FEATURE_MANAGED_REFLECTION",
           "value": "ON",
           "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_ENABLE_TESTING",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_BUILD_SHARED_LIBRARIES",
+          "value": "ON",
+          "type": "BOOL"
         }
       ]
     },
@@ -162,6 +222,16 @@
           "name": "LANGULUS_FEATURE_MANAGED_REFLECTION",
           "value": "ON",
           "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_ENABLE_TESTING",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_BUILD_SHARED_LIBRARIES",
+          "value": "ON",
+          "type": "BOOL"
         }
       ]
     },
@@ -183,6 +253,16 @@
         },
         {
           "name": "LANGULUS_FEATURE_MANAGED_REFLECTION",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_ENABLE_TESTING",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_BUILD_SHARED_LIBRARIES",
           "value": "ON",
           "type": "BOOL"
         }
@@ -210,6 +290,16 @@
           "name": "LANGULUS_FEATURE_MANAGED_REFLECTION",
           "value": "ON",
           "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_ENABLE_TESTING",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_BUILD_SHARED_LIBRARIES",
+          "value": "ON",
+          "type": "BOOL"
         }
       ]
     },
@@ -233,6 +323,16 @@
           "name": "LANGULUS_FEATURE_MANAGED_REFLECTION",
           "value": "ON",
           "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_ENABLE_TESTING",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_BUILD_SHARED_LIBRARIES",
+          "value": "ON",
+          "type": "BOOL"
         }
       ]
     },
@@ -254,6 +354,16 @@
         },
         {
           "name": "LANGULUS_FEATURE_MANAGED_REFLECTION",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_ENABLE_TESTING",
+          "value": "ON",
+          "type": "BOOL"
+        },
+        {
+          "name": "LANGULUS_BUILD_SHARED_LIBRARIES",
           "value": "ON",
           "type": "BOOL"
         }

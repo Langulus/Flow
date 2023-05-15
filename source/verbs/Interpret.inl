@@ -256,11 +256,12 @@ namespace Langulus
 
 namespace fmt
 {
+   using namespace ::Langulus;
 
    ///                                                                        
    /// Extend FMT to be capable of logging any meta definition                
    ///                                                                        
-   template<::Langulus::CT::Meta T>
+   template<CT::Meta T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -276,7 +277,7 @@ namespace fmt
             auto asView = meta.mToken;
          #endif
 
-         return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(asView));
+         return fmt::format_to(ctx.out(), "{}", asView);
       }
    };
 
@@ -284,7 +285,7 @@ namespace fmt
    /// Extend FMT to be capable of logging Flow::Time                         
    ///                                                                        
    template<>
-   struct formatter<::Langulus::Flow::Time> {
+   struct formatter<Flow::Time> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
          return ctx.begin();
@@ -292,10 +293,9 @@ namespace fmt
 
       template<class CONTEXT>
       LANGULUS(INLINED)
-      auto format(::Langulus::Flow::Time const& element, CONTEXT& ctx) {
-         using namespace ::Langulus;
-         return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
-            static_cast<const Flow::Time::Base&>(element)));
+      auto format(Flow::Time const& element, CONTEXT& ctx) {
+         return fmt::format_to(ctx.out(), "{}", 
+            static_cast<const Flow::Time::Base&>(element));
       }
    };
    
@@ -304,7 +304,7 @@ namespace fmt
    /// convertible to a Debug string by an explicit or implicit conversion    
    /// operator.                                                              
    ///                                                                        
-   template<::Langulus::CT::Debuggable T>
+   template<CT::Debuggable T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -314,19 +314,16 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
-         using namespace ::Langulus;
-         using namespace ::Langulus::Flow;
-
-         auto asText = element.operator Debug();
-         auto asView = static_cast<Logger::TextView>(asText);
-         return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(asView));
+         auto asText = element.operator Anyness::Debug();
+         return fmt::format_to(ctx.out(), "{}",
+            static_cast<Logger::TextView>(asText));
       }
    };
 
    ///                                                                        
    /// Extend FMT to be capable of logging anything CT::Deep                  
    ///                                                                        
-   template<::Langulus::CT::Deep T>
+   template<CT::Deep T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -336,17 +333,16 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
-         using namespace ::Langulus;
          const auto asText = Verbs::Interpret::To<Flow::Debug>(element);
-         auto asView = static_cast<Logger::TextView>(asText);
-         return fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(asView));
+         return fmt::format_to(ctx.out(), "{}",
+            static_cast<Logger::TextView>(asText));
       }
    };
       
    ///                                                                        
    /// Extend FMT to be capable of logging any trait                          
    ///                                                                        
-   template<::Langulus::CT::Trait T>
+   template<CT::Trait T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -356,19 +352,18 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
-         using namespace ::Langulus;
          const auto type = element.GetTrait();
-         return fmt::vformat_to(ctx.out(), "{}({})", fmt::make_format_args(
+         return fmt::format_to(ctx.out(), "{}({})", 
             (type ? type->mToken : RTTI::MetaTrait::DefaultToken),
             static_cast<const Anyness::Any&>(element)
-         ));
+         );
       }
    };
       
    ///                                                                        
    /// Extend FMT to be capable of logging any pair                           
    ///                                                                        
-   template<::Langulus::CT::Pair T>
+   template<CT::Pair T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -378,18 +373,17 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
-         using namespace ::Langulus;
-         return fmt::vformat_to(ctx.out(), "Pair({}, {})", fmt::make_format_args(
+         return fmt::vformat_to(ctx.out(), "Pair({}, {})", 
             DenseCast(element.mKey), 
             DenseCast(element.mValue)
-         ));
+         );
       }
    };
    
    ///                                                                        
    /// Extend FMT to be capable of logging any map                            
    ///                                                                        
-   template<::Langulus::CT::Map T>
+   template<CT::Map T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -399,29 +393,27 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
-         using namespace ::Langulus;
-         fmt::vformat_to(ctx.out(), "Map(", make_format_args());
-
+         fmt::format_to(ctx.out(), "Map(");
          bool first = true;
          for (auto pair : element) {
             if (!first)
-               fmt::vformat_to(ctx.out(), ", ", fmt::make_format_args());
+               fmt::format_to(ctx.out(), ", ");
             first = false;
 
-            fmt::vformat_to(ctx.out(), "({}, {})", fmt::make_format_args(
+            fmt::format_to(ctx.out(), "({}, {})",
                DenseCast(pair.mKey),
                DenseCast(pair.mValue)
-            ));
+            );
          }
 
-         return fmt::vformat_to(ctx.out(), ")", make_format_args());
+         return fmt::format_to(ctx.out(), ")");
       }
    };
    
    ///                                                                        
    /// Extend FMT to be capable of logging any set                            
    ///                                                                        
-   template<::Langulus::CT::Set T>
+   template<CT::Set T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -431,28 +423,24 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
-         using namespace ::Langulus;
-         fmt::vformat_to(ctx.out(), "Set(", make_format_args());
-
+         fmt::format_to(ctx.out(), "Set(");
          bool first = true;
          for (auto key : element) {
             if (!first)
-               fmt::vformat_to(ctx.out(), ", ", fmt::make_format_args());
+               fmt::format_to(ctx.out(), ", ");
             first = false;
 
-            fmt::vformat_to(ctx.out(), "{}", fmt::make_format_args(
-               DenseCast(key)
-            ));
+            fmt::format_to(ctx.out(), "{}", DenseCast(key));
          }
 
-         return fmt::vformat_to(ctx.out(), ")", make_format_args());
+         return fmt::format_to(ctx.out(), ")");
       }
    };
 
    ///                                                                        
    /// Extend FMT to be capable of logging any owned values                   
    ///                                                                        
-   template<::Langulus::CT::Owned T>
+   template<CT::Owned T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -462,24 +450,20 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
-         using namespace ::Langulus;
          if constexpr (CT::Sparse<TypeOf<T>>) {
             if (element == nullptr) {
                const auto type = element.GetType();
-               if (type) {
-                  return fmt::vformat_to(ctx.out(), "{}(null)",
-                     fmt::make_format_args(*type));
-               }
-               else return fmt::vformat_to(ctx.out(), "null",
-                  fmt::make_format_args());
+               if (type)
+                  return fmt::format_to(ctx.out(), "{}(null)", *type);
+               else
+                  return fmt::format_to(ctx.out(), "null");
             }
-            else return fmt::vformat_to(ctx.out(), "{}",
-               fmt::make_format_args(*element.Get()));
+            else return fmt::format_to(ctx.out(), "{}", *element.Get());
          }
          else {
-            static_assert(CT::Dense<decltype(element.Get())>, "T not dense, but not sparse either????");
-            return fmt::vformat_to(ctx.out(), "{}",
-               fmt::make_format_args(element.Get()));
+            static_assert(CT::Dense<decltype(element.Get())>,
+               "T not dense, but not sparse either????");
+            return fmt::format_to(ctx.out(), "{}", element.Get());
          }
       }
    };
@@ -487,7 +471,7 @@ namespace fmt
    ///                                                                        
    /// Extend FMT to be capable of logging any shared pointers                
    ///                                                                        
-   template<::Langulus::CT::Pointer T>
+   template<CT::Pointer T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -497,18 +481,14 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
-         using namespace ::Langulus;
          if (element == nullptr) {
             const auto type = element.GetType();
-            if (type) {
-               return fmt::vformat_to(ctx.out(), "{}(null)",
-                  fmt::make_format_args(*type));
-            }
-            else return fmt::vformat_to(ctx.out(), "null",
-               fmt::make_format_args());
+            if (type)
+               return fmt::format_to(ctx.out(), "{}(null)", *type);
+            else
+               return fmt::format_to(ctx.out(), "null");
          }
-         else return fmt::vformat_to(ctx.out(), "{}",
-            fmt::make_format_args(*element.Get()));
+         else return fmt::format_to(ctx.out(), "{}", *element.Get());
       }
    };
 

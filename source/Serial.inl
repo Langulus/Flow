@@ -102,7 +102,7 @@ namespace Langulus::Flow
 
       // If this is reached, then we weren't able to serialize the item 
       // to the desired type                                            
-      throw Except::Convert("Can't serialize");
+      LANGULUS_THROW(Convert, "Can't serialize");
    }
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)

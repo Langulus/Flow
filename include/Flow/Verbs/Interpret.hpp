@@ -32,7 +32,7 @@ namespace Langulus::Verbs
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
-      LANGULUS_API(FLOW) static bool ExecuteDefault(const Block&, Verb&);
+      static bool ExecuteDefault(const Block&, Verb&);
    };
    
    /// Statically optimized interpret verb                                    

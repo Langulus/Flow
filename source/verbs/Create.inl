@@ -1,4 +1,4 @@
-///                                                                           
+//                                                                           
 /// Langulus::Flow                                                            
 /// Copyright(C) 2017 Dimo Markov <langulusteam@gmail.com>                    
 ///                                                                           
@@ -14,6 +14,7 @@
 #include "../Verb.inl"
 
 #define VERBOSE_CREATION(...) //Logger::Verbose(__VA_ARGS__)
+#define ERROR_CREATION(...) //Logger::Error(__VA_ARGS__)
 
 namespace Langulus::Verbs
 {
@@ -147,7 +148,14 @@ namespace Langulus::Verbs
                      i + 1, " of ", count
                   );
                }
-               result.Emplace(descriptor.GetArgument());
+
+               try {
+                  result.Emplace(descriptor.GetArgument());
+               }
+               catch (...) {
+                  ERROR_CREATION("Can't statelessly produce ", descriptor);
+                  return;
+               }
             }
          }
          else if (type->mDefaultConstructor && descriptor.IsEmpty()) {
@@ -158,11 +166,18 @@ namespace Langulus::Verbs
                      i + 1, " of ", count
                   );
                }
-               result.Emplace();
+
+               try {
+                  result.Emplace();
+               }
+               catch (...) {
+                  ERROR_CREATION("Can't statelessly produce ", descriptor);
+                  return;
+               }
             }
          }
          else {
-            Logger::Error("Can't statelessly produce ", descriptor);
+            ERROR_CREATION("Can't statelessly produce ", descriptor);
             return;
          }
 
@@ -311,6 +326,18 @@ namespace Langulus::Anyness
    ///   @return the first element, converted to T                            
    template<CT::Data T, bool FATAL_FAILURE>
    T Block::AsCast() const {
+      if (IsEmpty()) {
+         if constexpr (FATAL_FAILURE)
+            LANGULUS_THROW(Convert, "Unable to AsCast, container is empty");
+         else if constexpr (CT::Defaultable<T>)
+            return {};
+         else {
+            LANGULUS_ERROR(
+               "Unable to AsCast to non-default-constructible type, "
+               "when lack of FATAL_FAILURE demands it");
+         }
+      }
+
       // Attempt pointer arithmetic conversion first                    
       try { return As<T>(); }
       catch (const Except::Access&) {}
@@ -323,18 +350,6 @@ namespace Langulus::Anyness
       if (Verbs::Create::ExecuteStateless(creator)) {
          // Success                                                     
          return creator.GetOutput().As<T>();
-      }
-
-      if (IsEmpty()) {
-         if constexpr (FATAL_FAILURE)
-            LANGULUS_THROW(Convert, "Unable to AsCast, container is empty");
-         else if constexpr (CT::Defaultable<T>)
-            return {};
-         else {
-            LANGULUS_ERROR(
-               "Unable to AsCast to non-default-constructible type, "
-               "when lack of FATAL_FAILURE demands it");
-         }
       }
 
       // Alternatively, we attempt runtime conversion by                
@@ -360,3 +375,4 @@ namespace Langulus::Anyness
 } // namespace Langulus::Anyness
 
 #undef VERBOSE_CREATION
+#undef ERROR_CREATION

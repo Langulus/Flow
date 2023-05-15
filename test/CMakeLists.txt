@@ -1,4 +1,4 @@
-project(Langulus::Flow::Test)
+project(LangulusFlowTest)
 
 add_executable(LangulusFlowTest
 	Main.cpp
@@ -17,7 +17,7 @@ target_link_libraries(LangulusFlowTest
 )
 
 add_test(
-	NAME		Langulus::Flow::Test
+	NAME		LangulusFlowTest
 	COMMAND		LangulusFlowTest
 )
 

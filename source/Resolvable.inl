@@ -247,7 +247,7 @@ namespace Langulus::Flow
    ///   @param trait - the trait to search for                               
    ///   @return the static mutable memory block representing the member      
    LANGULUS(INLINED)
-      Block Resolvable::GetMember(const Token& trait) noexcept {
+   Block Resolvable::GetMember(const Token& trait) noexcept {
       return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait));
    }
 
@@ -255,7 +255,7 @@ namespace Langulus::Flow
    ///   @param trait - the trait to search for                               
    ///   @return the static constant memory block representing the member     
    LANGULUS(INLINED)
-      Block Resolvable::GetMember(const Token& trait) const noexcept {
+   Block Resolvable::GetMember(const Token& trait) const noexcept {
       return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait));
    }
 

@@ -174,7 +174,7 @@ namespace Langulus::Flow
 
       Element(TFactory*, const Any&);
       Element(Element&&) = default;
-      ~Element() SAFETY_NOEXCEPT();
+      ~Element();
    };
 
 

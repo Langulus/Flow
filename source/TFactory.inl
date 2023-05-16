@@ -66,15 +66,15 @@ namespace Langulus::Flow
    
    /// Destructor for descriptor-constructible element                        
    TEMPLATE() LANGULUS(INLINED)
-   FACTORY()::Element::~Element() SAFETY_NOEXCEPT() {
-      #ifdef LANGULUS_ENABLE_SAFE_MODE
+   FACTORY()::Element::~Element() {
+      /*#ifdef LANGULUS_ENABLE_SAFE_MODE
          if (mData.GetReferences() != 1) {
             Logger::Error("Unable to destroy ", mData,
                ", it has ", mData.GetReferences(), " uses instead of 1"
             );
             LANGULUS_THROW(Destruct, "Unable to destroy factory element");
          }
-      #endif
+      #endif*/
    }
 
 
@@ -116,30 +116,35 @@ namespace Langulus::Flow
 
       mHashmap.Reset();
 
-      #ifdef LANGULUS_ENABLE_SAFE_MODE
-         auto raw = mData.GetRaw();
-         const auto rawEnd = mData.GetRawEnd();
-         Count count = 0;
-         while (raw != rawEnd) {
-            if (!raw->mData.GetReferences())
-               continue;
-
-            if (raw->mData.GetReferences() > 1) {
-               Logger::Error("Unable to destroy ", raw->mData, ", it has ", 
-                  raw->mData.GetReferences(), " uses instead of 1");
-               LANGULUS_THROW(Destruct,"Unable to destroy factory");
-            }
-
-            ++count;
-            ++raw;
+      // Destroy only elements that have a single reference             
+      // Some of the elements might be used in other modules, and their 
+      // destruction, as well as the destruction of the mData.mEntry    
+      // will commence automatically after their use have ceased.       
+      auto raw = mData.GetRaw();
+      const auto rawEnd = mData.GetRawEnd();
+      //Count count = 0;
+      while (raw != rawEnd) {
+         if (raw->mData.GetReferences() != 1) {
+            /*Logger::Error("Unable to destroy ", raw->mData, ", it has ",
+               raw->mData.GetReferences(), " uses instead of 1");
+            LANGULUS_THROW(Destruct, "Unable to destroy factory");*/
+            continue;
          }
 
-         LANGULUS_ASSUME(DevAssumes, count == mCount, 
-            "Factory element(s) unaccounted for");
-         LANGULUS_ASSUME(DevAssumes, mData.GetUses() == 1, 
-            "Factory bank has ", mData.GetUses(), " uses instead of 1");
-      #endif
+         // Destroy the element                                         
+         raw->~Element();
 
+         //++count;
+         ++raw;
+      }
+
+      /*LANGULUS_ASSUME(DevAssumes, count == mCount, 
+         "Factory element(s) unaccounted for");
+      LANGULUS_ASSUME(DevAssumes, mData.GetUses() == 1, 
+         "Factory bank has ", mData.GetUses(), " uses instead of 1");*/
+
+      // Make sure no more destructors are called upon Any::Reset()     
+      mData.mCount = 0;
       mData.Reset();
       mReusable = nullptr;
       mCount = 0;

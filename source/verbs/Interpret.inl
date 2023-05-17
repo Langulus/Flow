@@ -340,6 +340,26 @@ namespace fmt
    };
       
    ///                                                                        
+   /// Extend FMT to be capable of logging Descriptor (same as CT::Deep)      
+   ///                                                                        
+   template<>
+   struct formatter<Anyness::Descriptor> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(INLINED)
+      auto format(Anyness::Descriptor const& element, CONTEXT& ctx) {
+         const auto asText = Verbs::Interpret::To<Flow::Debug>(
+            static_cast<const Anyness::Any&>(element));
+         return fmt::format_to(ctx.out(), "{}",
+            static_cast<Logger::TextView>(asText));
+      }
+   };
+      
+   ///                                                                        
    /// Extend FMT to be capable of logging any trait                          
    ///                                                                        
    template<CT::Trait T>

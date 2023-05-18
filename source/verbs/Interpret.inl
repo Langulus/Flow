@@ -118,7 +118,7 @@ namespace Langulus::Verbs
          // Always interpreted as deserialization                       
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             if constexpr (CT::SameAsOneOf<FROM, Code, Bytes>)
-               return Serializer::Deserialize(from);
+               return Flow::Deserialize(from);
             else
                LANGULUS_ERROR("No deserializer exists between these types");
          #else
@@ -144,7 +144,7 @@ namespace Langulus::Verbs
          // No constructor/conversion operator exists, that would do    
          // the conversion, but we can rely on the serializer,          
          // if TO is supported                                          
-         return Serializer::Serialize<TO>(from);
+         return Flow::Serialize<TO>(from);
       }
       else LANGULUS_ERROR(
          "No static conversion routine, or dynamic serializer "

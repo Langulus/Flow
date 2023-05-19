@@ -343,7 +343,7 @@ namespace Langulus::Anyness
                }
                else {
                   Logger::Error("Can't serialize block of type ",
-                     GetToken(), " to ", RTTI::NameOf<TO>());
+                     GetToken(), " to ", NameOf<TO>());
                   LANGULUS_THROW(Convert, "Can't serialize block to text");
                }
             }

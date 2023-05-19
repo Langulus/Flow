@@ -32,28 +32,15 @@ namespace Langulus::Flow
       : mParent {parent}
       , mState {state} { }
 
+   /// Serialize temporal as Code                                             
    Temporal::operator Code() const {
       return IdentityOf(this);
    }
 
+   /// Serialize temporal as debug string                                     
    Temporal::operator Debug() const {
       return IdentityOf(this);
    }
-
-   /// Clone the flow, but fork the parent flow, if any                       
-   ///   @return the cloned flow                                              
-   /*Temporal Temporal::Clone() const {
-      Temporal clone;
-      // Note, that the parent flow is never cloned                     
-      clone.mFrequencyStack = mFrequencyStack.Clone();
-      clone.mTimeStack = mTimeStack.Clone();
-      clone.mPriorityStack = mPriorityStack.Clone();
-      clone.mPreviousTime = mPreviousTime;
-      clone.mCurrentTime = mCurrentTime;
-      clone.mDuration = mDuration;
-      clone.mState = mState;
-      return clone;
-   }*/
 
    /// Reset progress for the priority stack                                  
    void Temporal::Reset() {

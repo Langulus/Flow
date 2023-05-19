@@ -94,12 +94,17 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) Temporal& operator = (Temporal&&) noexcept = default;
 
    public:
-      NOD() LANGULUS_API(FLOW) operator Code() const;
-      NOD() LANGULUS_API(FLOW) operator Debug() const;
+      NOD() LANGULUS_API(FLOW)
+      operator Code() const;
 
-      NOD() LANGULUS_API(FLOW) bool operator == (const Temporal&) const;
+      NOD() LANGULUS_API(FLOW)
+      operator Debug() const;
 
-      NOD() LANGULUS_API(FLOW) bool IsValid() const;
+      NOD() LANGULUS_API(FLOW)
+      bool operator == (const Temporal&) const;
+
+      NOD() LANGULUS_API(FLOW)
+      bool IsValid() const;
 
       LANGULUS_API(FLOW) void Merge(const Temporal&);
       LANGULUS_API(FLOW) bool Push(Any);

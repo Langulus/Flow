@@ -50,7 +50,6 @@ namespace Langulus::Flow
       Construct(DMeta, T&, const Charge& = {});
       template<CT::NotSemantic T = Any>
       Construct(DMeta, T&&, const Charge& = {});
-
       template<CT::Semantic S>
       Construct(DMeta, S&&, const Charge& = {});
 
@@ -62,7 +61,6 @@ namespace Langulus::Flow
          Construct(const Token&, T&, const Charge& = {});
          template<CT::NotSemantic T = Any>
          Construct(const Token&, T&&, const Charge& = {});
-
          template<CT::Semantic S>
          Construct(const Token&, S&&, const Charge& = {});
       #endif
@@ -72,11 +70,15 @@ namespace Langulus::Flow
       template<CT::Semantic S>
       Construct& operator = (S&&) requires (CT::Exact<TypeOf<S>, Construct>);
 
-      NOD() LANGULUS_API(FLOW) explicit operator Code() const;
-      NOD() LANGULUS_API(FLOW) explicit operator Debug() const;
+      NOD() LANGULUS_API(FLOW)
+      explicit operator Code() const;
+
+      NOD() LANGULUS_API(FLOW)
+      explicit operator Debug() const;
 
    public:
-      NOD() LANGULUS_API(FLOW) Hash GetHash() const;
+      NOD() LANGULUS_API(FLOW)
+      Hash GetHash() const;
 
       template<CT::Data T, CT::Data HEAD, CT::Data... TAIL>
       NOD() static Construct From(HEAD&&, TAIL&&...);
@@ -86,7 +88,8 @@ namespace Langulus::Flow
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          template<CT::Data HEAD, CT::Data... TAIL>
          NOD() static Construct FromToken(const Token&, HEAD&&, TAIL&&...);
-         NOD() LANGULUS_API(FLOW) static Construct FromToken(const Token&);
+         NOD() LANGULUS_API(FLOW)
+         static Construct FromToken(const Token&);
       #endif
 
    private:
@@ -96,27 +99,44 @@ namespace Langulus::Flow
       using Any::FromState;
 
    public:
-      NOD() LANGULUS_API(FLOW) bool operator == (const Construct&) const;
+      NOD() LANGULUS_API(FLOW)
+      bool operator == (const Construct&) const;
 
-      NOD() LANGULUS_API(FLOW) bool StaticCreation(Any&) const;
+      NOD() LANGULUS_API(FLOW)
+      bool StaticCreation(Any&) const;
 
-      NOD() LANGULUS_API(FLOW) bool CastsTo(DMeta type) const;
+      NOD() LANGULUS_API(FLOW)
+      bool CastsTo(DMeta type) const;
+
       template<CT::Data T>
       NOD() bool CastsTo() const;
 
-      NOD() LANGULUS_API(FLOW) bool Is(DMeta) const;
+      NOD() LANGULUS_API(FLOW)
+      bool Is(DMeta) const;
+
       template<CT::Data T>
       NOD() bool Is() const;
 
-      NOD() LANGULUS_API(FLOW) const Any& GetArgument() const noexcept;
-      NOD() LANGULUS_API(FLOW) Any& GetArgument() noexcept;
+      NOD() LANGULUS_API(FLOW)
+      const Any& GetArgument() const noexcept;
 
-      NOD() LANGULUS_API(FLOW) const Charge& GetCharge() const noexcept;
-      NOD() LANGULUS_API(FLOW) Charge& GetCharge() noexcept;
+      NOD() LANGULUS_API(FLOW)
+      Any& GetArgument() noexcept;
 
-      NOD() LANGULUS_API(FLOW) DMeta GetType() const noexcept;
-      NOD() LANGULUS_API(FLOW) Token GetToken() const noexcept;
-      NOD() LANGULUS_API(FLOW) DMeta GetProducer() const noexcept;
+      NOD() LANGULUS_API(FLOW)
+      const Charge& GetCharge() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      Charge& GetCharge() noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      DMeta GetType() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      Token GetToken() const noexcept;
+
+      NOD() LANGULUS_API(FLOW)
+      DMeta GetProducer() const noexcept;
 
       LANGULUS_API(FLOW) void Clear();
       LANGULUS_API(FLOW) void ResetCharge() noexcept;

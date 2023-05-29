@@ -27,12 +27,7 @@ namespace Langulus::Flow
       // Traits are ordered first by their trait type, then by their    
       // order of appearance. Duplicate trait types are allowed         
       // Trait contents are also normalized all the way through         
-      TUnorderedMap<TMeta, TAny<Trait>> mTraits;
-      // Metas are ordered by their hash, duplicates are discarded      
-      TUnorderedSet<DMeta> mMetaDatas;
-      TUnorderedSet<TMeta> mMetaTraits;
-      TUnorderedSet<CMeta> mMetaConstants;
-      TUnorderedSet<VMeta> mMetaVerbs;
+      TUnorderedMap<TMeta, TAny<Any>> mTraits;
       // Subconstructs are sorted first by the construct type, and then 
       // by their order of appearance. Their contents are also          
       // nest-normalized all the way through                            
@@ -60,6 +55,19 @@ namespace Langulus::Flow
       NOD() Hash GetHash() const;
 
       bool operator == (const Normalized&) const;
+
+      void Merge(const Normalized&);
+
+      template<CT::Trait T>
+      const TAny<Trait>* GetTraits();
+      template<CT::Trait T>
+      const TAny<Trait>* GetTraits() const;
+
+      template<CT::Trait T, CT::Data D>
+      void SetDefaultTrait(D&&);
+
+      template<CT::Trait T, CT::Data D>
+      void OverwriteTrait(D&&);
    };
 
 } // namespace Langulus::Flow

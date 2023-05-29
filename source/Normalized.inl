@@ -19,10 +19,6 @@ namespace Langulus::Flow
    Normalized::Normalized(S&& other)
       : mVerbs {S::Nest(other->mVerbs)}
       , mTraits {S::Nest(other->mTraits)}
-      , mMetaDatas {S::Nest(other->mMetaDatas)}
-      , mMetaTraits {S::Nest(other->mMetaTraits)}
-      , mMetaConstants {S::Nest(other->mMetaConstants)}
-      , mMetaVerbs {S::Nest(other->mMetaVerbs)}
       , mConstructs {S::Nest(other->mConstructs)}
       , mAnythingElse {S::Nest(other->mAnythingElse)}
       , mHash {other->mHash} {
@@ -59,27 +55,36 @@ namespace Langulus::Flow
                
                // Normalize trait contents and push sort it by its      
                // trait type                                            
-               mTraits[trait.GetTrait()] << Trait::From(
-                  trait.GetTrait(), Normalized {trait}
-               );
+               mTraits[trait.GetTrait()] << Normalized {trait};
             },
             [this](const MetaData* type) {
-               mMetaDatas << type;
+               // Insert an empty Construct to signify solo type ID     
+               mConstructs[type] << Construct {type};
             },
             [this](const MetaTrait* type) {
-               mMetaTraits << type;
+               // Insert an empty Any to signify trait without content  
+               mTraits[type] << Any {};
             },
             [this](const MetaConst* type) {
-               mMetaConstants << type;
+               // Expand the constant, then normalize, and merge it     
+               Any wrapped = Block {
+                  DataState::Constrained, 
+                  type->mValueType, 1,
+                  type->mPtrToValue, nullptr
+               };
+
+               // Clone it, so that we take authority over the data     
+               Any cloned = Clone(wrapped);
+               Merge(Normalized {cloned});
             },
             [this](const MetaVerb* type) {
-               mMetaVerbs << type;
+               // Insert an empty verb to signify solo verb ID          
+               mVerbs << Verb::FromMeta(type);
             },
             [this](const Construct& construct) {
                // Normalize contents and push sort it by type           
                mConstructs[construct.GetType()] << Construct {
-                  construct.GetType(), 
-                  Normalized {construct}
+                  construct.GetType(), Normalized {construct}
                };
             }
          )) return;
@@ -102,10 +107,6 @@ namespace Langulus::Flow
 
       mVerbs = S::Nest(other->mVerbs);
       mTraits = S::Nest(other->mTraits);
-      mMetaDatas = S::Nest(other->mMetaDatas);
-      mMetaTraits = S::Nest(other->mMetaTraits);
-      mMetaConstants = S::Nest(other->mMetaConstants);
-      mMetaVerbs = S::Nest(other->mMetaVerbs);
       mConstructs = S::Nest(other->mConstructs);
       mAnythingElse = S::Nest(other->mAnythingElse);
       mHash = other->mHash;
@@ -124,16 +125,7 @@ namespace Langulus::Flow
          return mHash;
 
       // Cache hash so we don't recompute it all the time               
-      mHash = HashOf(
-         mVerbs,
-         mTraits,
-         mMetaDatas,
-         mMetaTraits,
-         mMetaConstants,
-         mMetaVerbs,
-         mConstructs,
-         mAnythingElse
-      );
+      mHash = HashOf(mVerbs, mTraits, mConstructs, mAnythingElse);
       return mHash;
    }
 
@@ -147,12 +139,71 @@ namespace Langulus::Flow
 
       return mVerbs == rhs.mVerbs
          && mTraits == rhs.mTraits
-         && mMetaDatas == rhs.mMetaDatas
-         && mMetaTraits == rhs.mMetaTraits
-         && mMetaConstants == rhs.mMetaConstants
-         && mMetaVerbs == rhs.mMetaVerbs
          && mConstructs == rhs.mConstructs
          && mAnythingElse == rhs.mAnythingElse;
+   }
+
+   /// Merge two normalized descriptors                                       
+   ///   @param rhs - the descriptor to merge                                 
+   LANGULUS(INLINED)
+   void Normalized::Merge(const Normalized& rhs) {
+      mVerbs += rhs.mVerbs;
+      mTraits += rhs.mTraits;
+      mConstructs += rhs.mConstructs;
+      mAnythingElse += rhs.mAnythingElse;
+
+      // Rehash                                                         
+      mHash = HashOf(mVerbs, mTraits, mConstructs, mAnythingElse);
+   }
+
+   /// Get list of traits, corresponding to a type                            
+   ///   @tparam T - trait type to search for                                 
+   ///   @return the trait list, or nullptr if no such list exists            
+   ///   @attention the list can be empty, if trait was provided with no      
+   ///              contents                                                  
+   template<CT::Trait T>
+   LANGULUS(INLINED)
+   const TAny<Trait>* Normalized::GetTraits() {
+      auto found = mTraits.FindKeyIndex(MetaTrait::Of<T>());
+      if (!found)
+         return nullptr;
+      else return &mTraits.GetValue(found);
+   }
+
+   /// Get list of traits, corresponding to a type (const)                    
+   ///   @tparam T - trait type to search for                                 
+   ///   @return the trait list, or nullptr if no such list exists            
+   ///   @attention the list can be empty, if trait was provided with no      
+   ///              contents                                                  
+   template<CT::Trait T>
+   LANGULUS(INLINED)
+   const TAny<Trait>* Normalized::GetTraits() const {
+      return const_cast<Normalized*>(this)->template GetTraits<T>();
+   }
+
+   /// Set a default trait, if such wasn't already set                        
+   ///   @tparam T - trait to set                                             
+   ///   @tparam D - type of data to set it to (deducible)                    
+   ///   @param value - the value to assign                                   
+   template<CT::Trait T, CT::Data D>
+   LANGULUS(INLINED)
+   void Normalized::SetDefaultTrait(D&& value) {
+      auto found = GetTraits<T>();
+      if (found && !found->IsEmpty())
+         return;
+      *found = Forward<D>(value);
+   }
+
+   /// Overwrite trait, or add a new one, if not already set                  
+   ///   @tparam T - trait to set                                             
+   ///   @tparam D - type of data to set it to (deducible)                    
+   ///   @param value - the value to assign                                   
+   template<CT::Trait T, CT::Data D>
+   LANGULUS(INLINED)
+   void Normalized::OverwriteTrait(D&& value) {
+      // Trait was found, overwrite it                                  
+      auto meta = MetaTrait::Of<T>();
+      mTraits[meta] = Forward<D>(value);
    }
 
 } // namespace Langulus::Flow

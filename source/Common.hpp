@@ -121,13 +121,18 @@ namespace Langulus::Flow
 } // namespace Langulus::Flow
 
 LANGULUS_DEFINE_TRAIT(Mass,
-   "Mass of anything with charge, or with physical mass");
-LANGULUS_DEFINE_TRAIT(Frequency,
-   "Frequency of anything with charge, or with physical frequency");
+   "Mass of anything with charge, amplitude, or literally physical mass");
+LANGULUS_DEFINE_TRAIT(Rate,
+   "Rate of anything with charge, or with physical frequency");
 LANGULUS_DEFINE_TRAIT(Time,
    "Time of anything with charge, or with a temporal component");
 LANGULUS_DEFINE_TRAIT(Priority,
    "Priority of anything with charge, or some kind of priority");
+
+LANGULUS_DEFINE_TRAIT(Argument,
+   "For accessing parameters and arguments");
+LANGULUS_DEFINE_TRAIT(Result,
+   "For accessing the results of some operation");
 
 /// Make the rest of the code aware, that Langulus::Flow has been included    
 #define LANGULUS_LIBRARY_FLOW() 1

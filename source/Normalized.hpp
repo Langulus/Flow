@@ -59,15 +59,25 @@ namespace Langulus::Flow
       void Merge(const Normalized&);
 
       template<CT::Trait T>
-      const TAny<Trait>* GetTraits();
+      const TAny<Any>* GetTraits();
       template<CT::Trait T>
-      const TAny<Trait>* GetTraits() const;
+      const TAny<Any>* GetTraits() const;
+
+      template<CT::Data T>
+      const TAny<Any>* GetData();
+      template<CT::Data T>
+      const TAny<Any>* GetData() const;
 
       template<CT::Trait T, CT::Data D>
       void SetDefaultTrait(D&&);
 
       template<CT::Trait T, CT::Data D>
       void OverwriteTrait(D&&);
+
+      template<CT::Trait T, CT::Data D>
+      bool ExtractTrait(D&&);
+      template<CT::Data D>
+      bool ExtractData(D&&);
    };
 
 } // namespace Langulus::Flow

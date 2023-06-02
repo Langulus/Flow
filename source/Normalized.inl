@@ -163,7 +163,7 @@ namespace Langulus::Flow
    ///              contents                                                  
    template<CT::Trait T>
    LANGULUS(INLINED)
-   const TAny<Trait>* Normalized::GetTraits() {
+   const TAny<Any>* Normalized::GetTraits() {
       auto found = mTraits.FindKeyIndex(MetaTrait::Of<T>());
       if (!found)
          return nullptr;
@@ -177,8 +177,29 @@ namespace Langulus::Flow
    ///              contents                                                  
    template<CT::Trait T>
    LANGULUS(INLINED)
-   const TAny<Trait>* Normalized::GetTraits() const {
+   const TAny<Any>* Normalized::GetTraits() const {
       return const_cast<Normalized*>(this)->template GetTraits<T>();
+   }
+   
+   /// Get list of data, corresponding to a type                              
+   ///   @tparam T - type to search for                                       
+   ///   @return the data list, or nullptr if no such list exists             
+   template<CT::Data T>
+   LANGULUS(INLINED)
+   const TAny<Any>* Normalized::GetData() {
+      auto found = mAnythingElse.FindKeyIndex(MetaData::Of<T>());
+      if (!found)
+         return nullptr;
+      else return &mAnythingElse.GetValue(found);
+   }
+
+   /// Get list of data, corresponding to a type (const)                      
+   ///   @tparam T - type to search for                                       
+   ///   @return the data list, or nullptr if no such list exists             
+   template<CT::Data T>
+   LANGULUS(INLINED)
+   const TAny<Any>* Normalized::GetData() const {
+      return const_cast<Normalized*>(this)->template GetData<T>();
    }
 
    /// Set a default trait, if such wasn't already set                        
@@ -204,6 +225,47 @@ namespace Langulus::Flow
       // Trait was found, overwrite it                                  
       auto meta = MetaTrait::Of<T>();
       mTraits[meta] = Forward<D>(value);
+   }
+
+   /// Extract a trait from the descriptor                                    
+   ///   @tparam T - the trait we're searching for                            
+   ///   @tparam D - the type of the data we're extracting (deducible)        
+   ///   @param value - [out] where to save the value, if found               
+   ///   @return true if value changed                                        
+   template<CT::Trait T, CT::Data D>
+   LANGULUS(INLINED)
+   bool Normalized::ExtractTrait(D&& value) {
+      auto found = GetTraits<T>();
+      if (found) {
+         int reverseIdx = -1;
+         const int endIdx = -static_cast<int>(found->GetCount());
+         while (reverseIdx != endIdx) {
+            try {
+               value = (*found)[reverseIdx].AsCast<D>();
+               return true;
+            }
+            catch (...) {}
+         }
+         --reverseIdx;
+      }
+
+      return false;
+   }
+   
+   /// Extract data                                                           
+   ///   @tparam D - the type of the data we're extracting (deducible)        
+   ///   @param value - [out] where to save the value, if found               
+   ///   @return true if value changed                                        
+   template<CT::Data D>
+   LANGULUS(INLINED)
+   bool Normalized::ExtractData(D&& value) {
+      auto found = GetData<D>();
+      if (found) {
+         value = found->Last().template Get<D>();
+         return true;
+      }
+
+      return false;
    }
 
 } // namespace Langulus::Flow

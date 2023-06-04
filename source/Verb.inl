@@ -18,9 +18,9 @@ namespace Langulus::Flow
    ///   @param time - the time charge                                        
    ///   @param prio - the priority charge                                    
    LANGULUS(INLINED)
-   constexpr Charge::Charge(Real mass, Real freq, Real time, Real prio) noexcept
+   constexpr Charge::Charge(Real mass, Real rate, Real time, Real prio) noexcept
       : mMass {mass}
-      , mFrequency {freq}
+      , mRate {rate}
       , mTime {time}
       , mPriority {prio} {}
 
@@ -30,7 +30,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    constexpr bool Charge::operator == (const Charge& rhs) const noexcept {
       return mMass == rhs.mMass
-         && mFrequency == rhs.mFrequency
+         && mRate == rhs.mRate
          && mTime == rhs.mTime
          && mPriority == rhs.mPriority;
    }
@@ -46,7 +46,7 @@ namespace Langulus::Flow
    ///   @return true if charge is default                                    
    LANGULUS(INLINED)
    constexpr bool Charge::IsFlowDependent() const noexcept {
-      return mFrequency != DefaultFrequency
+      return mRate != mRate
          || mTime != DefaultTime
          || mPriority != DefaultPriority;
    }
@@ -55,14 +55,14 @@ namespace Langulus::Flow
    ///   @return the hash of the charge                                       
    LANGULUS(INLINED)
    Hash Charge::GetHash() const noexcept {
-      return HashOf(mMass, mFrequency, mTime, mPriority);
+      return HashOf(mMass, mRate, mTime, mPriority);
    }
 
    /// Reset the charge to the default                                        
    LANGULUS(INLINED)
    void Charge::Reset() noexcept {
       mMass = DefaultMass;
-      mFrequency = DefaultFrequency;
+      mRate = DefaultRate;
       mTime = DefaultTime;
       mPriority = DefaultPriority;
    }
@@ -156,31 +156,44 @@ namespace Langulus::Flow
       return (mState & VerbState::LongCircuited) == 0;
    }
 
+   /// Verb shallow-copy constructor                                          
+   ///   @param other - the verb to shallow-copy                              
    LANGULUS(INLINED)
    Verb::Verb(const Verb& other)
       : Verb {Copy(other)} {}
 
+   /// Verb move constructor                                                  
+   ///   @param other - the verb to move                                      
    LANGULUS(INLINED)
    Verb::Verb(Verb&& other)
       : Verb {Move(other)} {}
 
+   /// Verb argument copy-constructor                                         
+   ///   @param other - the argument to shallow-copy                          
    LANGULUS(INLINED)
    Verb::Verb(const CT::NotSemantic auto& other)
       : Verb {Copy(other)} {}
 
+   /// Verb argument copy-constructor                                         
+   ///   @param other - the argument to shallow-copy                          
    LANGULUS(INLINED)
    Verb::Verb(CT::NotSemantic auto& other)
       : Verb {Copy(other)} {}
 
+   /// Verb argument move-constructor                                         
+   ///   @param other - the argument to move                                  
    LANGULUS(INLINED)
    Verb::Verb(CT::NotSemantic auto&& other)
-      : Verb {Copy(other)} {}
+      : Verb {Move(other)} {}
 
+   /// Verb semantic-constructor                                              
+   ///   @param other - the verb/argument and semantic to construct with      
    LANGULUS(INLINED)
    Verb::Verb(CT::Semantic auto&& other)
       : Any {CT::Verb<TypeOf<Decay<decltype(other)>>>
          ? Any {other.template Forward<Any>()}
-         : Any {other.Forward()}} {
+         : Any {other.Forward()}
+      } {
       using S = Decay<decltype(other)>;
       if constexpr (CT::Verb<TypeOf<S>>) {
          Charge::operator = (*other);
@@ -191,21 +204,32 @@ namespace Langulus::Flow
       }
    }
 
+   /// Verb list-of-arguments constructor                                     
+   ///   @param head, tail... - arguments                                     
    template<CT::Data HEAD, CT::Data... TAIL>
    LANGULUS(INLINED)
    Verb::Verb(HEAD&& head, TAIL&&... tail) requires (sizeof...(TAIL) >= 1)
       : Any {Forward<HEAD>(head), Forward<TAIL>(tail)...} {}
 
+   /// Verb shallow-copy assignment                                           
+   ///   @param rhs - the verb to shallow-copy assign                         
+   ///   @return a reference to this verb                                     
    LANGULUS(INLINED)
    Verb& Verb::operator = (const Verb& rhs) {
       return operator = (Copy(rhs));
    }
 
+   /// Verb move-assignment                                                   
+   ///   @param rhs - the verb to move-assign                                 
+   ///   @return a reference to this verb                                     
    LANGULUS(INLINED)
    Verb& Verb::operator = (Verb&& rhs) {
       return operator = (Move(rhs));
    }
 
+   /// Verb semantic-assignment                                               
+   ///   @param rhs - the verb/argument and semantic to assign by             
+   ///   @return a reference to this verb                                     
    LANGULUS(INLINED)
    Verb& Verb::operator = (CT::Semantic auto&& rhs) {
       using S = Decay<decltype(rhs)>;
@@ -221,6 +245,11 @@ namespace Langulus::Flow
       return *this;
    }
 
+   /// Create a statically typed verb with charge and state                   
+   ///   @tparam VERB - the verb type                                         
+   ///   @param charge - verb charge                                          
+   ///   @param state - verb state                                            
+   ///   @return the new Verb instance                                        
    template<CT::Data VERB>
    LANGULUS(INLINED)
    Verb Verb::From(const Charge& charge, const VerbState& state) {
@@ -231,6 +260,13 @@ namespace Langulus::Flow
       return result;
    }
 
+   /// Create a statically typed verb with argument, charge and state         
+   ///   @tparam VERB - the verb type                                         
+   ///   @tparam DATA - the argument type (deducible)                         
+   ///   @param argument - argument to move in                                
+   ///   @param charge - verb charge                                          
+   ///   @param state - verb state                                            
+   ///   @return the new Verb instance                                        
    template<CT::Data VERB, CT::Data DATA>
    LANGULUS(INLINED)
    Verb Verb::From(DATA&& argument, const Charge& charge, const VerbState& state) {
@@ -242,6 +278,13 @@ namespace Langulus::Flow
       return result;
    }
 
+   /// Create a dynamically typed verb with argument, charge and state        
+   ///   @tparam DATA - the argument type (deducible)                         
+   ///   @param verb - type of the verb                                       
+   ///   @param argument - argument to move in                                
+   ///   @param charge - verb charge                                          
+   ///   @param state - verb state                                            
+   ///   @return the new Verb instance                                        
    template<CT::Data DATA>
    LANGULUS(INLINED)
    Verb Verb::FromMeta(VMeta verb, DATA&& argument, const Charge& charge, const VerbState& state) {
@@ -253,6 +296,11 @@ namespace Langulus::Flow
       return result;
    }
 
+   /// Create a dynamically typed verb with charge and state                  
+   ///   @param verb - type of the verb                                       
+   ///   @param charge - verb charge                                          
+   ///   @param state - verb state                                            
+   ///   @return the new Verb instance                                        
    LANGULUS(INLINED)
    Verb Verb::FromMeta(VMeta verb, const Charge& charge, const VerbState& state) {
       Verb result;
@@ -405,11 +453,11 @@ namespace Langulus::Flow
    }
 
    /// Set the verb frequency                                                 
-   ///   @param frequency - the frequency to set                              
+   ///   @param rate - the rate to set                                        
    ///   @return a reference to self                                          
    LANGULUS(INLINED)
-   Verb& Verb::SetFrequency(const Real frequency) noexcept {
-      mFrequency = frequency;
+   Verb& Verb::SetRate(const Real rate) noexcept {
+      mRate = rate;
       return *this;
    }
 
@@ -591,8 +639,8 @@ namespace Langulus::Flow
    /// Get the verb frequency                                                 
    ///   @return the current frequency                                        
    LANGULUS(INLINED)
-   Real Verb::GetFrequency() const noexcept {
-      return mFrequency; 
+   Real Verb::GetRate() const noexcept {
+      return mRate;
    }
 
    /// Get the verb time                                                      

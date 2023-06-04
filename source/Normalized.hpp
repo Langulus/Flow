@@ -74,10 +74,16 @@ namespace Langulus::Flow
       template<CT::Trait T, CT::Data D>
       void OverwriteTrait(D&&);
 
-      template<CT::Trait T, CT::Data D>
-      bool ExtractTrait(D&&);
+      template<CT::Trait T, CT::Data... D>
+      bool ExtractTrait(D&...);
       template<CT::Data D>
-      bool ExtractData(D&&);
+      bool ExtractData(D&);
+
+   protected:
+      template<CT::Data... D, Offset... IDX>
+      bool ExtractTraitInner(TAny<Any>&, std::integer_sequence<Offset, IDX...>, D&...);
+      template<Offset, CT::Data D>
+      bool ExtractTraitInnerInner(TAny<Any>&, D&);
    };
 
 } // namespace Langulus::Flow

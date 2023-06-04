@@ -230,25 +230,36 @@ namespace Langulus::Flow
    /// Extract a trait from the descriptor                                    
    ///   @tparam T - the trait we're searching for                            
    ///   @tparam D - the type of the data we're extracting (deducible)        
-   ///   @param value - [out] where to save the value, if found               
+   ///   @param values - [out] where to save the value, if found              
    ///   @return true if value changed                                        
-   template<CT::Trait T, CT::Data D>
+   template<CT::Trait T, CT::Data... D>
    LANGULUS(INLINED)
-   bool Normalized::ExtractTrait(D&& value) {
+   bool Normalized::ExtractTrait(D&... values) {
       auto found = GetTraits<T>();
-      if (found) {
-         int reverseIdx = -1;
-         const int endIdx = -static_cast<int>(found->GetCount());
-         while (reverseIdx != endIdx) {
-            try {
-               value = (*found)[reverseIdx].AsCast<D>();
-               return true;
-            }
-            catch (...) {}
-         }
-         --reverseIdx;
-      }
+      if (found)
+         return ExtractTraitInner(*found, ::std::make_integer_sequence<Offset, sizeof...(D)> {}, values);
+      return false;
+   }
 
+   ///                                                                        
+   template<CT::Data... D, Offset... IDX>
+   bool Normalized::ExtractTraitInner(TAny<Any>& found, ::std::integer_sequence<Offset, IDX...>, D&... values)
+   {
+      return (ExtractTraitInnerInner<IDX, D>(found, values) || ...);
+   }
+   
+   ///                                                                        
+   template<Offset IDX, CT::Data D>
+   bool Normalized::ExtractTraitInnerInner(TAny<Any>& found, D& value)
+   {
+      if (IDX >= found.GetCount())
+         return false;
+
+      try {
+         value = found[IDX].AsCast<D>();
+         return true;
+      }
+      catch (...) {}
       return false;
    }
    
@@ -258,7 +269,7 @@ namespace Langulus::Flow
    ///   @return true if value changed                                        
    template<CT::Data D>
    LANGULUS(INLINED)
-   bool Normalized::ExtractData(D&& value) {
+   bool Normalized::ExtractData(D& value) {
       auto found = GetData<D>();
       if (found) {
          value = found->Last().template Get<D>();

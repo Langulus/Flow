@@ -172,7 +172,7 @@ namespace Langulus::Flow
       Real GetMass() const noexcept;
 
       NOD() LANGULUS_API(FLOW)
-      Real GetFrequency() const noexcept;
+      Real GetRate() const noexcept;
 
       NOD() LANGULUS_API(FLOW)
       Real GetTime() const noexcept;
@@ -237,7 +237,7 @@ namespace Langulus::Flow
       Verb& SetVerb();
       LANGULUS_API(FLOW) Verb& SetVerb(VMeta) noexcept;
       LANGULUS_API(FLOW) Verb& SetMass(Real) noexcept;
-      LANGULUS_API(FLOW) Verb& SetFrequency(Real) noexcept;
+      LANGULUS_API(FLOW) Verb& SetRate(Real) noexcept;
       LANGULUS_API(FLOW) Verb& SetTime(Real) noexcept;
       LANGULUS_API(FLOW) Verb& SetPriority(Real) noexcept;
       LANGULUS_API(FLOW) Verb& SetCharge(const Charge&) noexcept;

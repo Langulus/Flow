@@ -190,11 +190,13 @@ namespace Langulus::Flow
          for (auto candidate : mHashmap.GetValue(found)) {
             if (candidate->mData.GetDescriptor() != descriptor)
                continue;
-            return candidate;    // Found                               
+            // Found                                                    
+            return candidate;
          }
       }
       
-      return nullptr;            // Not found                           
+      // Not found                                                      
+      return nullptr;
    }
 
    /// Create/Destroy element(s) inside the factory                           

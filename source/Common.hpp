@@ -79,7 +79,7 @@ namespace Langulus::Flow
       // Mass of the verb                                               
       Real mMass = DefaultMass;
       // Frequency of the verb                                          
-      Real mFrequency = DefaultFrequency;
+      Real mRate = DefaultRate;
       // Time of the verb                                               
       Real mTime = DefaultTime;
       // Priority of the verb                                           
@@ -87,7 +87,7 @@ namespace Langulus::Flow
 
    public:
       static constexpr Real DefaultMass {1};
-      static constexpr Real DefaultFrequency {0};
+      static constexpr Real DefaultRate {0};
       static constexpr Real DefaultTime {0};
 
       static constexpr Real DefaultPriority {0};
@@ -96,7 +96,7 @@ namespace Langulus::Flow
 
       constexpr Charge(
          Real = DefaultMass,
-         Real = DefaultFrequency,
+         Real = DefaultRate,
          Real = DefaultTime,
          Real = DefaultPriority
       ) noexcept;

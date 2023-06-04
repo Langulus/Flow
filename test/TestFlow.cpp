@@ -311,8 +311,8 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Any required = Verbs::Add {Real(2)}
          .SetSource(
             Verbs::Create {Traits::Count {Real(1)}}
-               .SetFrequency(1))
-         .SetFrequency(3);
+               .SetRate(1))
+         .SetRate(3);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -328,8 +328,8 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Any required = Verbs::Add {Real(2)}
          .SetSource(
             Verbs::Create {Traits::Count {Real(1)}}
-               .SetFrequency(1))
-         .SetFrequency(3);
+               .SetRate(1))
+         .SetRate(3);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -344,12 +344,12 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "Create^1(Count(1)) Add^2(2) Multiply^3(4)";
       const Any multiply = Verbs::Multiply {Real(4)}
          .SetSource(Real(2))
-         .SetFrequency(3);
+         .SetRate(3);
       const Any required = Verbs::Add {multiply}
-         .SetFrequency(2)
+         .SetRate(2)
          .SetSource(
             Verbs::Create {Traits::Count {Real(1)}}
-               .SetFrequency(1)
+               .SetRate(1)
          );
 
       WHEN("Parsed") {
@@ -366,7 +366,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Any required = Verbs::Add {Real(8)}
          .SetSource(
             Verbs::Create {Traits::Count {Real(1)}}
-               .SetFrequency(1)
+               .SetRate(1)
          );
 
       WHEN("Parsed") {

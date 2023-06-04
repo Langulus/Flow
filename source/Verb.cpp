@@ -23,9 +23,9 @@ namespace Langulus::Flow
          code += Code::Mass;
          code += Text {mMass};
       }
-      if (mFrequency != Charge::DefaultFrequency) {
-         code += Code::Frequency;
-         code += Text {mFrequency};
+      if (mRate != Charge::DefaultRate) {
+         code += Code::Rate;
+         code += Text {mRate};
       }
       if (mTime != Charge::DefaultTime) {
          code += Code::Time;
@@ -45,12 +45,12 @@ namespace Langulus::Flow
 
    /// Scale the mass of a charge                                             
    constexpr Charge Charge::operator * (const Real& scalar) const noexcept {
-      return {mMass * scalar, mFrequency, mTime, mPriority};
+      return {mMass * scalar, mRate, mTime, mPriority};
    }
 
    /// Scale the frequency of a charge                                        
    constexpr Charge Charge::operator ^ (const Real& scalar) const noexcept {
-      return {mMass, mFrequency * scalar, mTime, mPriority};
+      return {mMass, mRate * scalar, mTime, mPriority};
    }
 
    /// Scale the mass of a charge                                             
@@ -61,7 +61,7 @@ namespace Langulus::Flow
 
    /// Scale the frequency of a charge                                        
    constexpr Charge& Charge::operator ^= (const Real& scalar) noexcept {
-      mFrequency *= scalar;
+      mRate *= scalar;
       return *this;
    }
 
@@ -93,7 +93,7 @@ namespace Langulus::Flow
    ///   @return a new verb, with the modified frequency                      
    Verb Verb::operator ^ (const Real& rhs) const {
       Verb shallowCopy = *this;
-      shallowCopy.mFrequency *= rhs;
+      shallowCopy.mRate *= rhs;
       return shallowCopy;
    }
 
@@ -109,7 +109,7 @@ namespace Langulus::Flow
    ///   @param rhs - the frequency to multiply by                            
    ///   @return a reference to this verb                                     
    Verb& Verb::operator ^= (const Real& rhs) noexcept {
-      mFrequency *= rhs;
+      mRate *= rhs;
       return *this;
    }
 

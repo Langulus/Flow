@@ -36,7 +36,7 @@ namespace Langulus::Flow
          Past,
          Constant,
          Mass,
-         Frequency,
+         Rate,
          Time,
          Priority,
 

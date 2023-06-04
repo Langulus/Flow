@@ -909,8 +909,8 @@ namespace Langulus::Flow
          case Code::Mass:
             charge.mMass = asReal;
             break;
-         case Code::Frequency:
-            charge.mFrequency = asReal;
+         case Code::Rate:
+            charge.mRate = asReal;
             break;
          case Code::Time:
             charge.mTime = asReal;

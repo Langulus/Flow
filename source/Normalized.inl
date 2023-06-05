@@ -237,21 +237,19 @@ namespace Langulus::Flow
    bool Normalized::ExtractTrait(D&... values) {
       auto found = GetTraits<T>();
       if (found)
-         return ExtractTraitInner(*found, ::std::make_integer_sequence<Offset, sizeof...(D)> {}, values);
+         return ExtractTraitInner(*found, ::std::make_integer_sequence<Offset, sizeof...(D)> {}, values...);
       return false;
    }
 
    ///                                                                        
    template<CT::Data... D, Offset... IDX>
-   bool Normalized::ExtractTraitInner(TAny<Any>& found, ::std::integer_sequence<Offset, IDX...>, D&... values)
-   {
+   bool Normalized::ExtractTraitInner(TAny<Any>& found, ::std::integer_sequence<Offset, IDX...>, D&... values) {
       return (ExtractTraitInnerInner<IDX, D>(found, values) || ...);
    }
    
    ///                                                                        
    template<Offset IDX, CT::Data D>
-   bool Normalized::ExtractTraitInnerInner(TAny<Any>& found, D& value)
-   {
+   bool Normalized::ExtractTraitInnerInner(TAny<Any>& found, D& value) {
       if (IDX >= found.GetCount())
          return false;
 

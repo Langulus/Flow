@@ -422,7 +422,7 @@ namespace Langulus::Flow
                return !stack.IsOr();
             }
 
-            return true;
+            return Flow::Continue;
          },
          [&](Inner::MissingFuture& future) {
             atLeastOneSuccess |= Link(scope, future);

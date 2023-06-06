@@ -96,17 +96,17 @@ namespace Langulus::Flow
       Count counter = 0;
       ForEachDeep([&](Trait& t) {
          if (t.GetTrait() != trait.GetTrait())
-            return true;
+            return Flow::Continue;
 
          if (counter == index) {
             t = trait;
             mHash = {};
             done = true;
-            return false;
+            return Flow::Break;
          }
             
          ++counter;
-         return true;
+         return Flow::Continue;
       });
 
       if (!done)
@@ -123,15 +123,15 @@ namespace Langulus::Flow
       Count counter = 0;
       ForEachDeep([&](const Trait& t) {
          if (t.GetTrait() != meta)
-            return true;
+            return Flow::Continue;
 
          if (counter == index) {
             found = &t;
-            return false;
+            return Flow::Break;
          }
 
          ++counter;
-         return true;
+         return Flow::Continue;
       });
 
       return found;

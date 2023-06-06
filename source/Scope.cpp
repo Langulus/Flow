@@ -174,13 +174,13 @@ namespace Langulus::Flow
             // Execute verbs                                            
             [&](const Verb& constVerb) {
                if (skipVerbs)
-                  return false;
+                  return Flow::Break;
 
                if (constVerb.GetCharge().IsFlowDependent()) {
                   // The verb hasn't been integrated into a flow, just  
                   // forward it                                         
                   output.SmartPush(constVerb);
-                  return true;
+                  return Flow::Continue;
                }
 
                // Shallow-copy the verb to make it mutable              
@@ -200,7 +200,7 @@ namespace Langulus::Flow
                }
 
                output.SmartPush(Abandon(verb.mOutput));
-               return true;
+               return Flow::Continue;
             }
          );
       }
@@ -277,13 +277,13 @@ namespace Langulus::Flow
             // Execute verbs                                            
             [&](const Verb& constVerb) {
                if (localSkipVerbs)
-                  return false;
+                  return Flow::Break;
 
                if (constVerb.GetCharge().IsFlowDependent()) {
                   // The verb hasn't been integrated into a flow, just  
                   // forward it                                         
                   output.SmartPush(constVerb);
-                  return true;
+                  return Flow::Continue;
                }
 
                // Shallow-copy the verb to make it mutable              
@@ -296,11 +296,11 @@ namespace Langulus::Flow
                );
 
                if (!Scope::ExecuteVerb(environment, verb))
-                  return true;
+                  return Flow::Continue;
 
                executed = true;
                output.SmartPush(Abandon(verb.mOutput));
-               return true;
+               return Flow::Continue;
             }
          );
       }

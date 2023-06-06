@@ -46,7 +46,7 @@ namespace Langulus::Flow
    ///   @return true if charge is default                                    
    LANGULUS(INLINED)
    constexpr bool Charge::IsFlowDependent() const noexcept {
-      return mRate != mRate
+      return mRate != DefaultRate
          || mTime != DefaultTime
          || mPriority != DefaultPriority;
    }

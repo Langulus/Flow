@@ -62,7 +62,7 @@ namespace Langulus::Flow
       // Every produced T will also be bound to that instance           
       // If factory moved, all contents will be remapped to the new     
       // instance                                                       
-      Producer* const mFactoryOwner {};
+      Producer* mFactoryOwner {};
       // Elements are allocated here, so they are cache-friendly and    
       // iterated fast, rarely ever moving                              
       TAny<Element> mData;

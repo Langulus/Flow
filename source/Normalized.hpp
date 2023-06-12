@@ -78,6 +78,8 @@ namespace Langulus::Flow
       bool ExtractTrait(D&...);
       template<CT::Data D>
       bool ExtractData(D&);
+      template<CT::Data D>
+      bool ExtractDataAs(D&);
 
    protected:
       template<CT::Data... D, Offset... IDX>

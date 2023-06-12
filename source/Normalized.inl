@@ -236,14 +236,23 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    bool Normalized::ExtractTrait(D&... values) {
       auto found = GetTraits<T>();
-      if (found)
-         return ExtractTraitInner(*found, ::std::make_integer_sequence<Offset, sizeof...(D)> {}, values...);
+      if (found) {
+         return ExtractTraitInner(
+            *found,
+            ::std::make_integer_sequence<Offset, sizeof...(D)> {},
+            values...
+         );
+      }
       return false;
    }
 
    ///                                                                        
    template<CT::Data... D, Offset... IDX>
-   bool Normalized::ExtractTraitInner(TAny<Any>& found, ::std::integer_sequence<Offset, IDX...>, D&... values) {
+   bool Normalized::ExtractTraitInner(
+      TAny<Any>& found, 
+      ::std::integer_sequence<Offset, IDX...>, 
+      D&... values
+   ) {
       return (ExtractTraitInnerInner<IDX, D>(found, values) || ...);
    }
    
@@ -261,7 +270,7 @@ namespace Langulus::Flow
       return false;
    }
    
-   /// Extract data                                                           
+   /// Extract data of an exact type                                          
    ///   @tparam D - the type of the data we're extracting (deducible)        
    ///   @param value - [out] where to save the value, if found               
    ///   @return true if value changed                                        
@@ -272,6 +281,26 @@ namespace Langulus::Flow
       if (found) {
          value = found->Last().template Get<D>();
          return true;
+      }
+
+      return false;
+   }
+   
+   /// Extract any data, convertible to D                                     
+   ///   @tparam D - the type of the data we're extracting (deducible)        
+   ///   @param value - [out] where to save the value, if found               
+   ///   @return true if value changed                                        
+   template<CT::Data D>
+   LANGULUS(INLINED)
+   bool Normalized::ExtractDataAs(D& value) {
+      for (auto pair : mAnythingElse) {
+         for (auto& group : pair.mValue) {
+            try {
+               value = group.AsCast<D>();
+               return true;
+            }
+            catch (...) {}
+         }
       }
 
       return false;

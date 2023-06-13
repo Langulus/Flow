@@ -9,6 +9,7 @@
 #include "Resolvable.hpp"
 #include <Flow/Verbs/Do.hpp>
 #include <Flow/Verbs/Associate.hpp>
+#include <Flow/Verbs/Interpret.hpp>
 
 namespace Langulus
 {
@@ -174,7 +175,7 @@ namespace Langulus::Flow
    ///   @return a reference to the verb's output                             
    template<bool DISPATCH, bool DEFAULT, CT::Verb V>
    LANGULUS(INLINED)
-   const Any& Resolvable::Run(const V& verb) {
+   Any Resolvable::Run(const V& verb) {
       return Run<DISPATCH, DEFAULT, V>(const_cast<V&>(verb));
    }
 
@@ -186,7 +187,7 @@ namespace Langulus::Flow
    ///   @return a reference to the verb's output                             
    template<bool DISPATCH, bool DEFAULT, CT::Verb V>
    LANGULUS(INLINED)
-   Any& Resolvable::Run(V& verb) {
+   Any Resolvable::Run(V& verb) {
       auto environment = GetBlock();
       DispatchFlat<false, DISPATCH, DEFAULT>(environment, verb);
       return verb.GetOutput();
@@ -200,8 +201,33 @@ namespace Langulus::Flow
    ///   @return a reference to the verb's output                             
    template<bool DISPATCH, bool DEFAULT, CT::Verb V>
    LANGULUS(INLINED)
-   Any& Resolvable::Run(V&& verb) requires (CT::Mutable<V>) {
+   Any Resolvable::Run(V&& verb) requires (CT::Mutable<V>) {
       return Run<DISPATCH, DEFAULT, V>(verb);
+   }
+   
+   /// Parse and execute a scope in the resolved context                      
+   ///   @param code - the code to parse and execute                          
+   ///   @return the results of the execution                                 
+   LANGULUS(INLINED)
+   Any Resolvable::Run(const Code& code) {
+      if (code.IsEmpty())
+         return {};
+      return Run(code.Parse());
+   }
+
+   /// Execute a scope in the resolved context                                
+   ///   @param scope - the scope to execute                                  
+   ///   @return the results of the execution                                 
+   LANGULUS(INLINED)
+   Any Resolvable::Run(const Scope& scope) {
+      Any context {GetBlock()};
+      Any output;
+      if (!scope.Execute(context, output)) {
+         Logger::Error("Can't execute scope: ", scope);
+         return {};
+      }
+
+      return output;
    }
 
    /// Get the first member matching a runtime trait definition               

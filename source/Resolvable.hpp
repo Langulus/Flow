@@ -23,7 +23,9 @@ namespace Langulus::Flow
       LANGULUS_CONVERSIONS(Debug);
 
    private:
+      // Concrete type of the resolvable                                
       DMeta mClassType;
+      // Byte offset from an instance of Resolvable, to the derived     
       Offset mClassOffset;
 
    public:
@@ -48,11 +50,14 @@ namespace Langulus::Flow
       NOD() Block GetBlock() const noexcept;
 
       template<bool DISPATCH = true, bool DEFAULT = true, CT::Verb V>
-      const Any& Run(const V&);
+      Any Run(const V&);
       template<bool DISPATCH = true, bool DEFAULT = true, CT::Verb V>
-      Any& Run(V&);
+      Any Run(V&);
       template<bool DISPATCH = true, bool DEFAULT = true, CT::Verb V>
-      Any& Run(V&&) requires (CT::Mutable<V>);
+      Any Run(V&&) requires (CT::Mutable<V>);
+
+      Any Run(const Code&);
+      Any Run(const Scope&);
 
       NOD() Block GetMember(TMeta) noexcept;
       NOD() Block GetMember(TMeta) const noexcept;

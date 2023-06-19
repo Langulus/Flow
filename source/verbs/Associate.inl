@@ -79,7 +79,10 @@ namespace Langulus::Verbs
       // This will happen only if types are exactly the same            
       // This is a default (fallback) routine, let's keep things simple 
       try {
-         lhs.CallUnknownSemanticAssignment(lhs.GetCount(), Copy(rhs));
+         lhs.CallUnknownSemanticAssignment(
+            lhs.GetCount(), 
+            Copy(static_cast<const Block&>(rhs))
+         );
       }
       catch (...) {
          return false;

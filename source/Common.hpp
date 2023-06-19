@@ -129,10 +129,5 @@ LANGULUS_DEFINE_TRAIT(Time,
 LANGULUS_DEFINE_TRAIT(Priority,
    "Priority of anything with charge, or some kind of priority");
 
-LANGULUS_DEFINE_TRAIT(Argument,
-   "For accessing parameters and arguments");
-LANGULUS_DEFINE_TRAIT(Result,
-   "For accessing the results of some operation");
-
 /// Make the rest of the code aware, that Langulus::Flow has been included    
 #define LANGULUS_LIBRARY_FLOW() 1

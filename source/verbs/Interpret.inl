@@ -153,177 +153,94 @@ namespace Langulus::Verbs
 
 } // namespace Langulus::Verbs
 
-namespace Langulus
+namespace Langulus::Flow
 {
-   namespace CT
-   {
-      namespace Inner
-      {
-         template<class T>
-         concept Debuggable =
-            requires (T& a) { a.operator Anyness::Debug(); } ||
-            requires (const T& a) { a.operator Anyness::Debug(); };
-      }
-
-      /// A debuggable type is one that has either an implicit or explicit    
-      /// cast operator to Debug type. Reverse conversion through             
-      /// constructors is avoided to mitigate ambiguity problems.             
-      template<class... T>
-      concept Debuggable = (Inner::Debuggable<T> && ...);
-   }
-
-   namespace Flow
-   {
       
-      /// Serialize verb to any form of text                                  
-      ///   @tparam T - the type of text to serialize to                      
-      ///   @return the serialized verb                                       
-      template<CT::Text T>
-      LANGULUS(INLINED)
-      T Verb::SerializeVerb() const {
-         Code result;
+   /// Serialize verb to any form of text                                     
+   ///   @tparam T - the type of text to serialize to                         
+   ///   @return the serialized verb                                          
+   template<CT::Text T>
+   LANGULUS(INLINED)
+   T Verb::SerializeVerb() const {
+      Code result;
 
-         if (mSuccesses) {
-            // If verb has been executed, just dump the output          
-            result += Verbs::Interpret::To<T>(mOutput);
-            return result;
-         }
-
-         // If reached, then verb hasn't been executed yet              
-         // Let's check if there's a source in which verb is executed   
-         if (mSource.IsValid())
-            result += Verbs::Interpret::To<T>(mSource);
-
-         // After the source, we decide whether to write verb token or  
-         // verb operator, depending on the verb definition, state and  
-         // charge                                                      
-         bool enscope = true;
-         if (!mVerb) {
-            // An invalid verb is always written as token               
-            result += MetaVerb::DefaultToken;
-         }
-         else {
-            // A valid verb is written either as token, or as operator  
-            if (mMass < 0) {
-               if (!mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault() && mState.IsDefault()) {
-                  // Write as operator                                  
-                  result += mVerb->mOperatorReverse;
-                  enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
-               }
-               else {
-                  // Write as token                                     
-                  if (mSource.IsValid())
-                     result += Text {' '};
-                  result += mVerb->mTokenReverse;
-                  result += Verbs::Interpret::To<T>(GetCharge() * -1);
-               }
-            }
-            else {
-               if (!mVerb->mOperator.empty() && GetCharge().IsDefault() && mState.IsDefault()) {
-                  // Write as operator                                  
-                  result += mVerb->mOperator;
-                  enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
-               }
-               else {
-                  // Write as token                                     
-                  if (mSource.IsValid())
-                     result += Text {' '};
-                  result += mVerb->mToken;
-                  result += Verbs::Interpret::To<T>(GetCharge());
-               }
-            }
-         }
-
-         if (IsLongCircuited())
-            result += " long ";
-         if (IsMonocast())
-            result += " mono ";
-
-         if (enscope)
-            result += Code::OpenScope;
-
-         if (IsValid())
-            result += Verbs::Interpret::To<T>(GetArgument());
-
-         if (enscope)
-            result += Code::CloseScope;
-
+      if (mSuccesses) {
+         // If verb has been executed, just dump the output             
+         result += Verbs::Interpret::To<T>(mOutput);
          return result;
       }
+
+      // If reached, then verb hasn't been executed yet                 
+      // Let's check if there's a source in which verb is executed      
+      if (mSource.IsValid())
+         result += Verbs::Interpret::To<T>(mSource);
+
+      // After the source, we decide whether to write verb token or     
+      // verb operator, depending on the verb definition, state and     
+      // charge                                                         
+      bool enscope = true;
+      if (!mVerb) {
+         // An invalid verb is always written as token                  
+         result += MetaVerb::DefaultToken;
+      }
+      else {
+         // A valid verb is written either as token, or as operator     
+         if (mMass < 0) {
+            if (!mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault() && mState.IsDefault()) {
+               // Write as operator                                     
+               result += mVerb->mOperatorReverse;
+               enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
+            }
+            else {
+               // Write as token                                        
+               if (mSource.IsValid())
+                  result += Text {' '};
+               result += mVerb->mTokenReverse;
+               result += Verbs::Interpret::To<T>(GetCharge() * -1);
+            }
+         }
+         else {
+            if (!mVerb->mOperator.empty() && GetCharge().IsDefault() && mState.IsDefault()) {
+               // Write as operator                                     
+               result += mVerb->mOperator;
+               enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
+            }
+            else {
+               // Write as token                                        
+               if (mSource.IsValid())
+                  result += Text {' '};
+               result += mVerb->mToken;
+               result += Verbs::Interpret::To<T>(GetCharge());
+            }
+         }
+      }
+
+      if (IsLongCircuited())
+         result += " long ";
+      if (IsMonocast())
+         result += " mono ";
+
+      if (enscope)
+         result += Code::OpenScope;
+
+      if (IsValid())
+         result += Verbs::Interpret::To<T>(GetArgument());
+
+      if (enscope)
+         result += Code::CloseScope;
+
+      return result;
    }
 
 } // namespace Langulus::CT
 
 namespace fmt
 {
-   using namespace ::Langulus;
-
-   ///                                                                        
-   /// Extend FMT to be capable of logging any meta definition                
-   ///                                                                        
-   template<CT::Meta T>
-   struct formatter<T> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT>
-      LANGULUS(INLINED)
-      auto format(T const& meta, CONTEXT& ctx) {
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            auto asView = meta.GetShortestUnambiguousToken();
-         #else
-            auto asView = meta.mToken;
-         #endif
-
-         return fmt::format_to(ctx.out(), "{}", asView);
-      }
-   };
-
-   ///                                                                        
-   /// Extend FMT to be capable of logging Flow::Time                         
-   ///                                                                        
-   template<>
-   struct formatter<Flow::Time> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT>
-      LANGULUS(INLINED)
-      auto format(Flow::Time const& element, CONTEXT& ctx) {
-         return fmt::format_to(ctx.out(), "{}", 
-            static_cast<const Flow::Time::Base&>(element));
-      }
-   };
-   
-   ///                                                                        
-   /// Extend FMT to be capable of logging anything that is statically        
-   /// convertible to a Debug string by an explicit or implicit conversion    
-   /// operator.                                                              
-   ///                                                                        
-   template<CT::Debuggable T>
-   struct formatter<T> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT>
-      LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) {
-         auto asText = element.operator Anyness::Debug();
-         return fmt::format_to(ctx.out(), "{}",
-            static_cast<Logger::TextView>(asText));
-      }
-   };
 
    ///                                                                        
    /// Extend FMT to be capable of logging anything CT::Deep                  
    ///                                                                        
-   template<CT::Deep T>
+   template<Langulus::CT::Deep T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -333,17 +250,18 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
+         using namespace Langulus;
          const auto asText = Verbs::Interpret::To<Flow::Debug>(element);
          return fmt::format_to(ctx.out(), "{}",
             static_cast<Logger::TextView>(asText));
       }
    };
-      
+
    ///                                                                        
-   /// Extend FMT to be capable of logging Descriptor (same as CT::Deep)      
+   /// Extend FMT to be capable of logging any pair                           
    ///                                                                        
-   template<>
-   struct formatter<Anyness::Descriptor> {
+   template<Langulus::CT::Pair T>
+   struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
          return ctx.begin();
@@ -351,18 +269,40 @@ namespace fmt
 
       template<class CONTEXT>
       LANGULUS(INLINED)
-      auto format(Anyness::Descriptor const& element, CONTEXT& ctx) {
+      auto format(T const& element, CONTEXT& ctx) {
+         using namespace Langulus;
+         return fmt::vformat_to(ctx.out(), "Pair({}, {})",
+            DenseCast(element.mKey),
+            DenseCast(element.mValue)
+         );
+      }
+   };
+
+   ///                                                                        
+   /// Extend FMT to be capable of logging Descriptor (same as CT::Deep)      
+   ///                                                                        
+   template<>
+   struct formatter<Langulus::Anyness::Descriptor> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(INLINED)
+      auto format(Langulus::Anyness::Descriptor const& element, CONTEXT& ctx) {
+         using namespace Langulus;
          const auto asText = Verbs::Interpret::To<Flow::Debug>(
             static_cast<const Anyness::Any&>(element));
          return fmt::format_to(ctx.out(), "{}",
             static_cast<Logger::TextView>(asText));
       }
    };
-      
+
    ///                                                                        
    /// Extend FMT to be capable of logging any trait                          
    ///                                                                        
-   template<CT::Trait T>
+   template<Langulus::CT::TraitBased T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -372,38 +312,19 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
+         using namespace Langulus;
          const auto type = element.GetTrait();
-         return fmt::format_to(ctx.out(), "{}({})", 
+         return fmt::format_to(ctx.out(), "{}({})",
             (type ? type->mToken : RTTI::MetaTrait::DefaultToken),
             static_cast<const Anyness::Any&>(element)
          );
       }
    };
-      
-   ///                                                                        
-   /// Extend FMT to be capable of logging any pair                           
-   ///                                                                        
-   template<CT::Pair T>
-   struct formatter<T> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
 
-      template<class CONTEXT>
-      LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) {
-         return fmt::vformat_to(ctx.out(), "Pair({}, {})", 
-            DenseCast(element.mKey), 
-            DenseCast(element.mValue)
-         );
-      }
-   };
-   
    ///                                                                        
    /// Extend FMT to be capable of logging any map                            
    ///                                                                        
-   template<CT::Map T>
+   template<Langulus::CT::Map T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -413,6 +334,7 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
+         using namespace Langulus;
          fmt::format_to(ctx.out(), "Map(");
          bool first = true;
          for (auto pair : element) {
@@ -429,11 +351,11 @@ namespace fmt
          return fmt::format_to(ctx.out(), ")");
       }
    };
-   
+
    ///                                                                        
    /// Extend FMT to be capable of logging any set                            
    ///                                                                        
-   template<CT::Set T>
+   template<Langulus::CT::Set T>
    struct formatter<T> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -443,6 +365,7 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
+         using namespace Langulus;
          fmt::format_to(ctx.out(), "Set(");
          bool first = true;
          for (auto key : element) {
@@ -454,61 +377,6 @@ namespace fmt
          }
 
          return fmt::format_to(ctx.out(), ")");
-      }
-   };
-
-   ///                                                                        
-   /// Extend FMT to be capable of logging any owned values                   
-   ///                                                                        
-   template<CT::Owned T>
-   struct formatter<T> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT>
-      LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) {
-         if constexpr (CT::Sparse<TypeOf<T>>) {
-            if (element == nullptr) {
-               const auto type = element.GetType();
-               if (type)
-                  return fmt::format_to(ctx.out(), "{}(null)", *type);
-               else
-                  return fmt::format_to(ctx.out(), "null");
-            }
-            else return fmt::format_to(ctx.out(), "{}", *element.Get());
-         }
-         else {
-            static_assert(CT::Dense<decltype(element.Get())>,
-               "T not dense, but not sparse either????");
-            return fmt::format_to(ctx.out(), "{}", element.Get());
-         }
-      }
-   };
-   
-   ///                                                                        
-   /// Extend FMT to be capable of logging any shared pointers                
-   ///                                                                        
-   template<CT::Pointer T>
-   struct formatter<T> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT>
-      LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) {
-         if (element == nullptr) {
-            const auto type = element.GetType();
-            if (type)
-               return fmt::format_to(ctx.out(), "{}(null)", *type);
-            else
-               return fmt::format_to(ctx.out(), "null");
-         }
-         else return fmt::format_to(ctx.out(), "{}", *element.Get());
       }
    };
 

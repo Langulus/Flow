@@ -173,7 +173,7 @@ namespace Langulus::Flow
    ///   @tparam V - type of verb to run (deducible)                          
    ///   @param verb - the verb to execute in this resolved type              
    ///   @return a reference to the verb's output                             
-   template<bool DISPATCH, bool DEFAULT, CT::Verb V>
+   template<bool DISPATCH, bool DEFAULT, CT::VerbBased V>
    LANGULUS(INLINED)
    Any Resolvable::Run(const V& verb) {
       return Run<DISPATCH, DEFAULT, V>(const_cast<V&>(verb));
@@ -185,7 +185,7 @@ namespace Langulus::Flow
    ///   @tparam V - type of verb to run (deducible)                          
    ///   @param verb - the verb to execute in this resolved type              
    ///   @return a reference to the verb's output                             
-   template<bool DISPATCH, bool DEFAULT, CT::Verb V>
+   template<bool DISPATCH, bool DEFAULT, CT::VerbBased V>
    LANGULUS(INLINED)
    Any Resolvable::Run(V& verb) {
       auto environment = GetBlock();
@@ -199,7 +199,7 @@ namespace Langulus::Flow
    ///   @tparam V - type of verb to run (deducible)                          
    ///   @param verb - the verb to execute in this resolved type              
    ///   @return a reference to the verb's output                             
-   template<bool DISPATCH, bool DEFAULT, CT::Verb V>
+   template<bool DISPATCH, bool DEFAULT, CT::VerbBased V>
    LANGULUS(INLINED)
    Any Resolvable::Run(V&& verb) requires (CT::Mutable<V>) {
       return Run<DISPATCH, DEFAULT, V>(verb);

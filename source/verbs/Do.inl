@@ -85,10 +85,10 @@ namespace Langulus::Verbs
 namespace Langulus::Flow
 {
 
-   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::Verb V>
+   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::VerbBased V>
    Count Execute(T& context, V& verb);
 
-   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::Verb V, CT::Data... BASES>
+   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::VerbBased V, CT::Data... BASES>
    Count ExecuteInBases(T& context, V& verb, TTypeList<BASES...>) {
       if constexpr (CT::Constant<T>)
          return (Execute<DISPATCH, DEFAULT, FALLBACK>(static_cast<const BASES&>(context), verb) || ...);
@@ -109,7 +109,7 @@ namespace Langulus::Flow
    ///   @param context - the context in which to execute in                  
    ///   @param verb - the verb to execute                                    
    ///   @return the number of successful executions                          
-   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::Verb V>
+   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::VerbBased V>
    Count Execute(T& context, V& verb) {
       // Always reset verb progress prior to execution                  
       verb.Undo();
@@ -165,7 +165,7 @@ namespace Langulus::Flow
    ///   @param context - the context in which to dispatch the verb           
    ///   @param verb - the verb to send over                                  
    ///   @return the number of successful executions                          
-   template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::Verb V>
+   template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::VerbBased V>
    Count DispatchFlat(T& context, V& verb) {
       if (context.IsEmpty() || verb.IsMonocast()) {
          if (context.IsInvalid()) {
@@ -242,7 +242,7 @@ namespace Langulus::Flow
    /// AND, or OR. The verb will be executed for each flat element inside     
    /// this block. If a failure occurs inside a scope, that scope will be     
    /// considered failed, unless it's an OR scope - OR scopes stop execution  
-   /// right after the first success and fail only   if all branches fail     
+   /// right after the first success and fail only if all branches fail       
    ///   @tparam RESOLVE - whether or not to perform runtime resolve of the   
    ///                     contexts, getting the most concrete type           
    ///   @tparam DISPATCH - whether or not to use custom dispatcher for       
@@ -252,7 +252,7 @@ namespace Langulus::Flow
    ///   @param context - the context in which scope will be dispatched to    
    ///   @param verb - the verb to execute                                    
    ///   @return the number of successful executions                          
-   template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::Verb V>
+   template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::VerbBased V>
    Count DispatchDeep(T& context, V& verb) {
       if (context.IsEmpty() || verb.IsMonocast()) {
          if (context.IsInvalid()) {

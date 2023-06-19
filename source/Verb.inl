@@ -233,7 +233,9 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    Verb& Verb::operator = (CT::Semantic auto&& rhs) {
       using S = Decay<decltype(rhs)>;
-      if constexpr (CT::Verb<TypeOf<S>>) {
+      using T = TypeOf<S>;
+
+      if constexpr (CT::VerbBased<T>) {
          Any::operator = (rhs.template Forward<Any>());
          Charge::operator = (*rhs);
          mVerb = rhs->mVerb;
@@ -317,7 +319,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    bool Verb::VerbIs() const noexcept {
       static_assert(CT::Verb<T...>, "Provided types must be verb definitions");
-      return (VerbIs(MetaVerb::Of<T>()) || ...);
+      return (VerbIs(T::GetVerb()) || ...);
    }
 
    /// Check if verb has been satisfied at least once                         
@@ -430,7 +432,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    Verb& Verb::SetVerb() {
       static_assert(CT::Verb<VERB>, "VERB must be a verb type");
-      mVerb = MetaVerb::Of<Decay<VERB>>();
+      mVerb = VERB::GetVerb();
       return *this;
    }
 
@@ -807,7 +809,7 @@ namespace Langulus::Flow
    template<CT::Dense T>
    LANGULUS(INLINED)
    bool Verb::GenericAvailableFor() const noexcept {
-      const auto meta = MetaData::Of<Decay<T>>();
+      const auto meta = MetaOf<Decay<T>>();
       return meta && meta->template GetAbility<CT::Mutable<T>>(mVerb, GetType());
    }
 
@@ -819,9 +821,9 @@ namespace Langulus::Flow
    template<CT::Dense T, CT::Data V>
    LANGULUS(INLINED)
    bool Verb::GenericExecuteIn(T& context, V& verb) {
-      static_assert(CT::Verb<V>, "V must be a verb");
+      static_assert(CT::VerbBased<V>, "V must be VerbBased");
 
-      if constexpr (!CT::Deep<T> && !CT::Same<V, Verb>) {
+      if constexpr (!CT::Deep<T> && CT::Verb<V>) {
          // Always prefer statically optimized routine when available   
          // Literally zero ability searching overhead!                  
          if constexpr (V::template AvailableFor<T>())
@@ -886,9 +888,9 @@ namespace Langulus::Flow
    template<CT::Data V>
    LANGULUS(INLINED)
    bool Verb::GenericExecuteDefault(Block& context, V& verb) {
-      static_assert(CT::Verb<V>, "V must be a verb");
+      static_assert(CT::VerbBased<V>, "V must be VerbBased");
 
-      if constexpr (!CT::Same<V, Verb>) {
+      if constexpr (CT::Verb<V>) {
          // Always prefer statically optimized routine when available   
          // Literally zero ability searching overhead!                  
          if constexpr (CT::DefaultableVerb<V>)
@@ -920,9 +922,9 @@ namespace Langulus::Flow
    template<CT::Data V>
    LANGULUS(INLINED)
    bool Verb::GenericExecuteDefault(const Block& context, V& verb) {
-      static_assert(CT::Verb<V>, "V must be a verb");
+      static_assert(CT::VerbBased<V>, "V must be VerbBased");
 
-      if constexpr (!CT::Same<V, Verb>) {
+      if constexpr (CT::Verb<V>) {
          // Always prefer statically optimized routine when available   
          // Literally zero ability searching overhead!                  
          if constexpr (CT::DefaultableVerbConstant<V>)
@@ -947,9 +949,9 @@ namespace Langulus::Flow
    template<CT::Data V>
    LANGULUS(INLINED)
    bool Verb::GenericExecuteStateless(V& verb) {
-      static_assert(CT::Verb<V>, "V must be a verb");
+      static_assert(CT::VerbBased<V>, "V must be VerbBased");
 
-      if constexpr (!CT::Same<V, Verb>) {
+      if constexpr (CT::Verb<V>) {
          // Always prefer statically optimized routine when available   
          // Literally zero ability searching overhead!                  
          if constexpr (CT::StatelessVerb<V>)
@@ -1055,6 +1057,12 @@ namespace Langulus::Flow
       }
       else LANGULUS_ERROR("Bad verb assignment");
       return *this;
+   }
+
+   template<class VERB>
+   LANGULUS(INLINED)
+   VMeta StaticVerb<VERB>::GetVerb() {
+      return RTTI::MetaVerb::Of<VERB>();
    }
 
 } // namespace Langulus::Flow

@@ -164,7 +164,7 @@ namespace Langulus::Flow
    template<CT::Trait T>
    LANGULUS(INLINED)
    const TAny<Any>* Normalized::GetTraits() {
-      auto found = mTraits.FindKeyIndex(MetaTrait::Of<T>());
+      auto found = mTraits.FindKeyIndex(T::GetTrait());
       if (!found)
          return nullptr;
       else return &mTraits.GetValue(found);
@@ -187,7 +187,7 @@ namespace Langulus::Flow
    template<CT::Data T>
    LANGULUS(INLINED)
    const TAny<Any>* Normalized::GetData() {
-      auto found = mAnythingElse.FindKeyIndex(MetaData::Of<T>());
+      auto found = mAnythingElse.FindKeyIndex(MetaOf<T>());
       if (!found)
          return nullptr;
       else return &mAnythingElse.GetValue(found);
@@ -223,8 +223,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    void Normalized::OverwriteTrait(D&& value) {
       // Trait was found, overwrite it                                  
-      auto meta = MetaTrait::Of<T>();
-      mTraits[meta] = Forward<D>(value);
+      mTraits[T::GetTrait()] = Forward<D>(value);
    }
 
    /// Extract a trait from the descriptor                                    

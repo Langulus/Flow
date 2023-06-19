@@ -13,7 +13,7 @@ struct Thing : public Resolvable {
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
-   Thing() : Resolvable(MetaData::Of<Thing>()) {}
+   Thing() : Resolvable(MetaOf<Thing>()) {}
    Thing(DMeta type) : Resolvable(type) {}
    virtual ~Thing() = default;
 
@@ -25,7 +25,7 @@ struct Thing : public Resolvable {
 /// A mockup of more concrete Langulus::Thing, for testing purposes           
 struct Thing2 : public Thing {
    LANGULUS_BASES(Thing);
-   Thing2() : Thing {MetaData::Of<Thing2>()} {}
+   Thing2() : Thing {MetaOf<Thing2>()} {}
 
    void Update() final {}
 
@@ -38,7 +38,7 @@ struct Universe : public Resolvable {
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
-   Universe() : Resolvable(MetaData::Of<Universe>()) {}
+   Universe() : Resolvable(MetaOf<Universe>()) {}
 };
 
 /// A mockup of a window component, for testing purposes                      
@@ -47,7 +47,7 @@ struct Window : public Resolvable {
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
-   Window() : Resolvable(MetaData::Of<Window>()) {}
+   Window() : Resolvable(MetaOf<Window>()) {}
 };
 
 /// A mockup of a user component, for testing purposes                        
@@ -56,7 +56,7 @@ struct User : public Resolvable {
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
-   User() : Resolvable(MetaData::Of<User>()) {}
+   User() : Resolvable(MetaOf<User>()) {}
 };
 
 /// A mockup of a session component, for testing purposes                     
@@ -65,7 +65,7 @@ struct Session : public Resolvable {
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
-   Session() : Resolvable(MetaData::Of<Session>()) {}
+   Session() : Resolvable(MetaOf<Session>()) {}
 };
 
 /// A mockup of a fraction                                                    
@@ -73,7 +73,7 @@ struct Fraction : public Resolvable {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
    LANGULUS_BASES(Resolvable);
-   Fraction() : Resolvable(MetaData::Of<Fraction>()) {}
+   Fraction() : Resolvable(MetaOf<Fraction>()) {}
 };
 
 /// A mockup of a producer                                                    

@@ -334,6 +334,8 @@ namespace Langulus::Flow
       StaticVerb& operator = (const StaticVerb&);
       StaticVerb& operator = (StaticVerb&&);
       StaticVerb& operator = (CT::Semantic auto&&);
+
+      NOD() static VMeta GetVerb();
    };
 
 
@@ -341,7 +343,7 @@ namespace Langulus::Flow
    /// Statically typed verb, used as CRTP for arithmetic verbs               
    ///                                                                        
    template<class VERB, bool NOEXCEPT>
-   struct ArithmeticVerb : public StaticVerb<VERB> {
+   struct ArithmeticVerb : StaticVerb<VERB> {
       template<CT::Data T>
       using Operator = Conditional<NOEXCEPT,
          T(*)(const T*, const T*) noexcept, 
@@ -375,13 +377,20 @@ namespace Langulus
    namespace CT
    {
 
-      /// A reflected verb type is any type that inherits Verb, and is binary 
-      /// compatible to a Verb                                                
+      /// A VerbBased type is any type that inherits (or is) Verb, and is     
+      /// binary compatible to a Verb                                         
       template<class... T>
-      concept Verb = ((DerivedFrom<T, ::Langulus::Flow::Verb>
-         && sizeof(T) == sizeof(::Langulus::Flow::Verb)) && ...);
+      concept VerbBased = ((DerivedFrom<T, Flow::Verb>
+            && sizeof(T) == sizeof(Flow::Verb)
+         ) && ...);
+
+      /// A reflected verb type is any type that inherits Verb, is not Verb   
+      /// itself, and is binary compatible to a Verb                          
+      template<class... T>
+      concept Verb = VerbBased<T...> && (!Same<T, Flow::Verb> && ...);
 
    } // namespace Langulus::CT
+
 
    /// Get the meta of some stuff, just for convenience                       
    ///   @tparam T - type to get meta definition of                           
@@ -389,9 +398,9 @@ namespace Langulus
    template<class T>
    NOD() auto MetaOf() {
       if constexpr (CT::Trait<T>)
-         return RTTI::MetaTrait::Of<Decay<T>>();
+         return T::GetTrait();
       else if constexpr (CT::Verb<T>)
-         return RTTI::MetaVerb::Of<Decay<T>>();
+         return T::GetVerb();
       else
          return RTTI::MetaData::Of<T>();
    }
@@ -408,6 +417,8 @@ namespace Langulus::Verbs
    struct Catenate;
    struct Exponent;
    struct Multiply;
+   struct Modulate;
+   struct Randomize;
    struct Add;
    struct Associate;
    struct Conjunct;

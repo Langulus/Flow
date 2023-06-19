@@ -345,7 +345,7 @@ namespace Langulus::Anyness
       // If this is reached, we attempt runtime conversion by           
       // invoking descriptor constructor of T, with this container      
       // as the set of arguments                                        
-      const auto meta = MetaData::Of<T>();
+      const auto meta = MetaOf<T>();
       Verbs::Create creator {Flow::Construct {meta, *this}};
       if (Verbs::Create::ExecuteStateless(creator)) {
          // Success                                                     

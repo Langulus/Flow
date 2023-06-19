@@ -216,9 +216,8 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    GIVEN("The script: Create!-1(Verb(?, ??))") {
       const Code code = "Create!-1(Verb(?, ??))";
       TAny<Any> package {pastMissing, futureMissing};
-      const Any required = Verbs::Create {
-         Any {Verb{package}}
-      }.SetPriority(-1);
+      const Any required = Verbs::Create {Verb{package}}
+         .SetPriority(-1);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -232,9 +231,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    GIVEN("The script: number    ?       ><       number ?? ") {
       const Code code = "number    ?       ><     number ?? ";
       Any source {pastMissing};
-      source << MetaData::Of<A::Number>();
+      source << MetaOf<A::Number>();
       Any argument {futureMissing};
-      argument << MetaData::Of<A::Number>();
+      argument << MetaOf<A::Number>();
       const Any required = Verbs::Catenate {argument}
          .SetSource(source);
 
@@ -266,9 +265,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    GIVEN("The script: .Context = .Verb.??") {
       const Code code = ".Context = .Verb.??";
       const Any package = Verbs::Select {futureMissing}
-         .SetSource(Verbs::Select {MetaData::Of<Verb>()});
+         .SetSource(Verbs::Select {MetaOf<Verb>()});
       const Any required = Verbs::Associate {package}
-         .SetSource(Verbs::Select {MetaTrait::Of<Traits::Context>()});
+         .SetSource(Verbs::Select {MetaOf<Traits::Context>()});
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -281,16 +280,14 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: Create!-1(Verb(?(Number,DMeta,Construct), ??(Number,DMeta,Construct)))") {
       Any a1 {pastMissing};
-      a1
-         << MetaData::Of<A::Number>()
-         << MetaData::Of<MetaData>()
-         << MetaData::Of<Construct>();
+      a1 << MetaOf<A::Number>()
+         << MetaOf<MetaData>()
+         << MetaOf<Construct>();
 
       Any a2 {futureMissing};
-      a2
-         << MetaData::Of<A::Number>()
-         << MetaData::Of<MetaData>()
-         << MetaData::Of<Construct>();
+      a2 << MetaOf<A::Number>()
+         << MetaOf<MetaData>()
+         << MetaOf<Construct>();
 
       const Code code = "Create!-1(Verb(?(Number,DMeta,Construct), ??(Number,DMeta,Construct)))";
       const Any required = Verbs::Create {
@@ -412,7 +409,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    GIVEN("The script: ? create Thing(User)") {
       const Code code = "? create Thing(User)";
       const Any required = Verbs::Create {
-         Construct::From<Thing>(MetaData::Of<User>())
+         Construct::From<Thing>(MetaOf<User>())
       }.SetSource(pastMissing);
 
       WHEN("Parsed") {
@@ -427,9 +424,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    GIVEN("The script: (number? >< number??) or (? Conjunct!4 ??)") {
       const Code code = "(number? >< number??) or (? Conjunct!4 ??)";
       Any pastNumber {pastMissing};
-      pastNumber << MetaData::Of<A::Number>();
+      pastNumber << MetaOf<A::Number>();
       Any futrNumber {futureMissing};
-      futrNumber << MetaData::Of<A::Number>();
+      futrNumber << MetaOf<A::Number>();
 
       Verbs::Catenate catenate {futrNumber};
       catenate.SetSource(pastNumber);
@@ -453,9 +450,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    GIVEN("The script: (number? + Fraction(number??)) or (? Conjunct!8 ??)") {
       const Code code = "(number? + Fraction(number??)) or (? Conjunct!8 ??)";
       Any pastNumber {pastMissing};
-      pastNumber << MetaData::Of<A::Number>();
+      pastNumber << MetaOf<A::Number>();
       Any futrNumber {futureMissing};
-      futrNumber << MetaData::Of<A::Number>();
+      futrNumber << MetaOf<A::Number>();
 
       Verbs::Add add {Construct::From<Fraction>(futrNumber)};
       add.SetSource(pastNumber);
@@ -505,7 +502,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Any required = Verbs::Select {futureMissing}
          .SetSource(
             Verbs::Select {
-               Construct::From<Thing>(MetaData::Of<User>())
+               Construct::From<Thing>(MetaOf<User>())
             }.SetSource(pastMissing)
          );
 
@@ -520,7 +517,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: Traits::Name") {
       const Code code = "Traits::Name";
-      const Any required = MetaTrait::Of<Traits::Name>();
+      const Any required = Traits::Name::GetTrait();
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -548,7 +545,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    GIVEN("The script: (? = ??) or (?.Thing(Session or User)) or (?.??)") {
       const Code code = "(? = ??) or (?.Thing(Session or User)) or (?.??)";
 
-      Any sessionOrUser {MetaData::Of<Session>(), MetaData::Of<User>()};
+      Any sessionOrUser {MetaOf<Session>(), MetaOf<User>()};
       sessionOrUser.MakeOr();
 
       Verbs::Associate first {futureMissing};

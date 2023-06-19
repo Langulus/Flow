@@ -49,69 +49,69 @@ namespace Langulus::Flow
 
       LANGULUS_NAMED_VALUES(Enum) {
          {
-            "Auto",
+            "PerAuto",
             Enum::Auto,
             "Automatically determined refresh rate, based on traits and context"
          },
          {
-            "None",
+            "PerNone",
             Enum::None,
             "No refresh rate (a constant, never refreshes)"
          },
 
          {
-            "Tick",
+            "PerTick",
             Enum::Tick,
             "Refresh once per tick (when flow moves forward in time)"
          },
          {
-            "Pass",
+            "PerPass",
             Enum::Pass,
             "Refresh once per render pass"
          },
          {
-            "Camera",
+            "PerCamera",
             Enum::Camera,
             "Refresh once per camera"
          },
          {
-            "Level",
+            "PerLevel",
             Enum::Level,
             "Refresh once per level"
          },
          {
-            "Renderable",
+            "PerRenderable",
             Enum::Renderable,
             "Refresh once per renderable"
          },
          {
-            "Instance",
+            "PerInstance",
             Enum::Instance,
             "Refresh once per instance"
          },
 
          {
-            "Vertex",
+            "PerVertex",
             Enum::Vertex,
             "Refresh once per vertex (inside vertex shader)"
          },
          {
-            "Primitive",
+            "PerPrimitive",
             Enum::Primitive,
             "Refresh once per geometric primitive (inside geometry shader)"
          },
          {
-            "TessCtrl",
+            "PerTessCtrl",
             Enum::TessCtrl,
             "Refresh once per tesselation control unit (inside tesselation control shader)"
          },
          {
-            "TessEval",
+            "PerTessEval",
             Enum::TessEval,
             "Refresh once per tesselation evaluation unit (inside tesselation evaluation shader)"
          },
          {
-            "Pixel",
+            "PerPixel",
             Enum::Pixel,
             "Refresh once per pixel (inside fragment shader)"
          },

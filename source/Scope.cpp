@@ -11,9 +11,9 @@
 #include "verbs/Do.inl"
 #include "verbs/Interpret.inl"
 
-#define VERBOSE(a)      //Logger::Verbose() << a
-#define VERBOSE_TAB(a)  //const auto tab = Logger::Verbose() << a << Logger::Tabs{}
-#define FLOW_ERRORS(a)  //Logger::Error() << a
+#define VERBOSE(...)      //Logger::Verbose(__VA_ARGS__)
+#define VERBOSE_TAB(...)  //const auto tab = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
+#define FLOW_ERRORS(...)  //Logger::Error(__VA_ARGS__)
 
 namespace Langulus::Flow
 {
@@ -90,7 +90,7 @@ namespace Langulus::Flow
    bool Scope::Execute(Any& environment, Any& output, bool& skipVerbs) const {
       auto results = Any::FromState(*this);
       if (!IsEmpty()) {
-         VERBOSE_TAB("Executing scope: [" << *this << ']');
+         VERBOSE_TAB("Executing scope: [", this, ']');
 
          try {
             if (IsOr() && GetCount() > 1)
@@ -121,7 +121,7 @@ namespace Langulus::Flow
             const auto& scope = ReinterpretCast<Scope>(block);
             Any local;
             if (!scope.Execute(environment, local, skipVerbs)) {
-               VERBOSE(Logger::Red << "Deep AND flow failed: " << *this);
+               VERBOSE(Logger::Red, "Deep AND flow failed: ", *this);
                LANGULUS_THROW(Flow, "Deep AND failure");
             }
 
@@ -141,7 +141,7 @@ namespace Langulus::Flow
                const auto& scope = ReinterpretCast<Scope>(static_cast<const Block&>(trait));
                Any local;
                if (!scope.Execute(environment, local, skipVerbs)) {
-                  VERBOSE(Logger::Red << "Trait AND flow failed: " << *this);
+                  VERBOSE(Logger::Red, "Trait AND flow failed: ", *this);
                   LANGULUS_THROW(Flow, "Trait AND failure");
                }
 
@@ -158,7 +158,7 @@ namespace Langulus::Flow
                const auto& scope = ReinterpretCast<Scope>(construct.GetArgument());
                Any local;
                if (!scope.Execute(environment, local, skipVerbs)) {
-                  VERBOSE(Logger::Red << "Construct AND flow failed: " << *this);
+                  VERBOSE(Logger::Red, "Construct AND flow failed: ", *this);
                   LANGULUS_THROW(Flow, "Construct AND failure");
                }
 
@@ -195,7 +195,7 @@ namespace Langulus::Flow
 
                // Execute the verb                                      
                if (!Scope::ExecuteVerb(environment, verb)) {
-                  VERBOSE(Logger::Red << "Verb AND flow failed: " << *this);
+                  VERBOSE(Logger::Red, "Verb AND flow failed: ", *this);
                   LANGULUS_THROW(Flow, "Verb AND failure");
                }
 
@@ -211,7 +211,7 @@ namespace Langulus::Flow
          output.SmartPush(static_cast<const Any&>(*this));
       }
 
-      VERBOSE(Logger::Green << "AND scope done: " << *this);
+      VERBOSE(Logger::Green, "AND scope done: ", *this);
       return true;
    }
 
@@ -314,12 +314,11 @@ namespace Langulus::Flow
          ++executed;
       }
 
-      if (executed) {
-         VERBOSE(Logger::Green << "OR scope done: " << *this);
-      }
-      else {
-         VERBOSE(Logger::Red << "OR scope failed: " << *this);
-      }
+      if (executed)
+         VERBOSE(Logger::Green, "OR scope done: ", *this);
+      else
+         VERBOSE(Logger::Red, "OR scope failed: ", *this);
+
       return executed;
    }
 
@@ -339,7 +338,7 @@ namespace Langulus::Flow
       Any localSource;
       if (!ReinterpretCast<Scope>(verb.GetSource()).Execute(environment, localSource)) {
          // It's considered error only if verb is not monocast          
-         FLOW_ERRORS(Logger::Error() << "Error at source of: " << verb);
+         FLOW_ERRORS("Error at source of: ", verb);
          return false;
       }
 
@@ -350,7 +349,7 @@ namespace Langulus::Flow
       Any localArgument;
       if (!ReinterpretCast<Scope>(verb.GetArgument()).Execute(localSource, localArgument)) {
          // It's considered error only if verb is not monocast          
-         FLOW_ERRORS(Logger::Error() << "Error at argument of: " << verb);
+         FLOW_ERRORS("Error at argument of: ", verb);
          return false;
       }
 
@@ -368,8 +367,7 @@ namespace Langulus::Flow
       // Source and argument will be executed locally if scripts, and   
       // substituted with their results in the verb                     
       if (!Scope::IntegrateVerb(context, verb)) {
-         FLOW_ERRORS("Error integrating verb: " << verb
-            << " (" << verb.GetVerb() << ')');
+         FLOW_ERRORS("Error integrating verb: ", verb, " (", verb.GetVerb(), ')');
          return false;
       }
 
@@ -388,19 +386,16 @@ namespace Langulus::Flow
          return true;
       }
 
-      VERBOSE_TAB("Executing verb: " << Logger::Cyan << verb 
-         << " (" << verb.GetVerb() << ')');
+      VERBOSE_TAB("Executing verb: ", Logger::Cyan, verb, " (", verb.GetVerb(), ')');
 
       // Dispatch the verb to the context, executing it                 
       // Any results should be inside verb.mOutput afterwards           
       if (!DispatchDeep(verb.mSource, verb)) {
-         FLOW_ERRORS("Error executing verb: " << verb
-            << " (" << verb.GetVerb() << ')');
+         FLOW_ERRORS("Error executing verb: ", verb, " (", verb.GetVerb(), ')');
          return false;
       }
 
-      VERBOSE("Executed: " << Logger::Green << verb
-         << " (" << verb.GetVerb() << ')');
+      VERBOSE("Executed: ", Logger::Green, verb, " (", verb.GetVerb(), ')');
       return true;
    }
 

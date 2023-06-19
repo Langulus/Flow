@@ -190,6 +190,7 @@ namespace Langulus::Flow
          for (auto candidate : mHashmap.GetValue(found)) {
             if (candidate->mData.GetDescriptor() != descriptor)
                continue;
+
             // Found                                                    
             return candidate;
          }
@@ -206,7 +207,7 @@ namespace Langulus::Flow
       verb.ForEachDeep(
          [&](const Construct& construct) {
             // For each construct...                                    
-            if (!MetaData::Of<T>()->CastsTo(construct.GetType()))
+            if (!MetaOf<T>()->CastsTo(construct.GetType()))
                return;
             
             auto count = static_cast<int>(
@@ -221,7 +222,7 @@ namespace Langulus::Flow
          },
          [&](const MetaData* type) {
             // For each type...                                         
-            if (!type || !MetaData::Of<T>()->CastsTo(type))
+            if (!type || !MetaOf<T>()->CastsTo(type))
                return;
 
             auto count = static_cast<int>(
@@ -308,14 +309,14 @@ namespace Langulus::Flow
       verb.ForEachDeep(
          [&](const Construct& construct) {
             // For each construct...                                    
-            if (!MetaData::Of<T>()->CastsTo(construct.GetType()))
+            if (!MetaOf<T>()->CastsTo(construct.GetType()))
                return;
 
             TODO();
          },
          [&](const MetaData* type) {
             // For each type...                                         
-            if (!type || !MetaData::Of<T>()->CastsTo(type))
+            if (!type || !MetaOf<T>()->CastsTo(type))
                return;
 
             TODO();

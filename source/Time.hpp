@@ -98,3 +98,26 @@ namespace Langulus::CT
    concept Time = SameAsOneOf<T, Flow::TimePoint, Flow::Time>;
 
 } // namespace Langulus::CT
+
+namespace fmt
+{
+
+   ///                                                                        
+   /// Extend FMT to be capable of logging Flow::Time                         
+   ///                                                                        
+   template<>
+   struct formatter<Langulus::Flow::Time> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(INLINED)
+         auto format(Langulus::Flow::Time const& element, CONTEXT& ctx) {
+         return fmt::format_to(ctx.out(), "{}",
+            static_cast<const Langulus::Flow::Time::Base&>(element));
+      }
+   };
+
+} // namespace fmt

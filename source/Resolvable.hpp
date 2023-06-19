@@ -49,11 +49,11 @@ namespace Langulus::Flow
       NOD() constexpr DMeta GetType() const noexcept;
       NOD() Block GetBlock() const noexcept;
 
-      template<bool DISPATCH = true, bool DEFAULT = true, CT::Verb V>
+      template<bool DISPATCH = true, bool DEFAULT = true, CT::VerbBased V>
       Any Run(const V&);
-      template<bool DISPATCH = true, bool DEFAULT = true, CT::Verb V>
+      template<bool DISPATCH = true, bool DEFAULT = true, CT::VerbBased V>
       Any Run(V&);
-      template<bool DISPATCH = true, bool DEFAULT = true, CT::Verb V>
+      template<bool DISPATCH = true, bool DEFAULT = true, CT::VerbBased V>
       Any Run(V&&) requires (CT::Mutable<V>);
 
       Any Run(const Code&);

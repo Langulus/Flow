@@ -355,7 +355,8 @@ namespace Langulus::Anyness
       // Alternatively, we attempt runtime conversion by                
       // dispatching Verbs::Interpret to the first element              
       Verbs::Interpret interpreter {meta};
-      if (Flow::DispatchDeep(GetElementResolved(0), interpreter)) {
+      auto context = GetElementResolved(0);
+      if (Flow::DispatchDeep(context, interpreter)) {
          // Success                                                     
          return interpreter.GetOutput().As<T>();
       }

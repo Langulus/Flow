@@ -127,7 +127,7 @@ namespace Langulus::Verbs
                " (managed reflection is disabled)");
          #endif
       }
-      else if constexpr (CT::Convertible<FROM, TO>) {
+      else if constexpr (CT::Convertible<FROM, TO> && !CT::Deep<FROM>) {
          // Directly convert if static conversion exists                
          if constexpr (requires { TO {from}; }) {
             return TO {from};

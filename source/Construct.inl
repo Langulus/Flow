@@ -148,7 +148,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    Construct Construct::From(HEAD&& head, TAIL&&... tail) {
       static_assert(CT::Decayed<T>, "T must be fully decayed");
-      const auto meta = MetaOf<T>();
+      const auto meta = RTTI::MetaData::Of<T>();
       if constexpr (sizeof...(tail) == 0)
          return Construct {meta, Forward<HEAD>(head)};
       else
@@ -162,7 +162,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    Construct Construct::From() {
       static_assert(CT::Decayed<T>, "T must be fully decayed");
-      return Construct {MetaOf<T>()};
+      return Construct {RTTI::MetaData::Of<T>()};
    }
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -201,7 +201,7 @@ namespace Langulus::Flow
    template<CT::Data T>
    LANGULUS(INLINED)
    bool Construct::CastsTo() const {
-      return CastsTo(MetaOf<T>());
+      return CastsTo(RTTI::MetaData::Of<T>());
    }
 
    /// Check if construct type fully matches a given static type              
@@ -209,7 +209,7 @@ namespace Langulus::Flow
    template<CT::Data T>
    LANGULUS(INLINED)
    bool Construct::Is() const {
-      return Is(MetaOf<T>());
+      return Is(RTTI::MetaData::Of<T>());
    }
 
    /// Get the argument for the construct                                     

@@ -59,12 +59,12 @@ namespace Langulus::Flow
       void Merge(const Normalized&);
 
       template<CT::Trait T>
-      const TAny<Any>* GetTraits();
+      TAny<Any>* GetTraits();
       template<CT::Trait T>
       const TAny<Any>* GetTraits() const;
 
       template<CT::Data T>
-      const TAny<Any>* GetData();
+      TAny<Any>* GetData();
       template<CT::Data T>
       const TAny<Any>* GetData() const;
 

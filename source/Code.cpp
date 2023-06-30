@@ -12,9 +12,9 @@
 #include "verbs/Do.inl"
 #include "verbs/Select.inl"
 #include "verbs/Associate.inl"
-#include "verbs/Add.inl"
+/*#include "verbs/Add.inl"
 #include "verbs/Multiply.inl"
-#include "verbs/Exponent.inl"
+#include "verbs/Exponent.inl"*/
 #include "verbs/Create.inl"
 
 #define ENABLE_VERBOSE() 0

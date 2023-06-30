@@ -7,7 +7,7 @@ SCENARIO("Temporal flow", "[temporal]") {
    /// The following tests rely on this ontology sequence                     
    const auto HI = "? create Thing(User)"_code.Parse();
    const auto COMMA = "(number? >< number??) or (? Conjunct!4 ??)"_code.Parse();
-   const auto DOT = "(number? + Fraction(number??)) or (? Conjunct!8 ??)"_code.Parse();
+   const auto DOT = "? Conjunct!8 ??"_code.Parse();
    const auto MY = "?.Thing(User).??"_code.Parse();
    const auto NAME = "Traits::Name"_code.Parse();
    const auto IS = "? = ??"_code.Parse();

@@ -338,37 +338,6 @@ namespace Langulus::Flow
       NOD() static VMeta GetVerb();
    };
 
-
-   ///                                                                        
-   /// Statically typed verb, used as CRTP for arithmetic verbs               
-   ///                                                                        
-   template<class VERB, bool NOEXCEPT>
-   struct ArithmeticVerb : StaticVerb<VERB> {
-      template<CT::Data T>
-      using Operator = Conditional<NOEXCEPT,
-         T(*)(const T*, const T*) noexcept, 
-         T(*)(const T*, const T*)
-      >;
-
-      template<CT::Data T>
-      using OperatorMutable = Conditional<NOEXCEPT,
-         void(*)(T*, const T*) noexcept,
-         void(*)(T*, const T*)
-      >;
-
-      using StaticVerb<VERB>::StaticVerb;
-
-      template<CT::Data T>
-      static bool Vector(const Block&, const Block&, Verb&, Operator<T>) noexcept(NOEXCEPT);
-      template<CT::Data T>
-      static bool Vector(const Block&, Block&, Verb&, OperatorMutable<T>) noexcept(NOEXCEPT);
-
-      template<CT::Data T>
-      static bool Scalar(const Block&, const Block&, Verb&, Operator<T>) noexcept(NOEXCEPT);
-      template<CT::Data T>
-      static bool Scalar(const Block&, Block&, Verb&, OperatorMutable<T>) noexcept(NOEXCEPT);
-   };
-
 } // namespace Langulus::Flow
 
 
@@ -415,11 +384,6 @@ namespace Langulus::Verbs
    struct Create;
    struct Select;
    struct Catenate;
-   struct Exponent;
-   struct Multiply;
-   struct Modulate;
-   struct Randomize;
-   struct Add;
    struct Associate;
    struct Conjunct;
    struct Interpret;

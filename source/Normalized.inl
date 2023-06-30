@@ -163,7 +163,7 @@ namespace Langulus::Flow
    ///              contents                                                  
    template<CT::Trait T>
    LANGULUS(INLINED)
-   const TAny<Any>* Normalized::GetTraits() {
+   TAny<Any>* Normalized::GetTraits() {
       auto found = mTraits.FindKeyIndex(T::GetTrait());
       if (!found)
          return nullptr;
@@ -186,7 +186,7 @@ namespace Langulus::Flow
    ///   @return the data list, or nullptr if no such list exists             
    template<CT::Data T>
    LANGULUS(INLINED)
-   const TAny<Any>* Normalized::GetData() {
+   TAny<Any>* Normalized::GetData() {
       auto found = mAnythingElse.FindKeyIndex(MetaOf<T>());
       if (!found)
          return nullptr;

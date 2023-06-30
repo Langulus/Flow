@@ -69,12 +69,12 @@ struct Session : public Resolvable {
 };
 
 /// A mockup of a fraction                                                    
-struct Fraction : public Resolvable {
+/*struct Fraction : public Resolvable {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
    LANGULUS_BASES(Resolvable);
    Fraction() : Resolvable(MetaOf<Fraction>()) {}
-};
+};*/
 
 /// A mockup of a producer                                                    
 struct Producer {};

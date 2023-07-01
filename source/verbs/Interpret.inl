@@ -140,7 +140,7 @@ namespace Langulus::Verbs
          }
          else LANGULUS_ERROR("Unhandled conversion route");
       }
-      else if constexpr (CT::SameAsOneOf<TO, Code, Text, Debug, Bytes>) {
+      else if constexpr (CT::Text<TO> || CT::Bytes<TO>) {
          // No constructor/conversion operator exists, that would do    
          // the conversion, but we can rely on the serializer,          
          // if TO is supported                                          

@@ -98,25 +98,25 @@ namespace Langulus::Flow
          }
          catch (const Except::Convert&) {}
       }
-      else if constexpr (CT::Same<TO_ORIGINAL, Code>) {
+      else if constexpr (CT::Text<TO_ORIGINAL>) {
          ///   CODE SERIALIZER                                          
          // Code serializer is strict to allow for deserialization      
          const auto block = Block::From(item);
 
          try {
-            Code result;
-            (void)block.template Serialize<HEADER, Code, Code>(result);
+            TO_ORIGINAL result;
+            (void)block.template Serialize<HEADER, TO_ORIGINAL, TO_ORIGINAL>(result);
             return result;
          }
          catch (const Except::Convert&) {}
       }
-      else if constexpr (CT::Same<TO_ORIGINAL, Bytes>) {
+      else if constexpr (CT::Bytes<TO_ORIGINAL>) {
          ///   BINARY SERIALIZER                                        
          // Byte serializer is strict to allow for deserialization      
          const auto block = Block::From(item);
 
          try {
-            Bytes result;
+            TO_ORIGINAL result;
             (void)block.template Serialize<HEADER>(result);
             return result;
          }

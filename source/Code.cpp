@@ -12,9 +12,6 @@
 #include "verbs/Do.inl"
 #include "verbs/Select.inl"
 #include "verbs/Associate.inl"
-/*#include "verbs/Add.inl"
-#include "verbs/Multiply.inl"
-#include "verbs/Exponent.inl"*/
 #include "verbs/Create.inl"
 
 #define ENABLE_VERBOSE() 0
@@ -226,16 +223,43 @@ namespace Langulus::Flow
    ///   @param input - code that starts with a skippable character           
    ///   @return number of parsed characters                                  
    Offset Code::SkippedParser::Parse(const Code& input) {
-      Offset progress = 0;
-      while (progress < input.GetCount()) {
-         const auto relevant = input.RightOf(progress);
-         if (Peek(relevant))
-            ++progress;
-         else break;
+      Offset p = 0;
+      while (p < input.GetCount()) {
+         const auto relevant = input.RightOf(p);
+         const auto asview = Token {relevant};
+
+         if (relevant[0] > 0 && relevant[0] <= 32) {
+            // Skip a single skippable character                     
+            ++p;
+            continue;
+         }
+         else if (asview.starts_with("//")) {
+            // Skip an entire line comment                           
+            while (p < input.GetCount() && input[p] != '\n')
+               ++p;
+            continue;
+         }
+         else if (asview.starts_with("/*")) {
+            // Skip a block comment (across multiple new lines)      
+            while (p + 1 < input.GetCount() && (input[p] != '*' || input[p + 1] != '/'))
+               ++p;
+
+            if (p + 1 < input.GetCount())
+               // Skip the "*/" tag                                  
+               p += 2;
+            else 
+               // Skip to end of input, "*/" was never found         
+               p = input.GetCount();
+
+            continue;
+         }
+
+         // If reached, then something valuable was encountered      
+         break;
       }
 
-      VERBOSE("Skipped ", progress, " characters");
-      return progress;
+      VERBOSE("Skipped ", p, " characters");
+      return p;
    }
 
    /// Peek inside input, and return true if first symbol is a character      

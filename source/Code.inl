@@ -51,23 +51,27 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    bool Code::StartsWithSpecial() const noexcept {
       const auto& letter = (*this)[0];
-      return !IsEmpty() && letter > 0 && letter < 32;
+      return letter > 0 && letter < 32;
    }
 
    /// Check if the Code container begins with skippable elements, such as    
-   /// tabs or spaces, or special characters/sequences                        
-   ///   @return true if the first symbol is a spacer                         
+   /// tabs or spaces, comment blocks, or special character sequences (TODO)  
+   ///   @return true if the first symbol is skippable                        
    LANGULUS(INLINED)
    bool Code::StartsWithSkippable() const noexcept {
       const auto& letter = (*this)[0];
-      return !IsEmpty() && letter > 0 && letter <= 32;
+      if (letter > 0 && letter <= 32)
+         return true;
+
+      const auto asview = Token {*this};
+      return asview.starts_with("//") || asview.starts_with("/*");
    }
 
    /// Check if the Code code container begins with skippable elements        
    ///   @return true if the first symbol is a spacer                         
    LANGULUS(INLINED)
    bool Code::EndsWithSkippable() const noexcept {
-      return !IsEmpty() && last() > 0 && last() <= 32;
+      return last() > 0 && last() <= 32;
    }
 
    /// Check if the Code code container begins with a letter or underscore    
@@ -75,7 +79,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    bool Code::StartsWithLetter() const noexcept {
       const auto c = (*this)[0];
-      return !IsEmpty() && (::std::isalpha(c) || c == '_');
+      return IsAlpha(c) || c == '_';
    }
 
    /// Check if the Code code container ends with a letter or underscore      
@@ -83,21 +87,21 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    bool Code::EndsWithLetter() const noexcept {
       const auto c = last();
-      return !IsEmpty() && (::std::isalpha(c) || c == '_');
+      return IsAlpha(c) || c == '_';
    }
 
    /// Check if the Code code container begins with a number                  
    ///   @return true if the first symbol is a number                         
    LANGULUS(INLINED)
    bool Code::StartsWithDigit() const noexcept {
-      return !IsEmpty() && ::std::isdigit((*this)[0]);
+      return IsDigit((*this)[0]);
    }
 
    /// Check if the Code code container ends with a number                    
    ///   @return true if the last symbol is a number                          
    LANGULUS(INLINED)
    bool Code::EndsWithDigit() const noexcept {
-      return !IsEmpty() && ::std::isdigit(last());
+      return IsDigit(last());
    }
 
 } // namespace Langulus::Flow

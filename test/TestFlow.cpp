@@ -36,6 +36,34 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    // Required so that ',' can be parsed                                
    (void)MetaOf<Verbs::Conjunct>();
 
+   GIVEN("The script with line comments") {
+      const auto code = "//some comment\n`plural` associate many //same line comment with no new line"_code;
+      const Any required = Verbs::Associate {IndexMany}
+         .SetSource("plural"_text);
+
+      WHEN("Parsed") {
+         const auto parsed = code.Parse();
+         DumpResults(code, parsed, required);
+         THEN("The parsed contents must match the requirements") {
+            REQUIRE(parsed == required);
+         }
+      }
+   }
+   
+   GIVEN("The script with /**/ comments") {
+      const auto code = "/*some comment*/`plural` /*inbetween*/ associate many /*bad comment at the end"_code;
+      const Any required = Verbs::Associate {IndexMany}
+         .SetSource("plural"_text);
+
+      WHEN("Parsed") {
+         const auto parsed = code.Parse();
+         DumpResults(code, parsed, required);
+         THEN("The parsed contents must match the requirements") {
+            REQUIRE(parsed == required);
+         }
+      }
+   }
+   
    GIVEN("The script: `plural` associate many") {
       const auto code = "`plural` associate many"_code;
       const Any required = Verbs::Associate {IndexMany}

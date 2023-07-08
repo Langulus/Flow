@@ -13,6 +13,9 @@
 #include "verbs/Select.inl"
 #include "verbs/Associate.inl"
 #include "verbs/Create.inl"
+#include "verbs/Catenate.inl"
+#include "verbs/Conjunct.inl"
+#include "verbs/Interpret.inl"
 
 #define ENABLE_VERBOSE() 0
 
@@ -50,6 +53,38 @@ namespace Langulus::Flow
    ///   @param optimize - whether or not to precompile                       
    ///   @returned the parsed flow                                            
    Scope Code::Parse(bool optimize) const {
+      // Make sure that all default traits are registered before parsing
+      (void)MetaOf<Traits::Logger>();
+      (void)MetaOf<Traits::Count>();
+      (void)MetaOf<Traits::Name>();
+      (void)MetaOf<Traits::File>();
+      (void)MetaOf<Traits::Data>();
+      (void)MetaOf<Traits::Index>();
+      (void)MetaOf<Traits::Context>();
+      (void)MetaOf<Traits::Trait>();
+      (void)MetaOf<Traits::State>();
+      (void)MetaOf<Traits::Child>();
+      (void)MetaOf<Traits::Parent>();
+      (void)MetaOf<Traits::Clipboard>();
+      (void)MetaOf<Traits::Color>();
+      (void)MetaOf<Traits::Min>();
+      (void)MetaOf<Traits::Max>();
+      (void)MetaOf<Traits::Input>();
+      (void)MetaOf<Traits::Output>();
+
+      // Make sure that all default types are registered before parsing 
+      (void)MetaOf<Index>();
+
+      // Make sure that all default verbs are registered before parsing 
+      (void)MetaOf<Verbs::Do>();
+      (void)MetaOf<Verbs::Select>();
+      (void)MetaOf<Verbs::Associate>();
+      (void)MetaOf<Verbs::Create>();
+      (void)MetaOf<Verbs::Catenate>();
+      (void)MetaOf<Verbs::Conjunct>();
+      (void)MetaOf<Verbs::Interpret>();
+
+      // Parse                                                          
       Scope output;
       const auto parsed = UnknownParser::Parse(*this, output, 0, optimize);
       if (parsed != GetCount()) {

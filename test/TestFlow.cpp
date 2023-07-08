@@ -33,8 +33,6 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    // Required for constants, such as single, many, etc.                
    (void)MetaOf<Index>();
-   // Required so that ',' can be parsed                                
-   (void)MetaOf<Verbs::Conjunct>();
 
    GIVEN("The script with line comments") {
       const auto code = "//some comment\n`plural` associate many //same line comment with no new line"_code;

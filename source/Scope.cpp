@@ -10,6 +10,7 @@
 #include "Verb.hpp"
 #include "verbs/Do.inl"
 #include "verbs/Interpret.inl"
+#include "verbs/Create.inl"
 
 #define VERBOSE(...)      //Logger::Verbose(__VA_ARGS__)
 #define VERBOSE_TAB(...)  //const auto tab = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
@@ -168,7 +169,13 @@ namespace Langulus::Flow
                else {
                   // Construction failed, so just propagate construct   
                   // A new attempt will be made at runtime              
-                  output.SmartPush(Abandon(newc));
+                  Verbs::Create creator {&newc};
+                  if (DispatchDeep<true, true, false>(environment, creator))
+                     output.SmartPush(Abandon(creator.GetOutput()));
+                  else {
+                     VERBOSE(Logger::Red, "Construct runtime creation failed in: ", *this);
+                     LANGULUS_THROW(Flow, "Construct runtime creation failure");
+                  }
                }
             },
             // Execute verbs                                            

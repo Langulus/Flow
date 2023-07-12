@@ -280,23 +280,25 @@ namespace Langulus::Flow
       NOD() LANGULUS_API(FLOW)
       bool operator <= (const Verb&) const noexcept;
 
-      template<CT::Data T>
-      Verb& operator << (const T&);
-      template<CT::Data T>
-      Verb& operator << (T&&);
-      template<CT::Data T>
-      Verb& operator >> (const T&);
-      template<CT::Data T>
-      Verb& operator >> (T&&);
-
-      template<CT::Data T>
-      Verb& operator <<= (const T&);
-      template<CT::Data T>
-      Verb& operator <<= (T&&);
-      template<CT::Data T>
-      Verb& operator >>= (const T&);
-      template<CT::Data T>
-      Verb& operator >>= (T&&);
+      Verb& operator << (const CT::NotSemantic auto&);
+      Verb& operator << (CT::NotSemantic auto&);
+      Verb& operator << (CT::NotSemantic auto&&);
+      Verb& operator << (CT::Semantic auto&&);
+      
+      Verb& operator >> (const CT::NotSemantic auto&);
+      Verb& operator >> (CT::NotSemantic auto&);
+      Verb& operator >> (CT::NotSemantic auto&&);
+      Verb& operator >> (CT::Semantic auto&&);
+      
+      Verb& operator <<= (const CT::NotSemantic auto&);
+      Verb& operator <<= (CT::NotSemantic auto&);
+      Verb& operator <<= (CT::NotSemantic auto&&);
+      Verb& operator <<= (CT::Semantic auto&&);
+      
+      Verb& operator >>= (const CT::NotSemantic auto&);
+      Verb& operator >>= (CT::NotSemantic auto&);
+      Verb& operator >>= (CT::NotSemantic auto&&);
+      Verb& operator >>= (CT::Semantic auto&&);
 
       template<bool OR>
       Count CompleteDispatch(const Count, Abandoned<Any>&&);
@@ -325,7 +327,6 @@ namespace Langulus::Flow
       StaticVerb(const CT::NotSemantic auto&);
       StaticVerb(CT::NotSemantic auto&);
       StaticVerb(CT::NotSemantic auto&&);
-
       StaticVerb(CT::Semantic auto&&);
 
       template<CT::Data HEAD, CT::Data... TAIL>

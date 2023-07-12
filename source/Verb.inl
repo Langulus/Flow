@@ -701,73 +701,177 @@ namespace Langulus::Flow
       return mOutput;
    }
 
-   /// Push anything to output via shallow copy, satisfying the verb once     
-   ///   @tparam T - the type of the data to push (deducible)                 
-   ///   @param data - the data to push                                       
+   /// Push anything to end of outputs by shallow-copy, satisfying the verb   
+   ///   @attention nullptrs are never pushed and don't satisfy verb          
+   ///   @param data - the data to push (deducible)                           
    ///   @return a reference to this verb for chaining                        
-   template<CT::Data T>
    LANGULUS(INLINED)
-   Verb& Verb::operator << (const T& data) {
-      if (mOutput.SmartPush<IndexBack, true, true>(data))
+   Verb& Verb::operator << (const CT::NotSemantic auto& data) {
+      return operator << (Copy(data));
+   }
+   
+   /// Push anything to end of outputs by shallow-copy, satisfying the verb   
+   ///   @attention nullptrs are never pushed and don't satisfy verb          
+   ///   @param data - the data to push (deducible)                           
+   ///   @return a reference to this verb for chaining                        
+   LANGULUS(INLINED)
+   Verb& Verb::operator << (CT::NotSemantic auto& data) {
+      return operator << (Copy(data));
+   }
+   
+   /// Push anything to end of outputs by move, satisfying the verb           
+   ///   @attention nullptrs are never pushed and don't satisfy verb          
+   ///   @param data - the data to push (deducible)                           
+   ///   @return a reference to this verb for chaining                        
+   LANGULUS(INLINED)
+   Verb& Verb::operator << (CT::NotSemantic auto&& data) {
+      return operator << (Move(data));
+   }
+   
+   /// Push anything to end of the outputs via semantic, satisfying the verb  
+   ///   @attention nullptrs are never pushed and don't satisfy verb          
+   ///   @param data - the data and semantic to push (deducible)              
+   ///   @return a reference to this verb for chaining                        
+   LANGULUS(INLINED)
+   Verb& Verb::operator << (CT::Semantic auto&& data) {
+      using S = Decay<decltype(data)>;
+      if constexpr (CT::Sparse<TypeOf<S>>) {
+         if (!*data)
+            return *this;
+      }
+
+      if (mOutput.SmartPush<IndexBack, true, true>(data.Forward()))
          Done();
       return *this;
    }
-
-   /// Output anything to the back by a move                                  
-   ///   @tparam T - the type of the data to move (deducible)                 
-   ///   @param data - the data to move to output                             
+   
+   /// Push anything to start of outputs by shallow-copy, satisfying the verb 
+   ///   @attention nullptrs are never pushed and don't satisfy verb          
+   ///   @param data - the data to push (deducible)                           
    ///   @return a reference to this verb for chaining                        
-   template<CT::Data T>
    LANGULUS(INLINED)
-   Verb& Verb::operator << (T&& data) {
-      if (mOutput.SmartPush<IndexBack, true, true>(Forward<T>(data)))
-         Done();
-      return *this;
+   Verb& Verb::operator >> (const CT::NotSemantic auto& data) {
+      return operator >> (Copy(data));
    }
-
-   /// Output anything to the front by a shallow copy                         
-   ///   @tparam T - the type of the data to push (deducible)                 
-   ///   @param data - the data to push to output                             
+   
+   /// Push anything to start of outputs by shallow-copy, satisfying the verb 
+   ///   @attention nullptrs are never pushed and don't satisfy verb          
+   ///   @param data - the data to push (deducible)                           
    ///   @return a reference to this verb for chaining                        
-   template<CT::Data T>
    LANGULUS(INLINED)
-   Verb& Verb::operator >> (const T& data) {
-      if (mOutput.SmartPush<IndexFront, true, true>(data))
-         Done();
-      return *this;
+   Verb& Verb::operator >> (CT::NotSemantic auto& data) {
+      return operator >> (Copy(data));
    }
-
-   /// Output anything to the front by a move                                 
-   ///   @tparam T - the type of the data to move (deducible)                 
-   ///   @param data - the data to push                                       
+   
+   /// Push anything to start of outputs by move, satisfying the verb         
+   ///   @attention nullptrs are never pushed and don't satisfy verb          
+   ///   @param data - the data to push (deducible)                           
    ///   @return a reference to this verb for chaining                        
-   template<CT::Data T>
    LANGULUS(INLINED)
-   Verb& Verb::operator >> (T&& data) {
-      if (mOutput.SmartPush<IndexFront, true, true>(Forward<T>(data)))
+   Verb& Verb::operator >> (CT::NotSemantic auto&& data) {
+      return operator >> (Move(data));
+   }
+   
+   /// Push anything to start of outputs via semantic, satisfying the verb    
+   ///   @attention nullptrs are never pushed and don't satisfy verb          
+   ///   @param data - the data and semantic to push (deducible)              
+   ///   @return a reference to this verb for chaining                        
+   LANGULUS(INLINED)
+   Verb& Verb::operator >> (CT::Semantic auto&& data) {
+      using S = Decay<decltype(data)>;
+      if constexpr (CT::Sparse<TypeOf<S>>) {
+         if (!*data)
+            return *this;
+      }
+
+      if (mOutput.SmartPush<IndexFront, true, true>(data.Forward()))
          Done();
       return *this;
    }
 
    /// Merge anything to output's back                                        
-   ///   @tparam T - the type of the data to merge                            
-   ///   @param data - the data to merge                                      
+   ///   @param data - the data to merge (deducible)                          
    ///   @return a reference to this verb for chaining                        
-   template<CT::Data T>
    LANGULUS(INLINED)
-   Verb& Verb::operator <<= (const T&) {
-      TODO();
+   Verb& Verb::operator <<= (const CT::NotSemantic auto& data) {
+      return operator <<= (Copy(data));
+   }
+   
+   /// Merge anything to output's back                                        
+   ///   @param data - the data to merge (deducible)                          
+   ///   @return a reference to this verb for chaining                        
+   LANGULUS(INLINED)
+   Verb& Verb::operator <<= (CT::NotSemantic auto& data) {
+      return operator <<= (Copy(data));
+   }
+   
+   /// Merge anything to output's back                                        
+   ///   @param data - the data to merge (deducible)                          
+   ///   @return a reference to this verb for chaining                        
+   LANGULUS(INLINED)
+   Verb& Verb::operator <<= (CT::NotSemantic auto&& data) {
+      return operator <<= (Move(data));
+   }
+   
+   /// Merge anything to output's back by a semantic                          
+   ///   @param data - the data and semantic to merge (deducible)             
+   ///   @return a reference to this verb for chaining                        
+   LANGULUS(INLINED)
+   Verb& Verb::operator <<= (CT::Semantic auto&& data) {
+      using S = Decay<decltype(data)>;
+      if constexpr (CT::Sparse<TypeOf<S>>) {
+         if (!*data)
+            return *this;
+      }
+
+      if (mOutput.Find(*data))
+         return *this;
+
+      if (mOutput.SmartPush<IndexBack, true, true>(data.Forward()))
+         Done();
       return *this;
    }
-
+   
    /// Merge anything to output's front                                       
-   ///   @tparam T - the type of the data to merge                            
-   ///   @param data - the data to merge                                      
+   ///   @param data - the data to merge (deducible)                          
    ///   @return a reference to this verb for chaining                        
-   template<CT::Data T>
    LANGULUS(INLINED)
-   Verb& Verb::operator >>= (const T&) {
-      TODO();
+   Verb& Verb::operator >>= (const CT::NotSemantic auto& data) {
+      return operator >>= (Copy(data));
+   }
+   
+   /// Merge anything to output's front                                       
+   ///   @param data - the data to merge (deducible)                          
+   ///   @return a reference to this verb for chaining                        
+   LANGULUS(INLINED)
+   Verb& Verb::operator >>= (CT::NotSemantic auto& data) {
+      return operator >>= (Copy(data));
+   }
+   
+   /// Merge anything to output's front                                       
+   ///   @param data - the data to merge (deducible)                          
+   ///   @return a reference to this verb for chaining                        
+   LANGULUS(INLINED)
+   Verb& Verb::operator >>= (CT::NotSemantic auto&& data) {
+      return operator >>= (Move(data));
+   }
+   
+   /// Merge anything to output's front by a semantic                         
+   ///   @param data - the data and semantic to merge (deducible)             
+   ///   @return a reference to this verb for chaining                        
+   LANGULUS(INLINED)
+   Verb& Verb::operator >>= (CT::Semantic auto&& data) {
+      using S = Decay<decltype(data)>;
+      if constexpr (CT::Sparse<TypeOf<S>>) {
+         if (!*data)
+            return *this;
+      }
+
+      if (mOutput.Find(*data)) //TODO: find deep instead?
+         return *this;
+
+      if (mOutput.SmartPush<IndexFront, true, true>(data.Forward()))
+         Done();
       return *this;
    }
 

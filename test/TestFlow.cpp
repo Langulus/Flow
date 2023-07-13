@@ -498,4 +498,106 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
          }
       }
    }
+
+   GIVEN("The script: ? create @ 1 ! 2 ^ 3 * 5 Name(A::Text??)") {
+      const Code code = "? create @ 1 ! 2 ^ 3 * 5 Name(A::Text??)";
+      Any missingFutureText {futureMissing};
+      missingFutureText << MetaOf<A::Text>();
+      const Any required = Verbs::Create {Traits::Name {missingFutureText}}
+         .SetSource(pastMissing)
+         .SetTime(1).SetPriority(2).SetRate(3).SetMass(5);
+
+      WHEN("Parsed") {
+         const auto parsed = code.Parse();
+         DumpResults(code, parsed, required);
+         THEN("The parsed contents must match the requirements") {
+            REQUIRE(parsed == required);
+         }
+      }
+   }
+
+   GIVEN("The script: ? create @ 1.66 ! 2.11 ^ 3.22 * 5.33 Name(A::Text??)") {
+      const Code code = "? create @ 1.66 ! 2.11 ^ 3.22 * 5.33 Name(A::Text??)";
+      Any missingFutureText {futureMissing};
+      missingFutureText << MetaOf<A::Text>();
+      const Any required = Verbs::Create {Traits::Name {missingFutureText}}
+         .SetSource(pastMissing)
+         .SetTime(1.66).SetPriority(2.11).SetRate(3.22).SetMass(5.33);
+
+      WHEN("Parsed") {
+         const auto parsed = code.Parse();
+         DumpResults(code, parsed, required);
+         THEN("The parsed contents must match the requirements") {
+            REQUIRE(parsed == required);
+         }
+      }
+   }
+
+   GIVEN("The script: ? create@0.2!0.1^0.3*0.4 Name(A::Text??)") {
+      const Code code = "? create@0.2!0.1^0.3*0.4 Name(A::Text??)";
+      Any missingFutureText {futureMissing};
+      missingFutureText << MetaOf<A::Text>();
+      const Any required = Verbs::Create {Traits::Name {missingFutureText}}
+         .SetSource(pastMissing)
+         .SetTime(0.2).SetPriority(0.1).SetRate(0.3).SetMass(0.4);
+
+      WHEN("Parsed") {
+         const auto parsed = code.Parse();
+         DumpResults(code, parsed, required);
+         THEN("The parsed contents must match the requirements") {
+            REQUIRE(parsed == required);
+         }
+      }
+   }
+
+   GIVEN("The script: ? create@1!2^3*4 Name(A::Text??)") {
+      const Code code = "? create@1!2^3*4 Name(A::Text??)";
+      Any missingFutureText {futureMissing};
+      missingFutureText << MetaOf<A::Text>();
+      const Any required = Verbs::Create {Traits::Name {missingFutureText}}
+         .SetSource(pastMissing)
+         .SetTime(1).SetPriority(2).SetRate(3).SetMass(4);
+
+      WHEN("Parsed") {
+         const auto parsed = code.Parse();
+         DumpResults(code, parsed, required);
+         THEN("The parsed contents must match the requirements") {
+            REQUIRE(parsed == required);
+         }
+      }
+   }
+
+   GIVEN("The script: ? create@1.66!2.22^0.04*0.05 Name(A::Text??)") {
+      const Code code = "? create@1.66!2.22^0.04*0.05 Name(A::Text??)";
+      Any missingFutureText {futureMissing};
+      missingFutureText << MetaOf<A::Text>();
+      const Any required = Verbs::Create {Traits::Name {missingFutureText}}
+         .SetSource(pastMissing)
+         .SetTime(1.66).SetPriority(2.22).SetRate(0.04).SetMass(0.05);
+
+      WHEN("Parsed") {
+         const auto parsed = code.Parse();
+         DumpResults(code, parsed, required);
+         THEN("The parsed contents must match the requirements") {
+            REQUIRE(parsed == required);
+         }
+      }
+   }
+
+   GIVEN("The script: ? create@0.2!0.3^0.4*0.5 Name(A::Text??)") {
+      const Code code = "? create@0.2!0.3^0.4*0.5 Name(A::Text??)";
+      Any missingFutureText {futureMissing};
+      missingFutureText << MetaOf<A::Text>();
+      const Any required = Verbs::Create {Traits::Name {missingFutureText}}
+         .SetSource(pastMissing)
+         .SetTime(0.2).SetPriority(0.3).SetRate(0.4).SetMass(0.5);
+
+      WHEN("Parsed") {
+         const auto parsed = code.Parse();
+         DumpResults(code, parsed, required);
+         THEN("The parsed contents must match the requirements") {
+            REQUIRE(parsed == required);
+         }
+      }
+   }
 }

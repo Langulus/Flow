@@ -58,8 +58,8 @@ namespace Langulus::Flow
          { ")", 0, false },      // CloseScope
          { "[", 0, false },      // OpenCode
          { "]", 0, false },      // CloseCode
-         { "|", 0, false },      // OpenComment
-         { "|", 0, false },      // CloseComment
+         { "/*", 0, false },     // OpenComment
+         { "*/", 0, false },     // CloseComment
          { "\"", 0, false },     // OpenString
          { "\"", 0, false },     // CloseString
          { "`", 0, false },      // OpenStringAlt
@@ -71,7 +71,7 @@ namespace Langulus::Flow
          { "?", 0, false },      // Past
          { "const", 0, false },  // Constant
          { "*", 0, true },       // Mass
-         { "^", 0, true },       // Frequency
+         { "^", 0, true },       // Rate
          { "@", 0, true },       // Time
          { "!", 0, true }        // Priority
       };

@@ -859,14 +859,17 @@ namespace Langulus::Flow
    ///   @return number of parsed characters                                  
    Offset Code::OperatorParser::ParseReflected(Verb& op, const Code& input, Any& lhs, bool optimize) {
       Offset progress = 0;
+      Code relevant = input;
 
       // Parse charge if any                                            
-      if (ChargeParser::Peek(input) != NoOperator)
-         progress += ChargeParser::Parse(input, op);
+      if (ChargeParser::Peek(relevant) != NoOperator) {
+         progress += ChargeParser::Parse(relevant, op);
+         relevant = input.RightOf(progress);
+      }
       
       // Parse RHS for the operator                                     
       progress += UnknownParser::Parse(
-         input.RightOf(progress), op.GetArgument(), op.GetVerb()->mPrecedence, optimize);
+         relevant, op.GetArgument(), op.GetVerb()->mPrecedence, optimize);
 
       if (optimize && !op.GetCharge().IsFlowDependent()) {
          // Try executing operator at compile-time                      
@@ -891,14 +894,22 @@ namespace Langulus::Flow
       lhs = Move(op);
       return progress;
    }
-
+   
    /// Peek inside input, and return true if it begins with one of the        
    /// built-in operators for charging                                        
    ///   @param input - the code to peek into                                 
    ///   @return true if input begins with an operator for charging           
    Code::Operator Code::ChargeParser::Peek(const Code& input) noexcept {
+      // Parse skippables if any                                     
+      auto relevant = input;
+      if (SkippedParser::Peek(relevant)) {
+         const auto offset = SkippedParser::Parse(relevant);
+         relevant = input.RightOf(offset);
+      }
+
+      // Find the charge operator                                    
       for (Offset i = 0; i < Code::OpCounter; ++i) {
-         if (GlobalOperators[i].mCharge && input.StartsWithOperator(i))
+         if (GlobalOperators[i].mCharge && relevant.StartsWithOperator(i))
             return Operator(i);
       }
 
@@ -919,15 +930,29 @@ namespace Langulus::Flow
          if (relevant.IsEmpty() || relevant[0] == '\0')
             break;
 
-         const auto op = ChargeParser::Peek(relevant);
+         // Parse skippables if any                                     
+         if (SkippedParser::Peek(relevant)) {
+            progress += SkippedParser::Parse(relevant);
+            relevant = input.RightOf(progress);
+         }
+
+         // Find the charge operator                                    
+         Operator op = NoOperator;
+         for (Offset i = 0; i < Code::OpCounter; ++i) {
+            if (GlobalOperators[i].mCharge && relevant.StartsWithOperator(i)) {
+               op = Operator(i);
+               progress += GlobalOperators[i].mToken.size();
+               relevant = input.RightOf(progress);
+               break;
+            }
+         }
+
          if (op == Operator::NoOperator)
             return progress;
 
-         progress += GlobalOperators[op].mToken.size();
-         relevant = input.RightOf(progress);
          VERBOSE("Parsing charge operator: [", GlobalOperators[op].mToken, ']');
 
-         // Skip and spacing and consume '-' operators here             
+         // Skip any spacing and consume '-' operators here             
          bool reverse = false;
          while (SkippedParser::Peek(relevant) || relevant[0] == '-') {
             progress += SkippedParser::Parse(relevant);

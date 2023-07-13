@@ -59,6 +59,9 @@ namespace Langulus::Flow
    ///   @return true if the first symbol is skippable                        
    LANGULUS(INLINED)
    bool Code::StartsWithSkippable() const noexcept {
+      if (IsEmpty())
+         return false;
+
       const auto& letter = (*this)[0];
       if (letter > 0 && letter <= 32)
          return true;

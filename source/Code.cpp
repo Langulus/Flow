@@ -397,10 +397,7 @@ namespace Langulus::Flow
             break;
             
          case RTTI::Meta::Constant: {
-            const auto metaConst = static_cast<CMeta>(meta);
-            const Block constant {
-               {}, metaConst->mValueType, 1, metaConst->mPtrToValue, nullptr
-            };
+            const Block constant {{}, static_cast<CMeta>(meta)};
             lhs.SmartPush(Clone(constant));
             break;
          }

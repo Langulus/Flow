@@ -14,7 +14,7 @@
 
 #define VERBOSE(...)      //Logger::Verbose(__VA_ARGS__)
 #define VERBOSE_TAB(...)  //const auto tab = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
-#define FLOW_ERRORS(...)  //Logger::Error(__VA_ARGS__)
+#define FLOW_ERRORS(...)  Logger::Error(__VA_ARGS__)
 
 namespace Langulus::Flow
 {

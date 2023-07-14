@@ -327,6 +327,33 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
+            else if (!mType->mNamedValues.empty()) {
+               // Contained type has named values, we can use those     
+               for (Offset i = 0; i < GetCount(); ++i) {
+                  const auto lhs = GetElementDense(i);
+                  bool found = false;
+                  for (auto cmeta : mType->mNamedValues) {
+                     // Compare each element in Block with each constant
+                     const Block rhs {{}, cmeta};
+                     if (lhs == rhs) {
+                        // Match found                                  
+                        to += cmeta->mToken;
+                        found = true;
+                        break;
+                     }
+                  }
+
+                  if (!found) {
+                     LANGULUS_ASSERT(false, Convert, "Can't serialize block",
+                        " of type ", GetToken(), " to ", NameOf<TO>(),
+                        " because a named value couldn't be found in reflection"
+                     );
+                  }
+
+                  if (i < GetCount() - 1)
+                     to += Separator(IsOr());
+               }
+            }
             else {
                // Serialize all elements one by one using RTTI          
                Verbs::InterpretTo<TO> interpreter;

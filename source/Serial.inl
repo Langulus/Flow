@@ -337,7 +337,7 @@ namespace Langulus::Anyness
                      const Block rhs {{}, cmeta};
                      if (lhs == rhs) {
                         // Match found                                  
-                        to += cmeta->mToken;
+                        to += TO {cmeta};
                         found = true;
                         break;
                      }

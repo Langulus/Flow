@@ -32,6 +32,7 @@ namespace Langulus::Flow
 
    /// Compile a descriptor, by removing Traits::Parent, and grouping elements
    /// in predictable ways, ensuring further comparisons are fast & orderless 
+   /// Nested contents are normalized only if deep                            
    ///   @param messy - the messy descriptor to normalize                     
    LANGULUS(INLINED)
    Normalized::Normalized(const Any& messy) {
@@ -44,8 +45,16 @@ namespace Langulus::Flow
                // Never modify verb sequences, but make sure their      
                // contents are normalized                               
                Verb normalizedVerb {verb.PartialCopy()};
-               normalizedVerb.SetSource(Normalized {verb.GetSource()});
-               normalizedVerb.SetArgument(Normalized {verb.GetArgument()});
+               if (verb.GetSource().IsDeep())
+                  normalizedVerb.SetSource(Normalized {verb.GetSource()});
+               else
+                  normalizedVerb.SetSource(verb.GetSource());
+
+               if (verb.GetArgument().IsDeep())
+                  normalizedVerb.SetArgument(Normalized {verb.GetArgument()});
+               else
+                  normalizedVerb.SetArgument(verb.GetArgument());
+
                mVerbs << Abandon(normalizedVerb);
             },
             [this](const Trait& trait) {
@@ -55,7 +64,10 @@ namespace Langulus::Flow
                
                // Normalize trait contents and push sort it by its      
                // trait type                                            
-               mTraits[trait.GetTrait()] << Normalized {trait};
+               if (trait.IsDeep())
+                  mTraits[trait.GetTrait()] << Normalized {trait};
+               else
+                  mTraits[trait.GetTrait()] << static_cast<const Any&>(trait);
             },
             [this](const MetaData* type) {
                // Insert an empty Construct to signify solo type ID     
@@ -67,11 +79,7 @@ namespace Langulus::Flow
             },
             [this](const MetaConst* type) {
                // Expand the constant, then normalize, and merge it     
-               Any wrapped = Block {
-                  DataState::Constrained, 
-                  type->mValueType, 1,
-                  type->mPtrToValue, nullptr
-               };
+               Any wrapped = Block {{}, type};
 
                // Clone it, so that we take authority over the data     
                Any cloned = Clone(wrapped);
@@ -83,9 +91,12 @@ namespace Langulus::Flow
             },
             [this](const Construct& construct) {
                // Normalize contents and push sort it by type           
-               mConstructs[construct.GetType()] << Construct {
-                  construct.GetType(), Normalized {construct}
-               };
+               if (construct.IsDeep()) {
+                  mConstructs[construct.GetType()] << Construct {
+                     construct.GetType(), Normalized {construct}
+                  };
+               }
+               else mConstructs[construct.GetType()] << construct;
             }
          )) return;
 
@@ -261,7 +272,11 @@ namespace Langulus::Flow
       if (IDX >= found.GetCount())
          return false;
 
-      try {
+      if constexpr (CT::Deep<D>) {
+         value = found[IDX];
+         return true;
+      }
+      else try {
          value = found[IDX].AsCast<D>();
          return true;
       }

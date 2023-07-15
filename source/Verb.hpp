@@ -182,19 +182,16 @@ namespace Langulus::Flow
 
       NOD() LANGULUS_API(FLOW)
       Any& GetSource() noexcept;
-
       NOD() LANGULUS_API(FLOW)
       const Any& GetSource() const noexcept;
 
       NOD() LANGULUS_API(FLOW)
       Any& GetArgument() noexcept;
-
       NOD() LANGULUS_API(FLOW)
       const Any& GetArgument() const noexcept;
 
       NOD() LANGULUS_API(FLOW)
       Any& GetOutput() noexcept;
-
       NOD() LANGULUS_API(FLOW)
       const Any& GetOutput() const noexcept;
 
@@ -242,41 +239,35 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) Verb& SetPriority(Real) noexcept;
       LANGULUS_API(FLOW) Verb& SetCharge(const Charge&) noexcept;
 
-      template<CT::Data T>
-      Verb& SetSource(const T&);
-      template<CT::Data T>
-      Verb& SetSource(T&);
-      template<CT::Data T>
-      Verb& SetSource(T&&) requires CT::Mutable<T>;
-
-      template<CT::Data T>
-      Verb& SetArgument(const T&);
-      template<CT::Data T>
-      Verb& SetArgument(T&&) requires CT::Mutable<T>;
-
-      template<CT::Data T>
-      Verb& SetOutput(const T&);
-      template<CT::Data T>
-      Verb& SetOutput(T&&) requires CT::Mutable<T>;
+      Verb& SetSource(const CT::NotSemantic auto&);
+      Verb& SetSource(CT::NotSemantic auto&);
+      Verb& SetSource(CT::NotSemantic auto&&);
+      Verb& SetSource(CT::Semantic auto&&);
+      
+      Verb& SetArgument(const CT::NotSemantic auto&);
+      Verb& SetArgument(CT::NotSemantic auto&);
+      Verb& SetArgument(CT::NotSemantic auto&&);
+      Verb& SetArgument(CT::Semantic auto&&);
+      
+      Verb& SetOutput(const CT::NotSemantic auto&);
+      Verb& SetOutput(CT::NotSemantic auto&);
+      Verb& SetOutput(CT::NotSemantic auto&&);
+      Verb& SetOutput(CT::Semantic auto&&);
 
       NOD() LANGULUS_API(FLOW)
       bool operator == (const Verb&) const;
-
       NOD() LANGULUS_API(FLOW)
       bool operator == (VMeta) const noexcept;
-
       NOD() LANGULUS_API(FLOW)
       bool operator == (bool) const noexcept;
 
       NOD() LANGULUS_API(FLOW)
       bool operator <  (const Verb&) const noexcept;
-
       NOD() LANGULUS_API(FLOW)
       bool operator >  (const Verb&) const noexcept;
 
       NOD() LANGULUS_API(FLOW)
       bool operator >= (const Verb&) const noexcept;
-
       NOD() LANGULUS_API(FLOW)
       bool operator <= (const Verb&) const noexcept;
 

@@ -491,69 +491,101 @@ namespace Langulus::Flow
    }
 
    /// Set the verb's source by shallow-copy                                  
-   ///   @param value  - the value to set                                     
+   ///   @param value  - the value to shallow-copy                            
    ///   @return a reference to self                                          
-   template<CT::Data T>
    LANGULUS(INLINED)
-   Verb& Verb::SetSource(const T& value) {
-      mSource = value;
-      return *this;
+   Verb& Verb::SetSource(const CT::NotSemantic auto& value) {
+      return SetSource(Copy(value));
    }
 
-   template<CT::Data T>
    LANGULUS(INLINED)
-   Verb& Verb::SetSource(T& value) {
-      mSource = value;
-      return *this;
+   Verb& Verb::SetSource(CT::NotSemantic auto& value) {
+      return SetSource(Copy(value));
    }
 
    /// Set the verb's source by move                                          
-   ///   @param value  - the value to set                                     
+   ///   @param value  - the value to move                                    
    ///   @return a reference to self                                          
-   template<CT::Data T>
    LANGULUS(INLINED)
-   Verb& Verb::SetSource(T&& value) requires CT::Mutable<T> {
-      mSource = Forward<T>(value);
+   Verb& Verb::SetSource(CT::NotSemantic auto&& value) {
+      return SetSource(Move(value));
+   }
+   
+   /// Set the verb's source by a semantic                                    
+   ///   @param value  - the value and semantic to use                        
+   ///   @return a reference to self                                          
+   LANGULUS(INLINED)
+   Verb& Verb::SetSource(CT::Semantic auto&& value) {
+      mSource = value.Forward();
+      // We guarantee that source is exactly Any, so we unconstrain it  
+      // in order to be safely able to overwrite it anytime             
+      mSource.MakeTypeConstrained(false);
       return *this;
    }
-
+   
    /// Set the verb's argument by shallow-copy                                
-   ///   @param value  - the value to set                                     
+   ///   @param value  - the value to shallow-copy                            
    ///   @return a reference to self                                          
-   template<CT::Data T>
    LANGULUS(INLINED)
-   Verb& Verb::SetArgument(const T& value) {
-      static_cast<Any&>(*this).operator = (value);
-      return *this;
+   Verb& Verb::SetArgument(const CT::NotSemantic auto& value) {
+      return SetArgument(Copy(value));
+   }
+
+   LANGULUS(INLINED)
+   Verb& Verb::SetArgument(CT::NotSemantic auto& value) {
+      return SetArgument(Copy(value));
    }
 
    /// Set the verb's argument by move                                        
-   ///   @param value  - the value to set                                     
+   ///   @param value  - the value to move                                    
    ///   @return a reference to self                                          
-   template<CT::Data T>
    LANGULUS(INLINED)
-   Verb& Verb::SetArgument(T&& value) requires CT::Mutable<T> {
-      static_cast<Any&>(*this).operator = (Forward<T>(value));
+   Verb& Verb::SetArgument(CT::NotSemantic auto&& value) {
+      return SetArgument(Move(value));
+   }
+   
+   /// Set the verb's argument by a semantic                                  
+   ///   @param value  - the value and semantic to use                        
+   ///   @return a reference to self                                          
+   LANGULUS(INLINED)
+   Verb& Verb::SetArgument(CT::Semantic auto&& value) {
+      Any::operator = (value.Forward());
+      // We guarantee that argument is exactly Any, so we unconstrain it
+      // in order to be safely able to overwrite it anytime             
+      MakeTypeConstrained(false);
       return *this;
    }
-
+   
    /// Set the verb's output by shallow-copy                                  
-   ///   @param value  - the value to set                                     
+   ///   @param value  - the value to shallow-copy                            
    ///   @return a reference to self                                          
-   template<CT::Data T>
    LANGULUS(INLINED)
-   Verb& Verb::SetOutput(const T& value) {
-      mOutput = value;
-      return *this;
+   Verb& Verb::SetOutput(const CT::NotSemantic auto& value) {
+      return SetOutput(Copy(value));
+   }
+
+   LANGULUS(INLINED)
+   Verb& Verb::SetOutput(CT::NotSemantic auto& value) {
+      return SetOutput(Copy(value));
    }
 
    /// Set the verb's output by move                                          
-   ///   @param value  - the value to set                                     
+   ///   @param value  - the value to move                                    
    ///   @return a reference to self                                          
-   template<CT::Data T>
    LANGULUS(INLINED)
-   Verb& Verb::SetOutput(T&& value) requires CT::Mutable<T> {
-      mOutput = Forward<T>(value);
+   Verb& Verb::SetOutput(CT::NotSemantic auto&& value) {
+      return SetOutput(Move(value));
+   }
+   
+   /// Set the verb's output by a semantic                                    
+   ///   @param value  - the value and semantic to use                        
+   ///   @return a reference to self                                          
+   LANGULUS(INLINED)
+   Verb& Verb::SetOutput(CT::Semantic auto&& value) {
+      mOutput = value.Forward();
+      // We guarantee that output is exactly Any, so we unconstrain it  
+      // in order to be safely able to overwrite it anytime             
+      mOutput.MakeTypeConstrained(false);
       return *this;
    }
 

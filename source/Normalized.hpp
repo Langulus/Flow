@@ -67,6 +67,11 @@ namespace Langulus::Flow
       TAny<Any>* GetData();
       template<CT::Data T>
       const TAny<Any>* GetData() const;
+      
+      template<CT::Data T>
+      TAny<Construct>* GetConstructs();
+      template<CT::Data T>
+      const TAny<Construct>* GetConstructs() const;
 
       template<CT::Trait T, CT::Data D>
       void SetDefaultTrait(D&&);

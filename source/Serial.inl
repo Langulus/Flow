@@ -11,8 +11,6 @@
 #include <Flow/Verbs/Conjunct.hpp>
 #include <Flow/Verbs/Interpret.hpp>
 
-#define LGLS_VERBOSE_SERIALIZATION(a)
-
 #ifndef LANGULUS_MAX_DEBUGGABLE_ELEMENTS
    #if LANGULUS(DEBUG) || LANGULUS(SAFE)
       #define LANGULUS_MAX_DEBUGGABLE_ELEMENTS 32
@@ -97,6 +95,9 @@ namespace Langulus::Flow
             return result;
          }
          catch (const Except::Convert&) {}
+
+         // If reached, then no debug serialization was available       
+         return "<not debuggable>";
       }
       else if constexpr (CT::Text<TO_ORIGINAL>) {
          ///   CODE SERIALIZER                                          
@@ -126,7 +127,11 @@ namespace Langulus::Flow
 
       // If this is reached, then we weren't able to serialize the item 
       // to the desired type                                            
-      LANGULUS_THROW(Convert, "Can't serialize");
+      LANGULUS_ASSERT(false, Convert, "Can't serialize ",
+         " type ", NameOf<FROM>(), " as ", NameOf<TO>(),
+         " (final target being ", NameOf<TO_ORIGINAL>(), ")"
+      );
+      return {};
    }
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -344,10 +349,18 @@ namespace Langulus::Anyness
                   }
 
                   if (!found) {
-                     LANGULUS_ASSERT(false, Convert, "Can't serialize block",
-                        " of type ", GetToken(), " to ", NameOf<TO>(),
-                        " because a named value couldn't be found in reflection"
-                     );
+                     if constexpr (CT::SameAsOneOf<TO_ORIGINAL, Debug, Text>) {
+                        // Don't pollute with messages while serializing
+                        // for logging, just return a default name      
+                        to += "<unserializable named value>";
+                     }
+                     else {
+                        LANGULUS_ASSERT(false, Convert, "Can't serialize block",
+                           " of type ", GetToken(), " to ", NameOf<TO>(),
+                           " (final target being ", NameOf<TO_ORIGINAL>(), ")"
+                           " because a named value couldn't be found in reflection"
+                        );
+                     }
                   }
 
                   if (i < GetCount() - 1)
@@ -355,7 +368,8 @@ namespace Langulus::Anyness
                }
             }
             else {
-               // Serialize all elements one by one using RTTI          
+               // Serialize one by one using Verbs::Interpret           
+               // This is the slowest routine                           
                Verbs::InterpretTo<TO> interpreter;
                interpreter.ShortCircuit(false);
 
@@ -368,10 +382,16 @@ namespace Langulus::Anyness
                      to += r;
                   });
                }
+               else if constexpr (CT::SameAsOneOf<TO_ORIGINAL, Debug, Text>) {
+                  // Don't pollute with messages while serializing      
+                  // for logging, just throw                            
+                  LANGULUS_THROW(Convert, "Can't serialize block");
+               }
                else {
-                  Logger::Error("Can't serialize block of type ",
-                     GetToken(), " to ", NameOf<TO>());
-                  LANGULUS_THROW(Convert, "Can't serialize block to text");
+                  LANGULUS_ASSERT(false, Convert, "Can't serialize block", 
+                     " of type ", GetToken(), " to ", NameOf<TO>(),
+                     " (final target being ", NameOf<TO_ORIGINAL>(), ")"
+                  );
                }
             }
          }
@@ -494,7 +514,11 @@ namespace Langulus::Anyness
          }
 
          // Failure if reached                                          
-         LANGULUS_THROW(Convert, "Can't binary serialize");
+         LANGULUS_ASSERT(false, Convert, "Can't serialize ", 
+            " type ", GetToken(), " as ", NameOf<TO>(),
+            " (final target being ", NameOf<TO_ORIGINAL>(), ")"
+         );
+         return 0;
       }
       else LANGULUS_ERROR("Unsupported serialization");
    }
@@ -544,8 +568,10 @@ namespace Langulus::Anyness
          // Don't read header - we have a predictable single element,   
          // like a member, a base, or a cast operator sequence          
          // In this case, result should already be allocated and known  
-         if (to.IsUntyped() || to.IsEmpty())
-            LANGULUS_THROW(Convert, "Bad resulting block");
+         LANGULUS_ASSERT(to.IsTyped() && !to.IsEmpty(),
+            Convert, "Bad serialization output block while deserializing ",
+            GetToken(), " as ", to.GetToken()
+         );
 
          deserializedCount = to.GetCount();
       }
@@ -648,7 +674,12 @@ namespace Langulus::Anyness
                   );
                }
             }
-            else LANGULUS_THROW(Convert, "Bad meta container");
+            else {
+               LANGULUS_ASSERT(false,
+                  Convert, "Bad meta container while deserializing ",
+                  GetToken(), " as ", to.GetToken()
+               );
+            }
 
             return read;
          }
@@ -733,7 +764,11 @@ namespace Langulus::Anyness
       }
 
       // Failure if reached                                             
-      LANGULUS_THROW(Convert, "Can't binary-deserialize");
+      LANGULUS_ASSERT(false,
+         Convert, "Can't deserialize ",
+         GetToken(), " as ", to.GetToken()
+      );
+      return 0;
    }
 
 #endif

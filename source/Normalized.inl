@@ -178,7 +178,8 @@ namespace Langulus::Flow
       auto found = mTraits.FindKeyIndex(T::GetTrait());
       if (!found)
          return nullptr;
-      else return &mTraits.GetValue(found);
+      
+      return &mTraits.GetValue(found);
    }
 
    /// Get list of traits, corresponding to a type (const)                    
@@ -201,7 +202,8 @@ namespace Langulus::Flow
       auto found = mAnythingElse.FindKeyIndex(MetaOf<T>());
       if (!found)
          return nullptr;
-      else return &mAnythingElse.GetValue(found);
+      
+      return &mAnythingElse.GetValue(found);
    }
 
    /// Get list of data, corresponding to a type (const)                      
@@ -211,6 +213,28 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    const TAny<Any>* Normalized::GetData() const {
       return const_cast<Normalized*>(this)->template GetData<T>();
+   }
+
+   /// Get list of constructs, corresponding to a type                        
+   ///   @tparam T - type to search for                                       
+   ///   @return the construct list, or nullptr if no such list exists        
+   template<CT::Data T>
+   LANGULUS(INLINED)
+   TAny<Construct>* Normalized::GetConstructs() {
+      auto found = mConstructs.FindKeyIndex(MetaOf<T>());
+      if (!found)
+         return nullptr;
+      
+      return &mConstructs.GetValue(found);
+   }
+
+   /// Get list of constructs, corresponding to a type (const)                
+   ///   @tparam T - type to search for                                       
+   ///   @return the construct list, or nullptr if no such list exists        
+   template<CT::Data T>
+   LANGULUS(INLINED)
+   const TAny<Construct>* Normalized::GetConstructs() const {
+      return const_cast<Normalized*>(this)->template GetConstructs<T>();
    }
 
    /// Set a default trait, if such wasn't already set                        

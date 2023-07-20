@@ -227,7 +227,7 @@ namespace Langulus::Verbs
             if (element.Is<Trait>()) {
                // Search for the trait                                  
                const auto meta = element.Get<Trait>().GetTrait();
-               const auto sati = satisfiedTraits.FindKeyIndex(meta);
+               const auto sati = satisfiedTraits.Find(meta);
                const auto index = sati
                   ? satisfiedTraits.GetValue(sati)
                   : IndexFirst;
@@ -270,7 +270,7 @@ namespace Langulus::Verbs
                meta = MetaOf<A::Number>();
             }
 
-            const auto sati = satisfiedData.FindKeyIndex(meta);
+            const auto sati = satisfiedData.Find(meta);
             const auto index = sati
                ? satisfiedData.GetValue(sati)
                : IndexFirst;

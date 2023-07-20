@@ -140,7 +140,7 @@ namespace Langulus::Flow
 
       // Merge time stacks                                              
       for (auto pair : other.mTimeStack) {
-         const auto found = mTimeStack.FindKeyIndex(pair.mKey);
+         const auto found = mTimeStack.Find(pair.mKey);
          if (!found) {
             const State state {
                TimePoint {mState.mStart + pair.mKey},
@@ -159,7 +159,7 @@ namespace Langulus::Flow
 
       // Merge periodic stacks                                          
       for (auto pair : other.mFrequencyStack) {
-         const auto found = mFrequencyStack.FindKeyIndex(pair.mKey);
+         const auto found = mFrequencyStack.Find(pair.mKey);
          if (!found) {
             const State state {
                mState.mStart,

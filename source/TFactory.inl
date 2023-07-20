@@ -185,7 +185,7 @@ namespace Langulus::Flow
    TEMPLATE() LANGULUS(INLINED)
    typename FACTORY()::Element* FACTORY()::Find(const Normalized& descriptor) const {
       const auto hash = descriptor.GetHash();
-      const auto found = mHashmap.FindKeyIndex(hash);
+      const auto found = mHashmap.Find(hash);
       if (found) {
          for (auto candidate : mHashmap.GetValue(found)) {
             if (candidate->mData.GetDescriptor() != descriptor)

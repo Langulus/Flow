@@ -90,7 +90,7 @@ namespace Langulus::Verbs
             auto& arguments = construct.GetArgument();
 
             // Then forward the constructors to each element            
-            if (!arguments.IsEmpty()) {
+            if (arguments) {
                for (Count i = 0; i < created.GetCount(); ++i) {
                   Any element {created.GetElement(i)};
 
@@ -126,7 +126,7 @@ namespace Langulus::Verbs
    ///   @param verb - the creation verb                                      
    ///   @return true if verb was satisfied                                   
    inline bool Create::ExecuteStateless(Verb& verb) {
-      if (verb.IsEmpty() || verb.GetMass() <= 0)
+      if (!verb || verb.GetMass() <= 0)
          return false;
 
       const auto createInner = [&](const Construct& descriptor) {
@@ -140,7 +140,7 @@ namespace Langulus::Verbs
          const auto count = static_cast<Count>(descriptor.GetCharge().mMass * verb.GetMass());
          auto result = Any::FromMeta(type);
 
-         if (type->mDescriptorConstructor && !descriptor.IsEmpty()) {
+         if (type->mDescriptorConstructor && descriptor) {
             for (Offset i = 0; i < count; ++i) {
                if (count != 1) {
                   VERBOSE_CREATION(Logger::Yellow,
@@ -158,7 +158,7 @@ namespace Langulus::Verbs
                }
             }
          }
-         else if (type->mDefaultConstructor && descriptor.IsEmpty()) {
+         else if (type->mDefaultConstructor && !descriptor) {
             for (Offset i = 0; i < count; ++i) {
                if (count != 1) {
                   VERBOSE_CREATION(Logger::Yellow,
@@ -237,7 +237,7 @@ namespace Langulus::Verbs
 
                Verbs::Select selector {meta, index};
                Verb::GenericExecuteIn(context, selector);
-               if (!selector.GetOutput().IsEmpty()) {
+               if (selector.GetOutput()) {
                   VERBOSE_CREATION("Initializing trait " << selector.GetOutput()
                      << " with " << Logger::Cyan << element << " (" << index << ")");
 
@@ -280,7 +280,7 @@ namespace Langulus::Verbs
 
             Verbs::Select selector {meta, index};
             Verb::GenericExecuteIn(context, selector);
-            if (!selector.GetOutput().IsEmpty()) {
+            if (selector.GetOutput()) {
                VERBOSE_CREATION("Initializing data " << selector.GetOutput()
                   << " with " << Logger::Cyan << element << " (" << index << ")");
 

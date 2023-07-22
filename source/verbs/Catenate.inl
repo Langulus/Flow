@@ -167,7 +167,7 @@ namespace Langulus::Verbs
          return false;
       }
 
-      if (verb.IsEmpty()) {
+      if (!verb) {
          verb << Any {context};
          return true;
       }
@@ -190,7 +190,7 @@ namespace Langulus::Verbs
          return false;
       }
 
-      if (verb.IsEmpty()) {
+      if (!verb) {
          verb << Any {context};
          return true;
       }

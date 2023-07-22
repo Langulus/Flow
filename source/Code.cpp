@@ -186,7 +186,7 @@ namespace Langulus::Flow
    ///   @param text - the text to check                                      
    ///   @return true if text is a valid Code keyword                         
    bool Code::IsValidKeyword(const Text& text) {
-      if (text.IsEmpty() || !::std::isalpha(text[0]))
+      if (!text || !IsAlpha(text[0]))
          return false;
 
       for (auto a : text) {
@@ -654,7 +654,7 @@ namespace Langulus::Flow
    ///   @param rhs - the content to insert                                   
    ///   @param lhs - the place where the content will be inserted            
    void Code::OperatorParser::InsertContent(Any& rhs, Any& lhs) {
-      if (lhs.IsUntyped() || lhs.IsEmpty()) {
+      if (lhs.IsUntyped() || !lhs) {
          // If output is untyped, we directly push content, regardless  
          // if it's filled with something or not - a scope is a scope   
          // If empty, just merge states                                 
@@ -924,7 +924,7 @@ namespace Langulus::Flow
       while (progress < input.GetCount()) {
          // Scan input until end of charge operators/code               
          auto relevant = input.RightOf(progress);
-         if (relevant.IsEmpty() || relevant[0] == '\0')
+         if (!relevant || relevant[0] == '\0')
             break;
 
          // Parse skippables if any                                     

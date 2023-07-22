@@ -505,7 +505,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       missingFutureText << MetaOf<A::Text>();
       const Any required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(pastMissing)
-         .SetTime(1).SetPriority(2).SetRate(3).SetMass(5);
+         .SetTime(1_real).SetPriority(2_real).SetRate(3_real).SetMass(5_real);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -522,7 +522,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       missingFutureText << MetaOf<A::Text>();
       const Any required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(pastMissing)
-         .SetTime(1.66).SetPriority(2.11).SetRate(3.22).SetMass(5.33);
+         .SetTime(1.66_real).SetPriority(2.11_real).SetRate(3.22_real).SetMass(5.33_real);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -539,7 +539,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       missingFutureText << MetaOf<A::Text>();
       const Any required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(pastMissing)
-         .SetTime(0.2).SetPriority(0.1).SetRate(0.3).SetMass(0.4);
+         .SetTime(0.2_real).SetPriority(0.1_real).SetRate(0.3_real).SetMass(0.4_real);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -556,7 +556,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       missingFutureText << MetaOf<A::Text>();
       const Any required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(pastMissing)
-         .SetTime(1).SetPriority(2).SetRate(3).SetMass(4);
+         .SetTime(1_real).SetPriority(2_real).SetRate(3_real).SetMass(4_real);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -573,7 +573,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       missingFutureText << MetaOf<A::Text>();
       const Any required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(pastMissing)
-         .SetTime(1.66).SetPriority(2.22).SetRate(0.04).SetMass(0.05);
+         .SetTime(1.66_real).SetPriority(2.22_real).SetRate(0.04_real).SetMass(0.05_real);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -590,7 +590,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       missingFutureText << MetaOf<A::Text>();
       const Any required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(pastMissing)
-         .SetTime(0.2).SetPriority(0.3).SetRate(0.4).SetMass(0.5);
+         .SetTime(0.2_real).SetPriority(0.3_real).SetRate(0.4_real).SetMass(0.5_real);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();

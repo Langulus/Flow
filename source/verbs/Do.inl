@@ -72,7 +72,7 @@ namespace Langulus::Verbs
    ///   @param verb - the do/undo verb                                       
    ///   @return true if verb was satisfied                                   
    inline bool Do::ExecuteStateless(Verb& verb) {
-      if (verb.IsEmpty())
+      if (!verb)
          return false;
 
       //TODO execute
@@ -167,7 +167,7 @@ namespace Langulus::Flow
    ///   @return the number of successful executions                          
    template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::VerbBased V>
    Count DispatchFlat(T& context, V& verb) {
-      if (context.IsEmpty() || verb.IsMonocast()) {
+      if (!context || verb.IsMonocast()) {
          if (context.IsInvalid()) {
             // Context is empty and doesn't have any relevant states,   
             // and execution happens only if DEFAULT verbs are allowed, 
@@ -224,7 +224,7 @@ namespace Langulus::Flow
             }
          }
          
-         if (verb.IsDone() && !verb.GetOutput().IsEmpty()) {
+         if (verb.IsDone() && verb.GetOutput()) {
             // Cache output, conserving the context hierarchy           
             output.SmartPush(Move(verb.GetOutput()));
          }
@@ -254,7 +254,7 @@ namespace Langulus::Flow
    ///   @return the number of successful executions                          
    template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::VerbBased V>
    Count DispatchDeep(T& context, V& verb) {
-      if (context.IsEmpty() || verb.IsMonocast()) {
+      if (!context || verb.IsMonocast()) {
          if (context.IsInvalid()) {
             // Context is empty and doesn't have any relevant states,   
             // and execution happens only if DEFAULT verbs are allowed, 
@@ -307,7 +307,7 @@ namespace Langulus::Flow
             }
 
             // Cache each output, conserving the context hierarchy      
-            if (hits && !verb.GetOutput().IsEmpty())
+            if (hits && verb.GetOutput())
                output << Move(verb.GetOutput());
          }
 

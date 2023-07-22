@@ -568,7 +568,7 @@ namespace Langulus::Anyness
          // Don't read header - we have a predictable single element,   
          // like a member, a base, or a cast operator sequence          
          // In this case, result should already be allocated and known  
-         LANGULUS_ASSERT(to.IsTyped() && !to.IsEmpty(),
+         LANGULUS_ASSERT(to.IsTyped() && to,
             Convert, "Bad serialization output block while deserializing ",
             GetToken(), " as ", to.GetToken()
          );

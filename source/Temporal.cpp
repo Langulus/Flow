@@ -60,9 +60,7 @@ namespace Langulus::Flow
    /// Check if flow contains anything executable                             
    ///   @return true if flow contains at least one verb                      
    bool Temporal::IsValid() const {
-      return !mFrequencyStack.IsEmpty()
-         || !mTimeStack.IsEmpty()
-         || !mPriorityStack.IsEmpty();
+      return mFrequencyStack || mTimeStack || mPriorityStack;
    }
 
    /// Dump the contents of the flow to the log                               
@@ -226,7 +224,7 @@ namespace Langulus::Flow
          // Nest deep scopes                                            
          scope.ForEach([&](const Block& subscope) {
             auto collapsed = Collapse(subscope);
-            if (!collapsed.IsEmpty())
+            if (collapsed)
                result << Abandon(collapsed);
          });
 
@@ -239,7 +237,7 @@ namespace Langulus::Flow
          [&](const Trait& subscope) {
             // Collapse traits                                          
             auto collapsed = Collapse(subscope);
-            if (!collapsed.IsEmpty()) {
+            if (collapsed) {
                result << Trait::From(
                   subscope.GetTrait(), 
                   Abandon(collapsed)
@@ -249,7 +247,7 @@ namespace Langulus::Flow
          [&](const Construct& subscope) {
             // Collapse constructs                                      
             auto collapsed = Collapse(subscope);
-            if (!collapsed.IsEmpty()) {
+            if (collapsed) {
                result << Construct {
                   subscope.GetType(),
                   Abandon(collapsed),
@@ -260,7 +258,7 @@ namespace Langulus::Flow
          [&](const Verb& subscope) {
             // Collapse verbs                                           
             auto collapsedArgument = Collapse(subscope.GetArgument());
-            if (!collapsedArgument.IsEmpty()) {
+            if (collapsedArgument) {
                auto v = Verb::FromMeta(
                   subscope.GetVerb(),
                   Abandon(collapsedArgument),
@@ -282,7 +280,7 @@ namespace Langulus::Flow
          }
       );
 
-      if (!done && !scope.IsEmpty())
+      if (!done && scope)
          result = scope;
       if (result.GetCount() < 2)
          result.MakeAnd();

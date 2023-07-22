@@ -92,7 +92,7 @@ namespace Langulus::Verbs
    ///   @return true if execution was a success                              
    template<bool MUTABLE>
    bool Select::DefaultSelect(Block& context, Verb& verb) {
-      if (verb.IsMissing() || context.IsEmpty() || context.IsMissing())
+      if (verb.IsMissing() || !context || context.IsMissing())
          return false;
 
       TAny<Index> indices;
@@ -158,7 +158,7 @@ namespace Langulus::Verbs
    template<bool MUTABLE, class META>
    bool Select::PerIndex(Block& context, TAny<Trait>& selectedTraits, TMeta resultingTrait, META meta, const TAny<Index>& indices) {
       bool done = false;
-      if (indices.IsEmpty()) {
+      if (!indices) {
          // Meta is the only filter                                     
          auto variable = context.GetMember(meta);
          if constexpr (!MUTABLE)
@@ -195,7 +195,7 @@ namespace Langulus::Verbs
    inline bool Select::SelectByMeta(const TAny<Index>& indices, DMeta id, Block& context, TAny<Trait>& selectedTraits, TAny<const RTTI::Ability*>& selectedVerbs) {
       const auto type = context.GetType();
       if (id->Is<VMeta>()) {
-         if (indices.IsEmpty() || indices == IndexAll) {
+         if (!indices || indices == IndexAll) {
             // Retrieve each ability corresponding to verbs in rhs      
             for (auto& ability : type->mAbilities)
                selectedVerbs << &ability.second;

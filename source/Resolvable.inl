@@ -210,7 +210,7 @@ namespace Langulus::Flow
    ///   @return the results of the execution                                 
    LANGULUS(INLINED)
    Any Resolvable::Run(const Code& code) {
-      if (code.IsEmpty())
+      if (!code)
          return {};
       return Run(code.Parse());
    }
@@ -351,7 +351,7 @@ namespace Langulus::Flow
    bool Resolvable::SetTrait(const D& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<T>();
-         if (found.IsEmpty())
+         if (!found)
             return false;
          return found.Copy(Block::From(data)) > 0;
       }
@@ -376,7 +376,7 @@ namespace Langulus::Flow
    bool Resolvable::SetTrait(D&& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<T>();
-         if (found.IsEmpty())
+         if (!found)
             return false;
          return found.Copy(Block::From(data)) > 0;
       }
@@ -400,7 +400,7 @@ namespace Langulus::Flow
    bool Resolvable::SetValue(const D& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<D>();
-         if (found.IsEmpty())
+         if (!found)
             return false;
          return found.Copy(Block::From(data)) > 0;
       }
@@ -424,7 +424,7 @@ namespace Langulus::Flow
    bool Resolvable::SetValue(D&& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<D>();
-         if (found.IsEmpty())
+         if (!found)
             return false;
          return found.Copy(Block::From(data)) > 0;
       }

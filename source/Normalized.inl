@@ -245,7 +245,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    void Normalized::SetDefaultTrait(D&& value) {
       auto found = GetTraits<T>();
-      if (found && !found->IsEmpty())
+      if (found && *found)
          return;
       *found = Forward<D>(value);
    }

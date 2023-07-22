@@ -385,8 +385,8 @@ namespace Langulus::Flow
          // inside (if any) should be done in the integration phase     
          // Just making sure that the integrated argument & source are  
          // propagated to the verb's output                             
-         if (verb.mOutput.IsEmpty()) {
-            if (!verb.IsEmpty())
+         if (!verb.mOutput) {
+            if (verb)
                verb << Move(verb.GetArgument());
             else
                verb << Move(verb.GetSource());

@@ -14,8 +14,8 @@ SCENARIO("Test factories", "[factory]") {
 				REQUIRE(factory.IsUnique == false);
 				REQUIRE(factory.mFactoryOwner == &producer);
 				REQUIRE(factory.mReusable == nullptr);
-				REQUIRE(factory.mHashmap.IsEmpty());
-				REQUIRE(factory.mData.IsEmpty());
+				REQUIRE(!factory.mHashmap);
+				REQUIRE(!factory.mData);
 				REQUIRE(factory.mData.GetType() == MetaOf<typename TFactory<Producible>::Element>());
 			}
 		}

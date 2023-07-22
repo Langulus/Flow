@@ -40,7 +40,7 @@ namespace Langulus::Flow::Inner
    ///   @param content - the content to check                                
    ///   @return true if contents are accepted                                
    inline bool Missing::Accepts(const Block& content) const {
-      if (mFilter.IsEmpty() || content.CastsTo<Verb, true>())
+      if (!mFilter || content.CastsTo<Verb, true>())
          return true;
 
       for (auto type : mFilter) {
@@ -54,7 +54,7 @@ namespace Langulus::Flow::Inner
    /// Check if the missing point has been satisfied by pushed contents       
    ///   @return true if point was satisfied                                  
    inline bool Missing::IsSatisfied() const {
-      if (mContent.IsEmpty() || mFilter.IsEmpty())
+      if (!mContent || !mFilter)
          return false;
 
       bool satisfied = false;
@@ -104,7 +104,7 @@ namespace Langulus::Flow::Inner
       //                                                                
       // If reached, we're pushing flat data                            
       // Let's check if there's a filter                                
-      if (mFilter.IsEmpty()) {
+      if (!mFilter) {
          // No filter, just push                                        
          if (!content.template CastsTo<Verb, true>()) {
             // Always try interpreting scope as verbs                   
@@ -130,7 +130,7 @@ namespace Langulus::Flow::Inner
             return false;
          }
 
-         if (!linked.IsEmpty()) {
+         if (linked) {
             if (pastHasBeenConsumed) {
                // There were missing points in content, and this        
                // mContent   has been consumed to fill them, so we      
@@ -269,8 +269,8 @@ namespace Langulus::Flow::Inner
 
             Inner::MissingPast pastShallowCopy;
             pastShallowCopy.mFilter = past.mFilter;
-            if (mContent.IsEmpty()) {
-               if (environment.IsEmpty())
+            if (!mContent) {
+               if (!environment)
                   LANGULUS_THROW(Link, "No environment provided for temporal flow");
 
                VERBOSE_MISSING_POINT(
@@ -313,7 +313,7 @@ namespace Langulus::Flow::Inner
          result += Text {mPriority};
       }
 
-      if (!mContent.IsEmpty()) {
+      if (mContent) {
          result += ", ";
          result += Verbs::Interpret::To<Debug>(mContent);
       }

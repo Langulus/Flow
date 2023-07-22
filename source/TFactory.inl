@@ -155,7 +155,14 @@ namespace Langulus::Flow
    bool FACTORY()::IsEmpty() const noexcept {
       return mCount == 0;
    }
-   
+
+   /// Explicit bool cast operator, for use in if statements                  
+   ///   @return true if block contains at least one valid element            
+   TEMPLATE() LANGULUS(INLINED)
+   constexpr FACTORY()::operator bool() const noexcept {
+      return !IsEmpty();
+   }
+
 #ifdef LANGULUS_ENABLE_SAFE_MODE
    /// Dump the factory to the log                                            
    TEMPLATE()
@@ -363,7 +370,7 @@ namespace Langulus::Flow
       const auto hash = item->mData.GetHash();
       auto& list = mHashmap[hash];
       list.Remove(item);
-      if (list.IsEmpty())
+      if (!list)
          mHashmap.RemoveKey(hash);
 
       // Destroy the element                                            

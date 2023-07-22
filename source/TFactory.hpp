@@ -94,7 +94,10 @@ namespace Langulus::Flow
 
    public:
       void Reset();
+
       NOD() bool IsEmpty() const noexcept;
+
+      NOD() constexpr explicit operator bool() const noexcept;
 
       void Create(Verb&);
       void Select(Verb&);

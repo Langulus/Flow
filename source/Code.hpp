@@ -17,6 +17,7 @@ namespace Langulus::Flow
    ///                                                                        
    struct Code : Text {
       LANGULUS_BASES(Text);
+      LANGULUS(FILES) "flow";
 
       enum Operator {
          OpenScope = 0,

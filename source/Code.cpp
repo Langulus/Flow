@@ -57,7 +57,7 @@ namespace Langulus::Flow
       (void)MetaOf<Traits::Logger>();
       (void)MetaOf<Traits::Count>();
       (void)MetaOf<Traits::Name>();
-      (void)MetaOf<Traits::File>();
+      (void)MetaOf<Traits::Path>();
       (void)MetaOf<Traits::Data>();
       (void)MetaOf<Traits::Index>();
       (void)MetaOf<Traits::Context>();

@@ -55,7 +55,7 @@ namespace Langulus::Flow
       using Producer = CT::ProducerOf<T>;
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
 
-   protected: TESTING(public:)
+   protected: IF_LANGULUS_TESTING(public:)
       struct Element;
 
       // Each factory is bound to a producer instance                   
@@ -154,7 +154,7 @@ namespace Langulus::Flow
    ///                                                                        
    template<class T, FactoryUsage USAGE>
    struct TFactory<T, USAGE>::Element {
-   protected: TESTING(public:)
+   protected: IF_LANGULUS_TESTING(public:)
       friend class TFactory<T, USAGE>;
       union {
          // When element is in use, this pointer points to the          

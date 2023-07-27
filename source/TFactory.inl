@@ -67,14 +67,14 @@ namespace Langulus::Flow
    /// Destructor for descriptor-constructible element                        
    TEMPLATE() LANGULUS(INLINED)
    FACTORY()::Element::~Element() {
-      /*#ifdef LANGULUS_ENABLE_SAFE_MODE
+      #ifdef LANGULUS_ENABLE_SAFE_MODE
          if (mData.GetReferences() != 1) {
             Logger::Error("Unable to destroy ", mData,
                ", it has ", mData.GetReferences(), " uses instead of 1"
             );
             LANGULUS_THROW(Destruct, "Unable to destroy factory element");
          }
-      #endif*/
+      #endif
    }
 
 
@@ -122,26 +122,23 @@ namespace Langulus::Flow
       // will commence automatically after their use have ceased.       
       auto raw = mData.GetRaw();
       const auto rawEnd = mData.GetRawEnd();
-      //Count count = 0;
+
       while (raw != rawEnd) {
-         if (raw->mData.GetReferences() != 1) {
-            /*Logger::Error("Unable to destroy ", raw->mData, ", it has ",
+         if (raw->mData.GetReferences() > 1) {
+            // The element is probably used from another module         
+            // This is not an error, we do not destroy the element      
+            // We make sure, that this factory no longer owns it        
+            Logger::Warning("Unable to destroy ", raw->mData, ", it has ",
                raw->mData.GetReferences(), " uses instead of 1");
-            LANGULUS_THROW(Destruct, "Unable to destroy factory");*/
-            continue;
+            raw->mData.Free();
+         }
+         else {
+            // Destroy the element, here was its last use               
+            raw->~Element();
          }
 
-         // Destroy the element                                         
-         raw->~Element();
-
-         //++count;
          ++raw;
       }
-
-      /*LANGULUS_ASSUME(DevAssumes, count == mCount, 
-         "Factory element(s) unaccounted for");
-      LANGULUS_ASSUME(DevAssumes, mData.GetUses() == 1, 
-         "Factory bank has ", mData.GetUses(), " uses instead of 1");*/
 
       // Make sure no more destructors are called upon Any::Reset()     
       mData.mCount = 0;

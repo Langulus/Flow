@@ -370,12 +370,12 @@ namespace Langulus::Anyness
             else {
                // Serialize one by one using Verbs::Interpret           
                // This is the slowest routine                           
-               Verbs::InterpretTo<TO> interpreter;
+               Verbs::InterpretAs<TO> interpreter;
                interpreter.ShortCircuit(false);
 
                if (DispatchFlat(*this, interpreter)) {
                   bool separate = false;
-                  interpreter.GetOutput().ForEach([&](const Text& r) {
+                  interpreter->ForEach([&](const Text& r) {
                      if (separate)
                         to += Separator(IsOr());
                      separate = true;

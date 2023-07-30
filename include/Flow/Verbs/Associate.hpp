@@ -12,9 +12,11 @@ namespace Langulus::Verbs
 {
    using namespace Flow;
 
-   /// Associate/Disassociate verb                                            
+   ///                                                                        
+   ///   Associate/Disassociate verb                                          
    /// Either performs a shallow copy, or aggregates associations,            
    /// depending on the context's complexity                                  
+   ///                                                                        
    struct Associate : StaticVerb<Associate> {
       LANGULUS(POSITIVE_VERB) "Associate";
       LANGULUS(NEGATIVE_VERB) "Disassociate";

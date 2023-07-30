@@ -64,8 +64,6 @@ namespace Langulus::Flow
    class Verb;
    struct Resolvable;
    class Temporal;
-   struct TimePoint;
-   struct Time;
    struct Scope;
 
    

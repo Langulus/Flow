@@ -733,6 +733,20 @@ namespace Langulus::Flow
       return mOutput;
    }
 
+   /// Convenience operator for accessing the output container inside verb    
+   ///   @return the verb output                                              
+   LANGULUS(INLINED)
+   const Any* Verb::operator -> () const noexcept {
+      return &mOutput;
+   }
+
+   /// Convenience operator for accessing the output container inside verb    
+   ///   @return the verb output                                              
+   LANGULUS(INLINED)
+   Any* Verb::operator -> () noexcept {
+      return &mOutput;
+   }
+
    /// Push anything to end of outputs by shallow-copy, satisfying the verb   
    ///   @attention nullptrs are never pushed and don't satisfy verb          
    ///   @param data - the data to push (deducible)                           
@@ -973,42 +987,42 @@ namespace Langulus::Flow
             // Scan for a reflected converter as statically as possible 
             using TO = typename V::Type;
             const auto found = meta->template GetConverter<TO>();
-            if (!found)
-               return false;
-
-            auto result = Block::From<TO>();
-            result.AllocateFresh(result.RequestSize(1));
-            result.mCount = 1;
-            found(context.GetRaw(), result.GetRaw());
-            verb << Abandon(result);
-            result.Free();
+            if (found) {
+               // Converter was found, prioritize it                    
+               // No escape from this scope                             
+               auto result = Block::From<TO>();
+               result.AllocateFresh(result.RequestSize(1));
+               result.mCount = 1;
+               found(context.GetRaw(), result.GetRaw());
+               verb << Abandon(result);
+               result.Free();
+               return verb.IsDone();
+            }
          }
-         else {
-            // Find ability at runtime                                  
-            if (verb.template VerbIs<Verbs::Interpret>()) {
-               // Scan for a reflected converter by scanning argument   
-               const auto to = verb.template As<DMeta>();
-               const auto found = meta->GetConverter(to);
-               if (!found)
-                  return false;
-
+         else if (verb.template VerbIs<Verbs::Interpret>()) {
+            // Scan for a reflected converter by scanning argument      
+            const auto to = verb.template As<DMeta>();
+            const auto found = meta->GetConverter(to);
+            if (found) {
+               // Converter was found, prioritize it                    
+               // No escape from this scope                             
                Block result {to};
                result.AllocateFresh(result.RequestSize(1));
                result.mCount = 1;
                found(context.GetRaw(), result.GetRaw());
                verb << Abandon(result);
                result.Free();
-            }
-            else {
-               // Scan for any other ability                            
-               const auto found = meta->template 
-                  GetAbility<CT::Mutable<T>>(verb.mVerb, verb.GetType());
-               if (!found)
-                  return false;
-
-               found(context.GetRaw(), verb);
+               return verb.IsDone();
             }
          }
+
+         // Scan for any other runtime ability                          
+         const auto found = meta->template
+            GetAbility<CT::Mutable<T>>(verb.mVerb, verb.GetType());
+         if (!found)
+            return false;
+
+         found(context.GetRaw(), verb);
       }
 
       return verb.IsDone();

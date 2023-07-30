@@ -108,7 +108,7 @@ namespace Langulus::Flow::Inner
          // No filter, just push                                        
          if (!content.template CastsTo<Verb, true>()) {
             // Always try interpreting scope as verbs                   
-            Verbs::InterpretTo<Verb> interpreter;
+            Verbs::InterpretAs<Verb> interpreter;
             interpreter.ShortCircuit(false);
 
             if (DispatchDeep(content, interpreter)) {

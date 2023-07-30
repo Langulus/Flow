@@ -12,8 +12,10 @@ namespace Langulus::Verbs
 {
    using namespace Flow;
 
-   /// Do/Undo verb                                                           
+   ///                                                                        
+   ///   Do/Undo verb                                                         
    /// Used as a runtime dispatcher of composite types                        
+   ///                                                                        
    struct Do : StaticVerb<Do> {
       LANGULUS(POSITIVE_VERB) "Do";
       LANGULUS(NEGATIVE_VERB) "Undo";

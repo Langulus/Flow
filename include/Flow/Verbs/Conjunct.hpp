@@ -12,9 +12,11 @@ namespace Langulus::Verbs
 {
    using namespace Flow;
 
-   /// Conjunct/Disjunct verb                                                 
+   ///                                                                        
+   ///   Conjunct/Disjunct verb                                               
    /// Either combines LHS and RHS as one AND container, or separates them    
    /// as one OR container - does only shallow copying                        
+   ///                                                                        
    struct Conjunct : StaticVerb<Conjunct> {
       LANGULUS(POSITIVE_VERB) "Conjunct";
       LANGULUS(NEGATIVE_VERB) "Disjunct";

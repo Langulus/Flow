@@ -12,8 +12,10 @@ namespace Langulus::Verbs
 {
    using namespace Flow;
 
-   /// Catenate/Split verb                                                    
+   ///                                                                        
+   ///   Catenate/Split verb                                                  
    /// Catenates anything catenable, or split stuff apart using a mask        
+   ///                                                                        
    struct Catenate : StaticVerb<Catenate> {
       LANGULUS(POSITIVE_VERB) "Catenate";
       LANGULUS(NEGATIVE_VERB) "Split";

@@ -9,30 +9,35 @@
 #include "Common.hpp"
 #include <chrono>
 
-namespace Langulus::A
+namespace Langulus
 {
-   struct Time {
-      LANGULUS(ABSTRACT) true;
-   };
-}
+   using namespace ::std::literals::chrono_literals;
 
-namespace Langulus::Flow
-{
+   namespace A
+   {
 
-   ///                                                                        
-   ///   A steady clock used to aquire TimePoint(s)                           
-   ///                                                                        
-   using SteadyClock = ::std::chrono::steady_clock;
+      /// An abstract clock                                                   
+      struct Clock {
+         LANGULUS(ABSTRACT) true;
+      };
+
+      /// An abstract time                                                    
+      struct Time {
+         LANGULUS(ABSTRACT) true;
+      };
+
+   } // namespace Langulus::A
 
 
    ///                                                                        
    ///   A time point                                                         
    ///                                                                        
-   struct TimePoint : SteadyClock::time_point {
+   struct TimePoint : A::Time, ::std::chrono::steady_clock::time_point {
+      LANGULUS(ABSTRACT) false;
       LANGULUS(POD) true;
       LANGULUS_BASES(A::Time);
 
-      using Base = SteadyClock::time_point;
+      using Base = time_point;
       using Base::time_point;
 
       constexpr TimePoint() noexcept
@@ -49,7 +54,7 @@ namespace Langulus::Flow
          using Representation = typename Base::rep;
          static_assert(sizeof(Representation) == sizeof(TimePoint),
             "Size mismatch");
-         return HashNumber(reinterpret_cast<const Representation&>(*this));
+         return HashNumber(reinterpret_cast<const Representation&>(*this));   
       }
    };
 
@@ -57,11 +62,12 @@ namespace Langulus::Flow
    ///                                                                        
    ///   A time duration (difference between two time points)                 
    ///                                                                        
-   struct Time : SteadyClock::duration {
+   struct Time : A::Time, ::std::chrono::steady_clock::duration {
+      LANGULUS(ABSTRACT) false;
       LANGULUS(POD) true;
       LANGULUS_BASES(A::Time);
 
-      using Base = SteadyClock::duration;
+      using Base = duration;
       using Base::duration;
       using Base::operator +;
 
@@ -89,15 +95,27 @@ namespace Langulus::Flow
       }
    };
 
-} // namespace Langulus::Flow
 
-namespace Langulus::CT
-{
+   ///                                                                        
+   ///   A steady clock used to aquire TimePoint(s)                           
+   ///                                                                        
+   class SteadyClock : public A::Clock, private ::std::chrono::steady_clock {
+      LANGULUS_BASES(A::Clock);
 
-   template<class T>
-   concept Time = SameAsOneOf<T, Flow::TimePoint, Flow::Time>;
+      NOD() static TimePoint Now() noexcept {
+         return steady_clock::now();
+      }
+   };
 
-} // namespace Langulus::CT
+   namespace CT
+   {
+
+      template<class T>
+      concept Time = SameAsOneOf<T, ::Langulus::TimePoint, ::Langulus::Time>;
+
+   } // namespace Langulus::CT
+
+} // namespace Langulus
 
 namespace fmt
 {
@@ -106,7 +124,7 @@ namespace fmt
    /// Extend FMT to be capable of logging Flow::Time                         
    ///                                                                        
    template<>
-   struct formatter<Langulus::Flow::Time> {
+   struct formatter<Langulus::Time> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
          return ctx.begin();
@@ -114,9 +132,9 @@ namespace fmt
 
       template<class CONTEXT>
       LANGULUS(INLINED)
-         auto format(Langulus::Flow::Time const& element, CONTEXT& ctx) {
+         auto format(Langulus::Time const& element, CONTEXT& ctx) {
          return fmt::format_to(ctx.out(), "{}",
-            static_cast<const Langulus::Flow::Time::Base&>(element));
+            static_cast<const Langulus::Time::Base&>(element));
       }
    };
 

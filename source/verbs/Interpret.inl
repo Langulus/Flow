@@ -75,7 +75,7 @@ namespace Langulus::Verbs
    inline bool Interpret::ExecuteDefault(const Block& context, Verb& verb) {
       verb.ForEach([&](DMeta to) {
          if (to->CastsTo<A::Text>())
-            return !InterpretTo<Text>::ExecuteDefault(context, verb);
+            return !InterpretAs<Text>::ExecuteDefault(context, verb);
          //TODO check reflected morphisms?
          return true;
       });
@@ -83,13 +83,20 @@ namespace Langulus::Verbs
       return verb.IsDone();
    }
 
+   /// Specialized interpret verb default construction adds the TO type as    
+   /// an argument automatically                                              
+   template<CT::Data TO>
+   InterpretAs<TO>::InterpretAs() {
+      SetArgument(MetaOf<TO>());
+   }
+
    /// Execute the default verb in an immutable context                       
    /// Statically optimized to avoid passing an argument                      
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
-   template<class TO>
-   bool InterpretTo<TO>::ExecuteDefault(const Block& context, Verb& verb) {
+   template<CT::Data TO>
+   bool InterpretAs<TO>::ExecuteDefault(const Block& context, Verb& verb) {
       if constexpr (CT::Text<TO>) {
          const auto from = context.GetType();
 

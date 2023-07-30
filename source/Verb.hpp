@@ -195,6 +195,9 @@ namespace Langulus::Flow
       NOD() LANGULUS_API(FLOW)
       const Any& GetOutput() const noexcept;
 
+      NOD() const Any* operator -> () const noexcept;
+      NOD() Any* operator -> () noexcept;
+
       NOD() LANGULUS_API(FLOW)
       bool Validate(const Index&) const noexcept;
 
@@ -374,6 +377,7 @@ namespace Langulus::Verbs
 {
 
    struct Create;
+   struct Compare;
    struct Select;
    struct Catenate;
    struct Associate;

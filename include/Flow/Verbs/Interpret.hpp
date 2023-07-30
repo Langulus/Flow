@@ -12,8 +12,10 @@ namespace Langulus::Verbs
 {
    using namespace Flow;
 
-   /// Interpret                                                              
+   ///                                                                        
+   ///   Interpret                                                            
    /// Performs conversion                                                    
+   ///                                                                        
    struct Interpret : StaticVerb<Interpret> {
       LANGULUS(VERB) "Interpret";
       LANGULUS(OPERATOR) " => ";
@@ -35,17 +37,21 @@ namespace Langulus::Verbs
       static bool ExecuteDefault(const Block&, Verb&);
    };
    
-   /// Statically optimized interpret verb                                    
-   ///   @tparam TO - what are we converting to?                              
-   template<class TO>
-   struct InterpretTo : Interpret {
+
+   ///                                                                        
+   ///   Statically optimized interpret verb                                  
+   ///   @tparam AS - what are we converting to?                              
+   ///                                                                        
+   template<CT::Data AS>
+   struct InterpretAs : Interpret {
       LANGULUS_BASES(Interpret);
       using Interpret::Interpret;
-      using Type = TO;
+      using Type = AS;
 
+      InterpretAs();
       static bool ExecuteDefault(const Block&, Verb&);
    };
 
-}
+} // namespace Langulus::Verbs
 
 #include "../../../source/verbs/Interpret.inl"

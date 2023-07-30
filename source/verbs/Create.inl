@@ -349,7 +349,7 @@ namespace Langulus::Anyness
       Verbs::Create creator {Flow::Construct {meta, *this}};
       if (Verbs::Create::ExecuteStateless(creator)) {
          // Success                                                     
-         return creator.GetOutput().As<T>();
+         return creator->As<T>();
       }
 
       // Alternatively, we attempt runtime conversion by                
@@ -358,7 +358,7 @@ namespace Langulus::Anyness
       auto context = GetElementResolved(0);
       if (Flow::DispatchDeep(context, interpreter)) {
          // Success                                                     
-         return interpreter.GetOutput().As<T>();
+         return interpreter->As<T>();
       }
 
       // Failure if reached                                             

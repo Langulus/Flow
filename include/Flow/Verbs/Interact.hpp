@@ -12,9 +12,11 @@ namespace Langulus::Verbs
 {
    using namespace Flow;
 
-   /// Interact                                                               
+   ///                                                                        
+   ///   Interact                                                             
    /// Used for processing user events, such as mouse movement, keyboard,     
    /// joystick and any other input                                           
+   ///                                                                        
    struct Interact : StaticVerb<Interact> {
       LANGULUS(VERB) "Interact";
       LANGULUS(INFO) 

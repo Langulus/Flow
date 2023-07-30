@@ -13,19 +13,14 @@ namespace Langulus::Verbs
    using namespace Flow;
 
    ///                                                                        
-   ///   Create/Destroy verb                                                  
-   /// Used for allocating new elements. If the type you're creating has      
-   /// a producer, you need to execute the verb in the correct context        
+   ///   Compare verb                                                         
+   /// Used to compare for equality, or for largeness/smallness               
    ///                                                                        
-   struct Create : StaticVerb<Create> {
-      LANGULUS(POSITIVE_VERB) "Create";
-      LANGULUS(NEGATIVE_VERB) "Destroy";
-      LANGULUS(PRECEDENCE) 1000;
-      LANGULUS(INFO)
-         "Used for allocating new elements. "
-         "If the type you're creating has   a producer, "
-         "you need to execute the verb in a matching producer, "
-         "or that producer will be created automatically for you, if possible";
+   struct Compare : StaticVerb<Compare> {
+      LANGULUS(VERB) "Compare";
+      LANGULUS(OPERATOR) " == ";
+      LANGULUS(PRECEDENCE) 3;
+      LANGULUS(INFO) "Used to compare for equality, or largeness/smallness";
 
       using StaticVerb::StaticVerb;
 
@@ -37,12 +32,8 @@ namespace Langulus::Verbs
       template<CT::Dense T>
       static bool ExecuteIn(T&, Verb&);
 
-      static bool ExecuteDefault(Block&, Verb&);
-      static bool ExecuteStateless(Verb&);
-
-   protected:
-      static void SetMembers(Any&, const Any&);
+      static bool ExecuteDefault(const Block&, Verb&);
    };
 }
 
-#include "../../../source/verbs/Create.inl"
+#include "../../../source/verbs/Compare.inl"

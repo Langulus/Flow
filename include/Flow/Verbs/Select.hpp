@@ -12,8 +12,10 @@ namespace Langulus::Verbs
 {
    using namespace Flow;
 
-   /// Select/Deselect verb                                                   
+   ///                                                                        
+   ///   Select/Deselect verb                                                 
    /// Used to focus on a part of a container, or access members              
+   ///                                                                        
    struct Select : StaticVerb<Select> {
       LANGULUS(POSITIVE_VERB) "Select";
       LANGULUS(NEGATIVE_VERB) "Deselect";

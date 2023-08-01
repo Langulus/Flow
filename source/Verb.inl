@@ -8,6 +8,7 @@
 #pragma once
 #include "Verb.hpp"
 #include "Code.hpp"
+#include <Anyness/Ref.hpp>
 
 namespace Langulus::Flow
 {
@@ -781,14 +782,25 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    Verb& Verb::operator << (CT::Semantic auto&& data) {
       using S = Decay<decltype(data)>;
-      if constexpr (CT::Sparse<TypeOf<S>>) {
+      using T = TypeOf<S>;
+
+      if constexpr (CT::Nullptr<T>)
+         // Can't push a nullptr_t                                      
+         return *this;
+      else if constexpr (CT::PointerRelated<TypeOf<S>>) {
+         // Push a pointer, but check if valid first                    
          if (!*data)
             return *this;
+         if (mOutput.SmartPush<IndexBack, true, true>(PointerDecay(*data)))
+            Done();
+         return *this;
       }
-
-      if (mOutput.SmartPush<IndexBack, true, true>(data.Forward()))
-         Done();
-      return *this;
+      else {
+         // Push anything dense                                         
+         if (mOutput.SmartPush<IndexBack, true, true>(data.Forward()))
+            Done();
+         return *this;
+      }
    }
    
    /// Push anything to start of outputs by shallow-copy, satisfying the verb 
@@ -825,14 +837,25 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    Verb& Verb::operator >> (CT::Semantic auto&& data) {
       using S = Decay<decltype(data)>;
-      if constexpr (CT::Sparse<TypeOf<S>>) {
+      using T = TypeOf<S>;
+
+      if constexpr (CT::Nullptr<T>)
+         // Can't push a nullptr_t                                      
+         return *this;
+      else if constexpr (CT::PointerRelated<TypeOf<S>>) {
+         // Push a pointer, but check if valid first                    
          if (!*data)
             return *this;
+         if (mOutput.SmartPush<IndexFront, true, true>(PointerDecay(*data)))
+            Done();
+         return *this;
       }
-
-      if (mOutput.SmartPush<IndexFront, true, true>(data.Forward()))
-         Done();
-      return *this;
+      else {
+         // Push anything dense                                         
+         if (mOutput.SmartPush<IndexFront, true, true>(data.Forward()))
+            Done();
+         return *this;
+      }
    }
 
    /// Merge anything to output's back                                        
@@ -865,16 +888,32 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    Verb& Verb::operator <<= (CT::Semantic auto&& data) {
       using S = Decay<decltype(data)>;
-      if constexpr (CT::Sparse<TypeOf<S>>) {
+      using T = TypeOf<S>;
+
+      if constexpr (CT::Nullptr<T>)
+         // Can't push a nullptr_t                                      
+         return *this;
+      else if constexpr (CT::PointerRelated<TypeOf<S>>) {
+         // Push a pointer, but check if valid first                    
          if (!*data)
             return *this;
+
+         auto ptr = PointerDecay(*data);
+         if (mOutput.Find(ptr))
+            return *this;
+
+         if (mOutput.SmartPush<IndexBack, true, true>(ptr))
+            Done();
+      }
+      else {
+         // Push anything dense                                         
+         if (mOutput.Find(*data))
+            return *this;
+
+         if (mOutput.SmartPush<IndexBack, true, true>(*data))
+            Done();
       }
 
-      if (mOutput.Find(*data))
-         return *this;
-
-      if (mOutput.SmartPush<IndexBack, true, true>(data.Forward()))
-         Done();
       return *this;
    }
    
@@ -908,16 +947,32 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    Verb& Verb::operator >>= (CT::Semantic auto&& data) {
       using S = Decay<decltype(data)>;
-      if constexpr (CT::Sparse<TypeOf<S>>) {
+      using T = TypeOf<S>;
+
+      if constexpr (CT::Nullptr<T>)
+         // Can't push a nullptr_t                                      
+         return *this;
+      else if constexpr (CT::PointerRelated<TypeOf<S>>) {
+         // Push a pointer, but check if valid first                    
          if (!*data)
             return *this;
+
+         auto ptr = PointerDecay(*data);
+         if (mOutput.Find(ptr)) //TODO: find deep instead?
+            return *this;
+
+         if (mOutput.SmartPush<IndexFront, true, true>(ptr))
+            Done();
+      }
+      else {
+         // Push anything dense                                         
+         if (mOutput.Find(*data))
+            return *this;
+
+         if (mOutput.SmartPush<IndexFront, true, true>(*data))
+            Done();
       }
 
-      if (mOutput.Find(*data)) //TODO: find deep instead?
-         return *this;
-
-      if (mOutput.SmartPush<IndexFront, true, true>(data.Forward()))
-         Done();
       return *this;
    }
 

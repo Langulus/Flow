@@ -587,7 +587,7 @@ namespace Langulus::Anyness
             if constexpr (HEADER)
                to.template AllocateMore<false, true>(deserializedCount);
 
-            const auto byteSize = to.GetByteSize();
+            const auto byteSize = to.GetBytesize();
             RequestMoreBytes(read, byteSize, loader);
 
             if (to.IsSparse()) {

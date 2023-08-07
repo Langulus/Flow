@@ -38,9 +38,9 @@ SCENARIO("Test factories", "[factory]") {
 				REQUIRE(factory.mData.GetCount() == 1);
 				REQUIRE(factory.mData.GetType() == MetaOf<typename TFactory<Producible>::Element>());
 				REQUIRE(factory.mData[0].mData == Producible {&producer});
-				REQUIRE(factory.mData[0].mData.GetDescriptor() == Normalized {{}});
+				REQUIRE(factory.mData[0].mData.GetNormalized() == Normalized {{}});
 				REQUIRE(factory.mData[0].mData.GetHash() == hash);
-				REQUIRE(factory.mData[0].mData.GetDescriptor() == normalized);
+				REQUIRE(factory.mData[0].mData.GetNormalized() == normalized);
 				REQUIRE(factory.mHashmap[hash].GetCount() == 1);
 				REQUIRE(factory.mHashmap[hash][0] == &factory.mData[0]);
 			}

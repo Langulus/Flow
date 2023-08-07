@@ -268,7 +268,7 @@ namespace Langulus::Flow
    ///   @return true if value changed                                        
    template<CT::Trait T, CT::Data... D>
    LANGULUS(INLINED)
-   bool Normalized::ExtractTrait(D&... values) {
+   bool Normalized::ExtractTrait(D&... values) const {
       auto found = GetTraits<T>();
       if (found) {
          return ExtractTraitInner(
@@ -283,16 +283,16 @@ namespace Langulus::Flow
    ///                                                                        
    template<CT::Data... D, Offset... IDX>
    bool Normalized::ExtractTraitInner(
-      TAny<Any>& found, 
+      const TAny<Any>& found, 
       ::std::integer_sequence<Offset, IDX...>, 
       D&... values
-   ) {
+   ) const {
       return (ExtractTraitInnerInner<IDX, D>(found, values) || ...);
    }
    
    ///                                                                        
    template<Offset IDX, CT::Data D>
-   bool Normalized::ExtractTraitInnerInner(TAny<Any>& found, D& value) {
+   bool Normalized::ExtractTraitInnerInner(const TAny<Any>& found, D& value) const {
       if (IDX >= found.GetCount())
          return false;
 
@@ -314,7 +314,7 @@ namespace Langulus::Flow
    ///   @return true if value changed                                        
    template<CT::Data D>
    LANGULUS(INLINED)
-   bool Normalized::ExtractData(D& value) {
+   bool Normalized::ExtractData(D& value) const {
       auto found = GetData<D>();
       if (found) {
          value = found->Last().template Get<D>();
@@ -330,7 +330,7 @@ namespace Langulus::Flow
    ///   @return true if value changed                                        
    template<CT::Data D>
    LANGULUS(INLINED)
-   bool Normalized::ExtractDataAs(D& value) {
+   bool Normalized::ExtractDataAs(D& value) const {
       for (auto pair : mAnythingElse) {
          for (auto& group : pair.mValue) {
             try {

@@ -143,7 +143,7 @@ namespace Langulus::Flow
       ProducedFrom(ProducedFrom&&);
       ProducedFrom(T*, const Any&);
 
-      const Normalized& GetDescriptor() const noexcept;
+      const Normalized& GetNormalized() const noexcept;
       Hash GetHash() const noexcept;
       T* GetProducer() const noexcept;
    };

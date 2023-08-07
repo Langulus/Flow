@@ -36,7 +36,7 @@ namespace Langulus::Flow
    /// Get the normalized descriptor of the produced item                     
    ///   @return the normalized descriptor                                    
    template<class T>
-   const Normalized& ProducedFrom<T>::GetDescriptor() const noexcept {
+   const Normalized& ProducedFrom<T>::GetNormalized() const noexcept {
       return mDescriptor;
    }
 
@@ -192,7 +192,7 @@ namespace Langulus::Flow
       const auto found = mHashmap.Find(hash);
       if (found) {
          for (auto candidate : mHashmap.GetValue(found)) {
-            if (candidate->mData.GetDescriptor() != descriptor)
+            if (candidate->mData.GetNormalized() != descriptor)
                continue;
 
             // Found                                                    

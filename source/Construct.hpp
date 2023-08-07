@@ -159,9 +159,13 @@ namespace Langulus::Flow
       template<CT::Data T>
       Construct& operator >>= (T&&);
 
-      LANGULUS_API(FLOW) Construct& Set(const Trait&, const Offset& = 0);
-      LANGULUS_API(FLOW) const Trait* Get(TMeta, const Offset& = 0) const;
+      LANGULUS_API(FLOW)
+      Construct& Set(const Trait&, const Offset& = 0);
+      template<CT::Trait T, CT::Semantic S>
+      void Set(S&&) const;
 
+      LANGULUS_API(FLOW)
+      const Trait* Get(TMeta, const Offset& = 0) const;
       template<CT::Trait T>
       const Trait* Get(const Offset& = 0) const;
    };

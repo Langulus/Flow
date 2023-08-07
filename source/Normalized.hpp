@@ -52,6 +52,8 @@ namespace Langulus::Flow
       template<CT::Semantic S>
       Normalized& operator = (S&&);
 
+      template<CT::Data T>
+      NOD() Construct MakeConstruct();
       NOD() Hash GetHash() const;
 
       bool operator == (const Normalized&) const;
@@ -80,17 +82,17 @@ namespace Langulus::Flow
       void OverwriteTrait(D&&);
 
       template<CT::Trait T, CT::Data... D>
-      bool ExtractTrait(D&...);
+      bool ExtractTrait(D&...) const;
       template<CT::Data D>
-      bool ExtractData(D&);
+      bool ExtractData(D&) const;
       template<CT::Data D>
-      bool ExtractDataAs(D&);
+      bool ExtractDataAs(D&) const;
 
    protected:
       template<CT::Data... D, Offset... IDX>
-      bool ExtractTraitInner(TAny<Any>&, std::integer_sequence<Offset, IDX...>, D&...);
+      bool ExtractTraitInner(const TAny<Any>&, std::integer_sequence<Offset, IDX...>, D&...) const;
       template<Offset, CT::Data D>
-      bool ExtractTraitInnerInner(TAny<Any>&, D&);
+      bool ExtractTraitInnerInner(const TAny<Any>&, D&) const;
    };
 
 } // namespace Langulus::Flow

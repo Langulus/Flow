@@ -53,7 +53,8 @@ namespace Langulus::Flow
       Normalized& operator = (S&&);
 
       template<CT::Data T>
-      NOD() Construct MakeConstruct();
+      NOD() Construct MakeConstruct() const;
+
       NOD() Hash GetHash() const;
 
       bool operator == (const Normalized&) const;

@@ -1,5 +1,3 @@
-project(LangulusFlowTest)
-
 add_executable(LangulusFlowTest
 	Main.cpp
 	TestFactory.cpp

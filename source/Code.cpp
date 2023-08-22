@@ -166,7 +166,7 @@ namespace Langulus::Flow
       }
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         if (!RTTI::Database.GetAmbiguousMeta(text).empty())
+         if (!RTTI::GetAmbiguousMeta(text).empty())
             return true;
       #endif
 
@@ -342,9 +342,9 @@ namespace Langulus::Flow
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       // Search for an exact token in meta definitions                  
-      const auto dmeta = RTTI::Database.GetMetaData(keyword);
-      const auto tmeta = RTTI::Database.GetMetaTrait(keyword);
-      const auto cmeta = RTTI::Database.GetMetaConstant(keyword);
+      const auto dmeta = RTTI::GetMetaData(keyword);
+      const auto tmeta = RTTI::GetMetaTrait(keyword);
+      const auto cmeta = RTTI::GetMetaConstant(keyword);
       if (dmeta && !tmeta && !cmeta) {
          // Exact non-ambiguous data definition found                   
          if (allowCharge) {
@@ -425,7 +425,7 @@ namespace Langulus::Flow
       const Offset progress, const Code& input, const Token& keyword
    ) {
       try {
-         return RTTI::Database.DisambiguateMeta(keyword);
+         return RTTI::DisambiguateMeta(keyword);
       }
       catch (...) {
          PRETTY_ERROR("Unknown keyword: ", keyword);
@@ -484,11 +484,11 @@ namespace Langulus::Flow
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       const auto word = Isolate(input);
-      auto found = RTTI::Database.GetOperator(word);
+      auto found = RTTI::GetOperator(word);
       if (found)
          return ReflectedOperator;
 
-      found = RTTI::Database.GetMetaVerb(word);
+      found = RTTI::GetMetaVerb(word);
       if (found)
          return ReflectedVerb;
 #endif
@@ -574,7 +574,7 @@ namespace Langulus::Flow
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Handle a reflected operator                                 
          const auto word = Isolate(input);
-         const auto found = RTTI::Database.GetOperator(word);
+         const auto found = RTTI::GetOperator(word);
 
          if (found->mPrecedence && priority >= found->mPrecedence) {
             VERBOSE(Logger::Yellow,
@@ -599,7 +599,7 @@ namespace Langulus::Flow
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Handle a reflected verb                                     
          const auto word = Isolate(input);
-         const auto found = RTTI::Database.GetMetaVerb(word);
+         const auto found = RTTI::GetMetaVerb(word);
 
          if (found->mPrecedence && priority >= found->mPrecedence) {
             VERBOSE(Logger::Yellow,

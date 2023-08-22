@@ -274,7 +274,7 @@ namespace Langulus::Flow
    ///   @return the static mutable memory block representing the member      
    LANGULUS(INLINED)
    Block Resolvable::GetMember(const Token& trait) noexcept {
-      return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait));
+      return GetBlock().GetMember(RTTI::GetMetaTrait(trait));
    }
 
    /// Get the first member matching a runtime trait token (const)            
@@ -282,7 +282,7 @@ namespace Langulus::Flow
    ///   @return the static constant memory block representing the member     
    LANGULUS(INLINED)
    Block Resolvable::GetMember(const Token& trait) const noexcept {
-      return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait));
+      return GetBlock().GetMember(RTTI::GetMetaTrait(trait));
    }
 
    /// Get Nth reflected member by trait token                                
@@ -293,7 +293,7 @@ namespace Langulus::Flow
    template<CT::Index INDEX>
    LANGULUS(INLINED)
    Block Resolvable::GetMember(const Token& trait, const INDEX& offset) noexcept {
-      return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait), offset);
+      return GetBlock().GetMember(RTTI::GetMetaTrait(trait), offset);
    }
 
    /// Get Nth reflected member by trait token (const)                        
@@ -304,7 +304,7 @@ namespace Langulus::Flow
    template<CT::Index INDEX>
    LANGULUS(INLINED)
    Block Resolvable::GetMember(const Token& trait, const INDEX& offset) const noexcept {
-      return GetBlock().GetMember(RTTI::Database.GetMetaTrait(trait), offset);
+      return GetBlock().GetMember(RTTI::GetMetaTrait(trait), offset);
    }
 #endif
 

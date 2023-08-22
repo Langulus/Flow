@@ -88,7 +88,7 @@ namespace Langulus::Flow
    ///   @param type - the type of the content                                
    LANGULUS(INLINED)
    Construct::Construct(const Token& token)
-      : mType {RTTI::Database.GetMetaData(token)->mOrigin} {}
+      : mType {RTTI::GetMetaData(token)->mOrigin} {}
 
    template<CT::NotSemantic T>
    LANGULUS(INLINED)
@@ -108,7 +108,7 @@ namespace Langulus::Flow
    template<CT::Semantic S>
    LANGULUS(INLINED)
    Construct::Construct(const Token& token, S&& arguments, const Charge& charge)
-      : Construct {RTTI::Database.GetMetaData(token), arguments.Forward(), charge} {}
+      : Construct {RTTI::GetMetaData(token), arguments.Forward(), charge} {}
 #endif
 
    /// Copy-assignment                                                        
@@ -175,7 +175,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    Construct Construct::FromToken(const Token& token, HEAD&& head, TAIL&&... tail) {
       const auto meta = dynamic_cast<DMeta>(
-         RTTI::Database.DisambiguateMeta(token)
+         RTTI::DisambiguateMeta(token)
       );
 
       if constexpr (sizeof...(tail) == 0)
@@ -190,7 +190,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    Construct Construct::FromToken(const Token& token) {
       const auto meta = dynamic_cast<DMeta>(
-         RTTI::Database.DisambiguateMeta(token)
+         RTTI::DisambiguateMeta(token)
       );
       return Construct {meta};
    }

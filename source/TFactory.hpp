@@ -6,7 +6,8 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "Normalized.hpp"
+#include "Common.hpp"
+#include <Anyness/Neat.hpp>
 
 namespace Langulus::Flow
 {
@@ -22,7 +23,7 @@ namespace Langulus::Flow
    /// be referencable                                                        
    template<class T>
    concept FactoryProducible = CT::Producible<T>
-      && !CT::Abstract<T> && CT::Dense<T> && CT::Referencable<T>;
+      and not CT::Abstract<T> and CT::Dense<T> and CT::Referencable<T>;
 
 
    ///                                                                        
@@ -76,7 +77,7 @@ namespace Langulus::Flow
       NOD() T* Produce(const Any&);
       void CreateInner(Verb&, int, const Any& = {});
       void Destroy(Element*);
-      NOD() Element* Find(const Normalized&) const;
+      NOD() Element* Find(const Neat&) const;
 
    public:
       /// Factories can't be default-, move- or copy-constructed              
@@ -133,7 +134,7 @@ namespace Langulus::Flow
       LANGULUS(PRODUCER) T;
    protected:
       // The descriptor used for hashing, and element identification    
-      Normalized mDescriptor;
+      Neat mDescriptor;
       // The producer of the element                                    
       T* const mProducer {};
 
@@ -143,7 +144,7 @@ namespace Langulus::Flow
       ProducedFrom(ProducedFrom&&);
       ProducedFrom(T*, const Any&);
 
-      const Normalized& GetNormalized() const noexcept;
+      const Neat& GetNeat() const noexcept;
       Hash GetHash() const noexcept;
       T* GetProducer() const noexcept;
    };

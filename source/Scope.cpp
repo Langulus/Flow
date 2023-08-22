@@ -6,7 +6,6 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #include "Scope.hpp"
-#include "Construct.hpp"
 #include "Verb.hpp"
 #include "verbs/Do.inl"
 #include "verbs/Interpret.inl"

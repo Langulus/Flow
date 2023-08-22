@@ -16,55 +16,6 @@ LANGULUS_RTTI_BOUNDARY("MAIN")
 namespace Langulus::Flow
 {
 
-   /// Serialize charge as code                                               
-   Charge::operator Code() const {
-      Code code;
-      if (mMass != Charge::DefaultMass) {
-         code += Code::Mass;
-         code += Text {mMass};
-      }
-      if (mRate != Charge::DefaultRate) {
-         code += Code::Rate;
-         code += Text {mRate};
-      }
-      if (mTime != Charge::DefaultTime) {
-         code += Code::Time;
-         code += Text {mTime};
-      }
-      if (mPriority != Charge::DefaultPriority) {
-         code += Code::Priority;
-         code += Text {mPriority};
-      }
-      return code;
-   }
-
-   /// Serialize charge as debug (same as code)                               
-   Charge::operator Debug() const {
-      return Charge::operator Code();
-   }
-
-   /// Scale the mass of a charge                                             
-   constexpr Charge Charge::operator * (const Real& scalar) const noexcept {
-      return {mMass * scalar, mRate, mTime, mPriority};
-   }
-
-   /// Scale the frequency of a charge                                        
-   constexpr Charge Charge::operator ^ (const Real& scalar) const noexcept {
-      return {mMass, mRate * scalar, mTime, mPriority};
-   }
-
-   /// Scale the mass of a charge                                             
-   constexpr Charge& Charge::operator *= (const Real& scalar) noexcept {
-      mMass *= scalar;
-      return *this;
-   }
-
-   /// Scale the frequency of a charge                                        
-   constexpr Charge& Charge::operator ^= (const Real& scalar) noexcept {
-      mRate *= scalar;
-      return *this;
-   }
-
    /// Dedicated descriptor constructor                                       
    ///   @param descriptor - the descriptor to use for argument               
    Verb::Verb(const Descriptor& descriptor)

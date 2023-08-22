@@ -2,7 +2,6 @@ add_executable(LangulusFlowTest
 	Main.cpp
 	TestFactory.cpp
 	TestFlow.cpp
-	TestNormalized.cpp
 	TestResolvable.cpp
 	TestSerialization.cpp
 	TestTemporal.cpp

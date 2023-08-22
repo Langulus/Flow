@@ -9,7 +9,6 @@
 #include "../Scope.hpp"
 #include "../Serial.hpp"
 #include "../Time.hpp"
-#include "../Construct.hpp"
 #include "Do.inl"
 
 #include <Anyness/View/Any.hpp>
@@ -75,7 +74,7 @@ namespace Langulus::Verbs
    inline bool Interpret::ExecuteDefault(const Block& context, Verb& verb) {
       verb.ForEach([&](DMeta to) {
          if (to->CastsTo<A::Text>())
-            return !InterpretAs<Text>::ExecuteDefault(context, verb);
+            return not InterpretAs<Text>::ExecuteDefault(context, verb);
          //TODO check reflected morphisms?
          return true;
       });
@@ -147,7 +146,7 @@ namespace Langulus::Verbs
          }
          else LANGULUS_ERROR("Unhandled conversion route");
       }
-      else if constexpr (CT::Text<TO> || CT::Bytes<TO>) {
+      else if constexpr (CT::Text<TO> or CT::Bytes<TO>) {
          // No constructor/conversion operator exists, that would do    
          // the conversion, but we can rely on the serializer,          
          // if TO is supported                                          
@@ -186,17 +185,17 @@ namespace Langulus::Flow
       // verb operator, depending on the verb definition, state and     
       // charge                                                         
       bool enscope = true;
-      if (!mVerb) {
+      if (not mVerb) {
          // An invalid verb is always written as token                  
          result += MetaVerb::DefaultToken;
       }
       else {
          // A valid verb is written either as token, or as operator     
          if (mMass < 0) {
-            if (!mVerb->mOperatorReverse.empty() && (GetCharge() * -1).IsDefault() && mState.IsDefault()) {
+            if (not mVerb->mOperatorReverse.empty() and (GetCharge() * -1).IsDefault() and mState.IsDefault()) {
                // Write as operator                                     
                result += mVerb->mOperatorReverse;
-               enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
+               enscope = GetCount() > 1 or (not IsEmpty() and CastsTo<Verb>());
             }
             else {
                // Write as token                                        
@@ -207,10 +206,10 @@ namespace Langulus::Flow
             }
          }
          else {
-            if (!mVerb->mOperator.empty() && GetCharge().IsDefault() && mState.IsDefault()) {
+            if (not mVerb->mOperator.empty() and GetCharge().IsDefault() and mState.IsDefault()) {
                // Write as operator                                     
                result += mVerb->mOperator;
-               enscope = GetCount() > 1 || (!IsEmpty() && CastsTo<Verb>());
+               enscope = GetCount() > 1 or (not IsEmpty() and CastsTo<Verb>());
             }
             else {
                // Write as token                                        
@@ -303,6 +302,60 @@ namespace fmt
             static_cast<const Anyness::Any&>(element));
          return fmt::format_to(ctx.out(), "{}",
             static_cast<Logger::TextView>(asText));
+      }
+   };
+   
+   ///                                                                        
+   /// Extend FMT to be capable of logging Construct                          
+   ///                                                                        
+   template<>
+   struct formatter<Langulus::Anyness::Charge> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(INLINED)
+      auto format(Langulus::Anyness::Charge const& element, CONTEXT& ctx) {
+         using namespace Langulus::Anyness;
+
+         if (element.mMass != Charge::DefaultMass)
+            fmt::format_to(ctx.out(), " *{}", element.mMass);
+         if (element.mRate != Charge::DefaultRate)
+            fmt::format_to(ctx.out(), " ^{}", element.mRate);
+         if (element.mTime != Charge::DefaultTime)
+            fmt::format_to(ctx.out(), " @{}", element.mTime);
+         if (element.mPriority != Charge::DefaultPriority)
+            fmt::format_to(ctx.out(), " !{}", element.mPriority);
+
+         return ctx.out();
+      }
+   };
+   
+   ///                                                                        
+   /// Extend FMT to be capable of logging Construct                          
+   ///                                                                        
+   template<>
+   struct formatter<Langulus::Anyness::Construct> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(INLINED)
+      auto format(Langulus::Anyness::Construct const& element, CONTEXT& ctx) {
+         using namespace Langulus;
+         if (!element.IsDefault() or element) {
+            return fmt::format_to(ctx.out(), "{}{}({})",
+               element.GetToken(),
+               element.GetCharge(),
+               element.GetArgument()
+            );
+         }
+
+         return fmt::format_to(ctx.out(), "{}", element.GetToken());
       }
    };
 

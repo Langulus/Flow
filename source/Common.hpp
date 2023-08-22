@@ -58,74 +58,13 @@ namespace Langulus::Flow
       return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
    }
 
-   class Charge;
-   class Construct;
    struct Code;
    class Verb;
    struct Resolvable;
    class Temporal;
    struct Scope;
 
-   
-   ///                                                                        
-   ///   Charge, carrying the four verb dimensions                            
-   ///                                                                        
-   class Charge {
-      LANGULUS(POD) true;
-      LANGULUS(NULLIFIABLE) false;
-
-      // Mass of the verb                                               
-      Real mMass = DefaultMass;
-      // Frequency of the verb                                          
-      Real mRate = DefaultRate;
-      // Time of the verb                                               
-      Real mTime = DefaultTime;
-      // Priority of the verb                                           
-      Real mPriority = DefaultPriority;
-
-   public:
-      static constexpr Real DefaultMass {1};
-      static constexpr Real DefaultRate {0};
-      static constexpr Real DefaultTime {0};
-
-      static constexpr Real DefaultPriority {0};
-      static constexpr Real MinPriority {-10000};
-      static constexpr Real MaxPriority {+10000};
-
-      constexpr Charge(
-         Real = DefaultMass,
-         Real = DefaultRate,
-         Real = DefaultTime,
-         Real = DefaultPriority
-      ) noexcept;
-
-      NOD() constexpr bool operator == (const Charge&) const noexcept;
-
-      NOD() constexpr Charge operator * (const Real&) const noexcept;
-      NOD() constexpr Charge operator ^ (const Real&) const noexcept;
-
-      NOD() constexpr Charge& operator *= (const Real&) noexcept;
-      NOD() constexpr Charge& operator ^= (const Real&) noexcept;
-
-      NOD() constexpr bool IsDefault() const noexcept;
-      NOD() constexpr bool IsFlowDependent() const noexcept;
-      NOD() Hash GetHash() const noexcept;
-      void Reset() noexcept;
-
-      NOD() explicit operator Code() const;
-      NOD() explicit operator Debug() const;
-   };
-
 } // namespace Langulus::Flow
-
-LANGULUS_DEFINE_TRAIT(Mass,
-   "Mass of anything with charge, amplitude, or literally physical mass");
-LANGULUS_DEFINE_TRAIT(Rate,
-   "Rate of anything with charge, or with physical frequency");
-LANGULUS_DEFINE_TRAIT(Time,
-   "Time of anything with charge, or with a temporal component");
-LANGULUS_DEFINE_TRAIT(Priority,
-   "Priority of anything with charge, or some kind of priority");
 
 /// Make the rest of the code aware, that Langulus::Flow has been included    
 #define LANGULUS_LIBRARY_FLOW() 1

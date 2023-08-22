@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Scope.hpp"
-#include "Construct.hpp"
+#include <Anyness/Construct.hpp>
 
 namespace Langulus::Flow
 {

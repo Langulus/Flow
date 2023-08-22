@@ -6,7 +6,8 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "Construct.hpp"
+#include "Common.hpp"
+#include <Anyness/Construct.hpp>
 
 namespace Langulus::Flow
 {

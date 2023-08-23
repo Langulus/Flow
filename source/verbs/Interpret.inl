@@ -347,7 +347,7 @@ namespace fmt
       LANGULUS(INLINED)
       auto format(Langulus::Anyness::Construct const& element, CONTEXT& ctx) {
          using namespace Langulus;
-         if (!element.IsDefault() or element) {
+         if (not element.IsDefault() or element) {
             return fmt::format_to(ctx.out(), "{}{}({})",
                element.GetToken(),
                element.GetCharge(),
@@ -398,7 +398,7 @@ namespace fmt
          fmt::format_to(ctx.out(), "Map(");
          bool first = true;
          for (auto pair : element) {
-            if (!first)
+            if (not first)
                fmt::format_to(ctx.out(), ", ");
             first = false;
 
@@ -429,7 +429,7 @@ namespace fmt
          fmt::format_to(ctx.out(), "Set(");
          bool first = true;
          for (auto key : element) {
-            if (!first)
+            if (not first)
                fmt::format_to(ctx.out(), ", ");
             first = false;
 

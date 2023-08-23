@@ -70,8 +70,8 @@ namespace Langulus::Verbs
       verb.ForEachDeep([&](const Construct& construct) {
          if (construct.GetProducer()) {
             // Creation of customly produced type hit default creation, 
-            // and that should not be allowed - add and reflect the     
-            // Create verb in the producer                              
+            // and that should not be allowed - you probably forgot to  
+            // add and reflect the Verbs::Create in the producer        
             return;
          }
          else if (construct.IsMissingDeep()) {
@@ -80,7 +80,7 @@ namespace Langulus::Verbs
          }
 
          if (construct.GetCharge().mMass * verb.GetMass() < 0) {
-            //TODO destroy
+            TODO(); //destroy
          }
          else {
             // Create                                                   
@@ -126,7 +126,7 @@ namespace Langulus::Verbs
    ///   @param verb - the creation verb                                      
    ///   @return true if verb was satisfied                                   
    inline bool Create::ExecuteStateless(Verb& verb) {
-      if (!verb || verb.GetMass() <= 0)
+      if (not verb or verb.GetMass() <= 0)
          return false;
 
       const auto createInner = [&](const Construct& descriptor) {
@@ -140,7 +140,7 @@ namespace Langulus::Verbs
          const auto count = static_cast<Count>(descriptor.GetCharge().mMass * verb.GetMass());
          auto result = Any::FromMeta(type);
 
-         if (type->mDescriptorConstructor && descriptor) {
+         if (type->mDescriptorConstructor and descriptor) {
             for (Offset i = 0; i < count; ++i) {
                if (count != 1) {
                   VERBOSE_CREATION(Logger::Yellow,

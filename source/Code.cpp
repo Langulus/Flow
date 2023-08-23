@@ -704,7 +704,7 @@ namespace Langulus::Flow
       else if (lhs.Is<Construct>()) {
          // The content is for an instantiated data scope               
          auto& construct = lhs.As<Construct>(-1);
-         construct.GetArgument().SmartPush(Move(rhs));
+         construct << Move(rhs);
          VERBOSE_ALT("Constructed from Construct ", Logger::Cyan, lhs);
       }
       else {

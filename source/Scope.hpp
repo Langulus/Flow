@@ -24,11 +24,6 @@ namespace Langulus::Flow
       using Any::Any;
       using Any::operator ==;
 
-      NOD() LANGULUS_API(FLOW)
-      bool IsExecutable() const noexcept;
-      NOD() LANGULUS_API(FLOW)
-      bool IsExecutableDeep() const noexcept;
-
       LANGULUS_API(FLOW)
       bool Execute(Any&) const;
       LANGULUS_API(FLOW)
@@ -49,5 +44,15 @@ namespace Langulus::Flow
       friend struct Langulus::Verbs::Associate;
       using Block::CallUnknownSemanticAssignment;
    };
+
+   NOD() LANGULUS_API(FLOW)
+   bool IsExecutable(const Block&) noexcept;
+   NOD() LANGULUS_API(FLOW)
+   bool IsExecutableDeep(const Block&) noexcept;
+
+   NOD() LANGULUS_API(FLOW)
+   bool IsExecutable(const Neat&) noexcept;
+   NOD() LANGULUS_API(FLOW)
+   bool IsExecutableDeep(const Neat&) noexcept;
 
 } // namespace Langulus::Flow

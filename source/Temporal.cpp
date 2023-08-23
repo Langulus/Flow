@@ -73,7 +73,7 @@ namespace Langulus::Flow
    /// Advance the flow - moves time forward, executes stacks                 
    ///   @param dt - delta time                                               
    void Temporal::Update(Time dt) {
-      if (!mCurrentTime) {
+      if (not mCurrentTime) {
          // If we're at the beginning of time - prepare for execution   
          auto collapsed = Collapse(mPriorityStack);
 
@@ -139,7 +139,7 @@ namespace Langulus::Flow
       // Merge time stacks                                              
       for (auto pair : other.mTimeStack) {
          const auto found = mTimeStack.Find(pair.mKey);
-         if (!found) {
+         if (not found) {
             const State state {
                TimePoint {mState.mStart + pair.mKey},
                Time {mState.mTime + pair.mKey},
@@ -158,7 +158,7 @@ namespace Langulus::Flow
       // Merge periodic stacks                                          
       for (auto pair : other.mFrequencyStack) {
          const auto found = mFrequencyStack.Find(pair.mKey);
-         if (!found) {
+         if (not found) {
             const State state {
                mState.mStart,
                mState.mTime,
@@ -246,7 +246,7 @@ namespace Langulus::Flow
          },
          [&](const Construct& subscope) {
             // Collapse constructs                                      
-            auto collapsed = Collapse(subscope);
+            auto collapsed = Collapse(subscope.MakeMessy()); //TODO MakeMessy is slow, probably a specialized Collapse would be better
             if (collapsed) {
                result << Construct {
                   subscope.GetType(),
@@ -328,7 +328,7 @@ namespace Langulus::Flow
             // Compile constructs                                       
             result << Construct {
                subscope.GetType(),
-               Compile(subscope, priority),
+               Compile(subscope.MakeMessy(), priority), //TODO MakeMessy is slow, probably a specialized Compile would be better
                subscope.GetCharge()
             };
          },
@@ -387,7 +387,7 @@ namespace Langulus::Flow
          stack.ForEachRev([&](Block& substack) {
             atLeastOneSuccess |= Link(scope, substack);
             // Continue linking only if the stack is branched           
-            return !(stack.IsOr() && atLeastOneSuccess);
+            return not (stack.IsOr() and atLeastOneSuccess);
          });
 
          return atLeastOneSuccess;
@@ -401,23 +401,23 @@ namespace Langulus::Flow
          [&](Trait& substack) {
             atLeastOneSuccess |= Link(scope, substack);
             // Continue linking only if the stack is branched           
-            return !(stack.IsOr() && atLeastOneSuccess);
+            return not (stack.IsOr() and atLeastOneSuccess);
          },
          [&](Construct& substack) {
             atLeastOneSuccess |= Link(scope, substack);
             // Continue linking only if the stack is branched           
-            return !(stack.IsOr() && atLeastOneSuccess);
+            return not (stack.IsOr() and atLeastOneSuccess);
          },
          [&](Verb& substack) {
             if (Link(scope, substack.GetArgument())) {
                atLeastOneSuccess = true;
                // Continue linking only if the stack is branched        
-               return !stack.IsOr();
+               return not stack.IsOr();
             }
             if (Link(scope, substack.GetSource())) {
                atLeastOneSuccess = true;
                // Continue linking only if the stack is branched        
-               return !stack.IsOr();
+               return not stack.IsOr();
             }
 
             return Flow::Continue;
@@ -425,7 +425,7 @@ namespace Langulus::Flow
          [&](Inner::MissingFuture& future) {
             atLeastOneSuccess |= Link(scope, future);
             // Continue linking only if the stack is branched           
-            return !(stack.IsOr() && atLeastOneSuccess);
+            return not (stack.IsOr() and atLeastOneSuccess);
          }
       );
 

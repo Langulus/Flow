@@ -209,7 +209,8 @@ namespace Langulus::Flow::Inner
       // Iterate backwards - the last future points are always most     
       // relevant for linking                                           
       // Lets start, by scanning all future points in the available     
-      // stack. Scope will be duplicated for each encountered branch    
+      // stack. Scope will be shallow-copied for each encountered       
+      // branch, and then cloned if changes occur.                      
       const auto found = scope.ForEach(
          [&](const Trait& trait) {
             try {
@@ -229,7 +230,7 @@ namespace Langulus::Flow::Inner
             try {
                result << Construct {
                   construct.GetType(), 
-                  Link(construct, environment, consumedPast)
+                  Link(construct.MakeMessy(), environment, consumedPast) //TODO MakeMessy is slow, probably a specialized Link would be better
                };
             }
             catch (const Except::Link&) {

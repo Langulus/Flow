@@ -18,49 +18,46 @@
 namespace Langulus::Flow
 {
 
-   /// Flat check if scope contains executable verbs                          
-   ///   @return true if the flat scope contains verbs                        
-   bool Scope::IsExecutable() const noexcept {
-      if (Is<Verb>())
+   /// Flat check if block contains verbs                                     
+   ///   @param block - the block to scan for verbs                           
+   ///   @return true if the block contains immediate verbs                   
+   bool IsExecutable(const Block& block) noexcept {
+      if (block.Is<Verb>())
          return true;
 
-      bool result{};
-      ForEach(
-         // Scan deeper into traits, because they're not marked deep    
-         // They are deep only in respect to execution                  
-         [&result](const Trait& trait) noexcept {
-            const auto& scope = ReinterpretCast<Scope>(
-               static_cast<const Any&>(trait));
-            result = scope.IsExecutable();
-            return !result;
+      bool executable = false;
+      block.ForEach(
+         // Scan deeper into traits, because they're not deep           
+         // They are deep only with respect to execution                
+         [&executable](const Trait& trait) noexcept {
+            executable = IsExecutable(trait);
+            return not executable;
          },
-         // Scan deeper into constructs, because they're not marked deep
-         // They are deep only in respect to execution                  
-         [&result](const Construct& construct) noexcept {
-            const auto& scope = ReinterpretCast<Scope>(
-               construct.GetArgument());
-            result = scope.IsExecutable();
-            return !result;
+         // Scan deeper into constructs, because they're not deep       
+         // They are deep only with respect to execution                
+         [&executable](const Construct& construct) noexcept {
+            executable = IsExecutable(construct);
+            return not executable;
          }
       );
 
-      return result;
+      return executable;
    }
 
-   /// Deep (nested and slower) check if scope contains executable verbs      
-   ///   @return true if the deep or flat scope contains verbs                
-   bool Scope::IsExecutableDeep() const noexcept {
-      if (IsExecutable())
+   /// Deep (nested and slower) check if block contains verbs                 
+   ///   @param block - the block to scan for verbs                           
+   ///   @return true if the deep or flat block contains verbs                
+   bool IsExecutableDeep(const Block& block) noexcept {
+      if (IsExecutable(block))
          return true;
 
-      bool result{};
-      ForEachDeep([&result](const Block& group) noexcept {
-         const auto& scope = ReinterpretCast<Scope>(group);
-         result = scope.IsExecutable();
-         return !result;
+      bool executable = false;
+      block.ForEachDeep([&executable](const Block& group) noexcept {
+         executable = IsExecutable(group);
+         return not executable;
       });
 
-      return result;
+      return executable;
    }
 
    /// Nested AND/OR scope execution (discarding outputs)                     
@@ -89,11 +86,11 @@ namespace Langulus::Flow
    ///   @return true of no errors occured                                    
    bool Scope::Execute(Any& environment, Any& output, bool& skipVerbs) const {
       auto results = Any::FromState(*this);
-      if (!IsEmpty()) {
+      if (not IsEmpty()) {
          VERBOSE_TAB("Executing scope: [", this, ']');
 
          try {
-            if (IsOr() && GetCount() > 1)
+            if (IsOr() and GetCount() > 1)
                ExecuteOR(environment, results, skipVerbs);
             else
                ExecuteAND(environment, results, skipVerbs);
@@ -140,7 +137,7 @@ namespace Langulus::Flow
 
                const auto& scope = ReinterpretCast<Scope>(static_cast<const Block&>(trait));
                Any local;
-               if (!scope.Execute(environment, local, skipVerbs)) {
+               if (not scope.Execute(environment, local, skipVerbs)) {
                   VERBOSE(Logger::Red, "Trait AND flow failed: ", *this);
                   LANGULUS_THROW(Flow, "Trait AND failure");
                }
@@ -157,7 +154,7 @@ namespace Langulus::Flow
 
                const auto& scope = ReinterpretCast<Scope>(construct.GetArgument());
                Any local;
-               if (!scope.Execute(environment, local, skipVerbs)) {
+               if (not scope.Execute(environment, local, skipVerbs)) {
                   VERBOSE(Logger::Red, "Construct AND flow failed: ", *this);
                   LANGULUS_THROW(Flow, "Construct AND failure");
                }
@@ -200,7 +197,7 @@ namespace Langulus::Flow
                verb.SetSource(constVerb.GetSource());
 
                // Execute the verb                                      
-               if (!Scope::ExecuteVerb(environment, verb)) {
+               if (not Scope::ExecuteVerb(environment, verb)) {
                   VERBOSE(Logger::Red, "Verb AND flow failed: ", *this);
                   LANGULUS_THROW(Flow, "Verb AND failure");
                }
@@ -211,7 +208,7 @@ namespace Langulus::Flow
          );
       }
 
-      if (!executed) {
+      if (not executed) {
          // If this is reached, then we had non-verb content            
          // Just propagate its contents                                 
          output.SmartPush(static_cast<const Any&>(*this));
@@ -222,8 +219,7 @@ namespace Langulus::Flow
    }
 
    /// Nested OR execution                                                    
-   ///   @param context - the context in which scope will be executed         
-   ///   @param scope - the scope to execute                                  
+   ///   @param environment - the context in which scope will be executed     
    ///   @param output - [out] verb result will be pushed here                
    ///   @param skipVerbs - [out] whether to skip verbs after OR success      
    ///   @return true of no errors occured                                    
@@ -234,9 +230,7 @@ namespace Langulus::Flow
       if (IsDeep()) {
          // Nest if deep                                                
          executed = ForEach([&](const Block& block) {
-            const auto& scope = 
-               ReinterpretCast<Scope>(block);
-
+            const auto& scope = ReinterpretCast<Scope>(block);
             Any local;
             if (scope.Execute(environment, local, localSkipVerbs)) {
                executed = true;
@@ -301,7 +295,7 @@ namespace Langulus::Flow
                   constVerb.GetVerbState()
                );
 
-               if (!Scope::ExecuteVerb(environment, verb))
+               if (not Scope::ExecuteVerb(environment, verb))
                   return Flow::Continue;
 
                executed = true;
@@ -344,7 +338,7 @@ namespace Langulus::Flow
 
       // Integrate the verb source to environment                       
       Any localSource;
-      if (!ReinterpretCast<Scope>(verb.GetSource()).Execute(environment, localSource)) {
+      if (not ReinterpretCast<Scope>(verb.GetSource()).Execute(environment, localSource)) {
          // It's considered error only if verb is not monocast          
          FLOW_ERRORS("Error at source of: ", verb);
          return false;
@@ -355,7 +349,7 @@ namespace Langulus::Flow
 
       // Integrate the verb argument to the source                      
       Any localArgument;
-      if (!ReinterpretCast<Scope>(verb.GetArgument()).Execute(localSource, localArgument)) {
+      if (not ReinterpretCast<Scope>(verb.GetArgument()).Execute(localSource, localArgument)) {
          // It's considered error only if verb is not monocast          
          FLOW_ERRORS("Error at argument of: ", verb);
          return false;
@@ -374,7 +368,7 @@ namespace Langulus::Flow
       // Integration (and execution of subverbs if any)                 
       // Source and argument will be executed locally if scripts, and   
       // substituted with their results in the verb                     
-      if (!Scope::IntegrateVerb(context, verb)) {
+      if (not Scope::IntegrateVerb(context, verb)) {
          FLOW_ERRORS("Error integrating verb: ", verb, " (", verb.GetVerb(), ')');
          return false;
       }
@@ -384,7 +378,7 @@ namespace Langulus::Flow
          // inside (if any) should be done in the integration phase     
          // Just making sure that the integrated argument & source are  
          // propagated to the verb's output                             
-         if (!verb.mOutput) {
+         if (not verb.mOutput) {
             if (verb)
                verb << Move(verb.GetArgument());
             else
@@ -398,7 +392,7 @@ namespace Langulus::Flow
 
       // Dispatch the verb to the context, executing it                 
       // Any results should be inside verb.mOutput afterwards           
-      if (!DispatchDeep(verb.mSource, verb)) {
+      if (not DispatchDeep(verb.mSource, verb)) {
          FLOW_ERRORS("Error executing verb: ", verb, " (", verb.GetVerb(), ')');
          return false;
       }

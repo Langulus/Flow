@@ -62,16 +62,16 @@ namespace Langulus::Verbs
       auto& lhs = ReinterpretCast<Scope>(context);
       auto& rhs = ReinterpretCast<Scope>(verb.GetArgument());
 
-      if (lhs.IsConstant() || lhs.GetCount() != rhs.GetCount())
+      if (lhs.IsConstant() or lhs.GetCount() != rhs.GetCount())
          // Can't overwrite a constant context                          
          return false;
-      else if (lhs.IsMissing() || rhs.IsMissing())
+      else if (lhs.IsMissing() or rhs.IsMissing())
          // Can't associate missing stuff                               
          return false;
-      else if (lhs.IsExecutableDeep() || rhs.IsExecutableDeep())
+      else if (IsExecutableDeep(lhs) or IsExecutableDeep(rhs))
          // Can't associate unexecuted verbs                            
          return false;
-      else if (!lhs.IsExact(rhs.GetType()))
+      else if (not lhs.IsExact(rhs.GetType()))
          // Can't associate unrelated types                             
          return false;
 

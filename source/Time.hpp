@@ -7,7 +7,9 @@
 ///                                                                           
 #pragma once
 #include "Common.hpp"
+#include <Anyness/Neat.hpp>
 #include <chrono>
+#include <fmt/chrono.h>
 
 namespace Langulus
 {
@@ -40,22 +42,12 @@ namespace Langulus
       using Base = time_point;
       using Base::time_point;
 
-      constexpr TimePoint() noexcept
-         : time_point {min()} {}
+      constexpr TimePoint() noexcept;
+      constexpr TimePoint(const time_point& a) noexcept;
 
-      constexpr TimePoint(const time_point& a) noexcept
-         : time_point {a} {}
+      constexpr explicit operator bool() const noexcept;
 
-      constexpr explicit operator bool() const noexcept {
-         return *this != min();
-      }
-
-      NOD() Hash GetHash() const noexcept {
-         using Representation = typename Base::rep;
-         static_assert(sizeof(Representation) == sizeof(TimePoint),
-            "Size mismatch");
-         return HashNumber(reinterpret_cast<const Representation&>(*this));   
-      }
+      NOD() Hash GetHash() const noexcept;
    };
 
 
@@ -71,28 +63,16 @@ namespace Langulus
       using Base::duration;
       using Base::operator +;
 
-      constexpr Time() noexcept
-         : duration {zero()} {}
+      constexpr Time() noexcept;
+      constexpr Time(const duration& a) noexcept;
+      Time(const Anyness::Neat& a);
 
-      constexpr Time(const duration& a) noexcept
-         : duration {a} {}
+      constexpr explicit operator bool() const noexcept;
 
-      constexpr explicit operator bool() const noexcept {
-         return *this != zero();
-      }
-
-      NOD() Hash GetHash() const noexcept {
-         using Representation = typename Base::rep;
-         static_assert(sizeof(Representation) == sizeof(Time),
-            "Size mismatch");
-         return HashNumber(reinterpret_cast<const Representation&>(*this));
-      }
+      NOD() Hash GetHash() const noexcept;
 
       template<CT::DenseBuiltinNumber T = Real>
-      NOD() Real Seconds() const noexcept {
-         auto& asBase = static_cast<const Base&>(*this);
-         return std::chrono::duration<T, std::chrono::seconds> {asBase}.count();
-      }
+      NOD() Real Seconds() const noexcept;
    };
 
 
@@ -101,10 +81,7 @@ namespace Langulus
    ///                                                                        
    class SteadyClock : public A::Clock, private ::std::chrono::steady_clock {
       LANGULUS_BASES(A::Clock);
-
-      NOD() static TimePoint Now() noexcept {
-         return steady_clock::now();
-      }
+      NOD() static TimePoint Now() noexcept;
    };
 
    namespace CT
@@ -116,6 +93,8 @@ namespace Langulus
    } // namespace Langulus::CT
 
 } // namespace Langulus
+
+#include "Time.inl"
 
 namespace fmt
 {

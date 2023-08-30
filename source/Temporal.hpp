@@ -53,35 +53,29 @@ namespace Langulus::Flow
 
       // A default execution context                                    
       Any mEnvironment;
-
       // A parent flow                                                  
       Temporal* mParent {};
-
       // Background charge                                              
       State mState;
-
       // Increments on each call to Update()                            
       TimePoint mPreviousTime;
       TimePoint mCurrentTime;
-
       // Accumulated flow duration                                      
       Time mDuration;
-
       // Priority stack, i.e. the order of things that happen NOW       
-      Scope mPriorityStack;
-
+      Any mPriorityStack;
       // Verb temporal stack, i.e. things that happen at specific time  
       TMap<Time, Temporal*> mTimeStack;
-
       // Verb frequency stack, i.e. things that happen periodically     
       TUnorderedMap<Time, Temporal*> mFrequencyStack;
 
    protected:
-      LANGULUS_API(FLOW) static Scope Collapse(const Block&);
-      LANGULUS_API(FLOW) static Scope Compile(const Block&, Real priority);
+      LANGULUS_API(FLOW) static Any Collapse(const Block&);
+      LANGULUS_API(FLOW) static Any Compile(const Block&, Real priority);
 
-      LANGULUS_API(FLOW) bool Link(const Scope&, Block&) const;
-      LANGULUS_API(FLOW) bool Link(const Scope&, Inner::MissingFuture&) const;
+      LANGULUS_API(FLOW) bool Link(const Any&, Block&) const;
+      LANGULUS_API(FLOW) bool Link(const Any&, Neat&) const;
+      LANGULUS_API(FLOW) bool Link(const Any&, Inner::MissingFuture&) const;
 
    public:
       Temporal(const Temporal&) = delete;
@@ -93,7 +87,6 @@ namespace Langulus::Flow
 
       LANGULUS_API(FLOW) Temporal& operator = (Temporal&&) noexcept = default;
 
-   public:
       NOD() LANGULUS_API(FLOW)
       operator Code() const;
 

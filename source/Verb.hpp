@@ -81,8 +81,6 @@ namespace Langulus::Flow
       LANGULUS_BASES(Any, Charge);
 
    protected:
-      friend struct Scope;
-
       // Verb meta, mass, frequency, time and priority                  
       VMeta mVerb {};
       // The number of successful executions                            
@@ -99,7 +97,6 @@ namespace Langulus::Flow
 
       LANGULUS_API(FLOW) Verb(const Verb&);
       LANGULUS_API(FLOW) Verb(Verb&&);
-      LANGULUS_API(FLOW) Verb(const Descriptor&);
 
       Verb(const CT::NotSemantic auto&);
       Verb(CT::NotSemantic auto&);
@@ -317,7 +314,7 @@ namespace Langulus::Flow
       StaticVerb();
       StaticVerb(const StaticVerb&);
       StaticVerb(StaticVerb&&);
-      StaticVerb(const Descriptor&);
+      //StaticVerb(const Neat&);
 
       StaticVerb(const CT::NotSemantic auto&);
       StaticVerb(CT::NotSemantic auto&);

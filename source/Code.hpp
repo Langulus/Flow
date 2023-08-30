@@ -6,7 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "Scope.hpp"
+#include "Executor.hpp"
 #include <Anyness/Construct.hpp>
 
 namespace Langulus::Flow
@@ -84,7 +84,7 @@ namespace Langulus::Flow
 
       LANGULUS_API(FLOW) explicit Code(Operator);
 
-      NOD() LANGULUS_API(FLOW) Scope Parse(bool optimize = true) const;
+      NOD() LANGULUS_API(FLOW) Any Parse(bool optimize = true) const;
 
       NOD() LANGULUS_API(FLOW) Code RightOf(Offset) const;
       NOD() LANGULUS_API(FLOW) Code LeftOf(Offset) const;
@@ -171,15 +171,8 @@ namespace Langulus::Flow
 
 #include "Code.inl"
 
-namespace Langulus::Verbs
-{
-
-   using Flow::Scope;
-   using Flow::Construct;
-
-} // namespace Langulus::Verbs
-
 namespace Langulus
 {
+   /// Convenience operator for code string literals                          
    Flow::Code operator "" _code(const char*, ::std::size_t);
 }

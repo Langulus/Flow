@@ -25,10 +25,10 @@ namespace Langulus::Flow
 
    /// Construct a produced item                                              
    ///   @param producer - the item's producer                                
-   ///   @param descriptor - the item's messy descriptor                      
+   ///   @param neat - the item's neat descriptor                             
    template<class T>
-   ProducedFrom<T>::ProducedFrom(T* producer, const Any& descriptor)
-      : mDescriptor {descriptor}
+   ProducedFrom<T>::ProducedFrom(T* producer, const Neat& neat)
+      : mDescriptor {neat}
       , mProducer {producer} {
       LANGULUS_ASSUME(DevAssumes, producer, "Invalid producer");
    }
@@ -57,24 +57,19 @@ namespace Langulus::Flow
 
    /// Constructor for descriptor-constructible element                       
    ///   @param factory - the factory who owns the T instance                 
-   ///   @param descriptor - the messy element descriptor, used               
-   ///                       to construct the element                         
+   ///   @param neat - element descriptor, used to construct the element      
    TEMPLATE() LANGULUS(INLINED)
-   FACTORY()::Element::Element(TFactory* factory, const Any& descriptor)
+   FACTORY()::Element::Element(TFactory* factory, const Neat& neat)
       : mFactory {factory}
-      , mData {factory->mFactoryOwner, descriptor} {}
+      , mData {factory->mFactoryOwner, neat} {}
    
    /// Destructor for descriptor-constructible element                        
    TEMPLATE() LANGULUS(INLINED)
    FACTORY()::Element::~Element() {
-      #ifdef LANGULUS_ENABLE_SAFE_MODE
-         if (mData.GetReferences() != 1) {
-            Logger::Error("Unable to destroy ", mData,
-               ", it has ", mData.GetReferences(), " uses instead of 1"
-            );
-            LANGULUS_THROW(Destruct, "Unable to destroy factory element");
-         }
-      #endif
+      LANGULUS_ASSUME(DevAssumes, mData.GetReferences() == 1, 
+         "Unable to destroy ", mData,
+         ", it has ", mData.GetReferences(), " uses instead of 1"
+      );
    }
 
 
@@ -111,7 +106,7 @@ namespace Langulus::Flow
    /// Reset the factory                                                      
    TEMPLATE() LANGULUS(INLINED)
    void FACTORY()::Reset() {
-      if (!mData.IsAllocated())
+      if (not mData.IsAllocated())
          return;
 
       mHashmap.Reset();
@@ -157,7 +152,7 @@ namespace Langulus::Flow
    ///   @return true if block contains at least one valid element            
    TEMPLATE() LANGULUS(INLINED)
    constexpr FACTORY()::operator bool() const noexcept {
-      return !IsEmpty();
+      return not IsEmpty();
    }
 
 #ifdef LANGULUS_ENABLE_SAFE_MODE
@@ -173,7 +168,7 @@ namespace Langulus::Flow
       auto raw = mData.GetRaw();
       const auto rawEnd = mData.GetRawEnd();
       while (raw != rawEnd) {
-         if (!raw->mData.GetReferences())
+         if (not raw->mData.GetReferences())
             continue;
 
          Logger::Info(counter, "] ", raw->mData,
@@ -245,15 +240,14 @@ namespace Langulus::Flow
    /// Inner creation/destruction verb                                        
    ///   @param verb - [in/out] the creation/destruction verb                 
    ///   @param count - the number of items to create (or destroy if negative)
-   ///   @param messy - uncompiled messy element descriptor                   
+   ///   @param neat - element descriptor                                     
    TEMPLATE()
-   void FACTORY()::CreateInner(Verb& verb, int count, const Any& messy) {
-      Neat descriptor {messy};
+   void FACTORY()::CreateInner(Verb& verb, int count, const Neat& neat) {
       if (count > 0) {
          // Produce amount of compatible constructs                     
          if constexpr (IsUnique) {
             // Check if descriptor matches any of the available         
-            const auto found = Find(descriptor);
+            const auto found = Find(neat);
             if (found) {
                // The unique construct was found, just return it.       
                // Mass will be ignored, it makes no sense to            
@@ -266,12 +260,12 @@ namespace Langulus::Flow
             // Produce exactly one element with this descriptor         
             // Mass will be ignored, it makes no sense to create        
             // multiple instances if unique                             
-            verb << Produce(messy);
+            verb << Produce(neat);
          }
          else {
             // Satisfy the required count                               
             while (count >= 1) {
-               auto produced = Produce(messy);
+               auto produced = Produce(neat);
                verb << produced;
                --count;
             }
@@ -281,7 +275,7 @@ namespace Langulus::Flow
          // Destroy amount of compatible constructs                     
          if constexpr (IsUnique) {
             // Check if descriptor matches any of the available         
-            const auto found = Find(descriptor);
+            const auto found = Find(neat);
             if (found) {
                // The unique construct was found, destroy it            
                // Mass is ignored, there should be exactly one          
@@ -292,7 +286,7 @@ namespace Langulus::Flow
          else {
             // Destroy the required amount of matching items            
             do {
-               const auto found = Find(descriptor);
+               const auto found = Find(neat);
                if (not found)
                   break;
 
@@ -329,28 +323,27 @@ namespace Langulus::Flow
       );
    }
 
-   /// Produce a single T with the given descriptor and arguments             
-   ///   @param descriptor - the original, messy element descriptor           
+   /// Produce a single T with the given descriptor                           
+   ///   @param neat - element descriptor                                     
    ///   @return the produced instance                                        
    TEMPLATE()
-   T* FACTORY()::Produce(const Any& descriptor) {
+   T* FACTORY()::Produce(const Neat& neat) {
       if (mReusable) {
          // Reuse a slot                                                
          auto memory = mReusable;
          mReusable = mReusable->mNextFreeElement;
-         auto result = new (memory) Element {this, descriptor};
+         auto result = new (memory) Element {this, neat};
          mHashmap[result->mData.GetHash()] << result;
          ++mCount;
          return &result->mData;
       }
-      else {
-         // If this is reached, then a reallocation is required         
-         mData.Emplace(this, descriptor);
-         auto result = &mData.Last();
-         mHashmap[result->mData.GetHash()] << result;
-         ++mCount;
-         return &result->mData;
-      }
+
+      // If this is reached, then a reallocation is required            
+      mData.Emplace(this, neat);
+      auto result = &mData.Last();
+      mHashmap[result->mData.GetHash()] << result;
+      ++mCount;
+      return &result->mData;
    }
 
    /// Destroys an element inside factory                                     

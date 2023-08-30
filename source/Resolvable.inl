@@ -7,9 +7,9 @@
 ///                                                                           
 #pragma once
 #include "Resolvable.hpp"
-#include <Flow/Verbs/Do.hpp>
-#include <Flow/Verbs/Associate.hpp>
-#include <Flow/Verbs/Interpret.hpp>
+#include "verbs/Do.inl"
+#include "verbs/Associate.inl"
+#include "verbs/Interpret.inl"
 
 namespace Langulus
 {
@@ -210,7 +210,7 @@ namespace Langulus::Flow
    ///   @return the results of the execution                                 
    LANGULUS(INLINED)
    Any Resolvable::Run(const Code& code) {
-      if (!code)
+      if (not code)
          return {};
       return Run(code.Parse());
    }
@@ -219,15 +219,23 @@ namespace Langulus::Flow
    ///   @param scope - the scope to execute                                  
    ///   @return the results of the execution                                 
    LANGULUS(INLINED)
-   Any Resolvable::Run(const Scope& scope) {
+   Any Resolvable::Run(const Any& scope) {
       Any context {GetBlock()};
       Any output;
-      if (!scope.Execute(context, output)) {
+      if (not Execute(scope, context, output)) {
          Logger::Error("Can't execute scope: ", scope);
          return {};
       }
 
       return output;
+   }
+   
+   /// Execute a temporal in the resolved context                             
+   ///   @param scope - the scope to execute                                  
+   ///   @return the results of the execution                                 
+   LANGULUS(INLINED)
+   Any Resolvable::Run(const Temporal& scope) {
+      TODO();
    }
 
    /// Get the first member matching a runtime trait definition               
@@ -351,7 +359,7 @@ namespace Langulus::Flow
    bool Resolvable::SetTrait(const D& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<T>();
-         if (!found)
+         if (not found)
             return false;
          return found.Copy(Block::From(data)) > 0;
       }
@@ -376,7 +384,7 @@ namespace Langulus::Flow
    bool Resolvable::SetTrait(D&& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<T>();
-         if (!found)
+         if (not found)
             return false;
          return found.Copy(Block::From(data)) > 0;
       }
@@ -400,7 +408,7 @@ namespace Langulus::Flow
    bool Resolvable::SetValue(const D& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<D>();
-         if (!found)
+         if (not found)
             return false;
          return found.Copy(Block::From(data)) > 0;
       }
@@ -424,7 +432,7 @@ namespace Langulus::Flow
    bool Resolvable::SetValue(D&& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<D>();
-         if (!found)
+         if (not found)
             return false;
          return found.Copy(Block::From(data)) > 0;
       }

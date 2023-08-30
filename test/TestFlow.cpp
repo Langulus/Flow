@@ -5,6 +5,7 @@
 #include <Flow/Verbs/Select.hpp>
 #include <Flow/Verbs/Catenate.hpp>
 #include <Flow/Verbs/Conjunct.hpp>
+#include <Flow/Verbs/Interpret.hpp>
 #include <catch2/catch.hpp>
 
 LANGULUS_EXCEPTION_HANDLER

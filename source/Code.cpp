@@ -52,7 +52,7 @@ namespace Langulus::Flow
    /// Parse code                                                             
    ///   @param optimize - whether or not to precompile                       
    ///   @returned the parsed flow                                            
-   Scope Code::Parse(bool optimize) const {
+   Any Code::Parse(bool optimize) const {
       // Make sure that all default traits are registered before parsing
       (void)MetaOf<Traits::Logger>();
       (void)MetaOf<Traits::Count>();
@@ -85,7 +85,7 @@ namespace Langulus::Flow
       (void)MetaOf<Verbs::Interpret>();
 
       // Parse                                                          
-      Scope output;
+      Any output;
       const auto parsed = UnknownParser::Parse(*this, output, 0, optimize);
       if (parsed != GetCount()) {
          Logger::Warning() << "Some characters were left out at the end, while parsing code:";
@@ -875,8 +875,8 @@ namespace Langulus::Flow
          const auto opStateBackup = op.GetVerbState();
          op.Multicast(false);
          Any output;
-         Scope scope {op};
-         if (scope.Execute(lhs, output)) {
+         Any scope {op};
+         if (Execute(scope, lhs, output)) {
             // The verb was executed at compile-time, so directly       
             // substitute LHS with the result                           
             lhs = Abandon(output);

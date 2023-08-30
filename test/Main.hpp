@@ -81,10 +81,10 @@ struct Producer {};
 
 /// A mockup of a producible                                                  
 struct Producible : Referenced, ProducedFrom<Producer> {
-   Producible(Producer* producer, const Any& d = {})
-      : ProducedFrom {producer, d} {}
+   Producible(Producer* producer, const Neat& neat = {})
+      : ProducedFrom {producer, neat} {}
 
-   Any mDescriptor;
+   Neat mDescriptor;
 
    bool operator == (const Producible& rhs) const {
       return mDescriptor == rhs.mDescriptor;

@@ -6,7 +6,8 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #include "Temporal.hpp"
-#include "inner/Missing.hpp"
+#include "Resolvable.inl"
+#include "inner/Missing.inl"
 #include "inner/Fork.hpp"
 
 #define VERBOSE_TEMPORAL(...) \
@@ -79,7 +80,7 @@ namespace Langulus::Flow
 
          // Now execute the collapsed priority stack                    
          Any output;
-         if (!collapsed.Execute(mEnvironment, output))
+         if (not Execute(collapsed, mEnvironment, output))
             LANGULUS_THROW(Flow, "Update failed");
 
          // Then, set the priority stack to the output, by wrapping it  
@@ -94,7 +95,7 @@ namespace Langulus::Flow
             "Flow after execution ", mPriorityStack);
       }
 
-      if (!dt) {
+      if (not dt) {
          // Avoid updating anything else, if no time had passed         
          return;
       }
@@ -120,9 +121,10 @@ namespace Langulus::Flow
 
       // Execute flows that occur after a given point in time           
       for (auto pair : mTimeStack) {
-         if (mCurrentTime < mState.mStart + pair.mKey)
+         if (mCurrentTime < mState.mStart + pair.mKey) {
             // The time stack is sorted, so no point in continuing      
             break;
+         }
 
          // Update the time flow                                        
          // It might have periodic flows inside                         
@@ -215,8 +217,8 @@ namespace Langulus::Flow
    /// scope, so we can execute it conventionally                             
    ///   @param scope - the scope to collapse                                 
    ///   @return the collapsed scope                                          
-   Scope Temporal::Collapse(const Block& scope) {
-      Scope result;
+   Any Temporal::Collapse(const Block& scope) {
+      Any result;
       if (scope.IsOr())
          result.MakeOr();
 
@@ -293,8 +295,8 @@ namespace Langulus::Flow
    ///   @param priority - the priority to set for any missing point created  
    ///                     for the provided scope                             
    ///   @return the compiled scope                                           
-   Scope Temporal::Compile(const Block& scope, Real priority) {
-      Scope result;
+   Any Temporal::Compile(const Block& scope, Real priority) {
+      Any result;
       if (scope.IsOr())
          result.MakeOr();
 
@@ -346,7 +348,7 @@ namespace Langulus::Flow
 
       if (!done) {
          // Just propagate content                                      
-         result = ReinterpretCast<Scope>(scope);
+         result = scope;
       }
 
       return Abandon(result);
@@ -360,7 +362,7 @@ namespace Langulus::Flow
    ///   @param scope - the scope to link                                     
    ///   @param future - [in/out] the future point to place inside            
    ///   @return true if scope was linked successfully                        
-   bool Temporal::Link(const Scope& scope, Inner::MissingFuture& future) const {
+   bool Temporal::Link(const Any& scope, Inner::MissingFuture& future) const {
       // Attempt linking to the contents first                          
       if (Link(scope, future.mContent))
          return true;
@@ -379,7 +381,7 @@ namespace Langulus::Flow
    ///   @param scope - the scope to link                                     
    ///   @param stack - [in/out] the stack to link with                       
    ///   @return true if scope was linked successfully                        
-   bool Temporal::Link(const Scope& scope, Block& stack) const {
+   bool Temporal::Link(const Any& scope, Block& stack) const {
       bool atLeastOneSuccess = false;
 
       if (stack.IsDeep()) {
@@ -428,6 +430,22 @@ namespace Langulus::Flow
             return not (stack.IsOr() and atLeastOneSuccess);
          }
       );
+
+      return atLeastOneSuccess;
+   }
+   
+   /// Links the missing past points of the provided scope, with the missing  
+   /// future points of the provided Neat. But anything new could go into     
+   /// old future points, as long as state and filters allows it!             
+   ///   @attention assumes argument is a valid scope                         
+   ///   @param scope - the scope to link                                     
+   ///   @param stack - [in/out] the neat stack to link with                  
+   ///   @return true if scope was linked successfully                        
+   bool Temporal::Link(const Any& scope, Neat& stack) const {
+      bool atLeastOneSuccess = false;
+      stack.ForEach([&](Block& substack) {
+         atLeastOneSuccess |= Link(scope, substack);
+      });
 
       return atLeastOneSuccess;
    }

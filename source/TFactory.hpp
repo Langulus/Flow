@@ -37,10 +37,8 @@ namespace Langulus::Flow
    /// that iteration is as fast and cache-friendly as possible.              
    ///                                                                        
    ///	By specifying a FactoryUsage::Unique usage, you're essentially       
-   /// making a set of the produced resources, never duplicating same         
-   /// creations twice. It is highly recommended in such cases, to make the   
-   /// produced item hashable and implement a satisfyingly fast compare       
-   /// operators, to avoid	huge overheads.                                    
+   /// making a set of the produced resources, never duplicating elements     
+   /// with the same descriptor twice.                                        
    ///                                                                        
    template<class T, FactoryUsage USAGE = FactoryUsage::Default>
    class TFactory {
@@ -50,7 +48,7 @@ namespace Langulus::Flow
       static_assert(CT::Data<T>, "T can't be void");
       static_assert(CT::Referencable<T>, "T must be referencable");
       static_assert(CT::Producible<T>, "T must have a producer");
-      static_assert(!CT::Abstract<T>, "T can't be abstract");
+      static_assert(not CT::Abstract<T>, "T can't be abstract");
 
       LANGULUS(TYPED) T;
       using Producer = CT::ProducerOf<T>;
@@ -74,8 +72,8 @@ namespace Langulus::Flow
       // Number of initialized elements                                 
       Count mCount {};
 
-      NOD() T* Produce(const Any&);
-      void CreateInner(Verb&, int, const Any& = {});
+      NOD() T* Produce(const Neat&);
+      void CreateInner(Verb&, int, const Neat& = {});
       void Destroy(Element*);
       NOD() Element* Find(const Neat&) const;
 
@@ -142,7 +140,7 @@ namespace Langulus::Flow
       ProducedFrom() = delete;
       ProducedFrom(const ProducedFrom&) = delete;
       ProducedFrom(ProducedFrom&&);
-      ProducedFrom(T*, const Any&);
+      ProducedFrom(T*, const Neat&);
 
       const Neat& GetNeat() const noexcept;
       Hash GetHash() const noexcept;
@@ -176,7 +174,7 @@ namespace Langulus::Flow
    public:
       Element() = delete;
 
-      Element(TFactory*, const Any&);
+      Element(TFactory*, const Neat&);
       Element(Element&&) = default;
       ~Element();
    };
@@ -200,10 +198,10 @@ namespace Langulus::Flow
       NOD() bool operator == (const TIterator&) const noexcept;
 
       NOD() T& operator * () const noexcept requires (MUTABLE);
-      NOD() const T& operator * () const noexcept requires (!MUTABLE);
+      NOD() const T& operator * () const noexcept requires (not MUTABLE);
 
       NOD() T& operator -> () const noexcept requires (MUTABLE);
-      NOD() const T& operator -> () const noexcept requires (!MUTABLE);
+      NOD() const T& operator -> () const noexcept requires (not MUTABLE);
 
       // Prefix operator                                                
       TIterator& operator ++ () noexcept;
@@ -213,5 +211,3 @@ namespace Langulus::Flow
    };
 
 } // namespace Langulus::Flow
-
-#include "TFactory.inl"

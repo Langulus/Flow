@@ -6,7 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include <Flow/Verbs/Associate.hpp>
+#include "../../include/Flow/Verbs/Associate.hpp"
 #include "../Verb.inl"
 
 #define VERBOSE_ASSOCIATE(...) //Logger::Verbose(__VA_ARGS__)
@@ -58,9 +58,8 @@ namespace Langulus::Verbs
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
-   inline bool Associate::ExecuteDefault(Block& context, Verb& verb) {
-      auto& lhs = ReinterpretCast<Scope>(context);
-      auto& rhs = ReinterpretCast<Scope>(verb.GetArgument());
+   inline bool Associate::ExecuteDefault(Block& lhs, Verb& verb) {
+      const Block& rhs = verb.GetArgument();
 
       if (lhs.IsConstant() or lhs.GetCount() != rhs.GetCount())
          // Can't overwrite a constant context                          
@@ -80,8 +79,7 @@ namespace Langulus::Verbs
       // This is a default (fallback) routine, let's keep things simple 
       try {
          lhs.CallUnknownSemanticAssignment(
-            lhs.GetCount(), 
-            Copy(static_cast<const Block&>(rhs))
+            lhs.GetCount(), Copy(rhs)
          );
       }
       catch (...) {
@@ -90,7 +88,7 @@ namespace Langulus::Verbs
 
       // At this point, context has a copy of verb's argument           
       // Just make sure it goes to output                               
-      verb << Any {context};
+      verb << Any {lhs};
       return true;
    }
 

@@ -1,4 +1,4 @@
-//                                                                           
+///                                                                           
 /// Langulus::Flow                                                            
 /// Copyright(C) 2017 Dimo Markov <langulusteam@gmail.com>                    
 ///                                                                           
@@ -6,12 +6,13 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
+#include "../../include/Flow/Verbs/Create.hpp"
+#include "../Verb.inl"
 #include "Associate.inl"
 #include "Select.inl"
+#include "Interpret.inl"
+
 #include <Anyness/TUnorderedMap.hpp>
-#include <Flow/Verbs/Create.hpp>
-#include <Flow/Verbs/Interpret.hpp>
-#include "../Verb.inl"
 
 #define VERBOSE_CREATION(...) //Logger::Verbose(__VA_ARGS__)
 #define ERROR_CREATION(...) //Logger::Error(__VA_ARGS__)
@@ -99,7 +100,7 @@ namespace Langulus::Verbs
                      "Delegating: " << arguments << " to " << element);
 
                   Verbs::Create creator {arguments};
-                  if (Scope::ExecuteVerb(element, creator)) {
+                  if (ExecuteVerb(element, creator)) {
                      VERBOSE_CREATION(Logger::Yellow <<
                         "Sideproduct: " << creator.GetOutput());
                      created.MergeBlock(Abandon(creator.GetOutput()));
@@ -314,66 +315,6 @@ namespace Langulus::Verbs
    }
 
 } // namespace Langulus::Verbs
-
-namespace Langulus::Anyness
-{
-
-   /// Define the otherwise undefined Langulus::Anyness::Block::AsCast        
-   /// to use the interpret verb pipeline for runtime conversion              
-   ///   @tparam T - the type to convert to                                   
-   ///   @tparam FATAL_FAILURE - true to throw on failure, otherwise          
-   ///                           return a default-initialized T on fail       
-   ///   @return the first element, converted to T                            
-   template<CT::Data T, bool FATAL_FAILURE>
-   T Block::AsCast() const {
-      if (IsEmpty()) {
-         if constexpr (FATAL_FAILURE)
-            LANGULUS_THROW(Convert, "Unable to AsCast, container is empty");
-         else if constexpr (CT::Defaultable<T>)
-            return {};
-         else {
-            LANGULUS_ERROR(
-               "Unable to AsCast to non-default-constructible type, "
-               "when lack of FATAL_FAILURE demands it");
-         }
-      }
-
-      // Attempt pointer arithmetic conversion first                    
-      try { return As<T>(); }
-      catch (const Except::Access&) {}
-
-      // If this is reached, we attempt runtime conversion by           
-      // invoking descriptor constructor of T, with this container      
-      // as the set of arguments                                        
-      const auto meta = MetaOf<T>();
-      Verbs::Create creator {Flow::Construct {meta, *this}};
-      if (Verbs::Create::ExecuteStateless(creator)) {
-         // Success                                                     
-         return creator->As<T>();
-      }
-
-      // Alternatively, we attempt runtime conversion by                
-      // dispatching Verbs::Interpret to the first element              
-      Verbs::Interpret interpreter {meta};
-      auto context = GetElementResolved(0);
-      if (Flow::DispatchDeep(context, interpreter)) {
-         // Success                                                     
-         return interpreter->As<T>();
-      }
-
-      // Failure if reached                                             
-      if constexpr (FATAL_FAILURE)
-         LANGULUS_THROW(Convert, "Unable to AsCast");
-      else if constexpr (CT::Defaultable<T>)
-         return {};
-      else {
-         LANGULUS_ERROR(
-            "Unable to AsCast to non-default-constructible type, "
-            "when lack of FATAL_FAILURE demands it");
-      }
-   }
-
-} // namespace Langulus::Anyness
 
 #undef VERBOSE_CREATION
 #undef ERROR_CREATION

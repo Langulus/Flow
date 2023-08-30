@@ -6,8 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #include "Verb.hpp"
-#include "verbs/Interpret.inl"
-#include "Resolvable.hpp" //todo remove this
+#include "Serial.inl"
 
 #define DELEGATION_VERBOSE(a) pcLogSelfVerbose << a
 
@@ -15,12 +14,7 @@ LANGULUS_RTTI_BOUNDARY("MAIN")
 
 namespace Langulus::Flow
 {
-
-   /// Dedicated descriptor constructor                                       
-   ///   @param descriptor - the descriptor to use for argument               
-   Verb::Verb(const Descriptor& descriptor)
-      : Verb {static_cast<const Any&>(descriptor)} {}
-   
+     
    /// Verb destructor                                                        
    Verb::~Verb() { }
 
@@ -85,14 +79,14 @@ namespace Langulus::Flow
    ///   @param id - the verb id to check                                     
    ///   @return true if verb id matches                                      
    bool Verb::VerbIs(VMeta id) const noexcept {
-      return !mVerb ? !id : mVerb->Is(id);
+      return not mVerb ? !id : mVerb->Is(id);
    }
 
    /// Check if a verb is valid for the given priority                        
    ///   @param priority - the priority to check                              
    ///   @return true if this verb's priority matches the provided one        
    bool Verb::Validate(const Index& priority) const noexcept {
-      return int(mPriority) == priority.mIndex || priority == IndexAll;
+      return int(mPriority) == priority.mIndex or priority == IndexAll;
    }
    
    /// Change the verb's circuitry                                            
@@ -120,7 +114,7 @@ namespace Langulus::Flow
    /// Get the verb token                                                     
    ///   @return the token as a literal                                       
    Token Verb::GetToken() const {
-      if (!mVerb)
+      if (not mVerb)
          return MetaVerb::DefaultToken;
 
       return mMass < 0 ? mVerb->mTokenReverse : mVerb->mToken;

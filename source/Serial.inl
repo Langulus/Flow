@@ -7,9 +7,9 @@
 ///                                                                           
 #pragma once
 #include "Serial.hpp"
-#include <Flow/Verbs/Do.hpp>
-#include <Flow/Verbs/Conjunct.hpp>
-#include <Flow/Verbs/Interpret.hpp>
+#include "verbs/Do.inl"
+#include "verbs/Conjunct.inl"
+#include "verbs/Interpret.inl"
 
 #ifndef LANGULUS_MAX_DEBUGGABLE_ELEMENTS
    #if LANGULUS(DEBUG) || LANGULUS(SAFE)
@@ -34,7 +34,7 @@ namespace Langulus::Flow
    ///   @return the serialized item                                          
    template<CT::Block TO, bool HEADER, CT::Sparse FROM, CT::Block TO_ORIGINAL>
    TO Serialize(FROM item) {
-      if (!item)
+      if (not item)
          return "<null>";
       return Serialize<TO, HEADER, Deptr<FROM>, TO_ORIGINAL>(*item);
    }
@@ -67,7 +67,7 @@ namespace Langulus::Flow
          try {
             // Attempt converting to debug via reflected converters     
             Debug result;
-            (void)block.template Serialize<HEADER, Debug, TO_ORIGINAL>(result);
+            (void) block.template Serialize<HEADER, Debug, TO_ORIGINAL>(result);
             if (block.GetCount() != originalCount) {
                result += " (";
                result += originalCount - block.GetCount();
@@ -86,7 +86,7 @@ namespace Langulus::Flow
             // of redundant and irrelevant data, but better something   
             // than nothing...                                          
             Code result;
-            (void)block.template Serialize<HEADER, Code, TO_ORIGINAL>(result);
+            (void) block.template Serialize<HEADER, Code, TO_ORIGINAL>(result);
             if (block.GetCount() != originalCount) {
                result += " (";
                result += originalCount - block.GetCount();
@@ -106,7 +106,7 @@ namespace Langulus::Flow
 
          try {
             TO_ORIGINAL result;
-            (void)block.template Serialize<HEADER, TO_ORIGINAL, TO_ORIGINAL>(result);
+            (void) block.template Serialize<HEADER, TO_ORIGINAL, TO_ORIGINAL>(result);
             return result;
          }
          catch (const Except::Convert&) {}
@@ -118,7 +118,7 @@ namespace Langulus::Flow
 
          try {
             TO_ORIGINAL result;
-            (void)block.template Serialize<HEADER>(result);
+            (void) block.template Serialize<HEADER>(result);
             return result;
          }
          catch (const Except::Convert&) {}
@@ -149,7 +149,7 @@ namespace Langulus::Flow
          // Deserialize from binary                                     
          Bytes::Header header;
          Any result;
-         (void)from.template Deserialize<true>(result, header);
+         (void) from.template Deserialize<true>(result, header);
          return Abandon(result);
       }
       else LANGULUS_ERROR("Deserializer not implemented");
@@ -184,7 +184,7 @@ namespace Langulus::Anyness
          bool stateWritten = false;
 
          UNUSED() bool scoped;
-         if constexpr (!ENSCOPED) {
+         if constexpr (not ENSCOPED) {
             if (IsConstant()) {
                to += Code {Code::Constant};
                stateWritten = true;
@@ -202,7 +202,7 @@ namespace Langulus::Anyness
             }
          }
 
-         if (!IsEmpty()) {
+         if (not IsEmpty()) {
             // Add a bit of spacing                                     
             if (stateWritten)
                to += Text {' '};
@@ -320,7 +320,7 @@ namespace Langulus::Anyness
             else if (CastsTo<Byte>()) {
                // Contained type is raw bytes, wrap it in byte scope    
                auto raw_bytes = GetRaw();
-               if (!IsOr()) {
+               if (not IsOr()) {
                   to += Code {Code::OpenByte};
                   for (Offset i = 0; i < GetCount(); ++i)
                      ToHex(raw_bytes[i], to);
@@ -332,7 +332,7 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (!mType->mNamedValues.empty()) {
+            else if (not mType->mNamedValues.empty()) {
                // Contained type has named values, we can use those     
                for (Offset i = 0; i < GetCount(); ++i) {
                   const auto lhs = GetElementDense(i);
@@ -348,7 +348,7 @@ namespace Langulus::Anyness
                      }
                   }
 
-                  if (!found) {
+                  if (not found) {
                      if constexpr (CT::SameAsOneOf<TO_ORIGINAL, Debug, Text>) {
                         // Don't pollute with messages while serializing
                         // for logging, just return a default name      
@@ -397,7 +397,7 @@ namespace Langulus::Anyness
          }
 
          // Close scope                                                 
-         if constexpr (!ENSCOPED) {
+         if constexpr (not ENSCOPED) {
             if (scoped)
                to += Code {Code::CloseScope};
             else {
@@ -426,11 +426,11 @@ namespace Langulus::Anyness
             to += Bytes {GetType()};
          }
 
-         if (IsEmpty() || IsUntyped())
+         if (IsEmpty() or IsUntyped())
             return to.GetCount() - initial;
 
          const bool resolvable = IsResolvable();
-         if (!resolvable) {
+         if (not resolvable) {
             if (IsPOD()) {
                // If data is POD, optimize by directly memcpying it     
                const auto denseStride = GetStride();
@@ -454,7 +454,7 @@ namespace Langulus::Anyness
             else if (IsDeep()) {
                // If data is deep, nest-serialize each sub-block        
                ForEach([&to](const Block& block) {
-                  (void)block.Serialize<true>(to);
+                  (void) block.Serialize<true>(to);
                });
 
                return to.GetCount() - initial;
@@ -476,8 +476,8 @@ namespace Langulus::Anyness
                   to += Bytes {verb.GetVerb()};
                   to += Bytes {verb.GetCharge()};
                   to += Bytes {verb.GetVerbState()};
-                  (void)verb.GetSource().Serialize<true>(to);
-                  (void)verb.GetArgument().Serialize<true>(to);
+                  (void) verb.GetSource().Serialize<true>(to);
+                  (void) verb.GetArgument().Serialize<true>(to);
                });
 
                return to.GetCount() - initial;
@@ -500,13 +500,13 @@ namespace Langulus::Anyness
                      continue;
 
                   const auto baseBlock = element.GetBaseMemory(base);
-                  (void)baseBlock.Serialize<false>(to);
+                  (void) baseBlock.Serialize<false>(to);
                }
 
                // Serialize all reflected members                       
                for (auto& member : element.GetType()->mMembers) {
                   const auto memberBlock = element.GetMember(member);
-                  (void)memberBlock.Serialize<false>(to);
+                  (void) memberBlock.Serialize<false>(to);
                }
             }
 
@@ -559,7 +559,7 @@ namespace Langulus::Anyness
          DMeta deserializedType;
          read = DeserializeMeta(deserializedType, read, header, loader);
 
-         if (!deserializedType)
+         if (not deserializedType)
             return read;
 
          to.template Mutate<false>(deserializedType);
@@ -568,7 +568,7 @@ namespace Langulus::Anyness
          // Don't read header - we have a predictable single element,   
          // like a member, a base, or a cast operator sequence          
          // In this case, result should already be allocated and known  
-         LANGULUS_ASSERT(to.IsTyped() && to,
+         LANGULUS_ASSERT(to.IsTyped() and to,
             Convert, "Bad serialization output block while deserializing ",
             GetToken(), " as ", to.GetToken()
          );
@@ -576,12 +576,12 @@ namespace Langulus::Anyness
          deserializedCount = to.GetCount();
       }
 
-      if (deserializedCount == 0)
+      if (not deserializedCount)
          return read;
 
       // Fill memory                                                    
       const bool resolvable = to.IsResolvable();
-      if (!resolvable) {
+      if (not resolvable) {
          if (to.IsPOD()) {
             // If data is POD, optimize by directly memcpying it        
             if constexpr (HEADER)

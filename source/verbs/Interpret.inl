@@ -6,10 +6,13 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../Scope.hpp"
+#include "../../include/Flow/Verbs/Interpret.hpp"
+#include "../../include/Flow/Verbs/Create.hpp"
+#include "../../include/Flow/Verbs/Do.hpp"
+#include "../Verb.inl"
+#include "../Executor.hpp"
 #include "../Serial.hpp"
 #include "../Time.hpp"
-#include "Do.inl"
 
 #include <Anyness/View/Any.hpp>
 #include <Anyness/View/Map.hpp>
@@ -17,9 +20,7 @@
 #include <Anyness/Pair.hpp>
 #include <Anyness/Own.hpp>
 #include <Anyness/Ref.hpp>
-#include <fmt/chrono.h>
-#include <Flow/Verbs/Interpret.hpp>
-#include "../Verb.inl"
+#include <Anyness/Neat.hpp>
 
 #define VERBOSE_CONVERSION(...) // Logger::Verbose(__VA_ARGS__)
 
@@ -75,6 +76,7 @@ namespace Langulus::Verbs
       verb.ForEach([&](DMeta to) {
          if (to->CastsTo<A::Text>())
             return not InterpretAs<Text>::ExecuteDefault(context, verb);
+
          //TODO check reflected morphisms?
          return true;
       });
@@ -106,6 +108,7 @@ namespace Langulus::Verbs
                return true;
             }
          }
+
          return false;
       }
       else return false;
@@ -223,6 +226,7 @@ namespace Langulus::Flow
 
       if (IsLongCircuited())
          result += " long ";
+
       if (IsMonocast())
          result += " mono ";
 
@@ -256,7 +260,8 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
-         using namespace Langulus;
+         using namespace ::Langulus;
+
          const auto asText = Verbs::Interpret::To<Flow::Debug>(element);
          return fmt::format_to(ctx.out(), "{}",
             static_cast<Logger::TextView>(asText));
@@ -276,39 +281,19 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
-         using namespace Langulus;
+         using namespace ::Langulus;
+
          return fmt::vformat_to(ctx.out(), "Pair({}, {})",
             DenseCast(element.mKey),
             DenseCast(element.mValue)
          );
       }
    };
-
-   ///                                                                        
-   /// Extend FMT to be capable of logging Descriptor (same as CT::Deep)      
-   ///                                                                        
-   template<>
-   struct formatter<Langulus::Anyness::Descriptor> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT>
-      LANGULUS(INLINED)
-      auto format(Langulus::Anyness::Descriptor const& element, CONTEXT& ctx) {
-         using namespace Langulus;
-         const auto asText = Verbs::Interpret::To<Flow::Debug>(
-            static_cast<const Anyness::Any&>(element));
-         return fmt::format_to(ctx.out(), "{}",
-            static_cast<Logger::TextView>(asText));
-      }
-   };
    
    ///                                                                        
-   /// Extend FMT to be capable of logging Construct                          
+   /// Extend FMT to be capable of logging Charge                             
    ///                                                                        
-   template<>
+   /*template<>
    struct formatter<Langulus::Anyness::Charge> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
@@ -318,7 +303,7 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(Langulus::Anyness::Charge const& element, CONTEXT& ctx) {
-         using namespace Langulus::Anyness;
+         using namespace ::Langulus::Anyness;
 
          if (element.mMass != Charge::DefaultMass)
             fmt::format_to(ctx.out(), " *{}", element.mMass);
@@ -331,8 +316,36 @@ namespace fmt
 
          return ctx.out();
       }
-   };
+   };*/
    
+   ///                                                                        
+   /// Extend FMT to be capable of logging Neat                               
+   ///                                                                        
+   template<>
+   struct formatter<Langulus::Anyness::Neat> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT>
+      LANGULUS(INLINED)
+      auto format(Langulus::Anyness::Neat const& neat, CONTEXT& ctx) {
+         using namespace ::Langulus::Anyness;
+
+         bool separator = false;
+         neat.ForEach([&](const Block& group) {
+            if (separator)
+               fmt::format_to(ctx.out(), ", {}", group);
+            else
+               fmt::format_to(ctx.out(), "{}", group);
+            separator = true;
+         });
+
+         return ctx.out();
+      }
+   };
+    
    ///                                                                        
    /// Extend FMT to be capable of logging Construct                          
    ///                                                                        
@@ -346,7 +359,8 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(Langulus::Anyness::Construct const& element, CONTEXT& ctx) {
-         using namespace Langulus;
+         using namespace ::Langulus;
+
          if (not element.IsDefault() or element) {
             return fmt::format_to(ctx.out(), "{}{}({})",
                element.GetToken(),
@@ -372,7 +386,8 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
-         using namespace Langulus;
+         using namespace ::Langulus;
+
          const auto type = element.GetTrait();
          return fmt::format_to(ctx.out(), "{}({})",
             (type ? type->mToken : RTTI::MetaTrait::DefaultToken),
@@ -394,7 +409,8 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
-         using namespace Langulus;
+         using namespace ::Langulus;
+
          fmt::format_to(ctx.out(), "Map(");
          bool first = true;
          for (auto pair : element) {
@@ -425,14 +441,15 @@ namespace fmt
       template<class CONTEXT>
       LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
-         using namespace Langulus;
+         using namespace ::Langulus;
+
          fmt::format_to(ctx.out(), "Set(");
          bool first = true;
          for (auto key : element) {
             if (not first)
                fmt::format_to(ctx.out(), ", ");
-            first = false;
 
+            first = false;
             fmt::format_to(ctx.out(), "{}", DenseCast(key));
          }
 
@@ -441,5 +458,116 @@ namespace fmt
    };
 
 } // namespace fmt
+
+
+namespace Langulus::Anyness
+{
+
+   /// Define the otherwise undefined Langulus::Anyness::Block::AsCast        
+   /// to use the interpret verb pipeline for runtime conversion              
+   ///   @tparam T - the type to convert to                                   
+   ///   @tparam FATAL_FAILURE - true to throw on failure, otherwise          
+   ///                           return a default-initialized T on fail       
+   ///   @return the first element, converted to T                            
+   template<CT::Data T, bool FATAL_FAILURE, CT::Index IDX>
+   T Block::AsCast(const IDX& index) const {
+      if (IsEmpty()) {
+         if constexpr (FATAL_FAILURE)
+            LANGULUS_THROW(Convert, "Unable to AsCast, container is empty");
+         else if constexpr (CT::Defaultable<T>)
+            return {};
+         else {
+            LANGULUS_ERROR(
+               "Unable to AsCast to non-default-constructible type, "
+               "when lack of FATAL_FAILURE demands it");
+         }
+      }
+
+      // Simplify the index as early as possible                        
+      const auto idx = mType->Is<T>()
+         ? SimplifyIndex<T>(index)
+         : SimplifyIndex<void>(index);
+
+      // Attempt pointer arithmetic conversion first                    
+      try { return As<T>(idx); }
+      catch (const Except::Access&) {}
+
+      // If this is reached, we attempt runtime conversion by           
+      // invoking descriptor constructor of T, with this container      
+      // as the set of arguments                                        
+      const auto meta = MetaOf<T>();
+      Verbs::Create creator {Flow::Construct {meta, GetElement(idx)}};
+      if (Verbs::Create::ExecuteStateless(creator)) {
+         // Success                                                     
+         return creator->As<T>();
+      }
+
+      // Alternatively, we attempt runtime conversion by                
+      // dispatching Verbs::Interpret to the first element              
+      Verbs::Interpret interpreter {meta};
+      auto context = GetElementResolved(idx);
+      if (Flow::DispatchDeep(context, interpreter)) {
+         // Success                                                     
+         return interpreter->As<T>();
+      }
+
+      // Failure if reached                                             
+      if constexpr (FATAL_FAILURE)
+         LANGULUS_THROW(Convert, "Unable to AsCast");
+      else if constexpr (CT::Defaultable<T>)
+         return {};
+      else {
+         LANGULUS_ERROR(
+            "Unable to AsCast to non-default-constructible type, "
+            "when lack of FATAL_FAILURE demands it");
+      }
+   }
+   
+   /// Define the otherwise undefined Langulus::Anyness::Neat::ExtractDataAs  
+   /// to use the interpret verb pipeline for runtime conversion              
+   /// Extract any data, convertible to D                                     
+   ///   @param value - [out] where to save the value, if found               
+   ///   @return the number of extracted values (always 1 if not an array)    
+   inline Count Neat::ExtractDataAs(CT::Data auto& value) const {
+      using D = Deref<decltype(value)>;
+      if constexpr (CT::Array<D>) {
+         // Fill a bounded array                                        
+         Count scanned = 0;
+         for (auto pair : mAnythingElse) {
+            for (auto& group : pair.mValue) {
+               const auto toscan = ::std::min(ExtentOf<D> - scanned, group.GetCount());
+               for (Offset i = 0; i < toscan; ++i) {
+                  //TODO can be optimized-out for POD
+                  try {
+                     value[scanned + i] = group.template AsCast<Deext<D>>(i);
+                     ++scanned;
+                  }
+                  catch (...) {}
+               }
+
+               if (scanned >= ExtentOf<D>)
+                  return ExtentOf<D>;
+            }
+         }
+
+         return scanned;
+      }
+      else {
+         // Fill a single value                                         
+         for (auto pair : mAnythingElse) {
+            for (auto& group : pair.mValue) {
+               try {
+                  value = group.template AsCast<D>();
+                  return 1;
+               }
+               catch (...) {}
+            }
+         }
+      }
+
+      return 0;
+   }
+
+} // namespace Langulus::Anyness
 
 #undef VERBOSE_CONVERSION

@@ -6,7 +6,7 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include <Flow/Verbs/Compare.hpp>
+#include "../../include/Flow/Verbs/Compare.hpp"
 #include "../Verb.inl"
 
 #define VERBOSE_COMPARE(...) //Logger::Verbose(__VA_ARGS__)

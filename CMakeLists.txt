@@ -35,7 +35,7 @@ add_library(LangulusFlow ${LANGULUS_LIBRARY_TYPE}
     $<TARGET_OBJECTS:LangulusAnyness>
     source/Code.cpp
     source/Construct.cpp
-    source/Scope.cpp
+    source/Executor.cpp
     source/Temporal.cpp
     source/Verb.cpp
 )

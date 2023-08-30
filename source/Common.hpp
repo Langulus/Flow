@@ -6,8 +6,6 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include <Core/Exceptions.hpp>
-#include <RTTI/MetaData.hpp>
 #include <Anyness/Trait.hpp>
 #include <Anyness/Text.hpp>
 
@@ -62,7 +60,6 @@ namespace Langulus::Flow
    class Verb;
    struct Resolvable;
    class Temporal;
-   struct Scope;
 
 } // namespace Langulus::Flow
 

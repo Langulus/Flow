@@ -23,7 +23,7 @@ namespace Langulus::Flow
    ///   @return true if state is not default                                 
    LANGULUS(INLINED)
    constexpr VerbState::operator bool() const noexcept {
-      return !IsDefault();
+      return not IsDefault();
    }
    
    /// Combine two states                                                     
@@ -265,7 +265,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    bool Verb::VerbIs() const noexcept {
       static_assert(CT::Verb<T...>, "Provided types must be verb definitions");
-      return (VerbIs(T::GetVerb()) || ...);
+      return (VerbIs(T::GetVerb()) or ...);
    }
 
    /// Check if verb has been satisfied at least once                         
@@ -331,8 +331,8 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    bool Verb::IsMissing() const noexcept {
       return mSource.IsMissing()
-         || Any::IsMissing()
-         || mOutput.IsMissing();
+          or Any::IsMissing()
+          or mOutput.IsMissing();
    }
 
    /// Check if anything inside the verb is missing deeply                    
@@ -340,8 +340,8 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    bool Verb::IsMissingDeep() const noexcept {
       return mSource.IsMissingDeep()
-         || Any::IsMissingDeep()
-         || mOutput.IsMissingDeep();
+          or Any::IsMissingDeep()
+          or mOutput.IsMissingDeep();
    }
 
    /// Satisfy verb a number of times                                         
@@ -540,11 +540,11 @@ namespace Langulus::Flow
    ///   @return true if verbs match                                          
    LANGULUS(INLINED)
    bool Verb::operator == (const Verb& rhs) const {
-      return (mVerb == rhs.mVerb || (mVerb && mVerb->Is(rhs.mVerb)))
-         && mSource == rhs.mSource
-         && Any::operator == (rhs.GetArgument())
-         && mOutput == rhs.mOutput
-         && mState == rhs.mState;
+      return (mVerb == rhs.mVerb or (mVerb and mVerb->Is(rhs.mVerb)))
+         and mSource == rhs.mSource
+         and Any::operator == (rhs.GetArgument())
+         and mOutput == rhs.mOutput
+         and mState == rhs.mState;
    }
 
    /// Compare verb types for equality                                        
@@ -734,15 +734,15 @@ namespace Langulus::Flow
          return *this;
       else if constexpr (CT::PointerRelated<TypeOf<S>>) {
          // Push a pointer, but check if valid first                    
-         if (!*data)
+         if (not *data)
             return *this;
-         if (mOutput.SmartPush<IndexBack, true, true>(PointerDecay(*data)))
+         if (mOutput.SmartPush(PointerDecay(*data)))
             Done();
          return *this;
       }
       else {
          // Push anything dense                                         
-         if (mOutput.SmartPush<IndexBack, true, true>(data.Forward()))
+         if (mOutput.SmartPush(data.Forward()))
             Done();
          return *this;
       }
@@ -789,15 +789,15 @@ namespace Langulus::Flow
          return *this;
       else if constexpr (CT::PointerRelated<TypeOf<S>>) {
          // Push a pointer, but check if valid first                    
-         if (!*data)
+         if (not *data)
             return *this;
-         if (mOutput.SmartPush<IndexFront, true, true>(PointerDecay(*data)))
+         if (mOutput.SmartPush<IndexFront>(PointerDecay(*data)))
             Done();
          return *this;
       }
       else {
          // Push anything dense                                         
-         if (mOutput.SmartPush<IndexFront, true, true>(data.Forward()))
+         if (mOutput.SmartPush<IndexFront>(data.Forward()))
             Done();
          return *this;
       }
@@ -840,14 +840,14 @@ namespace Langulus::Flow
          return *this;
       else if constexpr (CT::PointerRelated<TypeOf<S>>) {
          // Push a pointer, but check if valid first                    
-         if (!*data)
+         if (not *data)
             return *this;
 
          auto ptr = PointerDecay(*data);
          if (mOutput.Find(ptr))
             return *this;
 
-         if (mOutput.SmartPush<IndexBack, true, true>(ptr))
+         if (mOutput.SmartPush(ptr))
             Done();
       }
       else {
@@ -855,7 +855,7 @@ namespace Langulus::Flow
          if (mOutput.Find(*data))
             return *this;
 
-         if (mOutput.SmartPush<IndexBack, true, true>(*data))
+         if (mOutput.SmartPush(*data))
             Done();
       }
 
@@ -899,14 +899,14 @@ namespace Langulus::Flow
          return *this;
       else if constexpr (CT::PointerRelated<TypeOf<S>>) {
          // Push a pointer, but check if valid first                    
-         if (!*data)
+         if (not *data)
             return *this;
 
          auto ptr = PointerDecay(*data);
          if (mOutput.Find(ptr)) //TODO: find deep instead?
             return *this;
 
-         if (mOutput.SmartPush<IndexFront, true, true>(ptr))
+         if (mOutput.SmartPush<IndexFront>(ptr))
             Done();
       }
       else {
@@ -914,7 +914,7 @@ namespace Langulus::Flow
          if (mOutput.Find(*data))
             return *this;
 
-         if (mOutput.SmartPush<IndexFront, true, true>(*data))
+         if (mOutput.SmartPush<IndexFront>(*data))
             Done();
       }
 
@@ -960,7 +960,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    bool Verb::GenericAvailableFor() const noexcept {
       const auto meta = MetaOf<Decay<T>>();
-      return meta && meta->template GetAbility<CT::Mutable<T>>(mVerb, GetType());
+      return meta and meta->template GetAbility<CT::Mutable<T>>(mVerb, GetType());
    }
 
    /// Execute a known/unknown verb in an known/unknown context               
@@ -973,7 +973,7 @@ namespace Langulus::Flow
    bool Verb::GenericExecuteIn(T& context, V& verb) {
       static_assert(CT::VerbBased<V>, "V must be VerbBased");
 
-      if constexpr (!CT::Deep<T> && CT::Verb<V>) {
+      if constexpr (not CT::Deep<T> and CT::Verb<V>) {
          // Always prefer statically optimized routine when available   
          // Literally zero ability searching overhead!                  
          if constexpr (V::template AvailableFor<T>())
@@ -983,7 +983,7 @@ namespace Langulus::Flow
       else {
          // Search for the ability via RTTI                             
          const auto meta = context.GetType();
-         if constexpr (CT::DerivedFrom<V, Verbs::Interpret> && requires { typename V::Type; }) {
+         if constexpr (CT::DerivedFrom<V, Verbs::Interpret> and requires { typename V::Type; }) {
             // Scan for a reflected converter as statically as possible 
             using TO = typename V::Type;
             const auto found = meta->template GetConverter<TO>();
@@ -1019,7 +1019,7 @@ namespace Langulus::Flow
          // Scan for any other runtime ability                          
          const auto found = meta->template
             GetAbility<CT::Mutable<T>>(verb.mVerb, verb.GetType());
-         if (!found)
+         if (not found)
             return false;
 
          found(context.GetRaw(), verb);
@@ -1139,12 +1139,12 @@ namespace Langulus::Flow
    StaticVerb<VERB>::StaticVerb(StaticVerb&& other)
       : Verb {Move(other)} {}
    
-   template<class VERB>
+   /*template<class VERB>
    LANGULUS(INLINED)
    StaticVerb<VERB>::StaticVerb(const Descriptor& other)
       : Verb {other} {
       SetVerb<VERB>();
-   }
+   }*/
 
    template<class VERB>
    LANGULUS(INLINED)

@@ -8,42 +8,33 @@
 #pragma once
 #include "Common.hpp"
 
-namespace Langulus::Verbs
-{
-   struct Associate;
-}
-
 namespace Langulus::Flow
 {
 
    ///                                                                        
-   /// A scope is simply an Any container (binary compatible, too)            
-   /// It has some additional interface for executing flows                   
+   /// Tools for executing containers as flows                                
    ///                                                                        
-   struct Scope : Any {
-      using Any::Any;
-      using Any::operator ==;
+   LANGULUS_API(FLOW)
+   bool Execute(const Block&, Any&);
+   LANGULUS_API(FLOW)
+   bool Execute(const Block&, Any&, Any& output);
+   LANGULUS_API(FLOW)
+   bool Execute(const Block&, Any&, Any& output, bool& skipVerbs);
 
-      LANGULUS_API(FLOW)
-      bool Execute(Any&) const;
-      LANGULUS_API(FLOW)
-      bool Execute(Any&, Any& output) const;
-      LANGULUS_API(FLOW)
-      bool Execute(Any&, Any& output, bool& skipVerbs) const;
-      LANGULUS_API(FLOW)
-      bool ExecuteAND(Any&, Any& output, bool& skipVerbs) const;
-      LANGULUS_API(FLOW)
-      bool ExecuteOR(Any&, Any& output, bool& skipVerbs) const;
+   LANGULUS_API(FLOW)
+   bool Execute(const Neat&, Any&, Neat& output);
+   LANGULUS_API(FLOW)
+   bool Execute(const Neat&, Any&, Neat& output, bool& skipVerbs);
 
-      LANGULUS_API(FLOW)
-      static bool ExecuteVerb(Any&, Verb&);
-      LANGULUS_API(FLOW)
-      static bool IntegrateVerb(Any&, Verb&);
+   LANGULUS_API(FLOW)
+   bool ExecuteAND(const Block&, Any&, Any& output, bool& skipVerbs);
+   LANGULUS_API(FLOW)
+   bool ExecuteOR(const Block&, Any&, Any& output, bool& skipVerbs);
 
-   protected:
-      friend struct Langulus::Verbs::Associate;
-      using Block::CallUnknownSemanticAssignment;
-   };
+   LANGULUS_API(FLOW)
+   bool ExecuteVerb(Any&, Verb&);
+   LANGULUS_API(FLOW)
+   bool IntegrateVerb(Any&, Verb&);
 
    NOD() LANGULUS_API(FLOW)
    bool IsExecutable(const Block&) noexcept;

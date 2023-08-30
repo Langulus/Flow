@@ -40,7 +40,7 @@ namespace Langulus::Flow::Inner
    ///   @param content - the content to check                                
    ///   @return true if contents are accepted                                
    inline bool Missing::Accepts(const Block& content) const {
-      if (!mFilter || content.CastsTo<Verb, true>())
+      if (not mFilter or content.CastsTo<Verb, true>())
          return true;
 
       for (auto type : mFilter) {
@@ -54,14 +54,14 @@ namespace Langulus::Flow::Inner
    /// Check if the missing point has been satisfied by pushed contents       
    ///   @return true if point was satisfied                                  
    inline bool Missing::IsSatisfied() const {
-      if (!mContent || !mFilter)
+      if (not mContent or not mFilter)
          return false;
 
       bool satisfied = false;
       mContent.ForEachDeep([&](const Block& b) {
          if (Accepts(b))
             satisfied = true;
-         return !satisfied;
+         return not satisfied;
       });
 
       return satisfied;
@@ -104,9 +104,9 @@ namespace Langulus::Flow::Inner
       //                                                                
       // If reached, we're pushing flat data                            
       // Let's check if there's a filter                                
-      if (!mFilter) {
+      if (not mFilter) {
          // No filter, just push                                        
-         if (!content.template CastsTo<Verb, true>()) {
+         if (not content.template CastsTo<Verb, true>()) {
             // Always try interpreting scope as verbs                   
             Verbs::InterpretAs<Verb> interpreter;
             interpreter.ShortCircuit(false);
@@ -194,7 +194,7 @@ namespace Langulus::Flow::Inner
                result << Link(subscope, environment, consumedPast);
             }
             catch (const Except::Link&) {
-               if (!scope.IsOr())
+               if (not scope.IsOr())
                   throw;
                VERBOSE_MISSING_POINT(Logger::DarkYellow,
                   "Skipped branch: ", subscope);
@@ -220,7 +220,7 @@ namespace Langulus::Flow::Inner
                );
             }
             catch (const Except::Link&) {
-               if (!scope.IsOr())
+               if (not scope.IsOr())
                   throw;
                VERBOSE_MISSING_POINT(Logger::DarkYellow,
                   "Skipped branch: ", trait);
@@ -234,7 +234,7 @@ namespace Langulus::Flow::Inner
                };
             }
             catch (const Except::Link&) {
-               if (!scope.IsOr())
+               if (not scope.IsOr())
                   throw;
                VERBOSE_MISSING_POINT(Logger::DarkYellow,
                   "Skipped branch: ", construct);
@@ -252,7 +252,7 @@ namespace Langulus::Flow::Inner
                );
             }
             catch (const Except::Link&) {
-               if (!scope.IsOr())
+               if (not scope.IsOr())
                   throw;
                VERBOSE_MISSING_POINT(Logger::DarkYellow,
                   "Skipped branch: ", verb);
@@ -262,7 +262,7 @@ namespace Langulus::Flow::Inner
             VERBOSE_MISSING_POINT_TAB(
                "Linking future point ", *this, " to past point ", past);
 
-            if (mPriority != NoPriority && mPriority <= past.mPriority) {
+            if (mPriority != NoPriority and mPriority <= past.mPriority) {
                VERBOSE_MISSING_POINT(Logger::DarkYellow,
                   "Skipped past point with higher priority: ", past);
                LANGULUS_THROW(Link, "Past point of higher priority");
@@ -270,21 +270,21 @@ namespace Langulus::Flow::Inner
 
             Inner::MissingPast pastShallowCopy;
             pastShallowCopy.mFilter = past.mFilter;
-            if (!mContent) {
-               if (!environment)
+            if (not mContent) {
+               if (not environment)
                   LANGULUS_THROW(Link, "No environment provided for temporal flow");
 
                VERBOSE_MISSING_POINT(
                   "(empty future point, so falling back to environment: ", environment, ')');
 
-               if (!pastShallowCopy.Push(environment, {})) {
-                  if (!scope.IsOr())
+               if (not pastShallowCopy.Push(environment, {})) {
+                  if (not scope.IsOr())
                      LANGULUS_THROW(Link, "Scope not likable");
                }
             }
             else {
-               if (!pastShallowCopy.Push(mContent, {})) {
-                  if (!scope.IsOr())
+               if (not pastShallowCopy.Push(mContent, {})) {
+                  if (not scope.IsOr())
                      LANGULUS_THROW(Link, "Scope not linkable");
                }
                else consumedPast = true;

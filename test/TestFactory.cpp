@@ -24,7 +24,7 @@ SCENARIO("Test factories", "[factory]") {
 			Verbs::Create creator {Construct::From<Producible>()};
 			factory.Create(creator);
 			auto& output = creator.GetOutput();
-			const auto normalized = Neat {{}};
+			const Neat normalized {};
 			const auto hash = normalized.GetHash();
 
 			THEN("Requirements should be met") {
@@ -38,7 +38,7 @@ SCENARIO("Test factories", "[factory]") {
 				REQUIRE(factory.mData.GetCount() == 1);
 				REQUIRE(factory.mData.GetType() == MetaOf<typename TFactory<Producible>::Element>());
 				REQUIRE(factory.mData[0].mData == Producible {&producer});
-				REQUIRE(factory.mData[0].mData.GetNeat() == Neat {{}});
+				REQUIRE(factory.mData[0].mData.GetNeat() == Neat {});
 				REQUIRE(factory.mData[0].mData.GetHash() == hash);
 				REQUIRE(factory.mData[0].mData.GetNeat() == normalized);
 				REQUIRE(factory.mHashmap[hash].GetCount() == 1);

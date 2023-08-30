@@ -57,7 +57,8 @@ namespace Langulus::Flow
       Any Run(V&&) requires (CT::Mutable<V>);
 
       Any Run(const Code&);
-      Any Run(const Scope&);
+      Any Run(const Any&);
+      Any Run(const Temporal&);
 
       NOD() Block GetMember(TMeta) noexcept;
       NOD() Block GetMember(TMeta) const noexcept;
@@ -111,5 +112,3 @@ namespace Langulus
    NOD() Anyness::Text IdentityOf(RTTI::DMeta, const T&);
 
 } // namespace Langulus
-
-#include "Resolvable.inl"

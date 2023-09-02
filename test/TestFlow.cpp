@@ -300,7 +300,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
       const Code code = "Create!-1(Verb(?(Number,DMeta,Construct), ??(Number,DMeta,Construct)))";
       const Any required = Verbs::Create {
-         Construct::From<Verb>(Any {a1, a2})
+         Any {Verb {a1, a2}}
       }.SetPriority(-1);
 
       WHEN("Parsed") {

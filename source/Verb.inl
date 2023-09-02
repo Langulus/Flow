@@ -1138,13 +1138,6 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    StaticVerb<VERB>::StaticVerb(StaticVerb&& other)
       : Verb {Move(other)} {}
-   
-   /*template<class VERB>
-   LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb(const Descriptor& other)
-      : Verb {other} {
-      SetVerb<VERB>();
-   }*/
 
    template<class VERB>
    LANGULUS(INLINED)

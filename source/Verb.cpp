@@ -79,7 +79,7 @@ namespace Langulus::Flow
    ///   @param id - the verb id to check                                     
    ///   @return true if verb id matches                                      
    bool Verb::VerbIs(VMeta id) const noexcept {
-      return not mVerb ? !id : mVerb->Is(id);
+      return not mVerb ? not id : mVerb->Is(id);
    }
 
    /// Check if a verb is valid for the given priority                        

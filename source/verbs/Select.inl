@@ -92,12 +92,12 @@ namespace Langulus::Verbs
    ///   @return true if execution was a success                              
    template<bool MUTABLE>
    bool Select::DefaultSelect(Block& context, Verb& verb) {
-      if (verb.IsMissing() || !context || context.IsMissing())
+      if (verb.IsMissing() or not context or context.IsMissing())
          return false;
 
       TAny<Index> indices;
       indices.GatherFrom(verb);
-      bool containsOnlyIndices = !indices.IsEmpty();
+      bool containsOnlyIndices = not indices.IsEmpty();
 
       TAny<Trait> selectedTraits;
       TAny<const RTTI::Ability*> selectedAbilities;
@@ -158,10 +158,10 @@ namespace Langulus::Verbs
    template<bool MUTABLE, class META>
    bool Select::PerIndex(Block& context, TAny<Trait>& selectedTraits, TMeta resultingTrait, META meta, const TAny<Index>& indices) {
       bool done = false;
-      if (!indices) {
+      if (not indices) {
          // Meta is the only filter                                     
          auto variable = context.GetMember(meta);
-         if constexpr (!MUTABLE)
+         if constexpr (not MUTABLE)
             variable.MakeConst();
 
          if (variable.IsAllocated()) {
@@ -172,7 +172,7 @@ namespace Langulus::Verbs
       else for (auto& idx : indices) {
          // Search for each meta-index pair                             
          auto variable = context.GetMember(meta, idx.GetOffset());
-         if constexpr (!MUTABLE)
+         if constexpr (not MUTABLE)
             variable.MakeConst();
 
          if (variable.IsAllocated()) {
@@ -195,7 +195,7 @@ namespace Langulus::Verbs
    inline bool Select::SelectByMeta(const TAny<Index>& indices, DMeta id, Block& context, TAny<Trait>& selectedTraits, TAny<const RTTI::Ability*>& selectedVerbs) {
       const auto type = context.GetType();
       if (id->Is<VMeta>()) {
-         if (!indices || indices == IndexAll) {
+         if (not indices or indices == IndexAll) {
             // Retrieve each ability corresponding to verbs in rhs      
             for (auto& ability : type->mAbilities)
                selectedVerbs << &ability.second;

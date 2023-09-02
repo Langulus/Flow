@@ -91,9 +91,9 @@ namespace Langulus::Flow
    template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::VerbBased V, CT::Data... BASES>
    Count ExecuteInBases(T& context, V& verb, TTypeList<BASES...>) {
       if constexpr (CT::Constant<T>)
-         return (Execute<DISPATCH, DEFAULT, FALLBACK>(static_cast<const BASES&>(context), verb) || ...);
+         return (Execute<DISPATCH, DEFAULT, FALLBACK>(static_cast<const BASES&>(context), verb) or ...);
       else 
-         return (Execute<DISPATCH, DEFAULT, FALLBACK>(static_cast<BASES&>(context), verb) || ...);
+         return (Execute<DISPATCH, DEFAULT, FALLBACK>(static_cast<BASES&>(context), verb) or ...);
    }
 
    /// Invoke a single verb on a single context                               
@@ -114,7 +114,7 @@ namespace Langulus::Flow
       // Always reset verb progress prior to execution                  
       verb.Undo();
 
-      if constexpr (!FALLBACK && DISPATCH && CT::Dispatcher<T>) {
+      if constexpr (not FALLBACK and DISPATCH and CT::Dispatcher<T>) {
          // Custom reflected dispatcher is available                    
          // It's your responsibility to implement it adequately         
          // Keep in mind, that once you declare a custom Do for your    
@@ -132,7 +132,7 @@ namespace Langulus::Flow
 
          // If that fails, attempt in all reflected bases               
          if constexpr (requires { typename T::CTTI_Bases; }) {
-            if (!verb.IsDone()) {
+            if (not verb.IsDone()) {
                // Context has no abilities, or they failed, so try      
                // with all bases' abilities                             
                ExecuteInBases<true, false, FALLBACK>(context, verb, typename T::CTTI_Bases {});
@@ -140,8 +140,8 @@ namespace Langulus::Flow
          }
 
          // If that fails, attempt executing the default verb           
-         if constexpr (DEFAULT && !FALLBACK) {
-            if (!verb.IsDone()) {
+         if constexpr (DEFAULT and not FALLBACK) {
+            if (not verb.IsDone()) {
                // Verb wasn't executed neither in current element,      
                // nor in any of its bases, so we resort to the          
                // default abilities                                     
@@ -167,7 +167,7 @@ namespace Langulus::Flow
    ///   @return the number of successful executions                          
    template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::VerbBased V>
    Count DispatchFlat(T& context, V& verb) {
-      if (!context || verb.IsMonocast()) {
+      if (not context or verb.IsMonocast()) {
          if (context.IsInvalid()) {
             // Context is empty and doesn't have any relevant states,   
             // and execution happens only if DEFAULT verbs are allowed, 
@@ -224,7 +224,7 @@ namespace Langulus::Flow
             }
          }
          
-         if (verb.IsDone() && verb.GetOutput()) {
+         if (verb.IsDone() and verb.GetOutput()) {
             // Cache output, conserving the context hierarchy           
             output.SmartPush(Move(verb.GetOutput()));
          }
@@ -254,7 +254,7 @@ namespace Langulus::Flow
    ///   @return the number of successful executions                          
    template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::VerbBased V>
    Count DispatchDeep(T& context, V& verb) {
-      if (!context || verb.IsMonocast()) {
+      if (not context or verb.IsMonocast()) {
          if (context.IsInvalid()) {
             // Context is empty and doesn't have any relevant states,   
             // and execution happens only if DEFAULT verbs are allowed, 
@@ -274,7 +274,7 @@ namespace Langulus::Flow
          }
       }
 
-      if (context.IsDeep() || context.template Is<Trait>()) {
+      if (context.IsDeep() or context.template Is<Trait>()) {
          // Nest if context is deep, or a trait                         
          // Traits are considered deep only when executing in them      
          // There is no escape from this scope                          
@@ -307,7 +307,7 @@ namespace Langulus::Flow
             }
 
             // Cache each output, conserving the context hierarchy      
-            if (hits && verb.GetOutput())
+            if (hits and verb.GetOutput())
                output << Move(verb.GetOutput());
          }
 

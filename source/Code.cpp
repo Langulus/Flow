@@ -88,10 +88,11 @@ namespace Langulus::Flow
       Any output;
       const auto parsed = UnknownParser::Parse(*this, output, 0, optimize);
       if (parsed != GetCount()) {
-         Logger::Warning() << "Some characters were left out at the end, while parsing code:";
-         Logger::Warning() << "+-- " 
-            << Logger::Green << LeftOf(parsed) 
-            << Logger::Red << RightOf(parsed);
+         Logger::Warning("Some characters were left out at the end, while parsing code:");
+         Logger::Warning("+-- ", 
+            Logger::Green, LeftOf(parsed), 
+            Logger::Red,   RightOf(parsed)
+         );
       }
       return output;
    }
@@ -101,16 +102,17 @@ namespace Langulus::Flow
    ///   @return true if the operator matches                                 
    bool Code::StartsWithOperator(Offset i) const noexcept {
       const Size tokenSize = GlobalOperators[i].mToken.size();
-      if (!tokenSize || GetCount() < tokenSize)
+      if (not tokenSize or GetCount() < tokenSize)
          return false;
 
       const auto token = Code(GlobalOperators[i].mToken);
       const auto remainder = RightOf(tokenSize);
       const auto endsWithALetter = token.EndsWithLetter();
-      return tokenSize > 0 && MatchesLoose(token) == tokenSize
-         && (GetCount() == tokenSize 
-            || (endsWithALetter && (!remainder.StartsWithLetter() && !remainder.StartsWithDigit()))
-            || !endsWithALetter
+      return tokenSize > 0 and MatchesLoose(token) == tokenSize
+         and (GetCount() == tokenSize 
+            or (endsWithALetter and (
+               not remainder.StartsWithLetter() and not remainder.StartsWithDigit()))
+            or not endsWithALetter
          );
    }
 
@@ -127,10 +129,10 @@ namespace Langulus::Flow
    ///   @param rhs - the right token                                         
    ///   @return true if both loosely match                                   
    constexpr bool CompareTokens(const Token& lhs, const Token& rhs) noexcept {
-      return (lhs.size() == rhs.size() && (
-         lhs.size() == 0 || ::std::equal(lhs.begin(), lhs.end(), rhs.begin(),
+      return (lhs.size() == rhs.size() and (
+         lhs.size() == 0 or ::std::equal(lhs.begin(), lhs.end(), rhs.begin(),
             [](const char& c1, const char& c2) noexcept {
-               return c1 == c2 || (::std::toupper(c1) == ::std::toupper(c2));
+               return c1 == c2 or (::std::toupper(c1) == ::std::toupper(c2));
             })
          ));
    }
@@ -141,9 +143,9 @@ namespace Langulus::Flow
    constexpr Token IsolateOperator(const Token& token) noexcept {
       auto l = token.data();
       auto r = token.data() + token.size();
-      while (l < r && *l <= 32)
+      while (l < r and *l <= 32)
          ++l;
-      while (r > l && *(r - 1) <= 32)
+      while (r > l and *(r - 1) <= 32)
          --r;
       return token.substr(l - token.data(), r - l);
    }
@@ -166,7 +168,7 @@ namespace Langulus::Flow
       }
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         if (!RTTI::GetAmbiguousMeta(text).empty())
+         if (not RTTI::GetAmbiguousMeta(text).empty())
             return true;
       #endif
 
@@ -178,7 +180,7 @@ namespace Langulus::Flow
    ///   @param text - the text to check                                      
    ///   @return true if text is a valid Code keyword                         
    bool IsKeywordSymbol(char a) {
-      return ::std::isdigit(a) || ::std::isalpha(a) || a == ':' || a == '_';
+      return IsDigit(a) or IsAlpha(a) or a == ':' or a == '_';
    }
 
    /// A keyword must be made of only letters and numbers, namespace operator 
@@ -186,7 +188,7 @@ namespace Langulus::Flow
    ///   @param text - the text to check                                      
    ///   @return true if text is a valid Code keyword                         
    bool Code::IsValidKeyword(const Text& text) {
-      if (!text || !IsAlpha(text[0]))
+      if (not text or not IsAlpha(text[0]))
          return false;
 
       for (auto a : text) {
@@ -258,33 +260,33 @@ namespace Langulus::Flow
    ///   @param input - code that starts with a skippable character           
    ///   @return number of parsed characters                                  
    Offset Code::SkippedParser::Parse(const Code& input) {
-      Offset p = 0;
-      while (p < input.GetCount()) {
-         const auto relevant = input.RightOf(p);
+      Offset progress = 0;
+      while (progress < input.GetCount()) {
+         const auto relevant = input.RightOf(progress);
          const auto asview = Token {relevant};
 
-         if (relevant[0] > 0 && relevant[0] <= 32) {
+         if (relevant[0] > 0 and relevant[0] <= 32) {
             // Skip a single skippable character                     
-            ++p;
+            ++progress;
             continue;
          }
          else if (asview.starts_with("//")) {
             // Skip an entire line comment                           
-            while (p < input.GetCount() && input[p] != '\n')
-               ++p;
+            while (progress < input.GetCount() and input[progress] != '\n')
+               ++progress;
             continue;
          }
          else if (asview.starts_with("/*")) {
             // Skip a block comment (across multiple new lines)      
-            while (p + 1 < input.GetCount() && (input[p] != '*' || input[p + 1] != '/'))
-               ++p;
+            while (progress + 1 < input.GetCount() and (input[progress] != '*' or input[progress + 1] != '/'))
+               ++progress;
 
-            if (p + 1 < input.GetCount())
+            if (progress + 1 < input.GetCount())
                // Skip the "*/" tag                                  
-               p += 2;
+               progress += 2;
             else 
                // Skip to end of input, "*/" was never found         
-               p = input.GetCount();
+               progress = input.GetCount();
 
             continue;
          }
@@ -293,8 +295,8 @@ namespace Langulus::Flow
          break;
       }
 
-      VERBOSE("Skipped ", p, " characters");
-      return p;
+      VERBOSE("Skipped ", progress, " characters");
+      return progress;
    }
 
    /// Peek inside input, and return true if first symbol is a character      
@@ -311,7 +313,7 @@ namespace Langulus::Flow
       Offset progress = 0;
       while (progress < input.GetCount()) {
          const auto c = input[progress];
-         if (!IsKeywordSymbol(c))
+         if (not IsKeywordSymbol(c))
             break;
          ++progress;
       }
@@ -345,7 +347,7 @@ namespace Langulus::Flow
       const auto dmeta = RTTI::GetMetaData(keyword);
       const auto tmeta = RTTI::GetMetaTrait(keyword);
       const auto cmeta = RTTI::GetMetaConstant(keyword);
-      if (dmeta && !tmeta && !cmeta) {
+      if (dmeta and not tmeta and not cmeta) {
          // Exact non-ambiguous data definition found                   
          if (allowCharge) {
             const auto relevant = input.RightOf(progress);
@@ -359,11 +361,11 @@ namespace Langulus::Flow
          }
          else lhs << dmeta;
       }
-      else if (!dmeta && tmeta && !cmeta) {
+      else if (not dmeta and tmeta and not cmeta) {
          // Exact non-ambiguous trait definition found                  
          lhs << tmeta;
       }
-      else if (!dmeta && !tmeta && cmeta) {
+      else if (not dmeta and not tmeta and cmeta) {
          const Block constant {
             {}, cmeta->mValueType, 1, cmeta->mPtrToValue, nullptr
          };
@@ -373,7 +375,7 @@ namespace Langulus::Flow
          // If this is reached, then exactly one match in symbols       
          // Push found meta data, if any                                
          const auto meta = Disambiguate(progress, input, keyword);
-         if (!meta) {
+         if (not meta) {
             PRETTY_ERROR("Disambiguation of `", keyword, "` failed");
          }
 
@@ -424,7 +426,8 @@ namespace Langulus::Flow
    const RTTI::Meta* Code::KeywordParser::Disambiguate(
       const Offset progress, const Code& input, const Token& keyword
    ) {
-      try {
+      try
+      {
          return RTTI::DisambiguateMeta(keyword);
       }
       catch (...) {
@@ -466,7 +469,7 @@ namespace Langulus::Flow
    ///   @return true if input begins with an operators                       
    Code::Operator Code::OperatorParser::PeekBuiltin(const Code& input) noexcept {
       for (Offset i = 0; i < Code::OpCounter; ++i) {
-         if (!GlobalOperators[i].mCharge && input.StartsWithOperator(i))
+         if (not GlobalOperators[i].mCharge and input.StartsWithOperator(i))
             return Operator(i);
       }
 
@@ -482,16 +485,16 @@ namespace Langulus::Flow
       if (builtin != NoOperator)
          return builtin;
 
-#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      const auto word = Isolate(input);
-      auto found = RTTI::GetOperator(word);
-      if (found)
-         return ReflectedOperator;
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         const auto word = Isolate(input);
+         auto found = RTTI::GetOperator(word);
+         if (found)
+            return ReflectedOperator;
 
-      found = RTTI::GetMetaVerb(word);
-      if (found)
-         return ReflectedVerb;
-#endif
+         found = RTTI::GetMetaVerb(word);
+         if (found)
+            return ReflectedVerb;
+      #endif
 
       return NoOperator;
    }
@@ -511,9 +514,9 @@ namespace Langulus::Flow
       while (progress < input.GetCount()) {
          const auto relevant = input.RightOf(progress);
          if (KeywordParser::Peek(relevant)
-            || NumberParser::Peek(relevant)
-            || SkippedParser::Peek(relevant)
-            || PeekBuiltin(relevant) != NoOperator)
+            or NumberParser::Peek(relevant)
+            or SkippedParser::Peek(relevant)
+            or PeekBuiltin(relevant) != NoOperator)
             break;
          ++progress;
       }
@@ -536,7 +539,7 @@ namespace Langulus::Flow
       Offset progress = 0;
       if (op < NoOperator) {
          // Handle a built-in operator                                  
-         if (GlobalOperators[op].mPrecedence && priority >= GlobalOperators[op].mPrecedence) {
+         if (GlobalOperators[op].mPrecedence and priority >= GlobalOperators[op].mPrecedence) {
             VERBOSE(Logger::Yellow, 
                "Delaying built-in operator [", GlobalOperators[op].mToken,
                "] due to a prioritized operation");
@@ -576,7 +579,7 @@ namespace Langulus::Flow
          const auto word = Isolate(input);
          const auto found = RTTI::GetOperator(word);
 
-         if (found->mPrecedence && priority >= found->mPrecedence) {
+         if (found->mPrecedence and priority >= found->mPrecedence) {
             VERBOSE(Logger::Yellow,
                "Delaying reflected operator [", found,
                "] due to a prioritized operation");
@@ -601,7 +604,7 @@ namespace Langulus::Flow
          const auto word = Isolate(input);
          const auto found = RTTI::GetMetaVerb(word);
 
-         if (found->mPrecedence && priority >= found->mPrecedence) {
+         if (found->mPrecedence and priority >= found->mPrecedence) {
             VERBOSE(Logger::Yellow,
                "Delaying reflected operator [", found, 
                "] due to a prioritized operation");
@@ -636,7 +639,7 @@ namespace Langulus::Flow
       // We don't know what to expect, so we attempt blind parse        
       Any rhs;
       progress = UnknownParser::Parse(input, rhs, GlobalOperators[OpenScope].mPrecedence, optimize);
-      if (!input.RightOf(progress).StartsWithOperator(CloseScope))
+      if (not input.RightOf(progress).StartsWithOperator(CloseScope))
          PRETTY_ERROR("Missing closing bracket");
 
       // Account for the closing content scope                          
@@ -654,7 +657,7 @@ namespace Langulus::Flow
    ///   @param rhs - the content to insert                                   
    ///   @param lhs - the place where the content will be inserted            
    void Code::OperatorParser::InsertContent(Any& rhs, Any& lhs) {
-      if (lhs.IsUntyped() || !lhs) {
+      if (lhs.IsUntyped() or not lhs) {
          // If output is untyped, we directly push content, regardless  
          // if it's filled with something or not - a scope is a scope   
          // If empty, just merge states                                 
@@ -667,18 +670,28 @@ namespace Langulus::Flow
       else if (lhs.Is<DMeta>()) {
          // The content is for an uninstantiated data scope             
          const auto meta = lhs.As<DMeta>(-1);
-         Construct outputConstruct {meta, Move(rhs)};
-         Any precompiled;
-         if (outputConstruct.StaticCreation(precompiled)) {
-            // Precompiled successfully, append it to LHS               
+         if (meta->Is<Verb>()) {
             lhs.RemoveIndex(-1);
-            lhs.SmartPush(Abandon(precompiled));
-            VERBOSE_ALT("Statically constructed from DMeta: ", Logger::Cyan, lhs);
-            return;
+            lhs.SmartPush(Verb {Move(rhs)});
          }
+         else if (meta->Is<Trait>()) {
+            lhs.RemoveIndex(-1);
+            lhs.SmartPush(Trait {Move(rhs)});
+         }
+         else {
+            Construct outputConstruct {meta, Move(rhs)};
+            Any precompiled;
+            if (outputConstruct.StaticCreation(precompiled)) {
+               // Precompiled successfully, append it to LHS            
+               lhs.RemoveIndex(-1);
+               lhs.SmartPush(Abandon(precompiled));
+               VERBOSE_ALT("Statically constructed from DMeta: ", Logger::Cyan, lhs);
+               return;
+            }
 
-         lhs.RemoveIndex(-1);
-         lhs.SmartPush(Abandon(outputConstruct));
+            lhs.RemoveIndex(-1);
+            lhs.SmartPush(Abandon(outputConstruct));
+         }
          VERBOSE_ALT("Constructed from DMeta: ", Logger::Cyan, lhs);
       }
       else if (lhs.Is<VMeta>()) {
@@ -759,6 +772,7 @@ namespace Langulus::Flow
                ++depth;
             else if (relevant.StartsWithOperator(CloseCode)) {
                --depth;
+
                if (0 == depth) {
                   const auto tokenSize = GlobalOperators[CloseCode].mToken.size();
                   lhs << input.LeftOf(progress);
@@ -786,13 +800,13 @@ namespace Langulus::Flow
       Offset progress = 0;
       while (progress < input.GetCount()) {
          const auto c = input[progress];
-         if (::std::isdigit(c)) {
+         if (IsDigit(c)) {
             ++progress;
             continue;
          }
 
          const auto lc = ::std::tolower(c);
-         if (lc >= 'a' && lc <= 'f') {
+         if (lc >= 'a' and lc <= 'f') {
             ++progress;
             continue;
          }
@@ -807,7 +821,7 @@ namespace Langulus::Flow
       uint8_t stager {};
       uint8_t shifter {4};
       while (i != iEnd) {
-         stager |= uint8_t(*i - (::std::isdigit(*i) ? '0' : 'a')) << shifter;
+         stager |= uint8_t(*i - (IsDigit(*i) ? '0' : 'a')) << shifter;
 
          if (shifter == 0) {
             result << Byte {stager};
@@ -868,7 +882,7 @@ namespace Langulus::Flow
       progress += UnknownParser::Parse(
          relevant, op.GetArgument(), op.GetVerb()->mPrecedence, optimize);
 
-      if (optimize && !op.GetCharge().IsFlowDependent()) {
+      if (optimize and not op.GetCharge().IsFlowDependent()) {
          // Try executing operator at compile-time                      
          // We must disable multicast for this                          
          VERBOSE_TAB("Attempting compile-time execution... ");
@@ -906,7 +920,7 @@ namespace Langulus::Flow
 
       // Find the charge operator                                    
       for (Offset i = 0; i < Code::OpCounter; ++i) {
-         if (GlobalOperators[i].mCharge && relevant.StartsWithOperator(i))
+         if (GlobalOperators[i].mCharge and relevant.StartsWithOperator(i))
             return Operator(i);
       }
 
@@ -924,7 +938,7 @@ namespace Langulus::Flow
       while (progress < input.GetCount()) {
          // Scan input until end of charge operators/code               
          auto relevant = input.RightOf(progress);
-         if (!relevant || relevant[0] == '\0')
+         if (not relevant or relevant[0] == '\0')
             break;
 
          // Parse skippables if any                                     
@@ -936,7 +950,7 @@ namespace Langulus::Flow
          // Find the charge operator                                    
          Operator op = NoOperator;
          for (Offset i = 0; i < Code::OpCounter; ++i) {
-            if (GlobalOperators[i].mCharge && relevant.StartsWithOperator(i)) {
+            if (GlobalOperators[i].mCharge and relevant.StartsWithOperator(i)) {
                op = Operator(i);
                progress += GlobalOperators[i].mToken.size();
                relevant = input.RightOf(progress);
@@ -951,12 +965,12 @@ namespace Langulus::Flow
 
          // Skip any spacing and consume '-' operators here             
          bool reverse = false;
-         while (SkippedParser::Peek(relevant) || relevant[0] == '-') {
+         while (SkippedParser::Peek(relevant) or relevant[0] == '-') {
             progress += SkippedParser::Parse(relevant);
             relevant = input.RightOf(progress);
             if (relevant[0] == '-') {
                ++progress;
-               reverse = !reverse;
+               reverse = not reverse;
                relevant = input.RightOf(progress);
             }
          }

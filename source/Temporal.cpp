@@ -54,14 +54,14 @@ namespace Langulus::Flow
    ///   @return true if both flows are the same                              
    bool Temporal::operator == (const Temporal& other) const {
       return mFrequencyStack == other.mFrequencyStack
-         && mTimeStack == other.mTimeStack
-         && mPriorityStack == other.mPriorityStack;
+         and mTimeStack == other.mTimeStack
+         and mPriorityStack == other.mPriorityStack;
    }
 
    /// Check if flow contains anything executable                             
    ///   @return true if flow contains at least one verb                      
    bool Temporal::IsValid() const {
-      return mFrequencyStack || mTimeStack || mPriorityStack;
+      return mFrequencyStack or mTimeStack or mPriorityStack;
    }
 
    /// Dump the contents of the flow to the log                               

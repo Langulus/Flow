@@ -90,7 +90,7 @@ namespace Langulus
       floored = ::std::abs(floored);
       T limit {1};
       Count fract_numbers {};
-      while (fraction < limit && limit < T {1000}) {
+      while (fraction < limit and limit < T {1000}) {
          fraction *= T {10};
          limit *= T {10};
          ++fract_numbers;
@@ -167,7 +167,7 @@ namespace Langulus::Verbs
          return false;
       }
 
-      if (!verb) {
+      if (not verb) {
          verb << Any {context};
          return true;
       }
@@ -190,7 +190,7 @@ namespace Langulus::Verbs
          return false;
       }
 
-      if (!verb) {
+      if (not verb) {
          verb << Any {context};
          return true;
       }

@@ -37,32 +37,4 @@ namespace Langulus::Anyness
       return false;
    }
 
-   /// Serialize a construct to code                                          
-   /*Construct::operator Code() const {
-      Code result;
-      result += GetToken();
-      if (!Charge::IsDefault() || !IsEmpty()) {
-         result += Verbs::Interpret::To<Code>(GetCharge());
-         result += Code::OpenScope;
-         result += Verbs::Interpret::To<Code>(GetArgument());
-         result += Code::CloseScope;
-      }
-
-      return result;
-   }
-
-   /// Stringify a construct for logging                                      
-   Construct::operator Debug() const {
-      Code result;
-      result += GetToken();
-      if (!Charge::IsDefault() || !IsEmpty()) {
-         result += Verbs::Interpret::To<Debug>(GetCharge());
-         result += Code::OpenScope;
-         result += Verbs::Interpret::To<Debug>(GetArgument());
-         result += Code::CloseScope;
-      }
-
-      return Debug {result};
-   }*/
-
 } // namespace Langulus::Anyness

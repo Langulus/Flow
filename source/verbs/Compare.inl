@@ -19,26 +19,24 @@ namespace Langulus::Verbs
    template<CT::Dense T, CT::Data... A>
    constexpr bool Compare::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0) {
-         return
-            requires (const T& t, Verb& v) { t.Compare(v); }
-         || requires (const T& t) { {t == t} -> CT::Bool; }
-         || requires (const T& t) { {t != t} -> CT::Bool; }
-         || requires (const T& t) { {t >  t} -> CT::Bool; }
-         || requires (const T& t) { {t <  t} -> CT::Bool; }
-         || requires (const T& t) { {t <= t} -> CT::Bool; }
-         || requires (const T& t) { {t >= t} -> CT::Bool; }
-         || requires (const T& t) { t <=> t; };
+         return requires (const T& t, Verb& v) { t.Compare(v); }
+             or requires (const T& t) { {t == t} -> CT::Bool; }
+             or requires (const T& t) { {t != t} -> CT::Bool; }
+             or requires (const T& t) { {t >  t} -> CT::Bool; }
+             or requires (const T& t) { {t <  t} -> CT::Bool; }
+             or requires (const T& t) { {t <= t} -> CT::Bool; }
+             or requires (const T& t) { {t >= t} -> CT::Bool; }
+             or requires (const T& t) { t <=> t; };
       }
       else {
-         return
-            requires (const T& t, Verb& v, A... a) { t.Compare(v, a...); }
-         || requires (const T& t, A... a) { {((t == a) && ...)} -> CT::Bool; }
-         || requires (const T& t, A... a) { {((t != a) && ...)} -> CT::Bool; }
-         || requires (const T& t, A... a) { {((t >  a) && ...)} -> CT::Bool; }
-         || requires (const T& t, A... a) { {((t <  a) && ...)} -> CT::Bool; }
-         || requires (const T& t, A... a) { {((t <= a) && ...)} -> CT::Bool; }
-         || requires (const T& t, A... a) { {((t >= a) && ...)} -> CT::Bool; }
-         || requires (const T& t, A... a) { ((t <=> a) == ...); };
+         return requires (const T& t, Verb& v, A... a) { t.Compare(v, a...); }
+             or requires (const T& t, A... a) { {((t == a) and ...)} -> CT::Bool; }
+             or requires (const T& t, A... a) { {((t != a) and ...)} -> CT::Bool; }
+             or requires (const T& t, A... a) { {((t >  a) and ...)} -> CT::Bool; }
+             or requires (const T& t, A... a) { {((t <  a) and ...)} -> CT::Bool; }
+             or requires (const T& t, A... a) { {((t <= a) and ...)} -> CT::Bool; }
+             or requires (const T& t, A... a) { {((t >= a) and ...)} -> CT::Bool; }
+             or requires (const T& t, A... a) { ((t <=> a) == ...); };
       }
    }
 
@@ -78,7 +76,7 @@ namespace Langulus::Verbs
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
    inline bool Compare::ExecuteDefault(const Block& context, Verb& verb) {
-      if (verb.IsMissing() || !context || context.IsMissing())
+      if (verb.IsMissing() or not context or context.IsMissing())
          return false;
 
       // Scan verb argument for elements interpretable as the context   

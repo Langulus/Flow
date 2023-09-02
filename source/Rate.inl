@@ -19,17 +19,17 @@ namespace Langulus::Flow
 
    LANGULUS(INLINED)
    constexpr bool RefreshRate::IsUniform() const noexcept {
-      return mMode >= UniformBegin && mMode < UniformEnd;
+      return mMode >= UniformBegin and mMode < UniformEnd;
    }
 
    LANGULUS(INLINED)
    constexpr bool RefreshRate::IsStaticUniform() const noexcept {
-      return mMode >= StaticUniformBegin && mMode < StaticUniformEnd;
+      return mMode >= StaticUniformBegin and mMode < StaticUniformEnd;
    }
 
    LANGULUS(INLINED)
    constexpr bool RefreshRate::IsDynamicUniform() const noexcept {
-      return mMode >= DynamicUniformBegin && mMode < DynamicUniformEnd;
+      return mMode >= DynamicUniformBegin and mMode < DynamicUniformEnd;
    }
 
    LANGULUS(INLINED)
@@ -39,38 +39,38 @@ namespace Langulus::Flow
 
    LANGULUS(INLINED)
    constexpr bool RefreshRate::IsInput() const noexcept {
-      return mMode >= InputBegin && mMode < InputEnd;
+      return mMode >= InputBegin and mMode < InputEnd;
    }
 
    LANGULUS(INLINED)
    constexpr bool RefreshRate::IsShaderStage() const noexcept {
-      return mMode >= StagesBegin && mMode < StagesEnd;
+      return mMode >= StagesBegin and mMode < StagesEnd;
    }
 
    LANGULUS(INLINED)
    constexpr Offset RefreshRate::GetInputIndex() const {
-      if (!IsInput())
+      if (not IsInput())
          LANGULUS_THROW(Convert, "Not an input");
       return mMode - InputBegin;
    }
 
    LANGULUS(INLINED)
    constexpr Offset RefreshRate::GetStaticUniformIndex() const {
-      if (!IsStaticUniform())
+      if (not IsStaticUniform())
          LANGULUS_THROW(Convert, "Not a static uniform");
       return mMode - StaticUniformBegin;
    }
 
    LANGULUS(INLINED)
    constexpr Offset RefreshRate::GetDynamicUniformIndex() const {
-      if (!IsDynamicUniform())
+      if (not IsDynamicUniform())
          LANGULUS_THROW(Convert, "Not a dynamic uniform");
       return mMode - DynamicUniformBegin;
    }
 
    LANGULUS(INLINED)
    constexpr Offset RefreshRate::GetStageIndex() const {
-      if (!IsShaderStage())
+      if (not IsShaderStage())
          LANGULUS_THROW(Convert, "Not a shader stage");
       return mMode - StagesBegin;
    }

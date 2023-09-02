@@ -136,7 +136,7 @@ namespace Langulus::Verbs
                " (managed reflection is disabled)");
          #endif
       }
-      else if constexpr (CT::Convertible<FROM, TO> && !CT::Deep<FROM>) {
+      else if constexpr (CT::Convertible<FROM, TO> and not CT::Deep<FROM>) {
          // Directly convert if static conversion exists                
          if constexpr (requires { TO {from}; }) {
             return TO {from};
@@ -291,34 +291,6 @@ namespace fmt
    };
    
    ///                                                                        
-   /// Extend FMT to be capable of logging Charge                             
-   ///                                                                        
-   /*template<>
-   struct formatter<Langulus::Anyness::Charge> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT>
-      LANGULUS(INLINED)
-      auto format(Langulus::Anyness::Charge const& element, CONTEXT& ctx) {
-         using namespace ::Langulus::Anyness;
-
-         if (element.mMass != Charge::DefaultMass)
-            fmt::format_to(ctx.out(), " *{}", element.mMass);
-         if (element.mRate != Charge::DefaultRate)
-            fmt::format_to(ctx.out(), " ^{}", element.mRate);
-         if (element.mTime != Charge::DefaultTime)
-            fmt::format_to(ctx.out(), " @{}", element.mTime);
-         if (element.mPriority != Charge::DefaultPriority)
-            fmt::format_to(ctx.out(), " !{}", element.mPriority);
-
-         return ctx.out();
-      }
-   };*/
-   
-   ///                                                                        
    /// Extend FMT to be capable of logging Neat                               
    ///                                                                        
    template<>
@@ -330,19 +302,12 @@ namespace fmt
 
       template<class CONTEXT>
       LANGULUS(INLINED)
-      auto format(Langulus::Anyness::Neat const& neat, CONTEXT& ctx) {
-         using namespace ::Langulus::Anyness;
+      auto format(Langulus::Anyness::Neat const& element, CONTEXT& ctx) {
+         using namespace ::Langulus;
 
-         bool separator = false;
-         neat.ForEach([&](const Block& group) {
-            if (separator)
-               fmt::format_to(ctx.out(), ", {}", group);
-            else
-               fmt::format_to(ctx.out(), "{}", group);
-            separator = true;
-         });
-
-         return ctx.out();
+         const auto asText = Verbs::Interpret::To<Flow::Debug>(element);
+         return fmt::format_to(ctx.out(), "{}",
+            static_cast<Logger::TextView>(asText));
       }
    };
     
@@ -361,15 +326,9 @@ namespace fmt
       auto format(Langulus::Anyness::Construct const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
 
-         if (not element.IsDefault() or element) {
-            return fmt::format_to(ctx.out(), "{}{}({})",
-               element.GetToken(),
-               element.GetCharge(),
-               element.GetArgument()
-            );
-         }
-
-         return fmt::format_to(ctx.out(), "{}", element.GetToken());
+         const auto asText = Verbs::Interpret::To<Flow::Debug>(element);
+         return fmt::format_to(ctx.out(), "{}",
+            static_cast<Logger::TextView>(asText));
       }
    };
 

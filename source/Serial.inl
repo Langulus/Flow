@@ -317,6 +317,24 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
+            else if (CastsTo<Construct>()) {
+               // Contained type is Neat                                
+               for (Offset i = 0; i < GetCount(); ++i) {
+                  auto& construct = As<Construct>(i);
+                  to += construct.template SerializeAs<TO_ORIGINAL>();
+                  if (i < GetCount() - 1)
+                     to += Separator(IsOr());
+               }
+            }
+            else if (CastsTo<Neat>()) {
+               // Contained type is Neat                                
+               for (Offset i = 0; i < GetCount(); ++i) {
+                  auto& neat = As<Neat>(i);
+                  to += neat.template SerializeAs<TO_ORIGINAL>();
+                  if (i < GetCount() - 1)
+                     to += Separator(IsOr());
+               }
+            }
             else if (CastsTo<Byte>()) {
                // Contained type is raw bytes, wrap it in byte scope    
                auto raw_bytes = GetRaw();
@@ -496,7 +514,7 @@ namespace Langulus::Anyness
                // Serialize all reflected bases                         
                for (auto& base : element.GetType()->mBases) {
                   // Imposed bases are never serialized                 
-                  if (base.mImposed || base.mType->mIsAbstract)
+                  if (base.mImposed or base.mType->mIsAbstract)
                      continue;
 
                   const auto baseBlock = element.GetBaseMemory(base);
@@ -521,6 +539,66 @@ namespace Langulus::Anyness
          return 0;
       }
       else LANGULUS_ERROR("Unsupported serialization");
+   }
+
+   /// Serialize a Neat container                                             
+   ///   @tparam T - text type to serialize as                                
+   ///   @return the serialized data                                          
+   template<CT::Text T>
+   T Neat::SerializeAs() const {
+      using Flow::Code;
+      T to;
+      to += Code {Code::OpenScope};
+      bool separator = false;
+      for (auto pair : mAnythingElse) {
+         for (auto& group : pair.mValue) {
+            if (separator)
+               to += ", ";
+
+            if (group.IsValid())
+               to += Flow::Serialize<T, false>(group);
+            else
+               to += pair.mKey;
+            separator = true;
+         }
+      }
+
+      for (auto pair : mTraits) {
+         for (auto& trait : pair.mValue) {
+            if (separator)
+               to += ", ";
+
+            if (trait.IsValid())
+               to += Flow::Serialize<T, false>(Trait::From(pair.mKey, trait));
+            else
+               to += pair.mKey;
+            separator = true;
+         }
+      }
+
+      for (auto pair : mConstructs) {
+         for (auto& construct : pair.mValue) {
+            if (separator)
+               to += ", ";
+
+            if (construct.mData.IsValid() or not construct.mCharge.IsDefault())
+               to += Flow::Serialize<T, false>(Construct(pair.mKey, construct.mData, construct.mCharge));
+            else
+               to += pair.mKey;
+            separator = true;
+         }
+      }
+      to += Code {Code::CloseScope};
+      return to;
+   }
+   
+   template<CT::Text T>
+   T Construct::SerializeAs() const {
+      T to;
+      to += GetType();
+      to += GetCharge().operator Debug();
+      to += GetArgument().template SerializeAs<T>();
+      return to;
    }
 
    

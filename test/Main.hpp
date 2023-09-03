@@ -84,8 +84,6 @@ struct Producible : Referenced, ProducedFrom<Producer> {
    Producible(Producer* producer, const Neat& neat = {})
       : ProducedFrom {producer, neat} {}
 
-   Neat mDescriptor;
-
    bool operator == (const Producible& rhs) const {
       return mDescriptor == rhs.mDescriptor;
    }

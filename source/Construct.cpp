@@ -12,7 +12,7 @@
 #include "verbs/Select.inl"
 #include <Anyness/Construct.hpp>
 
-#define VERBOSE_CONSTRUCT(a) //Logger::Verbose() << a
+#define VERBOSE_CONSTRUCT(...) //Logger::Verbose(__VA_ARGS__)
 
 namespace Langulus::Anyness
 {
@@ -28,8 +28,7 @@ namespace Langulus::Anyness
       // Make sure we're creating something concrete                    
       Verbs::Create creator {this};
       if (Verbs::Create::ExecuteStateless(creator)) {
-         VERBOSE_CONSTRUCT("Constructed from initializer-list: "
-            << Logger::Cyan << creator.GetOutput());
+         VERBOSE_CONSTRUCT("Constructed from initializer-list: ", Logger::Cyan, creator.GetOutput());
          output << Move(creator.GetOutput());
          return true;
       }

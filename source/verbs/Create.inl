@@ -96,9 +96,7 @@ namespace Langulus::Verbs
                   Any element {created.GetElement(i)};
 
                   // First attempt delegating                           
-                  VERBOSE_CREATION(Logger::Yellow <<
-                     "Delegating: " << arguments << " to " << element);
-
+                  VERBOSE_CREATION(Logger::Yellow, "Delegating: ", arguments, " to ", element);
                   Verbs::Create creator {arguments};
                   if (ExecuteVerb(element, creator)) {
                      VERBOSE_CREATION(Logger::Yellow <<
@@ -107,8 +105,7 @@ namespace Langulus::Verbs
                      continue;
                   }
 
-                  VERBOSE_CREATION(Logger::Yellow <<
-                     "Couldn't delegate " << arguments << " inside: " << element);
+                  VERBOSE_CREATION(Logger::Yellow, "Couldn't delegate ", arguments, " inside: ", element);
 
                   // If reached, let's attempt to set reflected members 
                   SetMembers(element, arguments);
@@ -159,7 +156,7 @@ namespace Langulus::Verbs
                }
             }
          }
-         else if (type->mDefaultConstructor && !descriptor) {
+         else if (type->mDefaultConstructor and not descriptor) {
             for (Offset i = 0; i < count; ++i) {
                if (count != 1) {
                   VERBOSE_CREATION(Logger::Yellow,
@@ -218,8 +215,7 @@ namespace Langulus::Verbs
       TUnorderedMap<DMeta, Count> satisfiedData;
 
       data.ForEachDeep([&](const Block& group) {
-         VERBOSE_CREATION("Manually initializing " << context
-            << " with " << Logger::Cyan << group);
+         VERBOSE_CREATION("Manually initializing ", context, " with ", Logger::Cyan, group);
 
          // Search for similar data in the current context              
          // in an attempt to overwrite member variables and such        
@@ -233,14 +229,13 @@ namespace Langulus::Verbs
                   ? satisfiedTraits.GetValue(sati)
                   : IndexFirst;
 
-               VERBOSE_CREATION("Searching trait " << meta
-                  << "... " << " (" << index << ")");
+               VERBOSE_CREATION("Searching trait ", meta, "... ", " (", index, ")");
 
                Verbs::Select selector {meta, index};
                Verb::GenericExecuteIn(context, selector);
                if (selector.GetOutput()) {
-                  VERBOSE_CREATION("Initializing trait " << selector.GetOutput()
-                     << " with " << Logger::Cyan << element << " (" << index << ")");
+                  VERBOSE_CREATION("Initializing trait ", selector.GetOutput(),
+                     " with ", Logger::Cyan, element, " (", index, ")");
 
                   Verbs::Associate associator {element};
                   if (Verb::GenericExecuteIn(selector.GetOutput(), associator)) {
@@ -250,8 +245,8 @@ namespace Langulus::Verbs
                      else
                         satisfiedTraits.Insert(meta, 1);
 
-                     VERBOSE_CREATION(Logger::Yellow << "Initialized "
-                        << selector.GetOutput() << " (" << index << ")");
+                     VERBOSE_CREATION(Logger::Yellow, "Initialized ", 
+                        selector.GetOutput(), " (", index, ")");
                      continue;
                   }
                }
@@ -276,14 +271,13 @@ namespace Langulus::Verbs
                ? satisfiedData.GetValue(sati)
                : IndexFirst;
 
-            VERBOSE_CREATION("Searching for data " << meta
-               << "... " << " (" << index << ")");
+            VERBOSE_CREATION("Searching for data ", meta, "... ", " (", index, ")");
 
             Verbs::Select selector {meta, index};
             Verb::GenericExecuteIn(context, selector);
             if (selector.GetOutput()) {
-               VERBOSE_CREATION("Initializing data " << selector.GetOutput()
-                  << " with " << Logger::Cyan << element << " (" << index << ")");
+               VERBOSE_CREATION("Initializing data ", selector.GetOutput(),
+                  " with ", Logger::Cyan, element, " (", index, ")");
 
                Verbs::Associate associator {Move(element)};
                if (Verb::GenericExecuteIn(selector.GetOutput(), associator)) {
@@ -293,8 +287,8 @@ namespace Langulus::Verbs
                   else
                      satisfiedData.Insert(meta, 1);
 
-                  VERBOSE_CREATION(Logger::Yellow << "Initialized "
-                     << selector.GetOutput() << " (" << index << ")");
+                  VERBOSE_CREATION(Logger::Yellow,
+                     "Initialized ", selector.GetOutput(), " (", index, ")");
                }
                else {
                   // Can't set the member                               
@@ -305,7 +299,7 @@ namespace Langulus::Verbs
                // Failure occurs for the given argument                 
                // It may be because of excess arguments, so check if    
                // the constructed type is fully satisfied at this point 
-               if (!sati || satisfiedData.GetValue(sati) != context.GetType()->GetMemberCount(nullptr, meta)) {
+               if (not sati or satisfiedData.GetValue(sati) != context.GetType()->GetMemberCount(nullptr, meta)) {
                   // The context wasn't satisfied                       
                   LANGULUS_THROW(Construct, "Excess, or insufficient arguments");
                }

@@ -670,6 +670,8 @@ namespace Langulus::Flow
       else if (lhs.Is<DMeta>()) {
          // The content is for an uninstantiated data scope             
          const auto meta = lhs.As<DMeta>(-1);
+         LANGULUS_ASSERT(meta, Flow, "Bad data id");
+
          if (meta->Is<Verb>()) {
             lhs.RemoveIndex(-1);
             lhs.SmartPush(Verb {Move(rhs)});
@@ -679,31 +681,48 @@ namespace Langulus::Flow
             lhs.SmartPush(Trait {Move(rhs)});
          }
          else {
-            Construct outputConstruct {meta, Move(rhs)};
-            Any precompiled;
-            if (outputConstruct.StaticCreation(precompiled)) {
-               // Precompiled successfully, append it to LHS            
+            if (not rhs and not meta->mProducer and meta->mDefaultConstructor) {
+               // Invoke default-construction                           
+               Any constExpr;
+               constExpr.SetType(meta);
+               constExpr.New(1);
                lhs.RemoveIndex(-1);
-               lhs.SmartPush(Abandon(precompiled));
-               VERBOSE_ALT("Statically constructed from DMeta: ", Logger::Cyan, lhs);
-               return;
+               lhs.SmartPush(Abandon(constExpr));
             }
+            else {
+               // Invoke the descriptor-constructor only if we have to  
+               Construct outputConstruct {meta, Move(rhs)};
+               Any precompiled;
+               if (outputConstruct.StaticCreation(precompiled)) {
+                  // Precompiled successfully, append it to LHS         
+                  lhs.RemoveIndex(-1);
+                  lhs.SmartPush(Abandon(precompiled));
+                  VERBOSE_ALT("Statically constructed from DMeta: ", Logger::Cyan, lhs);
+                  return;
+               }
 
-            lhs.RemoveIndex(-1);
-            lhs.SmartPush(Abandon(outputConstruct));
+               lhs.RemoveIndex(-1);
+               lhs.SmartPush(Abandon(outputConstruct));
+            }
          }
          VERBOSE_ALT("Constructed from DMeta: ", Logger::Cyan, lhs);
       }
       else if (lhs.Is<VMeta>()) {
          // The content is for an uninstantiated verb scope             
-         auto verb = Verb::FromMeta(lhs.As<VMeta>(-1), Move(rhs));
+         const auto meta = lhs.As<VMeta>(-1);
+         LANGULUS_ASSERT(meta, Flow, "Bad verb id");
+
+         auto verb = Verb::FromMeta(meta, Move(rhs));
          lhs.RemoveIndex(-1);
          lhs.SmartPush(Abandon(verb));
          VERBOSE_ALT("Constructed from VMeta: ", Logger::Cyan, lhs);
       }
       else if (lhs.Is<TMeta>()) {
          // The content is for an uninstantiated trait scope            
-         auto trait = Trait::From(lhs.As<TMeta>(-1), Move(rhs));
+         const auto meta = lhs.As<TMeta>(-1);
+         LANGULUS_ASSERT(meta, Flow, "Bad trait id");
+
+         auto trait = Trait::From(meta, Move(rhs));
          lhs.RemoveIndex(-1);
          lhs.SmartPush(Abandon(trait));
          VERBOSE_ALT("Constructed from TMeta: ", Logger::Cyan, lhs);

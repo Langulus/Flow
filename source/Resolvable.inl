@@ -234,7 +234,7 @@ namespace Langulus::Flow
    ///   @param scope - the scope to execute                                  
    ///   @return the results of the execution                                 
    LANGULUS(INLINED)
-   Any Resolvable::Run(const Temporal& scope) {
+   Any Resolvable::Run(const Temporal&) {
       TODO();
    }
 

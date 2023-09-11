@@ -1,6 +1,7 @@
 ///                                                                           
 /// Langulus::Flow                                                            
-/// Copyright(C) 2017 Dimo Markov <langulusteam@gmail.com>                    
+/// Copyright (c) 2017 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
 ///                                                                           
 /// Distributed under GNU General Public License v3+                          
 /// See LICENSE file, or https://www.gnu.org/licenses                         
@@ -155,7 +156,7 @@ namespace Langulus::Flow
       return not IsEmpty();
    }
 
-#ifdef LANGULUS_ENABLE_SAFE_MODE
+#if LANGULUS(SAFE)
    /// Dump the factory to the log                                            
    TEMPLATE()
    void FACTORY()::Dump() const {

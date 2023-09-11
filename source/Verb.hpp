@@ -104,8 +104,8 @@ namespace Langulus::Flow
       Verb(CT::NotSemantic auto&&);
       Verb(CT::Semantic auto&&);
 
-      template<CT::Data HEAD, CT::Data... TAIL>
-      Verb(HEAD&&, TAIL&&...) requires (sizeof...(TAIL) >= 1);
+      template<CT::Data T1, CT::Data T2, CT::Data... TAIL>
+      Verb(T1&&, T2&&, TAIL&&...);
 
       LANGULUS_API(FLOW) ~Verb();
 
@@ -315,15 +315,14 @@ namespace Langulus::Flow
       StaticVerb();
       StaticVerb(const StaticVerb&);
       StaticVerb(StaticVerb&&);
-      //StaticVerb(const Neat&);
 
       StaticVerb(const CT::NotSemantic auto&);
       StaticVerb(CT::NotSemantic auto&);
       StaticVerb(CT::NotSemantic auto&&);
       StaticVerb(CT::Semantic auto&&);
 
-      template<CT::Data HEAD, CT::Data... TAIL>
-      StaticVerb(HEAD&&, TAIL&&...) requires (sizeof...(TAIL) >= 1);
+      template<CT::Data T1, CT::Data T2, CT::Data... TAIL>
+      StaticVerb(T1&&, T2&&, TAIL&&...);
 
       StaticVerb& operator = (const StaticVerb&);
       StaticVerb& operator = (StaticVerb&&);

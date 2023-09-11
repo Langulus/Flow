@@ -153,10 +153,10 @@ namespace Langulus::Flow
 
    /// Verb list-of-arguments constructor                                     
    ///   @param head, tail... - arguments                                     
-   template<CT::Data HEAD, CT::Data... TAIL>
+   template<CT::Data T1, CT::Data T2, CT::Data... TAIL>
    LANGULUS(INLINED)
-   Verb::Verb(HEAD&& head, TAIL&&... tail) requires (sizeof...(TAIL) >= 1)
-      : Any {Forward<HEAD>(head), Forward<TAIL>(tail)...} {}
+   Verb::Verb(T1&& t1, T2&& t2, TAIL&&... tail)
+      : Any {Forward<T1>(t1), Forward<T2>(t2), Forward<TAIL>(tail)...} {}
 
    /// Verb shallow-copy assignment                                           
    ///   @param rhs - the verb to shallow-copy assign                         
@@ -1169,10 +1169,10 @@ namespace Langulus::Flow
    }
 
    template<class VERB>
-   template<CT::Data HEAD, CT::Data... TAIL>
+   template<CT::Data T1, CT::Data T2, CT::Data... TAIL>
    LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb(HEAD&& head, TAIL&&... tail) requires (sizeof...(TAIL) >= 1)
-      : Verb {Forward<HEAD>(head), Forward<TAIL>(tail)...} {
+   StaticVerb<VERB>::StaticVerb(T1&& t1, T2&& t2, TAIL&&... tail)
+      : Verb {Forward<T1>(t1), Forward<T2>(t2), Forward<TAIL>(tail)...} {
       SetVerb<VERB>();
    }
 

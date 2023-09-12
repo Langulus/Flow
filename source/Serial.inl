@@ -52,14 +52,14 @@ namespace Langulus::Flow
    ///   @return the serialized item                                          
    template<CT::Block TO, bool HEADER, CT::Dense FROM, CT::Block TO_ORIGINAL>
    TO Serialize(const FROM& item) {
+      Block block = Block::From(const_cast<FROM&>(item));
+
       if constexpr (CT::SameAsOneOf<TO_ORIGINAL, Debug, Text>) {
          ///   DEBUG SERIALIZER                                         
          // Debug serializer doesn't have any restrictions. It is       
          // useful for omitting redundant or irrelevant data, and is    
          // a one-way process. Extensively used by the logger           
-         auto block = Block::From(item);
-
-         // Crop it down if too big                                     
+         // Crop it down if block is too big                            
          constexpr auto countCap = LANGULUS_MAX_DEBUGGABLE_ELEMENTS;
          const auto originalCount = block.GetCount();
          if (block.GetCount() > countCap)
@@ -103,8 +103,6 @@ namespace Langulus::Flow
       else if constexpr (CT::Text<TO_ORIGINAL>) {
          ///   CODE SERIALIZER                                          
          // Code serializer is strict to allow for deserialization      
-         const auto block = Block::From(item);
-
          try {
             TO_ORIGINAL result;
             (void) block.template Serialize<HEADER, TO_ORIGINAL, TO_ORIGINAL>(result);
@@ -115,8 +113,6 @@ namespace Langulus::Flow
       else if constexpr (CT::Bytes<TO_ORIGINAL>) {
          ///   BINARY SERIALIZER                                        
          // Byte serializer is strict to allow for deserialization      
-         const auto block = Block::From(item);
-
          try {
             TO_ORIGINAL result;
             (void) block.template Serialize<HEADER>(result);
@@ -128,9 +124,9 @@ namespace Langulus::Flow
 
       // If this is reached, then we weren't able to serialize the item 
       // to the desired type                                            
-      LANGULUS_ASSERT(false, Convert, "Can't serialize ",
-         " type ", NameOf<FROM>(), " as ", NameOf<TO>(),
-         " (final target being ", NameOf<TO_ORIGINAL>(), ")"
+      LANGULUS_OOPS(Convert, "Can't serialize ",
+         " type `", NameOf<FROM>(), "` as `", NameOf<TO>(),
+         "` (final target being `", NameOf<TO_ORIGINAL>(), "`)"
       );
       return {};
    }
@@ -374,9 +370,9 @@ namespace Langulus::Anyness
                         to += "<unserializable named value>";
                      }
                      else {
-                        LANGULUS_ASSERT(false, Convert, "Can't serialize block",
-                           " of type ", GetToken(), " to ", NameOf<TO>(),
-                           " (final target being ", NameOf<TO_ORIGINAL>(), ")"
+                        LANGULUS_OOPS(Convert, "Can't serialize block",
+                           " of type `", GetToken(), "` to `", NameOf<TO>(),
+                           "` (final target being `", NameOf<TO_ORIGINAL>(), "`)"
                            " because a named value couldn't be found in reflection"
                         );
                      }
@@ -398,7 +394,11 @@ namespace Langulus::Anyness
                      if (separate)
                         to += Separator(IsOr());
                      separate = true;
-                     to += r;
+
+                     if (r.IsEmpty())
+                        to += "<empty text interpretation>";
+                     else
+                        to += r;
                   });
                }
                else if constexpr (CT::SameAsOneOf<TO_ORIGINAL, Debug, Text>) {
@@ -407,9 +407,9 @@ namespace Langulus::Anyness
                   LANGULUS_THROW(Convert, "Can't serialize block");
                }
                else {
-                  LANGULUS_ASSERT(false, Convert, "Can't serialize block", 
-                     " of type ", GetToken(), " to ", NameOf<TO>(),
-                     " (final target being ", NameOf<TO_ORIGINAL>(), ")"
+                  LANGULUS_OOPS(Convert, "Can't serialize block",
+                     " of type `", GetToken(), "` to `", NameOf<TO>(),
+                     "` (final target being `", NameOf<TO_ORIGINAL>(), "`)"
                   );
                }
             }
@@ -533,9 +533,9 @@ namespace Langulus::Anyness
          }
 
          // Failure if reached                                          
-         LANGULUS_ASSERT(false, Convert, "Can't serialize ", 
-            " type ", GetToken(), " as ", NameOf<TO>(),
-            " (final target being ", NameOf<TO_ORIGINAL>(), ")"
+         LANGULUS_OOPS(Convert, "Can't serialize ",
+            " type `", GetToken(), "` as `", NameOf<TO>(),
+            "` (final target being `", NameOf<TO_ORIGINAL>(), "`)"
          );
          return 0;
       }
@@ -593,7 +593,11 @@ namespace Langulus::Anyness
       return to;
    }
    
+   /// Serialize a construct to a desired text type                           
+   ///   @tparam T - type to serialize as                                     
+   ///   @return the serialized container                                     
    template<CT::Text T>
+   LANGULUS(INLINED)
    T Construct::SerializeAs() const {
       T to;
       to += GetType();
@@ -602,6 +606,11 @@ namespace Langulus::Anyness
       return to;
    }
 
+   /// Explicit logging operator for Construct                                
+   LANGULUS(INLINED)
+   Construct::operator Debug() const {
+      return SerializeAs<Debug>();
+   }
    
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
 
@@ -754,9 +763,9 @@ namespace Langulus::Anyness
                }
             }
             else {
-               LANGULUS_ASSERT(false,
-                  Convert, "Bad meta container while deserializing ",
-                  GetToken(), " as ", to.GetToken()
+               LANGULUS_OOPS(
+                  Convert, "Bad meta container while deserializing `",
+                  GetToken(), "` as `", to.GetToken(), '`'
                );
             }
 
@@ -843,9 +852,9 @@ namespace Langulus::Anyness
       }
 
       // Failure if reached                                             
-      LANGULUS_ASSERT(false,
-         Convert, "Can't deserialize ",
-         GetToken(), " as ", to.GetToken()
+      LANGULUS_OOPS(
+         Convert, "Can't deserialize `",
+         GetToken(), "` as `", to.GetToken(), '`'
       );
       return 0;
    }

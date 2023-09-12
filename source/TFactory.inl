@@ -216,7 +216,8 @@ namespace Langulus::Flow
 
             try { CreateInner(verb, count, construct); }
             catch (const Exception& e) {
-               Logger::Error("Unable to create ", construct, " due to exception: ", e);
+               Logger::Error("Unable to create `",
+                  construct, "` due to exception: ", e);
                return;
             }
          },
@@ -231,7 +232,8 @@ namespace Langulus::Flow
 
             try { CreateInner(verb, count); }
             catch (const Exception& e) {
-               Logger::Error("Unable to create ", type, " due to exception: ", e);
+               Logger::Error("Unable to create `",
+                  type, "` due to exception: ", e);
                return;
             }
          }

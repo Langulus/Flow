@@ -84,7 +84,7 @@ namespace Langulus::Flow
    /// Checks if all elements are referenced exactly once before destruction  
    /// if safe mode is enabled                                                
    TEMPLATE() LANGULUS(INLINED)
-   FACTORY()::~TFactory() SAFETY_NOEXCEPT() {
+   FACTORY()::~TFactory() {
       Reset();
    }
 

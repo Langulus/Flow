@@ -90,7 +90,7 @@ namespace Langulus::Flow
 
       TFactory(Producer*);
       TFactory& operator = (TFactory&&) noexcept;
-      ~TFactory() SAFETY_NOEXCEPT();
+      ~TFactory();
 
    public:
       void Reset();
@@ -118,7 +118,7 @@ namespace Langulus::Flow
       NOD() ConstIterator end() const noexcept;
       NOD() ConstIterator last() const noexcept;
 
-      SAFETY(void Dump() const);
+      IF_SAFE(void Dump() const);
    };
 
    template<class T>

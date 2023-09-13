@@ -71,7 +71,7 @@ namespace Langulus::Flow
    ///   @attention type is assumed derived from Resolvable                   
    ///   @param type - type of the resolvable                                 
    LANGULUS(INLINED)
-   Resolvable::Resolvable(DMeta type) SAFETY_NOEXCEPT()
+   Resolvable::Resolvable(DMeta type) IF_UNSAFE(noexcept)
       : mClassType {type}
       , mClassOffset {0} {
       LANGULUS_ASSUME(DevAssumes, type,

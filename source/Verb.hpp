@@ -343,13 +343,13 @@ namespace Langulus
       /// binary compatible to a Verb                                         
       template<class... T>
       concept VerbBased = ((DerivedFrom<T, Flow::Verb>
-            && sizeof(T) == sizeof(Flow::Verb)
-         ) && ...);
+            and sizeof(T) == sizeof(Flow::Verb)
+         ) and ...);
 
       /// A reflected verb type is any type that inherits Verb, is not Verb   
       /// itself, and is binary compatible to a Verb                          
       template<class... T>
-      concept Verb = VerbBased<T...> && (!Same<T, Flow::Verb> && ...);
+      concept Verb = VerbBased<T...> and ((not Same<T, Flow::Verb>) and ...);
 
    } // namespace Langulus::CT
 

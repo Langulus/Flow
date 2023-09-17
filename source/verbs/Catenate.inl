@@ -197,7 +197,8 @@ namespace Langulus::Verbs
       }
 
       //TODO split
-      reinterpret_cast<Any&>(context).SmartPush(Move(verb.GetArgument()));
+      reinterpret_cast<Any&>(context).SmartPush(
+         Langulus::Move(verb.GetArgument()));
       verb << Any {context};
       return true;
    }
@@ -206,7 +207,7 @@ namespace Langulus::Verbs
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
    inline bool Catenate::ExecuteStateless(Verb& verb) {
-      verb << Move(verb.GetArgument());
+      verb << Langulus::Move(verb.GetArgument());
       return true;
    }
 

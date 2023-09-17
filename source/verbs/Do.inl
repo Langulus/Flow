@@ -227,7 +227,7 @@ namespace Langulus::Flow
          
          if (verb.IsDone() and verb.GetOutput()) {
             // Cache output, conserving the context hierarchy           
-            output.SmartPush(Move(verb.GetOutput()));
+            output.SmartPush(Langulus::Move(verb.GetOutput()));
          }
 
          if (verb.IsDone())
@@ -309,7 +309,7 @@ namespace Langulus::Flow
 
             // Cache each output, conserving the context hierarchy      
             if (hits and verb.GetOutput())
-               output << Move(verb.GetOutput());
+               output << Langulus::Move(verb.GetOutput());
          }
 
          if (context.IsOr())

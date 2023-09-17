@@ -280,7 +280,7 @@ namespace Langulus::Verbs
                VERBOSE_CREATION("Initializing data ", selector.GetOutput(),
                   " with ", Logger::Cyan, element, " (", index, ")");
 
-               Verbs::Associate associator {Move(element)};
+               Verbs::Associate associator {Langulus::Move(element)};
                if (Verb::GenericExecuteIn(selector.GetOutput(), associator)) {
                   // Data was found and was overwritten                 
                   if (sati)

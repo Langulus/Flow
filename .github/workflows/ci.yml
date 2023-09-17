@@ -1,5 +1,5 @@
 name: Langulus::Flow CI
-on: [push, pull_request, repository_dispatch] # Trigger on pushes to all branches and for all pull-requests
+on: [push, repository_dispatch]
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
@@ -7,7 +7,7 @@ concurrency:
 jobs:
   build:
     strategy:
-      fail-fast: false # do not abort on a failed job
+      fail-fast: false
       matrix:
         os: [ubuntu-22.04, windows-latest]
         build: [Debug, Release]
@@ -16,16 +16,14 @@ jobs:
         exclude:
           - os: ubuntu-22.04
             cxx: cl
-          - os: ubuntu-22.04
-            arch: x86
           - os: windows-latest
             cxx: g++
           - os: windows-latest
             cxx: clang++
         include:
-          #- os: ubuntu-22.04
-          #  architecture: x86
-          #  cmake_args: "-DCMAKE_CXX_FLAGS=-m32"
+          - os: ubuntu-22.04
+            arch: x86
+            cmake_args: "-DCMAKE_CXX_FLAGS=-m32"
           - os: ubuntu-22.04
             arch: x64
             cmake_args: "-DCMAKE_CXX_FLAGS=-m64"
@@ -43,8 +41,16 @@ jobs:
         if: ${{ startsWith(github.event.action, 'Dependency') }}
         run: >
           echo "Triggered by dependency: ${{github.event.client_payload.cause}}"
+
       - name: Clone
         uses: actions/checkout@v3
+
+      - if: matrix.os == 'ubuntu-22.04' && matrix.arch == 'x86'
+        name: Prepare Linux for cross-compilation
+        run: |
+          sudo apt update
+          sudo apt install g++-multilib
+
       - name: Configure
         run: >
           cmake
@@ -53,7 +59,9 @@ jobs:
           -B out
           -DCMAKE_BUILD_TYPE=${{matrix.build}}
           ${{matrix.cmake_args}}
+
       - name: Build
         run: cmake --build out --config ${{matrix.build}}
+
       - name: Test
         run: cd out && ctest -V -C ${{matrix.build}}

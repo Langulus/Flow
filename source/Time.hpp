@@ -47,8 +47,6 @@ namespace Langulus
       constexpr TimePoint(const time_point& a) noexcept;
 
       constexpr explicit operator bool() const noexcept;
-
-      NOD() Hash GetHash() const noexcept;
    };
 
 
@@ -69,8 +67,6 @@ namespace Langulus
       Time(const Anyness::Neat& a);
 
       constexpr explicit operator bool() const noexcept;
-
-      NOD() Hash GetHash() const noexcept;
 
       template<CT::DenseBuiltinNumber T = Real>
       NOD() Real Seconds() const noexcept;

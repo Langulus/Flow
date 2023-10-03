@@ -29,7 +29,7 @@ namespace Langulus
       result += type->mToken;
       result += Code::OpenScope;
       #if !LANGULUS(PARANOID) && LANGULUS(DEBUG)
-         // We're not paranoid, so directly dump the memory address     
+         // Feel like getting doxxed - directly dump the memory address 
          result += Anyness::Text {
             fmt::format("{:X}",
                reinterpret_cast<intptr_t>(&DenseCast(instance))
@@ -38,11 +38,7 @@ namespace Langulus
       #else
          // Obfuscate the pointer, by hashing it                        
          result += Anyness::Text {
-            fmt::format("{:X}",
-               HashNumber(
-                  reinterpret_cast<intptr_t>(&DenseCast(instance))
-               ).mHash
-            )
+            fmt::format("{:X}", HashOf(&DenseCast(instance)).mHash)
          };
       #endif
       result += Code::CloseScope;

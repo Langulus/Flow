@@ -15,7 +15,11 @@ namespace Langulus
    /// Default time point construction, defaults to the minimal possible value
    LANGULUS(INLINED)
    constexpr TimePoint::TimePoint() noexcept
-      : time_point {min()} {}
+      : time_point {min()} {
+      using Representation = typename Base::rep;
+      static_assert(sizeof(Representation) == sizeof(TimePoint),
+         "Size mismatch");
+   }
 
    /// Copy-construction                                                      
    ///   @param a - time point to copy                                        
@@ -30,20 +34,14 @@ namespace Langulus
       return *this != min();
    }
 
-   /// Get the hash of the time point                                         
-   ///   @return the hash value                                               
-   LANGULUS(INLINED)
-   Hash TimePoint::GetHash() const noexcept {
-      using Representation = typename Base::rep;
-      static_assert(sizeof(Representation) == sizeof(TimePoint),
-         "Size mismatch");
-      return HashNumber(reinterpret_cast<const Representation&>(*this));
-   }
-
    /// Default time duration construction, defaults to zero                   
    LANGULUS(INLINED)
    constexpr Time::Time() noexcept
-      : duration {zero()} {}
+      : duration {zero()} {
+      using Representation = typename Base::rep;
+      static_assert(sizeof(Representation) == sizeof(Time),
+         "Size mismatch");
+   }
 
    /// Copy-construction                                                      
    ///   @param a - duration to copy                                          
@@ -64,16 +62,6 @@ namespace Langulus
    LANGULUS(INLINED)
    constexpr Time::operator bool() const noexcept {
       return *this != zero();
-   }
-
-   /// Get the hash of the time duration                                      
-   ///   @return the hash value                                               
-   LANGULUS(INLINED)
-   Hash Time::GetHash() const noexcept {
-      using Representation = typename Base::rep;
-      static_assert(sizeof(Representation) == sizeof(Time),
-         "Size mismatch");
-      return HashNumber(reinterpret_cast<const Representation&>(*this));
    }
 
    /// Get time duration in seconds, represented by type T                    

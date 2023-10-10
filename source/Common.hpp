@@ -59,11 +59,6 @@ namespace Langulus::Flow
       return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
    }
 
-   struct Code;
-   class Verb;
-   struct Resolvable;
-   class Temporal;
-
 } // namespace Langulus::Flow
 
 /// Make the rest of the code aware, that Langulus::Flow has been included    

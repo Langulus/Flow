@@ -7,10 +7,11 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "Resolvable.hpp"
+#include "Code.hpp"
 #include "Time.hpp"
-#include <Anyness/TMap.hpp>
+#include <Anyness/TOrderedMap.hpp>
 #include <Anyness/TUnorderedMap.hpp>
+
 
 namespace Langulus::Flow
 {
@@ -51,7 +52,7 @@ namespace Langulus::Flow
          Time mTime;
          Time mPeriod;
       };
-
+      
       // A default execution context                                    
       Any mEnvironment;
       // A parent flow                                                  
@@ -66,7 +67,7 @@ namespace Langulus::Flow
       // Priority stack, i.e. the order of things that happen NOW       
       Any mPriorityStack;
       // Verb temporal stack, i.e. things that happen at specific time  
-      TMap<Time, Temporal*> mTimeStack;
+      TOrderedMap<Time, Temporal*> mTimeStack;
       // Verb frequency stack, i.e. things that happen periodically     
       TUnorderedMap<Time, Temporal*> mFrequencyStack;
 

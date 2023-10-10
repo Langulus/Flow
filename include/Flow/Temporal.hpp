@@ -8,3 +8,5 @@
 ///                                                                           
 #pragma once
 #include "../../source/Temporal.hpp"
+#include "../../source/Code.inl"
+#include "../../source/Time.inl"

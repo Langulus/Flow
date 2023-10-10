@@ -6,7 +6,7 @@
 /// Distributed under GNU General Public License v3+                          
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
-#include "Code.hpp"
+#include "Code.inl"
 #include "Serial.hpp"
 #include "Verb.hpp"
 
@@ -112,7 +112,8 @@ namespace Langulus::Flow
       return tokenSize > 0 and MatchesLoose(token) == tokenSize
          and (GetCount() == tokenSize 
             or (endsWithALetter and (
-               not remainder.StartsWithLetter() and not remainder.StartsWithDigit()))
+               not     remainder.StartsWithLetter()
+               and not remainder.StartsWithDigit()))
             or not endsWithALetter
          );
    }

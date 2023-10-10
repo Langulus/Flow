@@ -8,8 +8,9 @@
 ///                                                                           
 #pragma once
 #include "Verb.hpp"
-#include "Code.hpp"
-#include <Anyness/Ref.hpp>
+#include "verbs/Interpret.inl"
+//#include <Anyness/Ref.hpp>
+
 
 namespace Langulus::Flow
 {
@@ -730,9 +731,10 @@ namespace Langulus::Flow
       using S = Decay<decltype(data)>;
       using T = TypeOf<S>;
 
-      if constexpr (CT::Nullptr<T>)
+      if constexpr (CT::Nullptr<T>) {
          // Can't push a nullptr_t                                      
          return *this;
+      }
       else if constexpr (CT::PointerRelated<TypeOf<S>>) {
          // Push a pointer, but check if valid first                    
          if (not *data)

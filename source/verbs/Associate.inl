@@ -7,10 +7,11 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../../include/Flow/Verbs/Associate.hpp"
+#include "Associate.hpp"
 #include "../Verb.inl"
 
 #define VERBOSE_ASSOCIATE(...) //Logger::Verbose(__VA_ARGS__)
+
 
 namespace Langulus::Verbs
 {

@@ -9,6 +9,7 @@
 #pragma once
 #include "Code.hpp"
 
+
 namespace Langulus::Flow
 {
 
@@ -47,5 +48,3 @@ namespace Langulus::Flow
    } // namespace Langulus::Flow::Serial
 
 } // namespace Langulus::Flow
-
-#include "Serial.inl"

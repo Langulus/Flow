@@ -7,8 +7,9 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../../include/Flow/Verbs/Conjunct.hpp"
+#include "Conjunct.hpp"
 #include "../Verb.inl"
+
 
 namespace Langulus::Verbs
 {

@@ -7,8 +7,9 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../../include/Flow/Verbs/Do.hpp"
+#include "Do.hpp"
 #include "../Verb.inl"
+
 
 namespace Langulus::Verbs
 {
@@ -85,9 +86,6 @@ namespace Langulus::Verbs
 
 namespace Langulus::Flow
 {
-
-   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::VerbBased V>
-   Count Execute(T& context, V& verb);
 
    template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::VerbBased V, CT::Data... BASES>
    Count ExecuteInBases(T& context, V& verb, TTypeList<BASES...>) {
@@ -166,7 +164,7 @@ namespace Langulus::Flow
    ///   @param context - the context in which to dispatch the verb           
    ///   @param verb - the verb to send over                                  
    ///   @return the number of successful executions                          
-   template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::VerbBased V>
+   template<bool RESOLVE, bool DISPATCH, bool DEFAULT, CT::Deep T, CT::VerbBased V>
    Count DispatchFlat(T& context, V& verb) {
       if (not context or verb.IsMonocast()) {
          if (context.IsInvalid()) {
@@ -253,7 +251,7 @@ namespace Langulus::Flow
    ///   @param context - the context in which scope will be dispatched to    
    ///   @param verb - the verb to execute                                    
    ///   @return the number of successful executions                          
-   template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::VerbBased V>
+   template<bool RESOLVE, bool DISPATCH, bool DEFAULT, CT::Deep T, CT::VerbBased V>
    Count DispatchDeep(T& context, V& verb) {
       if (not context or verb.IsMonocast()) {
          if (context.IsInvalid()) {

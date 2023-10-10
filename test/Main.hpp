@@ -15,8 +15,9 @@ using namespace Langulus::Flow;
 
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 
+
 /// A mockup of Langulus::Thing, for testing purposes                         
-struct Thing : public Resolvable {
+struct Thing : Resolvable {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
@@ -31,7 +32,7 @@ struct Thing : public Resolvable {
 };
 
 /// A mockup of more concrete Langulus::Thing, for testing purposes           
-struct Thing2 : public Thing {
+struct Thing2 : Thing {
    LANGULUS_BASES(Thing);
    Thing2() : Thing {MetaOf<Thing2>()} {}
 
@@ -41,7 +42,7 @@ struct Thing2 : public Thing {
 };
 
 /// A mockup of a universe component, for testing purposes                    
-struct Universe : public Resolvable {
+struct Universe : Resolvable {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
@@ -50,7 +51,7 @@ struct Universe : public Resolvable {
 };
 
 /// A mockup of a window component, for testing purposes                      
-struct Window : public Resolvable {
+struct Window : Resolvable {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
@@ -59,7 +60,7 @@ struct Window : public Resolvable {
 };
 
 /// A mockup of a user component, for testing purposes                        
-struct User : public Resolvable {
+struct User : Resolvable {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
@@ -68,7 +69,7 @@ struct User : public Resolvable {
 };
 
 /// A mockup of a session component, for testing purposes                     
-struct Session : public Resolvable {
+struct Session : Resolvable {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;

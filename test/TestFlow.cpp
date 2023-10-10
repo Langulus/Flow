@@ -18,7 +18,10 @@
 
 LANGULUS_EXCEPTION_HANDLER
 
+
 SCENARIO("Parsing scripts with corner cases", "[flow]") {
+   static_assert(CT::Complete<Temporal>);
+
    Any pastMissing;
    pastMissing.MakePast();
 

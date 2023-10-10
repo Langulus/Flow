@@ -12,6 +12,7 @@
 #include <chrono>
 #include <fmt/chrono.h>
 
+
 namespace Langulus
 {
    using namespace ::std::literals::chrono_literals;
@@ -90,8 +91,6 @@ namespace Langulus
    } // namespace Langulus::CT
 
 } // namespace Langulus
-
-#include "Time.inl"
 
 namespace fmt
 {

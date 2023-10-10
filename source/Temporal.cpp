@@ -6,15 +6,19 @@
 /// Distributed under GNU General Public License v3+                          
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
-#include "Temporal.hpp"
+#include "Time.inl"
+#include "Serial.inl"
+#include "Code.inl"
 #include "Resolvable.inl"
 #include "inner/Missing.inl"
 #include "inner/Fork.hpp"
+#include "Temporal.hpp"
 
 #define VERBOSE_TEMPORAL(...) \
    Logger::Verbose(*this, ": ", __VA_ARGS__)
 #define VERBOSE_TEMPORAL_TAB(...) \
    const auto tab = Logger::Verbose(*this, ": ", __VA_ARGS__, Logger::Tabs{})
+
 
 namespace Langulus::Flow
 {
@@ -283,7 +287,7 @@ namespace Langulus::Flow
          }
       );
 
-      if (!done && scope)
+      if (not done and scope)
          result = scope;
       if (result.GetCount() < 2)
          result.MakeAnd();

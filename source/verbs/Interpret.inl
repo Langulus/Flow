@@ -7,13 +7,10 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../../include/Flow/Verbs/Interpret.hpp"
-#include "../../include/Flow/Verbs/Create.hpp"
-#include "../../include/Flow/Verbs/Do.hpp"
-#include "../Verb.inl"
-#include "../Executor.hpp"
+#include "Interpret.hpp"
+#include "Create.hpp"
+#include "Do.hpp"
 #include "../Serial.hpp"
-#include "../Time.hpp"
 
 #include <Anyness/View/Any.hpp>
 #include <Anyness/View/Map.hpp>
@@ -24,6 +21,7 @@
 #include <Anyness/Neat.hpp>
 
 #define VERBOSE_CONVERSION(...) // Logger::Verbose(__VA_ARGS__)
+
 
 namespace Langulus::Verbs
 {

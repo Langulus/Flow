@@ -8,7 +8,9 @@
 ///                                                                           
 #pragma once
 #include "Verb.hpp"
+#include "Temporal.hpp"
 #include <Anyness/Referenced.hpp>
+
 
 namespace Langulus::Flow
 {
@@ -50,12 +52,10 @@ namespace Langulus::Flow
       NOD() constexpr DMeta GetType() const noexcept;
       NOD() Block GetBlock() const noexcept;
 
-      template<bool DISPATCH = true, bool DEFAULT = true, CT::VerbBased V>
-      Any Run(const V&);
-      template<bool DISPATCH = true, bool DEFAULT = true, CT::VerbBased V>
-      Any Run(V&);
-      template<bool DISPATCH = true, bool DEFAULT = true, CT::VerbBased V>
-      Any Run(V&&) requires (CT::Mutable<V>);
+      template<bool DISPATCH = true, bool DEFAULT = true>
+      Any Run(CT::VerbBased auto&);
+      template<bool DISPATCH = true, bool DEFAULT = true>
+      Any Run(CT::VerbBased auto&&);
 
       Any Run(const Code&);
       Any Run(const Any&);
@@ -64,34 +64,29 @@ namespace Langulus::Flow
       NOD() Block GetMember(TMeta) noexcept;
       NOD() Block GetMember(TMeta) const noexcept;
 
-      template<CT::Index INDEX>
-      NOD() Block GetMember(TMeta, const INDEX&) noexcept;
-      template<CT::Index INDEX>
-      NOD() Block GetMember(TMeta, const INDEX&) const noexcept;
+      NOD() Block GetMember(TMeta, const CT::Index auto&) noexcept;
+      NOD() Block GetMember(TMeta, const CT::Index auto&) const noexcept;
 
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
          NOD() Block GetMember(const Token&) noexcept;
          NOD() Block GetMember(const Token&) const noexcept;
 
-         template<CT::Index INDEX>
-         NOD() Block GetMember(const Token&, const INDEX&) noexcept;
-         template<CT::Index INDEX>
-         NOD() Block GetMember(const Token&, const INDEX&) const noexcept;
+         NOD() Block GetMember(const Token&, const CT::Index auto&) noexcept;
+         NOD() Block GetMember(const Token&, const CT::Index auto&) const noexcept;
       #endif
 
-      template<CT::Trait, CT::Data D>
-      bool GetTrait(D&) const;
-      template<CT::Data D>
-      bool GetValue(D&) const;
+      template<CT::Trait>
+      bool GetTrait(CT::Data auto&) const;
+      bool GetValue(CT::Data auto&) const;
 
-      template<CT::Trait, bool DIRECT = false, CT::Data D>
-      bool SetTrait(const D&);
-      template<bool DIRECT = false, CT::Data D>
-      bool SetValue(const D&);
-      template<CT::Trait, bool DIRECT = false, CT::Data D>
-      bool SetTrait(D&&);
-      template<bool DIRECT = false, CT::Data D>
-      bool SetValue(D&&);
+      template<CT::Trait, bool DIRECT = false>
+      bool SetTrait(const CT::Data auto&);
+      template<bool DIRECT = false>
+      bool SetValue(const CT::Data auto&);
+      template<CT::Trait, bool DIRECT = false>
+      bool SetTrait(CT::Data auto&&);
+      template<bool DIRECT = false>
+      bool SetValue(CT::Data auto&&);
 
       // All inheritances of Resolvable will become convertible to Debug
       // and will share the reflected conversions list, but with one    
@@ -106,10 +101,7 @@ namespace Langulus::Flow
 namespace Langulus
 {
 
-   template<class T>
-   NOD() Anyness::Text IdentityOf(const T&);
-
-   template<class T>
-   NOD() Anyness::Text IdentityOf(RTTI::DMeta, const T&);
+   NOD() Anyness::Text IdentityOf(const auto&);
+   NOD() Anyness::Text IdentityOf(const Token&, const auto&);
 
 } // namespace Langulus

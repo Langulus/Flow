@@ -13,12 +13,13 @@
 #include "verbs/Interpret.inl"
 
 #ifndef LANGULUS_MAX_DEBUGGABLE_ELEMENTS
-   #if LANGULUS(DEBUG) || LANGULUS(SAFE)
+   #if LANGULUS(DEBUG) or LANGULUS(SAFE)
       #define LANGULUS_MAX_DEBUGGABLE_ELEMENTS 32
    #else
       #define LANGULUS_MAX_DEBUGGABLE_ELEMENTS 8
    #endif
 #endif
+
 
 namespace Langulus::Flow
 {

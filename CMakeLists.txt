@@ -10,14 +10,14 @@ if(PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
     include(LangulusUtilities.cmake)
 
     # Add Langulus::Core/Logger/RTTI/SIMD/Fractalloc/Anyness libraries      
-	fetch_langulus_module(Core)
-	fetch_langulus_module(Logger)
-	fetch_langulus_module(RTTI)
+	fetch_langulus_module(Core    GIT_TAG 39ae88b)
+	fetch_langulus_module(Logger  GIT_TAG 3314fbe)
+	fetch_langulus_module(RTTI    GIT_TAG 3e05451)
     if(LANGULUS_FEATURE_MANAGED_MEMORY)
-        fetch_langulus_module(Fractalloc)
+        fetch_langulus_module(Fractalloc GIT_TAG 4985d65)
     endif()
-	fetch_langulus_module(SIMD)
-	fetch_langulus_module(Anyness)
+	fetch_langulus_module(SIMD    GIT_TAG 57e150d)
+	fetch_langulus_module(Anyness GIT_TAG 0e3eb3d)
 endif()
 
 # Build and install Flow library                                            

@@ -8,11 +8,12 @@
 ///                                                                           
 #pragma once
 #include "TFactory.hpp"
-#include "verbs/Interpret.inl"
+#include "Serial.inl"
 
 #define TEMPLATE()   template<class T, FactoryUsage USAGE>
 #define FACTORY()    TFactory<T, USAGE>
 #define ITERATOR()   TFactory<T, USAGE>::template TIterator<MUTABLE>
+
 
 namespace Langulus::Flow
 {
@@ -331,20 +332,27 @@ namespace Langulus::Flow
    ///   @return the produced instance                                        
    TEMPLATE()
    T* FACTORY()::Produce(const Neat& neat) {
+      Element* result;
+
       if (mReusable) {
          // Reuse a slot                                                
-         auto memory = mReusable;
+         const auto memory = mReusable;
          mReusable = mReusable->mNextFreeElement;
-         auto result = new (memory) Element {this, neat};
-         mHashmap[result->mData.GetHash()] << result;
-         ++mCount;
-         return &result->mData;
+         result = new (memory) Element {this, neat};
+      }
+      else {
+         // Add new slot                                                
+         mData.Emplace(this, neat);
+         result = &mData.Last();
       }
 
-      // If this is reached, then a reallocation is required            
-      mData.Emplace(this, neat);
-      auto result = &mData.Last();
-      mHashmap[result->mData.GetHash()] << result;
+      // Register new entry in the hashmap, for fast indexing           
+      const auto hash = result->mData.GetHash();
+      const auto found = mHashmap.Find(hash);
+      if (found)
+         mHashmap.GetValue(found) << result;
+      else
+         mHashmap.Insert(hash, result);
       ++mCount;
       return &result->mData;
    }

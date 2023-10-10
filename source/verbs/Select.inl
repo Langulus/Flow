@@ -7,10 +7,11 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../../include/Flow/Verbs/Select.hpp"
+#include "Select.hpp"
 #include "../Verb.inl"
 
 #define VERBOSE_SELECT(...) //Logger::Verbose(__VA_ARGS__)
+
 
 namespace Langulus::Verbs
 {

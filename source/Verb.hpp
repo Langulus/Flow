@@ -8,6 +8,7 @@
 ///                                                                           
 #pragma once
 #include "Common.hpp"
+#include "Code.hpp"
 
 
 namespace Langulus::Flow
@@ -368,20 +369,3 @@ namespace Langulus
    }
 
 } // namespace Langulus
-
-
-/// Namespace containing all built-in Langulus verbs                          
-namespace Langulus::Verbs
-{
-
-   struct Create;
-   struct Compare;
-   struct Select;
-   struct Catenate;
-   struct Associate;
-   struct Conjunct;
-   struct Interpret;
-   struct Interact;
-   struct Do;
-
-} // namespace Langulus::Verbs

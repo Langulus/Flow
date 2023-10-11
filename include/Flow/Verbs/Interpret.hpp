@@ -9,3 +9,4 @@
 #pragma once
 #include "../../../source/verbs/Interpret.inl"
 #include "../../../source/Serial.inl"
+#include "../../../source/Code.inl"

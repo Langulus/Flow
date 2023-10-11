@@ -15,6 +15,7 @@
 
 #define VERBOSE_CONSTRUCT(...) //Logger::Verbose(__VA_ARGS__)
 
+
 namespace Langulus::Anyness
 {
 

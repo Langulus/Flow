@@ -12,12 +12,12 @@ if(PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
     # Add Langulus::Core/Logger/RTTI/SIMD/Fractalloc/Anyness libraries      
 	fetch_langulus_module(Core    GIT_TAG 39ae88b)
 	fetch_langulus_module(Logger  GIT_TAG 3314fbe)
-	fetch_langulus_module(RTTI    GIT_TAG c767d7b)
+	fetch_langulus_module(RTTI    GIT_TAG c954752b8ab877e5a2dd16a9206c78ba3e534e03)
     if(LANGULUS_FEATURE_MANAGED_MEMORY)
         fetch_langulus_module(Fractalloc GIT_TAG 4985d65)
     endif()
 	fetch_langulus_module(SIMD    GIT_TAG 57e150d)
-	fetch_langulus_module(Anyness GIT_TAG 429c539)
+	fetch_langulus_module(Anyness GIT_TAG 7f921f8256bf22135192c421666f2fd588768136)
 endif()
 
 # Build and install Flow library                                            

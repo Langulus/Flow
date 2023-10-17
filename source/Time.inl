@@ -53,7 +53,7 @@ namespace Langulus
    /// Descriptor-construction                                                
    ///   @param a - descriptor to scan for relevant data                      
    LANGULUS(INLINED)
-   Time::Time(const Anyness::Neat&)
+   Time::Time(Describe&&)
       : duration {zero()} {
       TODO();
    }

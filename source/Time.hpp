@@ -45,7 +45,7 @@ namespace Langulus
       using Base::time_point;
 
       constexpr TimePoint() noexcept;
-      constexpr TimePoint(const time_point& a) noexcept;
+      constexpr TimePoint(const time_point&) noexcept;
 
       constexpr explicit operator bool() const noexcept;
    };
@@ -64,8 +64,8 @@ namespace Langulus
       using Base::operator +;
 
       constexpr Time() noexcept;
-      constexpr Time(const duration& a) noexcept;
-      Time(const Anyness::Neat& a);
+      constexpr Time(const duration&) noexcept;
+      Time(Describe&&);
 
       constexpr explicit operator bool() const noexcept;
 

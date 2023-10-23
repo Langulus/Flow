@@ -739,7 +739,7 @@ namespace Langulus::Flow
          // Push a pointer, but check if valid first                    
          if (not *data)
             return *this;
-         if (mOutput.SmartPush(PointerDecay(*data)))
+         if (mOutput.SmartPush(*data /*PointerDecay(*data)*/))
             Done();
          return *this;
       }

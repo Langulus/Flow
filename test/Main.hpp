@@ -93,6 +93,9 @@ struct Producible : Referenced, ProducedFrom<Producer> {
    Producible(Producer* producer, const Neat& neat = {})
       : ProducedFrom {producer, neat} {}
 
+   /*Producible(Abandoned<Producible>&& other)
+      : ProducedFrom(other.Forward<ProducedFrom>()) {}*/
+
    bool operator == (const Producible& rhs) const {
       return mDescriptor == rhs.mDescriptor;
    }

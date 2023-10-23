@@ -132,6 +132,7 @@ namespace Langulus::Flow
    template<class T>
    class ProducedFrom {
       LANGULUS(PRODUCER) T;
+
    protected:
       // The descriptor used for hashing, and element identification    
       Neat mDescriptor;
@@ -143,6 +144,9 @@ namespace Langulus::Flow
       ProducedFrom(const ProducedFrom&) = delete;
       ProducedFrom(ProducedFrom&&);
       ProducedFrom(T*, const Neat&);
+
+      template<CT::Semantic S>
+      ProducedFrom(S&&) requires (CT::Same<TypeOf<S>, ProducedFrom> and CT::SemanticMakableAlt<S>);
 
       const Neat& GetNeat() const noexcept;
       Hash GetHash() const noexcept;
@@ -177,8 +181,9 @@ namespace Langulus::Flow
       Element() = delete;
 
       Element(TFactory*, const Neat&);
-      Element(Element&&) = default;
-      ~Element();
+
+      template<CT::Semantic S>
+      Element(S&&) requires (CT::Same<TypeOf<S>, Element> and CT::SemanticMakableAlt<S>);
    };
 
 

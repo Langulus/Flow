@@ -21,14 +21,26 @@ namespace Langulus::Flow
    /// Move a produced item                                                   
    ///   @param other - the item to move                                      
    template<class T>
+   LANGULUS(INLINED)
    ProducedFrom<T>::ProducedFrom(ProducedFrom&& other)
       // mProducer intentionally not overwritten                        
       : mDescriptor {Move(other.mDescriptor)} {}
+
+   /// Semantic construction                                                  
+   ///   @param other - semantic and element to initialize with               
+   template<class T>
+   template<CT::Semantic S>
+   LANGULUS(INLINED)
+   ProducedFrom<T>::ProducedFrom(S&& other)
+   requires (CT::Same<TypeOf<S>, ProducedFrom> and CT::SemanticMakableAlt<S>)
+      // mProducer intentionally not overwritten                        
+      : mDescriptor {S::Nest(other->mDescriptor)} {}
 
    /// Construct a produced item                                              
    ///   @param producer - the item's producer                                
    ///   @param neat - the item's neat descriptor                             
    template<class T>
+   LANGULUS(INLINED)
    ProducedFrom<T>::ProducedFrom(T* producer, const Neat& neat)
       : mDescriptor {neat}
       , mProducer {producer} {
@@ -38,6 +50,7 @@ namespace Langulus::Flow
    /// Get the normalized descriptor of the produced item                     
    ///   @return the normalized descriptor                                    
    template<class T>
+   LANGULUS(INLINED)
    const Neat& ProducedFrom<T>::GetNeat() const noexcept {
       return mDescriptor;
    }
@@ -45,6 +58,7 @@ namespace Langulus::Flow
    /// Get the hash of the normalized descriptor (cached and efficient)       
    ///   @return the hash                                                     
    template<class T>
+   LANGULUS(INLINED)
    Hash ProducedFrom<T>::GetHash() const noexcept {
       return mDescriptor.GetHash();
    }
@@ -52,6 +66,7 @@ namespace Langulus::Flow
    /// Return the producer of the item (a.k.a. the owner of the factory)      
    ///   @return a pointer to the producer instance                           
    template<class T>
+   LANGULUS(INLINED)
    T* ProducedFrom<T>::GetProducer() const noexcept {
       return mProducer;
    }
@@ -64,15 +79,16 @@ namespace Langulus::Flow
    FACTORY()::Element::Element(TFactory* factory, const Neat& neat)
       : mFactory {factory}
       , mData {factory->mFactoryOwner, neat} {}
-   
-   /// Destructor for descriptor-constructible element                        
-   TEMPLATE() LANGULUS(INLINED)
-   FACTORY()::Element::~Element() {
-      LANGULUS_ASSUME(DevAssumes, mData.GetReferences() == 1, 
-         "Unable to destroy ", mData,
-         ", it has ", mData.GetReferences(), " uses instead of 1"
-      );
-   }
+
+   /// Semantic construction                                                  
+   ///   @param other - semantic and element to initialize with               
+   TEMPLATE()
+   template<CT::Semantic S>
+   LANGULUS(INLINED)
+   FACTORY()::Element::Element(S&& other)
+   requires (CT::Same<TypeOf<S>, Element> and CT::SemanticMakableAlt<S>)
+      : mFactory {other->mFactory}
+      , mData {S::Nest(other->mData)} {}
 
 
    /// Construction of a factory                                              
@@ -348,9 +364,9 @@ namespace Langulus::Flow
 
       // Register new entry in the hashmap, for fast indexing           
       const auto hash = result->mData.GetHash();
-      const auto found = mHashmap.Find(hash);
+      const auto found = mHashmap.FindIt(hash);
       if (found)
-         mHashmap.GetValue(found) << result;
+         found->mValue << result;
       else
          mHashmap.Insert(hash, result);
       ++mCount;

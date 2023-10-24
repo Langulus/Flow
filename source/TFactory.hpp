@@ -25,7 +25,9 @@ namespace Langulus::Flow
    /// be referencable                                                        
    template<class T>
    concept FactoryProducible = CT::Producible<T>
-      and not CT::Abstract<T> and CT::Dense<T> and CT::Referencable<T>;
+                       and not CT::Abstract<T>
+                       and     CT::Dense<T>
+                       and     CT::Referencable<T>;
 
 
    ///                                                                        
@@ -145,8 +147,9 @@ namespace Langulus::Flow
       ProducedFrom(ProducedFrom&&);
       ProducedFrom(T*, const Neat&);
 
-      template<CT::Semantic S>
-      ProducedFrom(S&&) requires (CT::Same<TypeOf<S>, ProducedFrom> and CT::SemanticMakableAlt<S>);
+      template<template<class> class S>
+      requires CT::Semantic<S<Neat>>
+      ProducedFrom(S<ProducedFrom>&&);
 
       const Neat& GetNeat() const noexcept;
       Hash GetHash() const noexcept;
@@ -182,8 +185,9 @@ namespace Langulus::Flow
 
       Element(TFactory*, const Neat&);
 
-      template<CT::Semantic S>
-      Element(S&&) requires (CT::Same<TypeOf<S>, Element> and CT::SemanticMakableAlt<S>);
+      template<template<class> class S>
+      requires CT::SemanticMakableAlt<S<T>>
+      Element(S<Element>&&);
    };
 
 

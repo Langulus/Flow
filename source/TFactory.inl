@@ -23,18 +23,17 @@ namespace Langulus::Flow
    template<class T>
    LANGULUS(INLINED)
    ProducedFrom<T>::ProducedFrom(ProducedFrom&& other)
-      // mProducer intentionally not overwritten                        
-      : mDescriptor {Move(other.mDescriptor)} {}
+      : ProducedFrom {Move(other)} {}
 
    /// Semantic construction                                                  
    ///   @param other - semantic and element to initialize with               
    template<class T>
-   template<CT::Semantic S>
+   template<template<class> class S>
+   requires CT::Semantic<S<Neat>>
    LANGULUS(INLINED)
-   ProducedFrom<T>::ProducedFrom(S&& other)
-   requires (CT::Same<TypeOf<S>, ProducedFrom> and CT::SemanticMakableAlt<S>)
+   ProducedFrom<T>::ProducedFrom(S<ProducedFrom<T>>&& other)
       // mProducer intentionally not overwritten                        
-      : mDescriptor {S::Nest(other->mDescriptor)} {}
+      : mDescriptor {S<Neat> {other->mDescriptor}} {}
 
    /// Construct a produced item                                              
    ///   @param producer - the item's producer                                
@@ -83,12 +82,12 @@ namespace Langulus::Flow
    /// Semantic construction                                                  
    ///   @param other - semantic and element to initialize with               
    TEMPLATE()
-   template<CT::Semantic S>
+   template<template<class> class S>
+   requires CT::SemanticMakableAlt<S<T>>
    LANGULUS(INLINED)
-   FACTORY()::Element::Element(S&& other)
-   requires (CT::Same<TypeOf<S>, Element> and CT::SemanticMakableAlt<S>)
+   FACTORY()::Element::Element(S<Element>&& other)
       : mFactory {other->mFactory}
-      , mData {S::Nest(other->mData)} {}
+      , mData {S<T> {other->mData}} {}
 
 
    /// Construction of a factory                                              

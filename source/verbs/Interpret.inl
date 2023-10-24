@@ -488,6 +488,7 @@ namespace Langulus::Anyness
    ///   @return the number of extracted values (always 1 if not an array)    
    inline Count Neat::ExtractDataAs(CT::Data auto& value) const {
       using D = Deref<decltype(value)>;
+
       if constexpr (CT::Array<D>) {
          // Fill a bounded array                                        
          Count scanned = 0;

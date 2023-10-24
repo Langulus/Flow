@@ -219,6 +219,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    Any Resolvable::Run(const Temporal&) {
       TODO();
+      return {};
    }
 
    /// Get the first member matching a runtime trait definition               

@@ -138,6 +138,7 @@ namespace Langulus::Flow
    ///   @return true of no errors occured                                    
    bool Execute(const Neat& flow, Any& environment, Neat& output) {
       TODO();
+      return false;
    }
 
    /// Nested neat scope execution with output                                
@@ -149,6 +150,7 @@ namespace Langulus::Flow
    ///   @return true of no errors occured                                    
    bool Execute(const Neat& flow, Any& environment, Neat& output, bool& skipVerbs) {
       TODO();
+      return false;
    }
 
    /// Nested AND scope execution                                             

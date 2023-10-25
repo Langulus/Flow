@@ -29,16 +29,20 @@ namespace Langulus::Flow
 
       bool executable = false;
       block.ForEach(
-         // Scan deeper into traits, because they're not deep           
-         // They are deep only with respect to execution                
          [&executable](const Trait& trait) noexcept {
+            // Scan deeper into traits, because they're not deep        
+            // They are deep only with respect to execution             
             executable = IsExecutable(trait);
             return not executable;
          },
-         // Scan deeper into constructs, because they're not deep       
-         // They are deep only with respect to execution                
          [&executable](const Construct& construct) noexcept {
-            executable = IsExecutable(construct);
+            // Scan deeper into constructs, because they're not deep    
+            // They are deep only with respect to execution             
+            construct.ForEach([&executable](const Verb&) noexcept {
+               // Counts as executable if containing at least one verb  
+               executable = true;
+               return false;
+            });
             return not executable;
          }
       );
@@ -60,26 +64,6 @@ namespace Langulus::Flow
       });
 
       return executable;
-   }
-   
-   /// Flat check if Neat contains verbs                                      
-   ///   @param block - the Neat to scan for verbs                            
-   ///   @return true if the block contains immediate verbs                   
-   bool IsExecutable(const Neat& block) noexcept {
-      bool executable = false;
-      block.ForEach([&](const Block& group) noexcept {
-         executable = IsExecutable(group);
-         return not executable;
-      });
-      return executable;
-   }
-
-   /// Deep check if Neat contains verbs                                      
-   ///   @param block - the Neat to scan for verbs                            
-   ///   @return true if the deep or flat block contains verbs                
-   bool IsExecutableDeep(const Neat& block) noexcept {
-      // Neats are always flat, so it is the same as IsExecutable       
-      return IsExecutable(block);
    }
 
    /// Nested AND/OR scope execution (discarding outputs)                     
@@ -129,29 +113,6 @@ namespace Langulus::Flow
       output.SmartPush(Abandon(results));
       return true;
    }
-   
-   /// Nested neat scope execution with output                                
-   /// Iterates all verbs inside Neat, and executes them, producing new Neat  
-   ///   @param flow - the flow to execute                                    
-   ///   @param environment - the environment in which scope will be executed 
-   ///   @param output - [out] verb result will be pushed here                
-   ///   @return true of no errors occured                                    
-   bool Execute(const Neat& flow, Any& environment, Neat& output) {
-      TODO();
-      return false;
-   }
-
-   /// Nested neat scope execution with output                                
-   /// Iterates all verbs inside Neat, and executes them, producing new Neat  
-   ///   @param flow - the flow to execute                                    
-   ///   @param environment - the environment in which scope will be executed 
-   ///   @param output - [out] verb result will be pushed here                
-   ///   @param skipVerbs - [in/out] whether to skip verbs after OR success   
-   ///   @return true of no errors occured                                    
-   bool Execute(const Neat& flow, Any& environment, Neat& output, bool& skipVerbs) {
-      TODO();
-      return false;
-   }
 
    /// Nested AND scope execution                                             
    ///   @param flow - the flow to execute                                    
@@ -162,21 +123,19 @@ namespace Langulus::Flow
    bool ExecuteAND(const Block& flow, Any& environment, Any& output, bool& skipVerbs) {
       Count executed {};
       if (flow.IsDeep()) {
-         // Nest if deep                                                
          executed = flow.ForEach([&](const Block& block) {
+            // Nest if deep                                             
             Any local;
-            if (not Execute(block, environment, local, skipVerbs)) {
-               VERBOSE(Logger::Red, "Deep AND flow failed: ", flow);
-               LANGULUS_THROW(Flow, "Deep AND failure");
-            }
+            if (not Execute(block, environment, local, skipVerbs))
+               LANGULUS_OOPS(Flow, "Deep AND failure: ", flow);
 
             output.SmartPush(Abandon(local));
          });
       }
       else {
          executed = flow.ForEach(
-            // Nest if traits, but retain each trait                    
             [&](const Trait& trait) {
+               // Nest if traits, but retain each trait                 
                if (trait.IsMissing()) {
                   // Never touch missing stuff, only propagate it       
                   output.SmartPush(trait);
@@ -184,45 +143,60 @@ namespace Langulus::Flow
                }
 
                Any local;
-               if (not Execute(trait, environment, local, skipVerbs)) {
-                  VERBOSE(Logger::Red, "Trait AND flow failed: ", flow);
-                  LANGULUS_THROW(Flow, "Trait AND failure");
-               }
+               if (not Execute(trait, environment, local, skipVerbs))
+                  LANGULUS_OOPS(Flow, "Trait AND failure: ", flow);
 
                output.SmartPush(Trait::From(trait.GetTrait(), Abandon(local)));
             },
-            // Nest if constructs, but retain each construct            
             [&](const Construct& construct) {
-               if (construct.IsMissing()) {
-                  // Never touch missing stuff, only propagate it       
-                  output.SmartPush(construct);
+               // Nest if constructs, but retain each construct         
+               // Make a shallow copy of the construct, and strip all   
+               // verbs from it. Some of them might get reinserted, if  
+               // missing, but generally they will be substituted with  
+               // the corresponding results                             
+               Construct local = construct;
+               local.template RemoveData<Verb>();
+               bool constructIsMissing = false;
+
+               construct.ForEach([&](const Verb& constVerb) noexcept {
+                  if (constVerb.IsMissing()) {
+                     // Never touch missing stuff, only propagate it    
+                     local << constVerb;
+                     constructIsMissing = true;
+                     return;
+                  }
+
+                  // Execute all verbs, push their outputs to the local 
+                  // shallow-copied construct                           
+                  auto verb = Verb::FromMeta(
+                     constVerb.GetVerb(),
+                     constVerb.GetArgument(),
+                     constVerb,
+                     constVerb.GetVerbState()
+                  );
+                  verb.SetSource(constVerb.GetSource());
+
+                  if (not ExecuteVerb(environment, verb))
+                     LANGULUS_OOPS(Flow, "Construct AND failure: ", flow);
+               });
+
+               if (constructIsMissing) {
+                  // Just propagate, if missing                         
+                  output.SmartPush(Abandon(local));
                   return;
                }
 
-               Construct local;
-               if (not Execute(construct, environment, local, skipVerbs)) {
-                  VERBOSE(Logger::Red, "Construct AND flow failed: ", flow);
-                  LANGULUS_THROW(Flow, "Construct AND failure");
-               }
-
-               // Attempt to produce the thing at compile-time          
-               Any constExpr;
-               if (local.StaticCreation(constExpr))
-                  output.SmartPush(Abandon(constExpr));
-               else {
-                  // Construction failed, so just propagate construct   
-                  // A new attempt will be made at runtime              
-                  Verbs::Create creator {&local};
-                  if (DispatchDeep<true, true, false>(environment, creator))
-                     output.SmartPush(Abandon(creator.GetOutput()));
-                  else {
-                     VERBOSE(Logger::Red, "Construct runtime creation failed in: ", flow);
-                     LANGULUS_THROW(Flow, "Construct runtime creation failure");
-                  }
-               }
+               // A construct always means an implicit Verbs::Create    
+               // Try creating it in the current environment, it should 
+               // produce everything possible, including stateless ones 
+               Verbs::Create creator {&local};
+               if (DispatchDeep<true, true, false>(environment, creator))
+                  output.SmartPush(Abandon(creator.GetOutput()));
+               else
+                  LANGULUS_OOPS(Flow, "Construct creation failure: ", flow);
             },
-            // Execute verbs                                            
             [&](const Verb& constVerb) {
+               // Execute verbs                                         
                if (skipVerbs)
                   return Flow::Break;
 
@@ -244,10 +218,8 @@ namespace Langulus::Flow
                verb.SetSource(constVerb.GetSource());
 
                // Execute the verb                                      
-               if (not ExecuteVerb(environment, verb)) {
-                  VERBOSE(Logger::Red, "Verb AND flow failed: ", flow);
-                  LANGULUS_THROW(Flow, "Verb AND failure");
-               }
+               if (not ExecuteVerb(environment, verb))
+                  LANGULUS_OOPS(Flow, "Verb AND failure: ", flow);
 
                output.SmartPush(Abandon(verb.GetOutput()));
                return Flow::Continue;
@@ -276,8 +248,8 @@ namespace Langulus::Flow
       bool localSkipVerbs {};
 
       if (flow.IsDeep()) {
-         // Nest if deep                                                
          executed = flow.ForEach([&](const Block& block) {
+            // Nest if deep                                             
             Any local;
             if (Execute(block, environment, local, localSkipVerbs)) {
                executed = true;
@@ -287,8 +259,8 @@ namespace Langulus::Flow
       }
       else {
          executed = flow.ForEach(
-            // Nest if traits, but retain each trait                    
             [&](const Trait& trait) {
+               // Nest if traits, but retain each trait                 
                if (trait.IsMissing()) {
                   // Never touch missing stuff, only propagate it       
                   output.SmartPush(trait);
@@ -301,22 +273,55 @@ namespace Langulus::Flow
                   output.SmartPush(Trait::From(trait.GetTrait(), Abandon(local)));
                }
             },
-            // Nest if constructs, but retain each construct            
             [&](const Construct& construct) {
-               if (construct.IsMissing()) {
-                  // Never touch missing stuff, only propagate it       
-                  output.SmartPush(construct);
+               // Nest if constructs, but retain each construct         
+               // Make a shallow copy of the construct, and strip all   
+               // verbs from it. Some of them might get reinserted, if  
+               // missing, but generally they will be substituted with  
+               // the corresponding results                             
+               Construct local = construct;
+               local.template RemoveData<Verb>();
+               bool constructIsMissing = false;
+
+               construct.ForEach([&](const Verb& constVerb) noexcept {
+                  if (constVerb.IsMissing()) {
+                     // Never touch missing stuff, only propagate it    
+                     local << constVerb;
+                     constructIsMissing = true;
+                     return;
+                  }
+
+                  // Execute all verbs, push their outputs to the local 
+                  // shallow-copied construct                           
+                  auto verb = Verb::FromMeta(
+                     constVerb.GetVerb(),
+                     constVerb.GetArgument(),
+                     constVerb,
+                     constVerb.GetVerbState()
+                  );
+                  verb.SetSource(constVerb.GetSource());
+
+                  if (ExecuteVerb(environment, verb))
+                     executed = true;
+               });
+
+               if (constructIsMissing) {
+                  // Just propagate, if missing                         
+                  output.SmartPush(Abandon(local));
                   return;
                }
 
-               Construct local;
-               if (Execute(construct, environment, local)) {
-                  executed = true;
-                  output << Abandon(local);
-               }
+               // A construct always means an implicit Verbs::Create    
+               // Try creating it in the current environment, it should 
+               // produce everything possible, including stateless ones 
+               Verbs::Create creator {&local};
+               if (DispatchDeep<true, true, false>(environment, creator))
+                  output.SmartPush(Abandon(creator.GetOutput()));
+               else
+                  LANGULUS_OOPS(Flow, "Construct creation failure: ", flow);
             },
-            // Execute verbs                                            
             [&](const Verb& constVerb) {
+               // Execute verbs                                         
                if (localSkipVerbs)
                   return Flow::Break;
 
@@ -355,12 +360,10 @@ namespace Langulus::Flow
          ++executed;
       }
 
-      if (executed) {
+      if (executed)
          VERBOSE(Logger::Green, "OR scope done: ", flow);
-      }
-      else {
+      else
          VERBOSE(Logger::Red, "OR scope failed: ", flow);
-      }
 
       return executed;
    }

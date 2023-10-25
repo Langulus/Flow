@@ -22,6 +22,13 @@ namespace Langulus::Anyness
    /// Attempt to create construct statically if possible                     
    /// If not possible, simply propagate the construct                        
    ///   @param output - [out] results go here                                
+   //TODO this function might be removed in the future, because its use is 
+   //questionable - statically creating constructs might take away the
+   //opportunity to create items without producer at runtime. Like, what if
+   //some module produces specific Text for example, with some stuff always appended
+   //or, like, creating an integer in the context of something that will never allow zero
+   //there results should also be probably paired with the producer that made them, so that
+   //a solver can differentiate between them, and trust ones that are relevant
    bool Construct::StaticCreation(Any& output) const {
       if (mType->mProducer)
          return false;

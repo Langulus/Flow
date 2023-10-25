@@ -24,11 +24,6 @@ namespace Langulus::Flow
    bool Execute(const Block&, Any&, Any& output, bool& skipVerbs);
 
    LANGULUS_API(FLOW)
-   bool Execute(const Neat&, Any&, Neat& output);
-   LANGULUS_API(FLOW)
-   bool Execute(const Neat&, Any&, Neat& output, bool& skipVerbs);
-
-   LANGULUS_API(FLOW)
    bool ExecuteAND(const Block&, Any&, Any& output, bool& skipVerbs);
    LANGULUS_API(FLOW)
    bool ExecuteOR(const Block&, Any&, Any& output, bool& skipVerbs);
@@ -42,10 +37,5 @@ namespace Langulus::Flow
    bool IsExecutable(const Block&) noexcept;
    NOD() LANGULUS_API(FLOW)
    bool IsExecutableDeep(const Block&) noexcept;
-
-   NOD() LANGULUS_API(FLOW)
-   bool IsExecutable(const Neat&) noexcept;
-   NOD() LANGULUS_API(FLOW)
-   bool IsExecutableDeep(const Neat&) noexcept;
 
 } // namespace Langulus::Flow

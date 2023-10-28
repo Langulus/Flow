@@ -448,23 +448,24 @@ namespace Langulus::Anyness
 
       // Attempt pointer arithmetic conversion first                    
       try { return As<T>(idx); }
-      catch (const Except::Access&) {}
+      catch (...) {}
 
-      // If this is reached, we attempt runtime conversion by           
-      // invoking descriptor constructor of T, with this container      
-      // as the set of arguments                                        
-      const auto meta = MetaOf<T>();
-      Verbs::Create creator {Flow::Construct {meta, GetElement(idx)}};
-      if (Verbs::Create::ExecuteStateless(creator)) {
-         // Success                                                     
-         return creator->As<T>();
+      // If reached, then pointer arithmetic conversion failed, and we  
+      // need more advanced conversions                                 
+      if constexpr (CT::Inner::DescriptorMakable<T>) {
+         // If this is reached, we attempt runtime conversion by        
+         // invoking descriptor constructor of T, with the desired      
+         // element, as descriptor                                      
+         try { return T {Describe(GetElement(idx))}; }
+         catch (...) {}
       }
 
       // Alternatively, we attempt runtime conversion by                
-      // dispatching Verbs::Interpret to the first element              
+      // dispatching Verbs::Interpret to the indicated element          
+      const auto meta = MetaOf<T>();
       Verbs::Interpret interpreter {meta};
       auto context = GetElementResolved(idx);
-      if (Flow::DispatchDeep(context, interpreter)) {
+      if (Flow::DispatchDeep<false>(context, interpreter)) {
          // Success                                                     
          return interpreter->As<T>();
       }
@@ -498,7 +499,7 @@ namespace Langulus::Anyness
                for (Offset i = 0; i < toscan; ++i) {
                   //TODO can be optimized-out for POD
                   try {
-                     value[scanned + i] = group.template AsCast<Deext<D>>(i);
+                     value[scanned] = group.template AsCast<Deext<D>>(i);
                      ++scanned;
                   }
                   catch (...) {}

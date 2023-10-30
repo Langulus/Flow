@@ -137,19 +137,18 @@ namespace Langulus::Flow
    /// Verb semantic-constructor                                              
    ///   @param other - the verb/argument and semantic to construct with      
    LANGULUS(INLINED)
-   Verb::Verb(CT::Semantic auto&& other)
-      : Any {CT::VerbBased<TypeOf<Decay<decltype(other)>>>
-         ? Any {other.template Forward<Any>()}
-         : Any {other.Forward()}
-      } {
+   Verb::Verb(CT::Semantic auto&& other) {
       using S = Decay<decltype(other)>;
+
       if constexpr (CT::VerbBased<TypeOf<S>>) {
+         Any::operator = (other.template Forward<Any>());
          Charge::operator = (*other);
          mVerb = other->mVerb;
          mState = other->mState;
          mSource = S::Nest(other->mSource);
          mOutput = S::Nest(other->mOutput);
       }
+      else Any::operator = (other.Forward());
    }
 
    /// Verb list-of-arguments constructor                                     

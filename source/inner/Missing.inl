@@ -231,7 +231,7 @@ namespace Langulus::Flow::Inner
             try {
                result << Construct {
                   construct.GetType(), 
-                  Link(construct.MakeMessy(), environment, consumedPast) //TODO MakeMessy is slow, probably a specialized Link would be better
+                  Link(construct.GetDescriptor().MakeMessy(), environment, consumedPast) //TODO MakeMessy is slow, probably a specialized Link would be better
                };
             }
             catch (const Except::Link&) {

@@ -253,7 +253,7 @@ namespace Langulus::Flow
          },
          [&](const Construct& subscope) {
             // Collapse constructs                                      
-            auto collapsed = Collapse(subscope.MakeMessy()); //TODO MakeMessy is slow, probably a specialized Collapse would be better
+            auto collapsed = Collapse(subscope.GetDescriptor().MakeMessy()); //TODO MakeMessy is slow, probably a specialized Collapse would be better
             if (collapsed) {
                result << Construct {
                   subscope.GetType(),
@@ -335,7 +335,7 @@ namespace Langulus::Flow
             // Compile constructs                                       
             result << Construct {
                subscope.GetType(),
-               Compile(subscope.MakeMessy(), priority), //TODO MakeMessy is slow, probably a specialized Compile would be better
+               Compile(subscope.GetDescriptor().MakeMessy(), priority), //TODO MakeMessy is slow, probably a specialized Compile would be better
                subscope.GetCharge()
             };
          },
@@ -411,7 +411,7 @@ namespace Langulus::Flow
             return not (stack.IsOr() and atLeastOneSuccess);
          },
          [&](Construct& substack) {
-            atLeastOneSuccess |= Link(scope, substack);
+            atLeastOneSuccess |= Link(scope, substack.GetDescriptor());
             // Continue linking only if the stack is branched           
             return not (stack.IsOr() and atLeastOneSuccess);
          },

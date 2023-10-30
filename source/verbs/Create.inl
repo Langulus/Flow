@@ -77,7 +77,7 @@ namespace Langulus::Verbs
             // add and reflect the Verbs::Create in the producer        
             return;
          }
-         else if (construct.IsMissingDeep()) {
+         else if (construct.GetDescriptor().IsMissingDeep()) {
             // Creation of missing stuff is not allowed                 
             return;
          }
@@ -90,7 +90,7 @@ namespace Langulus::Verbs
             // First allocate and default-initialize the results        
             auto created = Any::FromMeta(construct.GetType());
             created.New(Count(construct.GetCharge().mMass));
-            auto& arguments = construct.GetArgument();
+            auto& arguments = construct.GetDescriptor();
 
             // Then forward the constructors to each element            
             if (arguments) {
@@ -130,7 +130,7 @@ namespace Langulus::Verbs
          return false;
 
       const auto createInner = [&](const Construct& descriptor) {
-         if (descriptor.IsMissingDeep()) {
+         if (descriptor.GetDescriptor().IsMissingDeep()) {
             // Creation of missing stuff is not allowed                 
             return;
          }
@@ -140,7 +140,7 @@ namespace Langulus::Verbs
          const auto count = static_cast<Count>(descriptor.GetCharge().mMass * verb.GetMass());
          auto result = Any::FromMeta(type);
 
-         if (type->mDescriptorConstructor and descriptor) {
+         if (type->mDescriptorConstructor and descriptor.GetDescriptor()) {
             for (Offset i = 0; i < count; ++i) {
                if (count != 1) {
                   VERBOSE_CREATION(Logger::Yellow,
@@ -150,7 +150,7 @@ namespace Langulus::Verbs
                }
 
                try {
-                  result.Emplace(descriptor.GetArgument());
+                  result.Emplace(descriptor.GetDescriptor());
                }
                catch (...) {
                   ERROR_CREATION("Can't statelessly produce ", descriptor);
@@ -158,7 +158,7 @@ namespace Langulus::Verbs
                }
             }
          }
-         else if (type->mDefaultConstructor and not descriptor) {
+         else if (type->mDefaultConstructor and not descriptor.GetDescriptor()) {
             for (Offset i = 0; i < count; ++i) {
                if (count != 1) {
                   VERBOSE_CREATION(Logger::Yellow,

@@ -38,7 +38,7 @@ namespace Langulus::Flow
          [&executable](const Construct& construct) noexcept {
             // Scan deeper into constructs, because they're not deep    
             // They are deep only with respect to execution             
-            construct.ForEach([&executable](const Verb&) noexcept {
+            construct.GetDescriptor().ForEach([&executable](const Verb&) noexcept {
                // Counts as executable if containing at least one verb  
                executable = true;
                return false;
@@ -155,10 +155,10 @@ namespace Langulus::Flow
                // missing, but generally they will be substituted with  
                // the corresponding results                             
                Construct local = construct;
-               local.template RemoveData<Verb>();
+               local.GetDescriptor().template RemoveData<Verb>();
                bool constructIsMissing = false;
 
-               construct.ForEach([&](const Verb& constVerb) noexcept {
+               construct.GetDescriptor().ForEach([&](const Verb& constVerb) noexcept {
                   if (constVerb.IsMissing()) {
                      // Never touch missing stuff, only propagate it    
                      local << constVerb;
@@ -280,10 +280,10 @@ namespace Langulus::Flow
                // missing, but generally they will be substituted with  
                // the corresponding results                             
                Construct local = construct;
-               local.template RemoveData<Verb>();
+               local.GetDescriptor().template RemoveData<Verb>();
                bool constructIsMissing = false;
 
-               construct.ForEach([&](const Verb& constVerb) noexcept {
+               construct.GetDescriptor().ForEach([&](const Verb& constVerb) noexcept {
                   if (constVerb.IsMissing()) {
                      // Never touch missing stuff, only propagate it    
                      local << constVerb;

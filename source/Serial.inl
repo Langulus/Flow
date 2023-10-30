@@ -603,7 +603,7 @@ namespace Langulus::Anyness
       T to;
       to += GetType();
       to += GetCharge().operator Debug();
-      to += GetArgument().template SerializeAs<T>();
+      to += GetDescriptor().template SerializeAs<T>();
       return to;
    }
 

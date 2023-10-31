@@ -10,14 +10,14 @@ if(PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
     include(LangulusUtilities.cmake)
 
     # Add Langulus::Core/Logger/RTTI/SIMD/Fractalloc/Anyness libraries      
-	fetch_langulus_module(Core    GIT_TAG d52feac3e995e3eeac44fadd7812361919b73a11)
+	fetch_langulus_module(Core    GIT_TAG d22b2ae2bae11deec5ec20e6baed4839fbf95aaa)
 	fetch_langulus_module(Logger  GIT_TAG 3314fbe3bf5611a5bd9ee649f2a6ba5c43f6b4c4)
-	fetch_langulus_module(RTTI    GIT_TAG 8c735514612820f76da494421baccaaea0d4d5e1)
+	fetch_langulus_module(RTTI    GIT_TAG b09fd3fbcea315c056b456ba49b582b3bdbdc1ea)
     if(LANGULUS_FEATURE_MANAGED_MEMORY)
         fetch_langulus_module(Fractalloc GIT_TAG 0126c1750d9101ab29227a735d2a7a06da672e02)
     endif()
 	fetch_langulus_module(SIMD    GIT_TAG 4aadc7d243c10a09e8095bf502909931b6ec6122)
-	fetch_langulus_module(Anyness GIT_TAG 2922d043c686826d39e710ab7be5358b47c1f66f)
+	fetch_langulus_module(Anyness GIT_TAG e18ccf59a00ab10409ad3a8f96c4c6b3471d4083)
 endif()
 
 # Build and install Flow library                                            
@@ -33,12 +33,11 @@ add_library(LangulusFlow ${LANGULUS_LIBRARY_TYPE}
     source/Verb.cpp
 )
 
-target_include_directories(LangulusFlow
-    PUBLIC      include
-                $<TARGET_PROPERTY:LangulusLogger,INTERFACE_INCLUDE_DIRECTORIES>
-                $<TARGET_PROPERTY:LangulusRTTI,INTERFACE_INCLUDE_DIRECTORIES>
-                $<$<BOOL:${LANGULUS_FEATURE_MANAGED_MEMORY}>:$<TARGET_PROPERTY:LangulusFractalloc,INTERFACE_INCLUDE_DIRECTORIES>>
-                $<TARGET_PROPERTY:LangulusAnyness,INTERFACE_INCLUDE_DIRECTORIES>
+target_include_directories(LangulusFlow PUBLIC include
+    $<TARGET_PROPERTY:LangulusLogger,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:LangulusRTTI,INTERFACE_INCLUDE_DIRECTORIES>
+    $<$<BOOL:${LANGULUS_FEATURE_MANAGED_MEMORY}>:$<TARGET_PROPERTY:LangulusFractalloc,INTERFACE_INCLUDE_DIRECTORIES>>
+    $<TARGET_PROPERTY:LangulusAnyness,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(LangulusFlow

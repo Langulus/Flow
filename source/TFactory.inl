@@ -230,7 +230,7 @@ namespace Langulus::Flow
                ::std::floor(construct.GetCharge().mMass * verb.GetMass())
             );
 
-            try { CreateInner(verb, count, construct); }
+            try { CreateInner(verb, count, construct.GetDescriptor()); }
             catch (const Exception& e) {
                Logger::Error("Unable to create `",
                   construct, "` due to exception: ", e);

@@ -105,7 +105,7 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) bool Push(Any);
 
       LANGULUS_API(FLOW) void Reset();
-      LANGULUS_API(FLOW) void Update(Time);
+      LANGULUS_API(FLOW) bool Update(Time);
 
       LANGULUS_API(FLOW) void Dump() const;
    };

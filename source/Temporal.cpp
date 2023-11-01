@@ -78,7 +78,8 @@ namespace Langulus::Flow
 
    /// Advance the flow - moves time forward, executes stacks                 
    ///   @param dt - delta time                                               
-   void Temporal::Update(Time dt) {
+   ///   @return true if no exit was requested                                
+   bool Temporal::Update(Time dt) {
       if (not mCurrentTime) {
          // If we're at the beginning of time - prepare for execution   
          auto collapsed = Collapse(mPriorityStack);
@@ -102,7 +103,7 @@ namespace Langulus::Flow
 
       if (not dt) {
          // Avoid updating anything else, if no time had passed         
-         return;
+         return true;
       }
 
       // Advance the global cycler for the flow                         
@@ -135,6 +136,8 @@ namespace Langulus::Flow
          // It might have periodic flows inside                         
          pair.mValue->Update(dt);
       }
+
+      return true;
    }
 
    /// Merge a flow                                                           

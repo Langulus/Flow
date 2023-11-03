@@ -83,7 +83,7 @@ namespace Langulus::Verbs
 
       // Scan verb argument for elements interpretable as the context   
       // Consider the hierarchy                                         
-      verb.ForEach([&](const Block& group) {
+      verb.ForEach([&](const Block&) {
          TODO(); //compare
       });
 

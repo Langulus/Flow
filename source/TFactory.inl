@@ -153,7 +153,7 @@ namespace Langulus::Flow
       }
 
       // Make sure no more destructors are called upon Any::Reset()     
-      mData.mCount = 0;
+      static_cast<Block&>(mData).mCount = 0;
       mData.Reset();
       mReusable = nullptr;
       mCount = 0;
@@ -406,36 +406,6 @@ namespace Langulus::Flow
    ///   @return an iterator to the first element, or end if empty            
    TEMPLATE() LANGULUS(INLINED)
    typename FACTORY()::Iterator FACTORY()::begin() noexcept {
-      static_assert(sizeof(Iterator) == sizeof(ConstIterator),
-         "Size mismatch - types must be binary-compatible");
-      const auto constant = const_cast<const FACTORY()*>(this)->begin();
-      return reinterpret_cast<const Iterator&>(constant);
-   }
-
-   /// Get iterator to end                                                    
-   ///   @return an iterator to the end element                               
-   TEMPLATE() LANGULUS(INLINED)
-   typename FACTORY()::Iterator FACTORY()::end() noexcept {
-      static_assert(sizeof(Iterator) == sizeof(ConstIterator),
-         "Size mismatch - types must be binary-compatible");
-      const auto constant = const_cast<const FACTORY()*>(this)->end();
-      return reinterpret_cast<const Iterator&>(constant);
-   }
-
-   /// Get iterator to the last element                                       
-   ///   @return an iterator to the last element, or end if empty             
-   TEMPLATE() LANGULUS(INLINED)
-   typename FACTORY()::Iterator FACTORY()::last() noexcept {
-      static_assert(sizeof(Iterator) == sizeof(ConstIterator),
-         "Size mismatch - types must be binary-compatible");
-      const auto constant = const_cast<const FACTORY()*>(this)->last();
-      return reinterpret_cast<const Iterator&>(constant);
-   }
-
-   /// Get iterator to first element                                          
-   ///   @return a constant iterator to the first element, or end if empty    
-   TEMPLATE() LANGULUS(INLINED)
-   typename FACTORY()::ConstIterator FACTORY()::begin() const noexcept {
       if (IsEmpty())
          return end();
 
@@ -448,18 +418,28 @@ namespace Langulus::Flow
       return {raw, rawEnd};
    }
 
-   /// Get iterator to end                                                    
-   ///   @return a constant iterator to the end element                       
    TEMPLATE() LANGULUS(INLINED)
-   typename FACTORY()::ConstIterator FACTORY()::end() const noexcept {
+   typename FACTORY()::ConstIterator FACTORY()::begin() const noexcept {
+      return const_cast<FACTORY()*>(this)->begin();
+   }
+
+   /// Get iterator to end                                                    
+   ///   @return an iterator to the end element                               
+   TEMPLATE() LANGULUS(INLINED)
+   typename FACTORY()::Iterator FACTORY()::end() noexcept {
       const auto ender = mData.GetRawEnd();
       return {ender, ender};
    }
 
-   /// Get iterator to the last valid element                                 
-   ///   @return a constant iterator to the last element, or end if empty     
    TEMPLATE() LANGULUS(INLINED)
-   typename FACTORY()::ConstIterator FACTORY()::last() const noexcept {
+   typename FACTORY()::ConstIterator FACTORY()::end() const noexcept {
+      return const_cast<FACTORY()*>(this)->end();
+   }
+
+   /// Get iterator to the last element                                       
+   ///   @return an iterator to the last element, or end if empty             
+   TEMPLATE() LANGULUS(INLINED)
+   typename FACTORY()::Iterator FACTORY()::last() noexcept {
       if (IsEmpty())
          return end();
 
@@ -470,6 +450,11 @@ namespace Langulus::Flow
          --raw;
 
       return {raw != rawEnd ? raw : mData.GetRawEnd()};
+   }
+
+   TEMPLATE() LANGULUS(INLINED)
+   typename FACTORY()::ConstIterator FACTORY()::last() const noexcept {
+      return const_cast<FACTORY()*>(this)->last();
    }
 
    

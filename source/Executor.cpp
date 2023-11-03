@@ -360,10 +360,12 @@ namespace Langulus::Flow
          ++executed;
       }
 
-      if (executed)
+      if (executed) {
          VERBOSE(Logger::Green, "OR scope done: ", flow);
-      else
+      }
+      else {
          VERBOSE(Logger::Red, "OR scope failed: ", flow);
+      }
 
       return executed;
    }

@@ -504,7 +504,7 @@ namespace Langulus::Anyness
             }
          }
       
-         if (IsDefaultable()) {
+         if (mType->mDefaultConstructor) {
             // Type is statically creatable, and has default constructor
             // therefore we can serialize it by serializing each        
             // reflected base and member                                
@@ -808,7 +808,7 @@ namespace Langulus::Anyness
          }
       }
 
-      if (to.IsDefaultable()) {
+      if (to.mType->mDefaultConstructor) {
          // Type is statically producible, and has default constructor, 
          // therefore we can deserialize it by making a default copy    
          // and then filling in the reflected members and bases         
@@ -832,7 +832,7 @@ namespace Langulus::Anyness
 
             // Deserialize all reflected bases                          
             for (auto& base : element.GetType()->mBases) {
-               if (base.mImposed || base.mType->mIsAbstract)
+               if (base.mImposed or base.mType->mIsAbstract)
                   continue;
 
                auto baseBlock = element.GetBaseMemory(base);

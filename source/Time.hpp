@@ -70,7 +70,7 @@ namespace Langulus
       constexpr explicit operator bool() const noexcept;
 
       template<CT::DenseBuiltinNumber T = Real>
-      NOD() Real Seconds() const noexcept;
+      NOD() T Seconds() const noexcept;
    };
 
 

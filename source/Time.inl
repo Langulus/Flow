@@ -66,12 +66,11 @@ namespace Langulus
    }
 
    /// Get time duration in seconds, represented by type T                    
-   /// Will return a fraction, if T is a real number                          
    template<CT::DenseBuiltinNumber T>
    LANGULUS(INLINED)
-   Real Time::Seconds() const noexcept {
+   T Time::Seconds() const noexcept {
       auto& asBase = static_cast<const Base&>(*this);
-      return std::chrono::duration<T, std::chrono::seconds> {asBase}.count();
+      return std::chrono::duration<T>(asBase).count();
    }
 
    /// Get current time point                                                 

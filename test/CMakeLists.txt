@@ -15,5 +15,3 @@ add_test(
 	NAME		LangulusFlowTest
 	COMMAND		LangulusFlowTest
 )
-
-langulus_copy_dlls(LangulusFlowTest ON LangulusFlowTest)

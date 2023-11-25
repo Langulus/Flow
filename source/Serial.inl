@@ -516,7 +516,7 @@ namespace Langulus::Anyness
                // Serialize all reflected bases                         
                for (auto& base : element.GetType()->mBases) {
                   // Imposed bases are never serialized                 
-                  if (base.mImposed or base.mType->mIsAbstract)
+                  if (base.mImposed or base.GetType()->mIsAbstract)
                      continue;
 
                   const auto baseBlock = element.GetBaseMemory(base);
@@ -832,7 +832,7 @@ namespace Langulus::Anyness
 
             // Deserialize all reflected bases                          
             for (auto& base : element.GetType()->mBases) {
-               if (base.mImposed or base.mType->mIsAbstract)
+               if (base.mImposed or base.GetType()->mIsAbstract)
                   continue;
 
                auto baseBlock = element.GetBaseMemory(base);

@@ -683,7 +683,7 @@ namespace Langulus::Flow
             lhs.SmartPush(Trait {Move(rhs)});
          }
          else {
-            if (not rhs and not meta->mProducer and meta->mDefaultConstructor) {
+            if (not rhs and not meta->mProducerRetriever and meta->mDefaultConstructor) {
                // Invoke default-construction                           
                Any constExpr;
                constExpr.SetType(meta);

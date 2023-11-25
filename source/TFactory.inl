@@ -44,6 +44,9 @@ namespace Langulus::Flow
       : mDescriptor {neat}
       , mProducer {producer} {
       LANGULUS_ASSUME(DevAssumes, producer, "Invalid producer");
+      // Remove parents, as they're ignored on hashing and comparison   
+      // - they can create circular dependencies, that we best avoid    
+      mDescriptor.RemoveTrait<Traits::Parent, true>();
    }
 
    /// Get the normalized descriptor of the produced item                     
@@ -232,8 +235,11 @@ namespace Langulus::Flow
 
             try { CreateInner(verb, count, construct.GetDescriptor()); }
             catch (const Exception& e) {
-               Logger::Error("Unable to create `",
-                  construct, "` due to exception: ", e);
+               Logger::Error(
+                  "Unable to ", MetaOf<FACTORY()>(), "::Create `", Logger::Push,
+                  Logger::DarkYellow, construct.GetType(), Logger::Pop, '`'
+               );
+               Logger::Error("Due to exception: ", e);
                return;
             }
          },
@@ -248,8 +254,11 @@ namespace Langulus::Flow
 
             try { CreateInner(verb, count); }
             catch (const Exception& e) {
-               Logger::Error("Unable to create `",
-                  type, "` due to exception: ", e);
+               Logger::Error(
+                  "Unable to ", MetaOf<FACTORY()>(), "::Create `", Logger::Push,
+                  Logger::DarkYellow, type, Logger::Pop, '`'
+               );
+               Logger::Error("Due to exception: ", e);
                return;
             }
          }

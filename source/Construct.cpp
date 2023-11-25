@@ -30,7 +30,7 @@ namespace Langulus::Anyness
    //there results should also be probably paired with the producer that made them, so that
    //a solver can differentiate between them, and trust ones that are relevant
    bool Construct::StaticCreation(Any& output) const {
-      if (mType->mProducer)
+      if (mType->mProducerRetriever)
          return false;
 
       // If reached, data doesn't rely on a producer                    

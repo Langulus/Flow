@@ -46,8 +46,8 @@ namespace Langulus::Verbs
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb has been satisfied                              
-   template<CT::Dense T>
-   bool Do::ExecuteIn(T& context, Verb& verb) {
+   bool Do::ExecuteIn(CT::Dense auto& context, Verb& verb) {
+      using T = Deref<decltype(context)>;
       static_assert(Do::AvailableFor<T>(),
          "Verb is not available for this context, this shouldn't be reached by flow");
       context.Do(verb);
@@ -86,13 +86,34 @@ namespace Langulus::Verbs
 
 namespace Langulus::Flow
 {
+   namespace Inner
+   {
+      /// Helper function that checks if statically reflected base is valid   
+      template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class BASE>
+      LANGULUS(INLINED)
+      Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb) {
+         using T = Deref<decltype(context)>;
+         if constexpr (CT::Void<BASE> or CT::Same<T, BASE>)
+            return 0;
+         else {
+            if constexpr (CT::Constant<T>) {
+               return Execute<DISPATCH, DEFAULT, FALLBACK>(
+                  static_cast<const BASE&>(context), verb);
+            }
+            else {
+               return Execute<DISPATCH, DEFAULT, FALLBACK>(
+                  static_cast<BASE&>(context), verb);
+            }
+         }
+      }
+   }
 
-   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::VerbBased V, CT::Data... BASES>
-   Count ExecuteInBases(T& context, V& verb, TTypeList<BASES...>) {
-      if constexpr (CT::Constant<T>)
-         return (Execute<DISPATCH, DEFAULT, FALLBACK>(static_cast<const BASES&>(context), verb) or ...);
-      else 
-         return (Execute<DISPATCH, DEFAULT, FALLBACK>(static_cast<BASES&>(context), verb) or ...);
+   /// Attempt casting context to any of its statically reflected bases, and  
+   /// execute verb there                                                     
+   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class... BASES>
+   LANGULUS(INLINED)
+   Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb, TTypeList<BASES...>) {
+      return (Inner::ExecuteInBases<DISPATCH, DEFAULT, FALLBACK, BASES>(context, verb) or ...);
    }
 
    /// Invoke a single verb on a single context                               
@@ -108,8 +129,10 @@ namespace Langulus::Flow
    ///   @param context - the context in which to execute in                  
    ///   @param verb - the verb to execute                                    
    ///   @return the number of successful executions                          
-   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::VerbBased V>
-   Count Execute(T& context, V& verb) {
+   template<bool DISPATCH, bool DEFAULT, bool FALLBACK>
+   Count Execute(CT::Data auto& context, CT::VerbBased auto& verb) {
+      using T = Deref<decltype(context)>;
+
       // Always reset verb progress prior to execution                  
       verb.Undo();
 
@@ -164,8 +187,8 @@ namespace Langulus::Flow
    ///   @param context - the context in which to dispatch the verb           
    ///   @param verb - the verb to send over                                  
    ///   @return the number of successful executions                          
-   template<bool RESOLVE, bool DISPATCH, bool DEFAULT, CT::Deep T, CT::VerbBased V>
-   Count DispatchFlat(T& context, V& verb) {
+   template<bool RESOLVE, bool DISPATCH, bool DEFAULT>
+   Count DispatchFlat(CT::Deep auto& context, CT::VerbBased auto& verb) {
       if (not context or verb.IsMonocast()) {
          if (context.IsInvalid()) {
             // Context is empty and doesn't have any relevant states,   
@@ -251,8 +274,10 @@ namespace Langulus::Flow
    ///   @param context - the context in which scope will be dispatched to    
    ///   @param verb - the verb to execute                                    
    ///   @return the number of successful executions                          
-   template<bool RESOLVE, bool DISPATCH, bool DEFAULT, CT::Deep T, CT::VerbBased V>
-   Count DispatchDeep(T& context, V& verb) {
+   template<bool RESOLVE, bool DISPATCH, bool DEFAULT>
+   Count DispatchDeep(CT::Deep auto& context, CT::VerbBased auto& verb) {
+      using T = Deref<decltype(context)>;
+
       if (not context or verb.IsMonocast()) {
          if (context.IsInvalid()) {
             // Context is empty and doesn't have any relevant states,   

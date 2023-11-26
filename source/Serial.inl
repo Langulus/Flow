@@ -968,7 +968,7 @@ namespace Langulus::Flow::Serial
 
       // First we serialize all bases' members                          
       for (auto& base : from.GetType()->mBases) {
-         if (base.mType->mSize > 0) {
+         if (base.GetType()->mSize > 0) {
             if (separate) {
                to += Verbs::Conjunct::CTTI_PositiveOperator;
                separate = false;
@@ -976,7 +976,7 @@ namespace Langulus::Flow::Serial
 
             const auto initial = to.GetCount();
             SerializeMembers<TO, TO_ORIGINAL>(
-               from.GetBaseMemory(base.mType, base), to
+               from.GetBaseMemory(base.GetType(), base), to
             );
 
             if (initial < to.GetCount())

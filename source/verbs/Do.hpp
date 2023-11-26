@@ -30,9 +30,7 @@ namespace Langulus::Verbs
       template<CT::Dense T, CT::Data... A>
       static constexpr auto Of() noexcept;
 
-      template<CT::Dense T>
-      static bool ExecuteIn(T&, Verb&);
-
+      static bool ExecuteIn(CT::Dense auto&, Verb&);
       static bool ExecuteDefault(const Block&, Verb&);
       static bool ExecuteDefault(Block&, Verb&);
       static bool ExecuteStateless(Verb&);
@@ -42,16 +40,22 @@ namespace Langulus::Verbs
 namespace Langulus::Flow
 {
 
-   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::VerbBased V>
-   Count Execute(T& context, V& verb);
+   template<bool DISPATCH, bool DEFAULT, bool FALLBACK>
+   Count Execute(CT::Data auto& context, CT::VerbBased auto& verb);
 
-   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::Data T, CT::VerbBased V, CT::Data... BASES>
-   Count ExecuteInBases(T& context, V& verb, TTypeList<BASES...>);
+   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class... BASES>
+   Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb, TTypeList<BASES...>);
 
-   template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::VerbBased V>
-   Count DispatchFlat(T& context, V& verb);
+   namespace Inner
+   {
+      template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class BASE>
+      Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb);
+   }
 
-   template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true, CT::Deep T, CT::VerbBased V>
-   Count DispatchDeep(T& context, V& verb);
+   template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true>
+   Count DispatchFlat(CT::Deep auto& context, CT::VerbBased auto& verb);
+
+   template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true>
+   Count DispatchDeep(CT::Deep auto& context, CT::VerbBased auto& verb);
 
 }

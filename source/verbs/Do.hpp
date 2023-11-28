@@ -44,7 +44,7 @@ namespace Langulus::Flow
    Count Execute(CT::Data auto& context, CT::VerbBased auto& verb);
 
    template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class... BASES>
-   Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb, TTypeList<BASES...>);
+   Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb, Types<BASES...>);
 
    namespace Inner
    {

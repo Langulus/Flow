@@ -93,17 +93,14 @@ namespace Langulus::Flow
       LANGULUS(INLINED)
       Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb) {
          using T = Deref<decltype(context)>;
-         if constexpr (CT::Void<BASE> or CT::Same<T, BASE>)
-            return 0;
+
+         if constexpr (CT::Constant<T>) {
+            return Execute<DISPATCH, DEFAULT, FALLBACK>(
+               static_cast<const BASE&>(context), verb);
+         }
          else {
-            if constexpr (CT::Constant<T>) {
-               return Execute<DISPATCH, DEFAULT, FALLBACK>(
-                  static_cast<const BASE&>(context), verb);
-            }
-            else {
-               return Execute<DISPATCH, DEFAULT, FALLBACK>(
-                  static_cast<BASE&>(context), verb);
-            }
+            return Execute<DISPATCH, DEFAULT, FALLBACK>(
+               static_cast<BASE&>(context), verb);
          }
       }
    }
@@ -112,8 +109,11 @@ namespace Langulus::Flow
    /// execute verb there                                                     
    template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class... BASES>
    LANGULUS(INLINED)
-   Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb, TTypeList<BASES...>) {
-      return (Inner::ExecuteInBases<DISPATCH, DEFAULT, FALLBACK, BASES>(context, verb) or ...);
+   Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb, Types<BASES...>) {
+      if constexpr (Types<BASES...>::Empty)
+         return 0;
+      else
+         return (Inner::ExecuteInBases<DISPATCH, DEFAULT, FALLBACK, BASES>(context, verb) or ...);
    }
 
    /// Invoke a single verb on a single context                               
@@ -157,7 +157,8 @@ namespace Langulus::Flow
             if (not verb.IsDone()) {
                // Context has no abilities, or they failed, so try      
                // with all bases' abilities                             
-               ExecuteInBases<true, false, FALLBACK>(context, verb, typename T::CTTI_Bases {});
+               ExecuteInBases<true, false, FALLBACK>(
+                  context, verb, typename T::CTTI_Bases {});
             }
          }
 

@@ -11,7 +11,7 @@
 
 #define DELEGATION_VERBOSE(a) pcLogSelfVerbose << a
 
-LANGULUS_RTTI_BOUNDARY("MAIN")
+LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
 
 
 namespace Langulus::Flow

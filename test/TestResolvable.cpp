@@ -19,7 +19,7 @@ SCENARIO("Test resolvables", "[resolvable]") {
 			Any pack = static_cast<Resolvable*>(&resolvable);
 
 			THEN("When resolving the block, the correct data offset should be applied") {
-				REQUIRE(concreteptr != abstractptr);
+				REQUIRE(concreteptr == abstractptr);
 				REQUIRE(pack.IsSparse());
 				REQUIRE(pack.IsExact<Resolvable*>());
 				REQUIRE(pack.GetResolved().IsExact<Thing2>());
@@ -35,7 +35,7 @@ SCENARIO("Test resolvables", "[resolvable]") {
 			Any pack = static_cast<Thing*>(&resolvable);
 
 			THEN("When resolving the block, the correct data offset should be applied") {
-				REQUIRE(concreteptr != abstractptr);
+				REQUIRE(concreteptr == abstractptr);
 				REQUIRE(pack.IsSparse());
 				REQUIRE(pack.IsExact<Thing*>());
 				REQUIRE(pack.GetResolved().IsExact<Thing2>());

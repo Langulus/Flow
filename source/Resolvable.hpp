@@ -36,6 +36,7 @@ namespace Langulus::Flow
       Resolvable(const Resolvable&) noexcept = default;
       Resolvable(Resolvable&&) noexcept = default;
       Resolvable(DMeta) IF_UNSAFE(noexcept);
+      ~Resolvable() override = default;
 
       Resolvable& operator = (const Resolvable&) noexcept = default;
       Resolvable& operator = (Resolvable&&) noexcept = default;

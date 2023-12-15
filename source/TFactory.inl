@@ -243,7 +243,7 @@ namespace Langulus::Flow
                return;
             }
          },
-         [&](const MetaData* type) {
+         [&](const DMeta& type) {
             // For each type...                                         
             if (not type or not MetaOf<T>()->CastsTo(type))
                return;
@@ -341,7 +341,7 @@ namespace Langulus::Flow
 
             TODO();
          },
-         [&](const MetaData* type) {
+         [&](const DMeta& type) {
             // For each type...                                         
             if (not type or not MetaOf<T>()->CastsTo(type))
                return;

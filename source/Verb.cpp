@@ -117,8 +117,7 @@ namespace Langulus::Flow
    ///   @return the token as a literal                                       
    Token Verb::GetToken() const {
       if (not mVerb)
-         return MetaVerb::DefaultToken;
-
+         return RTTI::MetaVerb::DefaultToken;
       return mMass < 0 ? mVerb->mTokenReverse : mVerb->mToken;
    }
 

@@ -335,37 +335,19 @@ namespace Langulus::Flow
 } // namespace Langulus::Flow
 
 
-namespace Langulus
+namespace Langulus::CT
 {
-   namespace CT
-   {
 
-      /// A VerbBased type is any type that inherits (or is) Verb, and is     
-      /// binary compatible to a Verb                                         
-      template<class... T>
-      concept VerbBased = ((DerivedFrom<T, Flow::Verb>
-            and sizeof(T) == sizeof(Flow::Verb)
-         ) and ...);
+   /// A VerbBased type is any type that inherits (or is) Verb, and is        
+   /// binary compatible to a Verb                                            
+   template<class... T>
+   concept VerbBased = ((DerivedFrom<T, Flow::Verb>
+         and sizeof(T) == sizeof(Flow::Verb)
+      ) and ...);
 
-      /// A reflected verb type is any type that inherits Verb, is not Verb   
-      /// itself, and is binary compatible to a Verb                          
-      template<class... T>
-      concept Verb = VerbBased<T...> and ((not Same<T, Flow::Verb>) and ...);
+   /// A reflected verb type is any type that inherits Verb, is not Verb      
+   /// itself, and is binary compatible to a Verb                             
+   template<class... T>
+   concept Verb = VerbBased<T...> and ((not Same<T, Flow::Verb>) and ...);
 
-   } // namespace Langulus::CT
-
-
-   /// Get the meta of some stuff, just for convenience                       
-   ///   @tparam T - type to get meta definition of                           
-   ///   @return the meta definition of the provided stuff                    
-   template<class T>
-   NOD() auto MetaOf() {
-      if constexpr (CT::Trait<T>)
-         return T::GetTrait();
-      else if constexpr (CT::Verb<T>)
-         return T::GetVerb();
-      else
-         return RTTI::MetaData::Of<T>();
-   }
-
-} // namespace Langulus
+} // namespace Langulus::CT

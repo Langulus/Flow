@@ -349,6 +349,7 @@ namespace Langulus::Flow
       const auto dmeta = RTTI::GetMetaData(keyword);
       const auto tmeta = RTTI::GetMetaTrait(keyword);
       const auto cmeta = RTTI::GetMetaConstant(keyword);
+
       if (dmeta and not tmeta and not cmeta) {
          // Exact non-ambiguous data definition found                   
          if (allowCharge) {
@@ -381,32 +382,30 @@ namespace Langulus::Flow
             PRETTY_ERROR("Disambiguation of `", keyword, "` failed");
          }
 
-         switch (meta->GetMetaType()) {
-         case RTTI::Meta::Data:
+         const auto dmeta = meta.As<DMeta>();
+         const auto tmeta = meta.As<TMeta>();
+         const auto cmeta = meta.As<CMeta>();
+
+         if (dmeta) {
             if (allowCharge) {
                const auto relevant = input.RightOf(progress);
                if (ChargeParser::Peek(relevant) != NoOperator) {
                   // Parse charge for the keyword                       
                   Charge charge;
                   progress += ChargeParser::Parse(relevant, charge);
-                  lhs << Construct {static_cast<DMeta>(meta), {}, charge};
+                  lhs << Construct {dmeta, {}, charge};
                }
-               else lhs << static_cast<DMeta>(meta);
+               else lhs << dmeta;
             }
-            else lhs << static_cast<DMeta>(meta);
-            break;
-
-         case RTTI::Meta::Trait:
-            lhs << static_cast<TMeta>(meta);
-            break;
-            
-         case RTTI::Meta::Constant: {
-            const Block constant {{}, static_cast<CMeta>(meta)};
-            lhs.SmartPush(Clone(constant));
-            break;
+            else lhs << dmeta;
          }
-         default:
-            PRETTY_ERROR("Unhandled meta type");
+
+         if (tmeta)
+            lhs << tmeta;
+
+         if (cmeta) {
+            const Block constant {{}, cmeta};
+            lhs.SmartPush(Clone(constant));
          }
       }
 
@@ -425,7 +424,7 @@ namespace Langulus::Flow
    ///   @param input - the input code (used only for debugging)              
    ///   @param keyword - the keyword we'll be disambiguating                 
    ///   @return the disambiguated definition                                 
-   const RTTI::Meta* Code::KeywordParser::Disambiguate(
+   AMeta Code::KeywordParser::Disambiguate(
       const Offset progress, const Code& input, const Token& keyword
    ) {
       try

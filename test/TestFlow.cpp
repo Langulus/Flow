@@ -301,12 +301,12 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    GIVEN("The script: Create!-1(Verb(?(Number,DMeta,Construct), ??(Number,DMeta,Construct)))") {
       Any a1 {pastMissing};
       a1 << MetaOf<A::Number>()
-         << MetaOf<MetaData>()
+         << MetaOf<DMeta>()
          << MetaOf<Construct>();
 
       Any a2 {futureMissing};
       a2 << MetaOf<A::Number>()
-         << MetaOf<MetaData>()
+         << MetaOf<DMeta>()
          << MetaOf<Construct>();
 
       const Code code = "Create!-1(Verb(?(Number,DMeta,Construct), ??(Number,DMeta,Construct)))";

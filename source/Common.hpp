@@ -29,10 +29,7 @@ namespace Langulus::Flow
    using RTTI::TMeta;
    using RTTI::DMeta;
    using RTTI::CMeta;
-   using RTTI::MetaData;
-   using RTTI::MetaVerb;
-   using RTTI::MetaTrait;
-   using RTTI::MetaConst;
+   using RTTI::AMeta;
 
 
    ///                                                                        

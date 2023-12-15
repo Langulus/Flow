@@ -189,7 +189,7 @@ namespace Langulus::Flow
       bool enscope = true;
       if (not mVerb) {
          // An invalid verb is always written as token                  
-         result += MetaVerb::DefaultToken;
+         result += RTTI::MetaVerb::DefaultToken;
       }
       else {
          // A valid verb is written either as token, or as operator     

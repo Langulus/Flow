@@ -34,6 +34,7 @@ add_library(LangulusFlow ${LANGULUS_LIBRARY_TYPE}
     source/Executor.cpp
     source/Temporal.cpp
     source/Verb.cpp
+    source/Resolvable.cpp
 )
 
 target_include_directories(LangulusFlow PUBLIC include

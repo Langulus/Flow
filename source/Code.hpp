@@ -121,7 +121,7 @@ namespace Langulus::Flow
          NOD() static bool Peek(const Code&) noexcept;
          NOD() static Token Isolate(const Code&) noexcept;
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            NOD() static const RTTI::Meta* Disambiguate(Offset, const Code&, const Token&);
+            NOD() static AMeta Disambiguate(Offset, const Code&, const Token&);
          #endif
       };
 

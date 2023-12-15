@@ -289,7 +289,7 @@ namespace Langulus::Anyness
                   auto& trait = As<Trait>(i);
                   to += trait.GetTrait()
                      ? trait.GetTrait()->mToken
-                     : MetaTrait::DefaultToken;
+                     : RTTI::MetaTrait::DefaultToken;
                   to += Code {Code::OpenScope};
                   to += Flow::Serialize<TO, false, Block, TO_ORIGINAL>(trait);
                   to += Code {Code::CloseScope};
@@ -297,11 +297,42 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (CastsTo<RTTI::Meta>()) {
+            else if (CastsTo<DMeta>()) {
                // Contained type is meta definitions, write the token   
                for (Offset i = 0; i < GetCount(); ++i) {
-                  auto meta = As<const RTTI::Meta*>(i);
-                  to += TO {meta};
+                  to += TO {As<DMeta>(i)};
+                  if (i < GetCount() - 1)
+                     to += Separator(IsOr());
+               }
+            }
+            else if (CastsTo<TMeta>()) {
+               // Contained type is meta definitions, write the token   
+               for (Offset i = 0; i < GetCount(); ++i) {
+                  to += TO {As<TMeta>(i)};
+                  if (i < GetCount() - 1)
+                     to += Separator(IsOr());
+               }
+            }
+            else if (CastsTo<VMeta>()) {
+               // Contained type is meta definitions, write the token   
+               for (Offset i = 0; i < GetCount(); ++i) {
+                  to += TO {As<VMeta>(i)};
+                  if (i < GetCount() - 1)
+                     to += Separator(IsOr());
+               }
+            }
+            else if (CastsTo<CMeta>()) {
+               // Contained type is meta definitions, write the token   
+               for (Offset i = 0; i < GetCount(); ++i) {
+                  to += TO {As<CMeta>(i)};
+                  if (i < GetCount() - 1)
+                     to += Separator(IsOr());
+               }
+            }
+            else if (CastsTo<AMeta>()) {
+               // Contained type is meta definitions, write the token   
+               for (Offset i = 0; i < GetCount(); ++i) {
+                  to += TO {As<AMeta>(i)};
                   if (i < GetCount() - 1)
                      to += Separator(IsOr());
                }
@@ -516,7 +547,7 @@ namespace Langulus::Anyness
                // Serialize all reflected bases                         
                for (auto& base : element.GetType()->mBases) {
                   // Imposed bases are never serialized                 
-                  if (base.mImposed or base.GetType()->mIsAbstract)
+                  if (base.mImposed or base.mType->mIsAbstract)
                      continue;
 
                   const auto baseBlock = element.GetBaseMemory(base);
@@ -715,60 +746,25 @@ namespace Langulus::Anyness
 
             return read;
          }
-         else if (to.template CastsTo<RTTI::Meta>()) {
-            // Deserialize meta definitions                             
-            // The resulting container should be always const & sparse  
+         else if (to.IsExact<DMeta, TMeta, CMeta, VMeta>()) {
+            // Deserialize data definition                              
             if constexpr (HEADER)
                to.New(deserializedCount);
 
-            auto p = to.template GetHandle<Byte*>(0);
-            const auto pEnd = p + to.GetCount();
-            if (to.template IsExact<DMeta>()) {
-               while (p != pEnd) {
-                  DMeta ptr;
-                  read = DeserializeMeta(ptr, read, header, loader);
-                  p.New(
-                     reinterpret_cast<Byte*>(const_cast<MetaData*>(ptr)),
-                     nullptr
-                  );
+            to.ForEach(
+               [&](DMeta& meta) {
+                  read = DeserializeMeta(meta, read, header, loader);
+               },
+               [&](VMeta& meta) {
+                  read = DeserializeMeta(meta, read, header, loader);
+               },
+               [&](CMeta& meta) {
+                  read = DeserializeMeta(meta, read, header, loader);
+               },
+               [&](TMeta& meta) {
+                  read = DeserializeMeta(meta, read, header, loader);
                }
-            }
-            else if (to.template IsExact<TMeta>()) {
-               while (p != pEnd) {
-                  TMeta ptr;
-                  read = DeserializeMeta(ptr, read, header, loader);
-                  p.New(
-                     reinterpret_cast<Byte*>(const_cast<MetaTrait*>(ptr)),
-                     nullptr
-                  );
-               }
-            }
-            else if (to.template IsExact<VMeta>()) {
-               while (p != pEnd) {
-                  VMeta ptr;
-                  read = DeserializeMeta(ptr, read, header, loader);
-                  p.New(
-                     reinterpret_cast<Byte*>(const_cast<MetaVerb*>(ptr)),
-                     nullptr
-                  );
-               }
-            }
-            else if (to.template IsExact<CMeta>()) {
-               while (p != pEnd) {
-                  CMeta ptr;
-                  read = DeserializeMeta(ptr, read, header, loader);
-                  p.New(
-                     reinterpret_cast<Byte*>(const_cast<MetaConst*>(ptr)),
-                     nullptr
-                  );
-               }
-            }
-            else {
-               LANGULUS_OOPS(
-                  Convert, "Bad meta container while deserializing `",
-                  GetToken(), "` as `", to.GetToken(), '`'
-               );
-            }
+            );
 
             return read;
          }
@@ -832,7 +828,7 @@ namespace Langulus::Anyness
 
             // Deserialize all reflected bases                          
             for (auto& base : element.GetType()->mBases) {
-               if (base.mImposed or base.GetType()->mIsAbstract)
+               if (base.mImposed or base.mType->mIsAbstract)
                   continue;
 
                auto baseBlock = element.GetBaseMemory(base);

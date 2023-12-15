@@ -20,7 +20,7 @@ namespace Langulus::Flow
    ///                                                                        
    /// Holds a reflected class type and context state                         
    ///                                                                        
-   struct Resolvable : Referenced {
+   struct LANGULUS_API(FLOW) Resolvable : Referenced {
       LANGULUS(ABSTRACT) true;
       LANGULUS(UNINSERTABLE) true;
       LANGULUS_CONVERSIONS(Debug);
@@ -33,10 +33,11 @@ namespace Langulus::Flow
 
    public:
       Resolvable() = delete;
+
       Resolvable(const Resolvable&) noexcept = default;
       Resolvable(Resolvable&&) noexcept = default;
       Resolvable(DMeta) IF_UNSAFE(noexcept);
-      ~Resolvable() override = default;
+      virtual ~Resolvable() = default;
 
       Resolvable& operator = (const Resolvable&) noexcept = default;
       Resolvable& operator = (Resolvable&&) noexcept = default;

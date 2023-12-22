@@ -61,12 +61,12 @@ namespace Langulus::Verbs
    inline bool Conjunct::ExecuteDefault(const Block&, Verb& verb) {
       Any joined;
       if (verb.GetMass() < 0) {
-         joined.SmartPush(verb.GetSource(), DataState::Or);
-         joined.SmartPush(verb.GetArgument(), DataState::Or);
+         joined.SmartPush(IndexBack, verb.GetSource(), DataState::Or);
+         joined.SmartPush(IndexBack, verb.GetArgument(), DataState::Or);
       }
       else {
-         joined.SmartPush(verb.GetSource());
-         joined.SmartPush(verb.GetArgument());
+         joined.SmartPush(IndexBack, verb.GetSource());
+         joined.SmartPush(IndexBack, verb.GetArgument());
       }
 
       verb << Abandon(joined);

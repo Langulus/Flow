@@ -738,13 +738,13 @@ namespace Langulus::Flow
          // Push a pointer, but check if valid first                    
          if (not *data)
             return *this;
-         if (mOutput.SmartPush(*data))
+         if (mOutput.SmartPush(IndexBack, *data))
             Done();
          return *this;
       }
       else {
          // Push anything dense                                         
-         if (mOutput.SmartPush(data.Forward()))
+         if (mOutput.SmartPush(IndexBack, data.Forward()))
             Done();
          return *this;
       }
@@ -793,13 +793,13 @@ namespace Langulus::Flow
          // Push a pointer, but check if valid first                    
          if (not *data)
             return *this;
-         if (mOutput.SmartPush<IndexFront>(PointerDecay(*data)))
+         if (mOutput.SmartPush(IndexFront, PointerDecay(*data)))
             Done();
          return *this;
       }
       else {
          // Push anything dense                                         
-         if (mOutput.SmartPush<IndexFront>(data.Forward()))
+         if (mOutput.SmartPush(IndexFront, data.Forward()))
             Done();
          return *this;
       }
@@ -849,7 +849,7 @@ namespace Langulus::Flow
          if (mOutput.Find(ptr))
             return *this;
 
-         if (mOutput.SmartPush(ptr))
+         if (mOutput.SmartPush(IndexBack, ptr))
             Done();
       }
       else {
@@ -857,7 +857,7 @@ namespace Langulus::Flow
          if (mOutput.Find(*data))
             return *this;
 
-         if (mOutput.SmartPush(*data))
+         if (mOutput.SmartPush(IndexBack, *data))
             Done();
       }
 
@@ -908,7 +908,7 @@ namespace Langulus::Flow
          if (mOutput.Find(ptr)) //TODO: find deep instead?
             return *this;
 
-         if (mOutput.SmartPush<IndexFront>(ptr))
+         if (mOutput.SmartPush(IndexFront, ptr))
             Done();
       }
       else {
@@ -916,7 +916,7 @@ namespace Langulus::Flow
          if (mOutput.Find(*data))
             return *this;
 
-         if (mOutput.SmartPush<IndexFront>(*data))
+         if (mOutput.SmartPush(IndexFront, *data))
             Done();
       }
 

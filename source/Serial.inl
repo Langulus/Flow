@@ -746,7 +746,7 @@ namespace Langulus::Anyness
 
             return read;
          }
-         else if (to.IsExact<DMeta, TMeta, CMeta, VMeta>()) {
+         else if (to.template IsExact<DMeta, TMeta, CMeta, VMeta>()) {
             // Deserialize data definition                              
             if constexpr (HEADER)
                to.New(deserializedCount);
@@ -955,7 +955,8 @@ namespace Langulus::Flow::Serial
    template<CT::Text TO, CT::Block TO_ORIGINAL>
    void SerializeMembers(const Block& from, TO& to) {
       if (from.IsDeep()) {
-         to += Serialize<TO, true, Block, TO_ORIGINAL>(from.template Get<Block>());
+         to += Serialize<TO, true, Block, TO_ORIGINAL>(
+            from.template Get<Block>());
          return;
       }
 
@@ -964,7 +965,7 @@ namespace Langulus::Flow::Serial
 
       // First we serialize all bases' members                          
       for (auto& base : from.GetType()->mBases) {
-         if (base.GetType()->mSize > 0) {
+         if (base.mType->mSize > 0) {
             if (separate) {
                to += Verbs::Conjunct::CTTI_PositiveOperator;
                separate = false;
@@ -972,7 +973,7 @@ namespace Langulus::Flow::Serial
 
             const auto initial = to.GetCount();
             SerializeMembers<TO, TO_ORIGINAL>(
-               from.GetBaseMemory(base.GetType(), base), to
+               from.GetBaseMemory(base.mType, base), to
             );
 
             if (initial < to.GetCount())
@@ -981,7 +982,7 @@ namespace Langulus::Flow::Serial
       }
 
       // Iterate members for each object                                
-      for (auto& member : from.GetType()->mMembers) {
+      for (auto& member : from.mType->mMembers) {
          if (separate)
             to += Verbs::Conjunct::CTTI_PositiveOperator;
 

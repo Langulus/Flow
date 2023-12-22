@@ -247,7 +247,7 @@ namespace Langulus::Flow
 
       // Input was parsed, relay content to output                      
       VERBOSE(Logger::Green, "Unknown parsed: ", rhs);
-      lhs.SmartPush(Abandon(rhs));
+      lhs.SmartPush(IndexBack, Abandon(rhs));
       return progress;
    }
 
@@ -372,7 +372,7 @@ namespace Langulus::Flow
          const Block constant {
             {}, cmeta->mValueType, 1, cmeta->mPtrToValue, nullptr
          };
-         lhs.SmartPush(Clone(constant));
+         lhs.SmartPush(IndexBack, Clone(constant));
       }
       else {
          // If this is reached, then exactly one match in symbols       
@@ -405,7 +405,7 @@ namespace Langulus::Flow
 
          if (cmeta) {
             const Block constant {{}, cmeta};
-            lhs.SmartPush(Clone(constant));
+            lhs.SmartPush(IndexBack, Clone(constant));
          }
       }
 
@@ -664,7 +664,7 @@ namespace Langulus::Flow
          // If empty, just merge states                                 
          const auto stateBackup = lhs.GetState();
          lhs.ResetState();
-         lhs.SmartPush(Move(rhs));
+         lhs.SmartPush(IndexBack, Move(rhs));
          lhs.AddState(stateBackup);
          VERBOSE_ALT("Untyped content: ", Logger::Cyan, lhs);
       }
@@ -675,11 +675,11 @@ namespace Langulus::Flow
 
          if (meta->Is<Verb>()) {
             lhs.RemoveIndex(-1);
-            lhs.SmartPush(Verb {Move(rhs)});
+            lhs.SmartPush(IndexBack, Verb {Move(rhs)});
          }
          else if (meta->Is<Trait>()) {
             lhs.RemoveIndex(-1);
-            lhs.SmartPush(Trait {Move(rhs)});
+            lhs.SmartPush(IndexBack, Trait {Move(rhs)});
          }
          else {
             if (not rhs and not meta->mProducerRetriever and meta->mDefaultConstructor) {
@@ -688,7 +688,7 @@ namespace Langulus::Flow
                constExpr.SetType(meta);
                constExpr.New(1);
                lhs.RemoveIndex(-1);
-               lhs.SmartPush(Abandon(constExpr));
+               lhs.SmartPush(IndexBack, Abandon(constExpr));
             }
             else {
                // Invoke the descriptor-constructor only if we have to  
@@ -697,13 +697,13 @@ namespace Langulus::Flow
                if (outputConstruct.StaticCreation(precompiled)) {
                   // Precompiled successfully, append it to LHS         
                   lhs.RemoveIndex(-1);
-                  lhs.SmartPush(Abandon(precompiled));
+                  lhs.SmartPush(IndexBack, Abandon(precompiled));
                   VERBOSE_ALT("Statically constructed from DMeta: ", Logger::Cyan, lhs);
                   return;
                }
 
                lhs.RemoveIndex(-1);
-               lhs.SmartPush(Abandon(outputConstruct));
+               lhs.SmartPush(IndexBack, Abandon(outputConstruct));
             }
          }
          VERBOSE_ALT("Constructed from DMeta: ", Logger::Cyan, lhs);
@@ -715,7 +715,7 @@ namespace Langulus::Flow
 
          auto verb = Verb::FromMeta(meta, Move(rhs));
          lhs.RemoveIndex(-1);
-         lhs.SmartPush(Abandon(verb));
+         lhs.SmartPush(IndexBack, Abandon(verb));
          VERBOSE_ALT("Constructed from VMeta: ", Logger::Cyan, lhs);
       }
       else if (lhs.Is<TMeta>()) {
@@ -725,13 +725,13 @@ namespace Langulus::Flow
 
          auto trait = Trait::From(meta, Move(rhs));
          lhs.RemoveIndex(-1);
-         lhs.SmartPush(Abandon(trait));
+         lhs.SmartPush(IndexBack, Abandon(trait));
          VERBOSE_ALT("Constructed from TMeta: ", Logger::Cyan, lhs);
       }
       else if (lhs.Is<Verb>()) {
          // The content is for an instantiated verb scope               
          auto& verb = lhs.As<Verb>(-1);
-         verb.GetArgument().SmartPush(Move(rhs));
+         verb.GetArgument().SmartPush(IndexBack, Move(rhs));
          VERBOSE_ALT("Constructed from Verb ", Logger::Cyan, lhs);
       }
       else if (lhs.Is<Construct>()) {

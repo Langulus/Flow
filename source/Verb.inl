@@ -9,154 +9,47 @@
 #pragma once
 #include "Verb.hpp"
 #include "Code.inl"
+#include "VerbState.inl"
 #include "verbs/Interpret.inl"
 
 
 namespace Langulus::Flow
 {
 
-   /// Manual construction                                                    
-   ///   @param state - the state                                             
-   LANGULUS(INLINED)
-   constexpr VerbState::VerbState(const Type& state) noexcept
-      : mState {state} {}
-
-   /// Explicit convertion to bool                                            
-   ///   @return true if state is not default                                 
-   LANGULUS(INLINED)
-   constexpr VerbState::operator bool() const noexcept {
-      return not IsDefault();
-   }
-   
-   /// Combine two states                                                     
-   ///   @param rhs - the other state                                         
-   ///   @return a new combined state                                         
-   LANGULUS(INLINED)
-   constexpr VerbState VerbState::operator + (const VerbState& rhs) const noexcept {
-      return mState | rhs.mState;
-   }
-   
-   /// Remove rhs state from this state                                       
-   ///   @param rhs - the other state                                         
-   ///   @return a new leftover state                                         
-   LANGULUS(INLINED)
-   constexpr VerbState VerbState::operator - (const VerbState& rhs) const noexcept {
-      return mState & (~rhs.mState);
-   }
-   
-   /// Destructively add state                                                
-   ///   @param rhs - the other state                                         
-   ///   @return a reference to this state                                    
-   LANGULUS(INLINED)
-   constexpr VerbState& VerbState::operator += (const VerbState& rhs) noexcept {
-      mState |= rhs.mState;
-      return *this;
-   }
-   
-   /// Destructively remove state                                             
-   ///   @param rhs - the other state                                         
-   ///   @return a reference to this state                                    
-   LANGULUS(INLINED)
-   constexpr VerbState& VerbState::operator -= (const VerbState& rhs) noexcept {
-      mState &= ~rhs.mState;
-      return *this;
-   }
-   
-   LANGULUS(INLINED)
-   constexpr bool VerbState::operator & (const VerbState& rhs) const noexcept {
-      return (mState & rhs.mState) == rhs.mState;
-   }
-   
-   LANGULUS(INLINED)
-   constexpr bool VerbState::operator % (const VerbState& rhs) const noexcept {
-      return (mState & rhs.mState) == 0;
-   }
-   
-   /// Check if default data state                                            
-   /// Default state is inclusive, mutable, nonpolar, nonvacuum, nonstatic,   
-   /// nonencrypted, noncompressed, untyped, and dense                        
-   LANGULUS(INLINED)
-   constexpr bool VerbState::IsDefault() const noexcept {
-      return mState == VerbState::Default;
-   }
-   
-   /// Check if state is multicast                                            
-   LANGULUS(INLINED)
-   constexpr bool VerbState::IsMulticast() const noexcept {
-      return (mState & VerbState::Monocast) == 0;
-   }
-   
-   /// Check if state is monocast                                             
-   LANGULUS(INLINED)
-   constexpr bool VerbState::IsMonocast() const noexcept {
-      return mState & VerbState::Monocast;
-   }
-   
-   /// Check if state is long-circuited                                       
-   LANGULUS(INLINED)
-   constexpr bool VerbState::IsLongCircuited() const noexcept {
-      return mState & VerbState::LongCircuited;
-   }
-   
-   /// Check if state is short-circuited                                      
-   LANGULUS(INLINED)
-   constexpr bool VerbState::IsShortCircuited() const noexcept {
-      return (mState & VerbState::LongCircuited) == 0;
-   }
-
-   /// Verb shallow-copy constructor                                          
+   /// Shallow-copy constructor                                               
    ///   @param other - the verb to shallow-copy                              
    LANGULUS(INLINED)
    Verb::Verb(const Verb& other)
       : Verb {Copy(other)} {}
 
-   /// Verb move constructor                                                  
+   /// Move constructor                                                       
    ///   @param other - the verb to move                                      
    LANGULUS(INLINED)
    Verb::Verb(Verb&& other)
       : Verb {Move(other)} {}
 
-   /// Verb argument copy-constructor                                         
-   ///   @param other - the argument to shallow-copy                          
-   LANGULUS(INLINED)
-   Verb::Verb(const CT::NotSemantic auto& other)
-      : Verb {Copy(other)} {}
-
-   /// Verb argument copy-constructor                                         
-   ///   @param other - the argument to shallow-copy                          
-   LANGULUS(INLINED)
-   Verb::Verb(CT::NotSemantic auto& other)
-      : Verb {Copy(other)} {}
-
-   /// Verb argument move-constructor                                         
-   ///   @param other - the argument to move                                  
-   LANGULUS(INLINED)
-   Verb::Verb(CT::NotSemantic auto&& other)
-      : Verb {Move(other)} {}
-
-   /// Verb semantic-constructor                                              
+   /// Generic constructor                                                    
    ///   @param other - the verb/argument and semantic to construct with      
-   LANGULUS(INLINED)
-   Verb::Verb(CT::Semantic auto&& other) {
-      using S = Decay<decltype(other)>;
+   template<CT::Data T1, CT::Data...TAIL>
+   requires CT::VerbMakable<T1, TAIL...> LANGULUS(INLINED)
+   Verb::Verb(T1&& t1, TAIL&&...tail) {
+      if constexpr (sizeof...(TAIL) == 0) {
+         using S = SemanticOf<T1>;
+         using ST = TypeOf<S>;
 
-      if constexpr (CT::VerbBased<TypeOf<S>>) {
-         Any::operator = (other.template Forward<Any>());
-         Charge::operator = (*other);
-         mVerb = other->mVerb;
-         mState = other->mState;
-         mSource = S::Nest(other->mSource);
-         mOutput = S::Nest(other->mOutput);
+         if constexpr (CT::VerbBased<ST>) {
+            decltype(auto) verb = DesemCast(t1);
+            Any::operator = (S::Nest(t1).template Forward<Any>());
+            Charge::operator = (verb);
+            mVerb = verb.mVerb;
+            mState = verb.mState;
+            mSource = S::Nest(verb.mSource);
+            mOutput = S::Nest(verb.mOutput);
+         }
+         else Any::operator = (Forward<T1>(t1));
       }
-      else Any::operator = (other.Forward());
+      else Any::Insert(0, Forward<T1>(t1), Forward<TAIL>(tail)...);
    }
-
-   /// Verb list-of-arguments constructor                                     
-   ///   @param head, tail... - arguments                                     
-   template<CT::Data T1, CT::Data T2, CT::Data... TAIL>
-   LANGULUS(INLINED)
-   Verb::Verb(T1&& t1, T2&& t2, TAIL&&... tail)
-      : Any {Forward<T1>(t1), Forward<T2>(t2), Forward<TAIL>(tail)...} {}
 
    /// Verb shallow-copy assignment                                           
    ///   @param rhs - the verb to shallow-copy assign                         
@@ -174,11 +67,11 @@ namespace Langulus::Flow
       return operator = (Move(rhs));
    }
 
-   /// Verb semantic-assignment                                               
+   /// Generic assignment                                                     
    ///   @param rhs - the verb/argument and semantic to assign by             
    ///   @return a reference to this verb                                     
    LANGULUS(INLINED)
-   Verb& Verb::operator = (CT::Semantic auto&& rhs) {
+   Verb& Verb::operator = (CT::VerbAssignable auto&& rhs) {
       using S = Decay<decltype(rhs)>;
       using T = TypeOf<S>;
 
@@ -195,53 +88,38 @@ namespace Langulus::Flow
    }
 
    /// Create a statically typed verb with charge and state                   
-   ///   @tparam VERB - the verb type                                         
+   ///   @tparam V - the verb type                                            
    ///   @param charge - verb charge                                          
    ///   @param state - verb state                                            
    ///   @return the new Verb instance                                        
-   template<CT::Data VERB>
-   LANGULUS(INLINED)
-   Verb Verb::From(const Charge& charge, const VerbState& state) {
-      Verb result;
-      result.template SetVerb<VERB>();
-      result.SetCharge(charge);
-      result.SetVerbState(state);
-      return result;
+   template<CT::Verb V> LANGULUS(INLINED)
+   Verb Verb::From(const Charge& charge, VerbState state) {
+      return FromMeta(MetaVerbOf<V>(), charge, state);
    }
 
    /// Create a statically typed verb with argument, charge and state         
-   ///   @tparam VERB - the verb type                                         
-   ///   @tparam DATA - the argument type (deducible)                         
-   ///   @param argument - argument to move in                                
+   ///   @tparam V - the verb type                                            
+   ///   @param a - argument to initialize with                               
    ///   @param charge - verb charge                                          
    ///   @param state - verb state                                            
    ///   @return the new Verb instance                                        
-   template<CT::Data VERB, CT::Data DATA>
-   LANGULUS(INLINED)
-   Verb Verb::From(DATA&& argument, const Charge& charge, const VerbState& state) {
-      Verb result;
-      result.template SetVerb<VERB>();
-      result.SetArgument(Forward<DATA>(argument));
-      result.SetCharge(charge);
-      result.SetVerbState(state);
-      return result;
+   template<CT::Verb V> LANGULUS(INLINED)
+   Verb Verb::From(CT::Inner::UnfoldInsertable auto&& a, const Charge& charge, VerbState state) {
+      using S = SemanticOf<decltype(a)>;
+      return FromMeta(MetaVerbOf<V>(), S::Nest(a), charge, state);
    }
 
    /// Create a dynamically typed verb with argument, charge and state        
-   ///   @tparam DATA - the argument type (deducible)                         
    ///   @param verb - type of the verb                                       
-   ///   @param argument - argument to move in                                
+   ///   @param a - argument to move in                                       
    ///   @param charge - verb charge                                          
    ///   @param state - verb state                                            
    ///   @return the new Verb instance                                        
-   template<CT::Data DATA>
    LANGULUS(INLINED)
-   Verb Verb::FromMeta(VMeta verb, DATA&& argument, const Charge& charge, const VerbState& state) {
-      Verb result;
-      result.SetVerb(verb);
-      result.SetArgument(Forward<DATA>(argument));
-      result.SetCharge(charge);
-      result.SetVerbState(state);
+   Verb Verb::FromMeta(VMeta verb, CT::Inner::UnfoldInsertable auto&& a, const Charge& charge, VerbState state) {
+      using S = SemanticOf<decltype(a)>;
+      auto result = FromMeta(verb, charge, state);
+      result.SetArgument(S::Nest(a));
       return result;
    }
 
@@ -251,7 +129,7 @@ namespace Langulus::Flow
    ///   @param state - verb state                                            
    ///   @return the new Verb instance                                        
    LANGULUS(INLINED)
-   Verb Verb::FromMeta(VMeta verb, const Charge& charge, const VerbState& state) {
+   Verb Verb::FromMeta(VMeta verb, const Charge& charge, VerbState state) {
       Verb result;
       result.SetVerb(verb);
       result.SetCharge(charge);
@@ -259,14 +137,12 @@ namespace Langulus::Flow
       return result;
    }
 
-   /// Check if verb is of a specific type                                    
-   ///   @tparam T - the verb to compare against                              
-   ///   @return true if verbs match                                          
-   template<CT::Data... T>
-   LANGULUS(INLINED)
+   /// Check if verb is matches one of the provided verb types                
+   ///   @tparam V1, VN... - the verbs to compare against                     
+   ///   @return true if at least one verb matches                            
+   template<CT::Verb V1, CT::Verb...VN> LANGULUS(INLINED)
    bool Verb::VerbIs() const noexcept {
-      static_assert(CT::Verb<T...>, "Provided types must be verb definitions");
-      return (VerbIs(T::GetVerb()) or ...);
+      return mVerb == MetaVerbOf<V1>() or ((mVerb == MetaVerbOf<VN>()) or ...);
    }
 
    /// Check if verb has been satisfied at least once                         
@@ -372,18 +248,16 @@ namespace Langulus::Flow
       return *this;
    }
 
-   /// Set the verb ID                                                        
-   ///   @param verb - the verb to assign                                     
+   /// Set the verb type                                                      
+   ///   @tparam V - the verb to assign                                       
    ///   @return a reference to self                                          
-   template<CT::Data VERB>
-   LANGULUS(INLINED)
+   template<CT::Verb V> LANGULUS(INLINED)
    Verb& Verb::SetVerb() {
-      static_assert(CT::Verb<VERB>, "VERB must be a verb type");
-      mVerb = VERB::GetVerb();
+      mVerb = MetaVerbOf<V>();
       return *this;
    }
 
-   /// Set the verb ID                                                        
+   /// Set the verb type at runtime                                           
    ///   @param verb - the verb to assign                                     
    ///   @return a reference to self                                          
    LANGULUS(INLINED)
@@ -437,99 +311,39 @@ namespace Langulus::Flow
       return *this;
    }
 
-   /// Set the verb's source by shallow-copy                                  
-   ///   @param value  - the value to shallow-copy                            
+   /// Set the verb's source                                                  
+   ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetSource(const CT::NotSemantic auto& value) {
-      return SetSource(Copy(value));
-   }
-
-   LANGULUS(INLINED)
-   Verb& Verb::SetSource(CT::NotSemantic auto& value) {
-      return SetSource(Copy(value));
-   }
-
-   /// Set the verb's source by move                                          
-   ///   @param value  - the value to move                                    
-   ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetSource(CT::NotSemantic auto&& value) {
-      return SetSource(Move(value));
-   }
-   
-   /// Set the verb's source by a semantic                                    
-   ///   @param value  - the value and semantic to use                        
-   ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetSource(CT::Semantic auto&& value) {
-      mSource = value.Forward();
+   template<CT::Data T1, CT::Data... TAIL>
+   requires CT::Inner::UnfoldInsertable<T1, TAIL...> LANGULUS(INLINED)
+   Verb& Verb::SetSource(T1&& t1, TAIL&&...tail) {
+      mSource = Any {Forward<T1>(t1), Forward<TAIL>(tail)...};
       // We guarantee that source is exactly Any, so we unconstrain it  
       // in order to be safely able to overwrite it anytime             
       mSource.MakeTypeConstrained(false);
       return *this;
    }
    
-   /// Set the verb's argument by shallow-copy                                
-   ///   @param value  - the value to shallow-copy                            
+   /// Set the verb's argument                                                
+   ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetArgument(const CT::NotSemantic auto& value) {
-      return SetArgument(Copy(value));
-   }
-
-   LANGULUS(INLINED)
-   Verb& Verb::SetArgument(CT::NotSemantic auto& value) {
-      return SetArgument(Copy(value));
-   }
-
-   /// Set the verb's argument by move                                        
-   ///   @param value  - the value to move                                    
-   ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetArgument(CT::NotSemantic auto&& value) {
-      return SetArgument(Move(value));
-   }
-   
-   /// Set the verb's argument by a semantic                                  
-   ///   @param value  - the value and semantic to use                        
-   ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetArgument(CT::Semantic auto&& value) {
-      Any::operator = (value.Forward());
+   template<CT::Data T1, CT::Data... TAIL>
+   requires CT::Inner::UnfoldInsertable<T1, TAIL...> LANGULUS(INLINED)
+   Verb& Verb::SetArgument(T1&& t1, TAIL&&...tail) {
+      Any::operator = (Any {Forward<T1>(t1), Forward<TAIL>(tail)...});
       // We guarantee that argument is exactly Any, so we unconstrain it
       // in order to be safely able to overwrite it anytime             
       MakeTypeConstrained(false);
       return *this;
    }
    
-   /// Set the verb's output by shallow-copy                                  
-   ///   @param value  - the value to shallow-copy                            
+   /// Set the verb's output                                                  
+   ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetOutput(const CT::NotSemantic auto& value) {
-      return SetOutput(Copy(value));
-   }
-
-   LANGULUS(INLINED)
-   Verb& Verb::SetOutput(CT::NotSemantic auto& value) {
-      return SetOutput(Copy(value));
-   }
-
-   /// Set the verb's output by move                                          
-   ///   @param value  - the value to move                                    
-   ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetOutput(CT::NotSemantic auto&& value) {
-      return SetOutput(Move(value));
-   }
-   
-   /// Set the verb's output by a semantic                                    
-   ///   @param value  - the value and semantic to use                        
-   ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetOutput(CT::Semantic auto&& value) {
-      mOutput = value.Forward();
+   template<CT::Data T1, CT::Data... TAIL>
+   requires CT::Inner::UnfoldInsertable<T1, TAIL...> LANGULUS(INLINED)
+   Verb& Verb::SetOutput(T1&& t1, TAIL&&...tail) {
+      mOutput = Any {Forward<T1>(t1), Forward<TAIL>(tail)...};
       // We guarantee that output is exactly Any, so we unconstrain it  
       // in order to be safely able to overwrite it anytime             
       mOutput.MakeTypeConstrained(false);
@@ -541,7 +355,7 @@ namespace Langulus::Flow
    ///   @return true if verbs match                                          
    LANGULUS(INLINED)
    bool Verb::operator == (const Verb& rhs) const {
-      return (mVerb == rhs.mVerb or (mVerb and mVerb->Is(rhs.mVerb)))
+      return mVerb == rhs.mVerb
          and mSource == rhs.mSource
          and Any::operator == (rhs.GetArgument())
          and mOutput == rhs.mOutput
@@ -553,7 +367,7 @@ namespace Langulus::Flow
    ///   @return true if verbs match                                          
    LANGULUS(INLINED)
    bool Verb::operator == (VMeta rhs) const noexcept {
-      return VerbIs(rhs); 
+      return mVerb == rhs;
    }
 
    /// Check if verb is satisfied at least once                               
@@ -694,229 +508,98 @@ namespace Langulus::Flow
       return &mOutput;
    }
 
-   /// Push anything to end of outputs by shallow-copy, satisfying the verb   
+   /// Push anything to end of the outputs, satisfying the verb               
    ///   @attention nullptrs are never pushed and don't satisfy verb          
-   ///   @param data - the data to push (deducible)                           
+   ///   @param rhs - the data (and semantic) to push                         
    ///   @return a reference to this verb for chaining                        
    LANGULUS(INLINED)
-   Verb& Verb::operator << (const CT::NotSemantic auto& data) {
-      return operator << (Copy(data));
-   }
-   
-   /// Push anything to end of outputs by shallow-copy, satisfying the verb   
-   ///   @attention nullptrs are never pushed and don't satisfy verb          
-   ///   @param data - the data to push (deducible)                           
-   ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator << (CT::NotSemantic auto& data) {
-      return operator << (Copy(data));
-   }
-   
-   /// Push anything to end of outputs by move, satisfying the verb           
-   ///   @attention nullptrs are never pushed and don't satisfy verb          
-   ///   @param data - the data to push (deducible)                           
-   ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator << (CT::NotSemantic auto&& data) {
-      return operator << (Move(data));
-   }
-   
-   /// Push anything to end of the outputs via semantic, satisfying the verb  
-   ///   @attention nullptrs are never pushed and don't satisfy verb          
-   ///   @param data - the data and semantic to push (deducible)              
-   ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator << (CT::Semantic auto&& data) {
-      using S = Decay<decltype(data)>;
+   Verb& Verb::operator <<  (CT::Inner::UnfoldInsertable auto&& rhs) {
+      using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
-      if constexpr (CT::Nullptr<T>) {
-         // Can't push a nullptr_t                                      
-         return *this;
-      }
-      else if constexpr (CT::PointerRelated<TypeOf<S>>) {
-         // Push a pointer, but check if valid first                    
-         if (not *data)
-            return *this;
-         if (mOutput.SmartPush(IndexBack, *data))
+      if constexpr (not CT::Nullptr<T>) {
+         if constexpr (CT::PointerRelated<T>) {
+            // Push a pointer, but check if valid first                 
+            if (not DesemCast(rhs))
+               return *this;
+         }
+
+         if (mOutput.SmartPush(IndexBack, S::Nest(rhs)))
             Done();
-         return *this;
       }
-      else {
-         // Push anything dense                                         
-         if (mOutput.SmartPush(IndexBack, data.Forward()))
-            Done();
-         return *this;
-      }
+
+      return *this;
    }
-   
-   /// Push anything to start of outputs by shallow-copy, satisfying the verb 
+
+   /// Push anything to the front of the outputs, satisfying the verb         
    ///   @attention nullptrs are never pushed and don't satisfy verb          
-   ///   @param data - the data to push (deducible)                           
+   ///   @param rhs - the data (and semantic) to push                         
    ///   @return a reference to this verb for chaining                        
    LANGULUS(INLINED)
-   Verb& Verb::operator >> (const CT::NotSemantic auto& data) {
-      return operator >> (Copy(data));
-   }
-   
-   /// Push anything to start of outputs by shallow-copy, satisfying the verb 
-   ///   @attention nullptrs are never pushed and don't satisfy verb          
-   ///   @param data - the data to push (deducible)                           
-   ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator >> (CT::NotSemantic auto& data) {
-      return operator >> (Copy(data));
-   }
-   
-   /// Push anything to start of outputs by move, satisfying the verb         
-   ///   @attention nullptrs are never pushed and don't satisfy verb          
-   ///   @param data - the data to push (deducible)                           
-   ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator >> (CT::NotSemantic auto&& data) {
-      return operator >> (Move(data));
-   }
-   
-   /// Push anything to start of outputs via semantic, satisfying the verb    
-   ///   @attention nullptrs are never pushed and don't satisfy verb          
-   ///   @param data - the data and semantic to push (deducible)              
-   ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator >> (CT::Semantic auto&& data) {
-      using S = Decay<decltype(data)>;
+   Verb& Verb::operator >>  (CT::Inner::UnfoldInsertable auto&& rhs) {
+      using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
-      if constexpr (CT::Nullptr<T>)
-         // Can't push a nullptr_t                                      
-         return *this;
-      else if constexpr (CT::PointerRelated<TypeOf<S>>) {
-         // Push a pointer, but check if valid first                    
-         if (not *data)
-            return *this;
-         if (mOutput.SmartPush(IndexFront, PointerDecay(*data)))
+      if constexpr (not CT::Nullptr<T>) {
+         if constexpr (CT::PointerRelated<T>) {
+            // Push a pointer, but check if valid first                 
+            if (not DesemCast(rhs))
+               return *this;
+         }
+
+         if (mOutput.SmartPush(IndexFront, S::Nest(rhs)))
             Done();
-         return *this;
       }
-      else {
-         // Push anything dense                                         
-         if (mOutput.SmartPush(IndexFront, data.Forward()))
-            Done();
-         return *this;
-      }
+
+      return *this;
    }
 
-   /// Merge anything to output's back                                        
-   ///   @param data - the data to merge (deducible)                          
-   ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator <<= (const CT::NotSemantic auto& data) {
-      return operator <<= (Copy(data));
-   }
-   
-   /// Merge anything to output's back                                        
-   ///   @param data - the data to merge (deducible)                          
-   ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator <<= (CT::NotSemantic auto& data) {
-      return operator <<= (Copy(data));
-   }
-   
-   /// Merge anything to output's back                                        
-   ///   @param data - the data to merge (deducible)                          
-   ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator <<= (CT::NotSemantic auto&& data) {
-      return operator <<= (Move(data));
-   }
-   
    /// Merge anything to output's back by a semantic                          
-   ///   @param data - the data and semantic to merge (deducible)             
+   ///   @param rhs - the data (and semantic) to merge                        
    ///   @return a reference to this verb for chaining                        
    LANGULUS(INLINED)
-   Verb& Verb::operator <<= (CT::Semantic auto&& data) {
-      using S = Decay<decltype(data)>;
+   Verb& Verb::operator <<= (CT::Inner::UnfoldInsertable auto&& rhs) {
+      using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
-      if constexpr (CT::Nullptr<T>)
-         // Can't push a nullptr_t                                      
-         return *this;
-      else if constexpr (CT::PointerRelated<TypeOf<S>>) {
-         // Push a pointer, but check if valid first                    
-         if (not *data)
-            return *this;
+      if constexpr (not CT::Nullptr<T>) {
+         if constexpr (CT::PointerRelated<TypeOf<S>>) {
+            // Push a pointer, but check if valid first                 
+            if (not DesemCast(rhs))
+               return *this;
+         }
 
-         auto ptr = PointerDecay(*data);
+         auto ptr = PointerDecay(DesemCast(rhs));
          if (mOutput.Find(ptr))
             return *this;
 
          if (mOutput.SmartPush(IndexBack, ptr))
             Done();
       }
-      else {
-         // Push anything dense                                         
-         if (mOutput.Find(*data))
-            return *this;
-
-         if (mOutput.SmartPush(IndexBack, *data))
-            Done();
-      }
 
       return *this;
    }
-   
-   /// Merge anything to output's front                                       
-   ///   @param data - the data to merge (deducible)                          
-   ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator >>= (const CT::NotSemantic auto& data) {
-      return operator >>= (Copy(data));
-   }
-   
-   /// Merge anything to output's front                                       
-   ///   @param data - the data to merge (deducible)                          
-   ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator >>= (CT::NotSemantic auto& data) {
-      return operator >>= (Copy(data));
-   }
-   
-   /// Merge anything to output's front                                       
-   ///   @param data - the data to merge (deducible)                          
-   ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator >>= (CT::NotSemantic auto&& data) {
-      return operator >>= (Move(data));
-   }
-   
+
    /// Merge anything to output's front by a semantic                         
-   ///   @param data - the data and semantic to merge (deducible)             
+   ///   @param rhs - the data (and semantic) to merge                        
    ///   @return a reference to this verb for chaining                        
    LANGULUS(INLINED)
-   Verb& Verb::operator >>= (CT::Semantic auto&& data) {
-      using S = Decay<decltype(data)>;
+   Verb& Verb::operator >>= (CT::Inner::UnfoldInsertable auto&& rhs) {
+      using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
-      if constexpr (CT::Nullptr<T>)
-         // Can't push a nullptr_t                                      
-         return *this;
-      else if constexpr (CT::PointerRelated<TypeOf<S>>) {
-         // Push a pointer, but check if valid first                    
-         if (not *data)
+      if constexpr (not CT::Nullptr<T>) {
+         if constexpr (CT::PointerRelated<TypeOf<S>>) {
+            // Push a pointer, but check if valid first                 
+            if (not DesemCast(rhs))
+               return *this;
+         }
+
+         auto ptr = PointerDecay(DesemCast(rhs));
+         if (mOutput.Find(ptr))
             return *this;
 
-         auto ptr = PointerDecay(*data);
-         if (mOutput.Find(ptr)) //TODO: find deep instead?
-            return *this;
-
-         if (mOutput.SmartPush(IndexFront, ptr))
-            Done();
-      }
-      else {
-         // Push anything dense                                         
-         if (mOutput.Find(*data))
-            return *this;
-
-         if (mOutput.SmartPush(IndexFront, *data))
+         if (mOutput.SmartPush(IndexBack, ptr))
             Done();
       }
 
@@ -928,8 +611,7 @@ namespace Langulus::Flow
    ///   @param successes - number of successes                               
    ///   @param output - the output container                                 
    ///   @return the number of successes for the verb                         
-   template<bool OR>
-   LANGULUS(INLINED)
+   template<bool OR> LANGULUS(INLINED)
    Count Verb::CompleteDispatch(const Count successes, Abandoned<Any>&& output) {
       if (IsShortCircuited()) {
          // If reached, this will result in failure in OR-context, or   
@@ -958,22 +640,22 @@ namespace Langulus::Flow
    /// This is a slow runtime check, use statically optimized variants inside 
    /// specific verbs if you know them at compile time                        
    ///   @return true if the ability exists                                   
-   template<CT::Dense T>
-   LANGULUS(INLINED)
+   template<CT::Dense T> LANGULUS(INLINED)
    bool Verb::GenericAvailableFor() const noexcept {
-      const auto meta = MetaOf<Decay<T>>();
-      return meta and meta->template GetAbility<CT::Mutable<T>>(mVerb, GetType());
+      const auto meta = MetaDataOf<Decay<T>>();
+      return meta and meta->template
+         GetAbility<CT::Mutable<Deref<T>>>(mVerb, GetType());
    }
 
    /// Execute a known/unknown verb in an known/unknown context               
-   ///   @attention assumes that if T is deep, it contains exactly one item   
+   ///   @attention assumes that if context is deep, it contains one item     
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb was executed                                    
-   template<CT::Dense T, CT::Data V>
    LANGULUS(INLINED)
-   bool Verb::GenericExecuteIn(T& context, V& verb) {
-      static_assert(CT::VerbBased<V>, "V must be VerbBased");
+   bool Verb::GenericExecuteIn(CT::Dense auto& context, CT::VerbBased auto& verb) {
+      using T = Deref<decltype(context)>;
+      using V = Deref<decltype(verb)>;
 
       if constexpr (not CT::Deep<T> and CT::Verb<V>) {
          // Always prefer statically optimized routine when available   
@@ -1033,14 +715,12 @@ namespace Langulus::Flow
    /// Execute a known/unknown verb with its default behavior inside a        
    /// mutable context                                                        
    ///   @attention assumes that context contains exactly one item            
-   ///   @tparam V - the verb type (deducible)                                
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb instance to execute                           
    ///   @return true if verb was executed                                    
-   template<CT::Data V>
    LANGULUS(INLINED)
-   bool Verb::GenericExecuteDefault(Block& context, V& verb) {
-      static_assert(CT::VerbBased<V>, "V must be VerbBased");
+   bool Verb::GenericExecuteDefault(Block& context, CT::VerbBased auto& verb) {
+      using V = Deref<decltype(verb)>;
 
       if constexpr (CT::Verb<V>) {
          // Always prefer statically optimized routine when available   
@@ -1067,14 +747,12 @@ namespace Langulus::Flow
    /// Execute a known/unknown verb with its default behavior inside a        
    /// constant context                                                       
    ///   @attention assumes that context contains exactly one item            
-   ///   @tparam V - the verb type (deducible)                                
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb instance to execute                           
    ///   @return true if verb was executed                                    
-   template<CT::Data V>
    LANGULUS(INLINED)
-   bool Verb::GenericExecuteDefault(const Block& context, V& verb) {
-      static_assert(CT::VerbBased<V>, "V must be VerbBased");
+   bool Verb::GenericExecuteDefault(const Block& context, CT::VerbBased auto& verb) {
+      using V = Deref<decltype(verb)>;
 
       if constexpr (CT::Verb<V>) {
          // Always prefer statically optimized routine when available   
@@ -1095,13 +773,11 @@ namespace Langulus::Flow
    }
 
    /// Execute a known/unknown verb without context                           
-   ///   @tparam V - the verb type (deducible)                                
    ///   @param verb - the verb instance to execute                           
    ///   @return true if verb was executed                                    
-   template<CT::Data V>
    LANGULUS(INLINED)
-   bool Verb::GenericExecuteStateless(V& verb) {
-      static_assert(CT::VerbBased<V>, "V must be VerbBased");
+   bool Verb::GenericExecuteStateless(CT::VerbBased auto& verb) {
+      using V = Deref<decltype(verb)>;
 
       if constexpr (CT::Verb<V>) {
          // Always prefer statically optimized routine when available   
@@ -1125,89 +801,27 @@ namespace Langulus::Flow
    ///                                                                        
    ///   Static verb implementation                                           
    ///                                                                        
-   template<class VERB>
-   LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb() {
-      SetVerb<VERB>();
-   }
-
-   template<class VERB>
-   LANGULUS(INLINED)
+   template<class VERB> LANGULUS(INLINED)
    StaticVerb<VERB>::StaticVerb(const StaticVerb& other)
       : Verb {Copy(other)} {}
 
-   template<class VERB>
-   LANGULUS(INLINED)
+   template<class VERB> LANGULUS(INLINED)
    StaticVerb<VERB>::StaticVerb(StaticVerb&& other)
       : Verb {Move(other)} {}
 
-   template<class VERB>
-   LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb(const CT::NotSemantic auto& other)
-      : Verb {Copy(other)} {
-      SetVerb<VERB>();
-   }
-
-   template<class VERB>
-   LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb(CT::NotSemantic auto& other)
-      : Verb {Copy(other)} {
-      SetVerb<VERB>();
-   }
-
-   template<class VERB>
-   LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb(CT::NotSemantic auto&& other)
-      : Verb {Move(other)} {
-      SetVerb<VERB>();
-   }
-
-   template<class VERB>
-   LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb(CT::Semantic auto&& other)
-      : Verb {other.Forward()} {
-      SetVerb<VERB>();
-   }
-
-   template<class VERB>
-   template<CT::Data T1, CT::Data T2, CT::Data... TAIL>
-   LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb(T1&& t1, T2&& t2, TAIL&&... tail)
-      : Verb {Forward<T1>(t1), Forward<T2>(t2), Forward<TAIL>(tail)...} {
-      SetVerb<VERB>();
-   }
-
-   template<class VERB>
-   LANGULUS(INLINED)
+   template<class VERB> LANGULUS(INLINED)
    StaticVerb<VERB>& StaticVerb<VERB>::operator = (const StaticVerb& rhs) {
       return operator = (Copy(rhs));
    }
 
-   template<class VERB>
-   LANGULUS(INLINED)
+   template<class VERB> LANGULUS(INLINED)
    StaticVerb<VERB>& StaticVerb<VERB>::operator = (StaticVerb&& rhs) {
       return operator = (Move(rhs));
    }
 
-   template<class VERB>
-   LANGULUS(INLINED)
-   StaticVerb<VERB>& StaticVerb<VERB>::operator = (CT::Semantic auto&& rhs) {
-      using S = Decay<decltype(rhs)>;
-      if constexpr (CT::VerbBased<TypeOf<S>>) {
-         Any::operator = (rhs.template Forward<Any>());
-         mSuccesses = rhs->mSuccesses;
-         mState = rhs->mState;
-         mSource = S::Nest(rhs->mSource);
-         mOutput = S::Nest(rhs->mOutput);
-      }
-      else LANGULUS_ERROR("Bad verb assignment");
-      return *this;
-   }
-
-   template<class VERB>
-   LANGULUS(INLINED)
-   VMeta StaticVerb<VERB>::GetVerb() {
-      return RTTI::MetaVerb::Of<VERB>();
+   template<class VERB> LANGULUS(INLINED)
+   VMeta StaticVerb<VERB>::GetVerb() const noexcept {
+      return (mVerb = MetaVerbOf<VERB>());
    }
 
 } // namespace Langulus::Flow

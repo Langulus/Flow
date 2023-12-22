@@ -110,7 +110,7 @@ namespace Langulus::Flow
          }
       }
 
-      output.SmartPush(Abandon(results));
+      output.SmartPush(IndexBack, Abandon(results));
       return true;
    }
 
@@ -129,7 +129,7 @@ namespace Langulus::Flow
             if (not Execute(block, environment, local, skipVerbs))
                LANGULUS_OOPS(Flow, "Deep AND failure: ", flow);
 
-            output.SmartPush(Abandon(local));
+            output.SmartPush(IndexBack, Abandon(local));
          });
       }
       else {
@@ -138,7 +138,7 @@ namespace Langulus::Flow
                // Nest if traits, but retain each trait                 
                if (trait.IsMissing()) {
                   // Never touch missing stuff, only propagate it       
-                  output.SmartPush(trait);
+                  output.SmartPush(IndexBack, trait);
                   return;
                }
 
@@ -146,7 +146,7 @@ namespace Langulus::Flow
                if (not Execute(trait, environment, local, skipVerbs))
                   LANGULUS_OOPS(Flow, "Trait AND failure: ", flow);
 
-               output.SmartPush(Trait::From(trait.GetTrait(), Abandon(local)));
+               output.SmartPush(IndexBack, Trait::From(trait.GetTrait(), Abandon(local)));
             },
             [&](const Construct& construct) {
                // Nest if constructs, but retain each construct         
@@ -182,7 +182,7 @@ namespace Langulus::Flow
 
                if (constructIsMissing) {
                   // Just propagate, if missing                         
-                  output.SmartPush(Abandon(local));
+                  output.SmartPush(IndexBack, Abandon(local));
                   return;
                }
 
@@ -191,7 +191,7 @@ namespace Langulus::Flow
                // produce everything possible, including stateless ones 
                Verbs::Create creator {&local};
                if (DispatchDeep<true, true, false>(environment, creator))
-                  output.SmartPush(Abandon(creator.GetOutput()));
+                  output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
                else
                   LANGULUS_OOPS(Flow, "Construct creation failure: ", flow);
             },
@@ -203,7 +203,7 @@ namespace Langulus::Flow
                if (constVerb.GetCharge().IsFlowDependent()) {
                   // The verb hasn't been integrated into a flow, just  
                   // forward it                                         
-                  output.SmartPush(constVerb);
+                  output.SmartPush(IndexBack, constVerb);
                   return Flow::Continue;
                }
 
@@ -221,7 +221,7 @@ namespace Langulus::Flow
                if (not ExecuteVerb(environment, verb))
                   LANGULUS_OOPS(Flow, "Verb AND failure: ", flow);
 
-               output.SmartPush(Abandon(verb.GetOutput()));
+               output.SmartPush(IndexBack, Abandon(verb.GetOutput()));
                return Flow::Continue;
             }
          );
@@ -230,7 +230,7 @@ namespace Langulus::Flow
       if (not executed) {
          // If this is reached, then we had non-verb content            
          // Just propagate its contents                                 
-         output.SmartPush(flow);
+         output.SmartPush(IndexBack, flow);
       }
 
       VERBOSE(Logger::Green, "AND scope done: ", flow);
@@ -253,7 +253,7 @@ namespace Langulus::Flow
             Any local;
             if (Execute(block, environment, local, localSkipVerbs)) {
                executed = true;
-               output.SmartPush(Abandon(local));
+               output.SmartPush(IndexBack, Abandon(local));
             }
          });
       }
@@ -263,14 +263,14 @@ namespace Langulus::Flow
                // Nest if traits, but retain each trait                 
                if (trait.IsMissing()) {
                   // Never touch missing stuff, only propagate it       
-                  output.SmartPush(trait);
+                  output.SmartPush(IndexBack, trait);
                   return;
                }
 
                Any local;
                if (Execute(trait, environment, local)) {
                   executed = true;
-                  output.SmartPush(Trait::From(trait.GetTrait(), Abandon(local)));
+                  output.SmartPush(IndexBack, Trait::From(trait.GetTrait(), Abandon(local)));
                }
             },
             [&](const Construct& construct) {
@@ -307,7 +307,7 @@ namespace Langulus::Flow
 
                if (constructIsMissing) {
                   // Just propagate, if missing                         
-                  output.SmartPush(Abandon(local));
+                  output.SmartPush(IndexBack, Abandon(local));
                   return;
                }
 
@@ -316,7 +316,7 @@ namespace Langulus::Flow
                // produce everything possible, including stateless ones 
                Verbs::Create creator {&local};
                if (DispatchDeep<true, true, false>(environment, creator))
-                  output.SmartPush(Abandon(creator.GetOutput()));
+                  output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
                else
                   LANGULUS_OOPS(Flow, "Construct creation failure: ", flow);
             },
@@ -328,7 +328,7 @@ namespace Langulus::Flow
                if (constVerb.GetCharge().IsFlowDependent()) {
                   // The verb hasn't been integrated into a flow, just  
                   // forward it                                         
-                  output.SmartPush(constVerb);
+                  output.SmartPush(IndexBack, constVerb);
                   return Flow::Continue;
                }
 
@@ -345,7 +345,7 @@ namespace Langulus::Flow
                   return Flow::Continue;
 
                executed = true;
-               output.SmartPush(Abandon(verb.GetOutput()));
+               output.SmartPush(IndexBack, Abandon(verb.GetOutput()));
                return Flow::Continue;
             }
          );
@@ -356,7 +356,7 @@ namespace Langulus::Flow
       if (not executed) {
          // If this is reached, then we have non-verb flat content      
          // Just propagate it                                           
-         output.SmartPush(flow);
+         output.SmartPush(IndexBack, flow);
          ++executed;
       }
 
@@ -378,7 +378,7 @@ namespace Langulus::Flow
       if (verb.IsMonocast()) {
          // We're executing on whole argument/source, so be lazy        
          if (verb.GetSource().IsInvalid())
-            verb.GetSource() = environment;
+            verb.SetSource(environment);
          return true;
       }
 
@@ -401,8 +401,8 @@ namespace Langulus::Flow
          return false;
       }
 
-      verb.GetSource() = Abandon(localSource);
-      verb.GetArgument() = Abandon(localArgument);
+      verb.SetSource(Abandon(localSource));
+      verb.SetArgument(Abandon(localArgument));
       return true;
    }
 

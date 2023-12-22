@@ -293,7 +293,7 @@ namespace Langulus::Flow
             // Context is empty, but has relevant states, so directly   
             // forward it as context. Alternatively, the verb is not a  
             // multicast verb, and we're operating on context as one    
-            verb.template SetSource<T>(context);
+            verb.SetSource(context);
             Execute<DISPATCH, DEFAULT, true>(context, verb);
             return verb.GetSuccesses();
          }
@@ -338,7 +338,8 @@ namespace Langulus::Flow
 
          if (context.IsOr())
             return verb.template CompleteDispatch<true>(successCount, Abandon(output));
-         return verb.template CompleteDispatch<false>(successCount, Abandon(output));
+         else
+            return verb.template CompleteDispatch<false>(successCount, Abandon(output));
       }
 
       // If reached, then block is flat                                 

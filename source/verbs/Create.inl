@@ -95,19 +95,21 @@ namespace Langulus::Verbs
             // Then forward the constructors to each element            
             if (arguments) {
                for (Count i = 0; i < created.GetCount(); ++i) {
-                  Any element {created.GetElement(i)};
+                  Any element = created.GetElement(i);
 
                   // First attempt delegating                           
-                  VERBOSE_CREATION(Logger::Yellow, "Delegating: ", arguments, " to ", element);
+                  VERBOSE_CREATION(Logger::Yellow,
+                     "Delegating: ", arguments, " to ", element);
                   Verbs::Create creator {arguments};
                   if (ExecuteVerb(element, creator)) {
                      VERBOSE_CREATION(Logger::Yellow <<
                         "Sideproduct: " << creator.GetOutput());
-                     created.MergeBlock(Abandon(creator.GetOutput()));
+                     created.MergeBlock(IndexBack, Abandon(creator.GetOutput()));
                      continue;
                   }
 
-                  VERBOSE_CREATION(Logger::Yellow, "Couldn't delegate ", arguments, " inside: ", element);
+                  VERBOSE_CREATION(Logger::Yellow,
+                     "Couldn't delegate ", arguments, " inside: ", element);
 
                   // If reached, let's attempt to set reflected members 
                   SetMembers(element, arguments);
@@ -150,7 +152,7 @@ namespace Langulus::Verbs
                }
 
                try {
-                  result.Emplace(descriptor.GetDescriptor());
+                  result.Emplace(IndexBack, descriptor.GetDescriptor());
                }
                catch (...) {
                   ERROR_CREATION("Can't statelessly produce ", descriptor);
@@ -168,7 +170,7 @@ namespace Langulus::Verbs
                }
 
                try {
-                  result.Emplace();
+                  result.Emplace(IndexBack);
                }
                catch (...) {
                   ERROR_CREATION("Can't statelessly produce ", descriptor);

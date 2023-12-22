@@ -249,7 +249,7 @@ namespace Langulus::Flow
          
          if (verb.IsDone() and verb.GetOutput()) {
             // Cache output, conserving the context hierarchy           
-            output.SmartPush(Langulus::Move(verb.GetOutput()));
+            output.SmartPush(IndexBack, Langulus::Move(verb.GetOutput()));
          }
 
          if (verb.IsDone())

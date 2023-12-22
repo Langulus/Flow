@@ -198,7 +198,7 @@ namespace Langulus::Verbs
       }
 
       //TODO split
-      reinterpret_cast<Any&>(context).SmartPush(
+      reinterpret_cast<Any&>(context).SmartPush(IndexBack,
          Langulus::Move(verb.GetArgument()));
       verb << Any {context};
       return true;

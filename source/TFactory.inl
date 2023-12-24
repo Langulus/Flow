@@ -12,7 +12,6 @@
 
 #define TEMPLATE()   template<class T, FactoryUsage USAGE>
 #define FACTORY()    TFactory<T, USAGE>
-#define ITERATOR()   TFactory<T, USAGE>::template TIterator<MUTABLE>
 
 
 namespace Langulus::Flow
@@ -20,17 +19,14 @@ namespace Langulus::Flow
 
    /// Move a produced item                                                   
    ///   @param other - the item to move                                      
-   template<class T>
-   LANGULUS(INLINED)
+   template<class T> LANGULUS(INLINED)
    ProducedFrom<T>::ProducedFrom(ProducedFrom&& other)
       : ProducedFrom {Move(other)} {}
 
    /// Semantic construction                                                  
    ///   @param other - semantic and element to initialize with               
-   template<class T>
-   template<template<class> class S>
-   requires CT::Semantic<S<Neat>>
-   LANGULUS(INLINED)
+   template<class T> template<template<class> class S>
+   requires CT::Semantic<S<Neat>> LANGULUS(INLINED)
    ProducedFrom<T>::ProducedFrom(S<ProducedFrom<T>>&& other)
       // mProducer intentionally not overwritten                        
       : mDescriptor {S<Neat> {other->mDescriptor}} {}
@@ -38,8 +34,7 @@ namespace Langulus::Flow
    /// Construct a produced item                                              
    ///   @param producer - the item's producer                                
    ///   @param neat - the item's neat descriptor                             
-   template<class T>
-   LANGULUS(INLINED)
+   template<class T> LANGULUS(INLINED)
    ProducedFrom<T>::ProducedFrom(T* producer, const Neat& neat)
       : mDescriptor {neat}
       , mProducer {producer} {
@@ -51,24 +46,21 @@ namespace Langulus::Flow
 
    /// Get the normalized descriptor of the produced item                     
    ///   @return the normalized descriptor                                    
-   template<class T>
-   LANGULUS(INLINED)
+   template<class T> LANGULUS(INLINED)
    const Neat& ProducedFrom<T>::GetNeat() const noexcept {
       return mDescriptor;
    }
 
    /// Get the hash of the normalized descriptor (cached and efficient)       
    ///   @return the hash                                                     
-   template<class T>
-   LANGULUS(INLINED)
+   template<class T> LANGULUS(INLINED)
    Hash ProducedFrom<T>::GetHash() const noexcept {
       return mDescriptor.GetHash();
    }
 
    /// Return the producer of the item (a.k.a. the owner of the factory)      
    ///   @return a pointer to the producer instance                           
-   template<class T>
-   LANGULUS(INLINED)
+   template<class T> LANGULUS(INLINED)
    T* ProducedFrom<T>::GetProducer() const noexcept {
       return mProducer;
    }
@@ -84,10 +76,8 @@ namespace Langulus::Flow
 
    /// Semantic construction                                                  
    ///   @param other - semantic and element to initialize with               
-   TEMPLATE()
-   template<template<class> class S>
-   requires CT::SemanticMakableAlt<S<T>>
-   LANGULUS(INLINED)
+   TEMPLATE() template<template<class> class S>
+   requires CT::SemanticMakableAlt<S<T>> LANGULUS(INLINED)
    FACTORY()::Element::Element(S<Element>&& other)
       : mFactory {other->mFactory}
       , mData {S<T> {other->mData}} {}
@@ -336,14 +326,14 @@ namespace Langulus::Flow
       verb.ForEachDeep(
          [&](const Construct& construct) {
             // For each construct...                                    
-            if (not MetaOf<T>()->CastsTo(construct.GetType()))
+            if (not MetaDataOf<T>()->CastsTo(construct.GetType()))
                return;
 
             TODO();
          },
          [&](const DMeta& type) {
             // For each type...                                         
-            if (not type or not MetaOf<T>()->CastsTo(type))
+            if (not type or not MetaDataOf<T>()->CastsTo(type))
                return;
 
             TODO();
@@ -366,7 +356,7 @@ namespace Langulus::Flow
       }
       else {
          // Add new slot                                                
-         mData.Emplace(this, neat);
+         mData.Emplace(IndexBack, this, neat);
          result = &mData.Last();
       }
 
@@ -466,7 +456,10 @@ namespace Langulus::Flow
       return const_cast<FACTORY()*>(this)->last();
    }
 
-   
+
+   #define ITERATOR()   TFactory<T, USAGE>::template TIterator<MUTABLE>
+   #define FACTORY_IT() FACTORY()::TIterator<MUTABLE>
+
    ///                                                                        
    ///   TFactory iterator                                                    
    ///                                                                        
@@ -474,20 +467,16 @@ namespace Langulus::Flow
    /// Construct an iterator                                                  
    ///   @param element - the current element                                 
    ///   @param sentinel - the sentinel (equivalent to factory::end())        
-   TEMPLATE()
-   template<bool MUTABLE>
-   LANGULUS(INLINED)
-   TFactory<T, USAGE>::TIterator<MUTABLE>::TIterator(const Element* element, const Element* sentinel) noexcept
+   TEMPLATE() template<bool MUTABLE> LANGULUS(INLINED)
+   FACTORY_IT()::TIterator(const Element* element, const Element* sentinel) noexcept
       : mElement {element}
       , mSentinel {sentinel} {}
 
    /// Prefix increment operator                                              
    ///   @attention assumes iterator points to a valid element                
    ///   @return the modified iterator                                        
-   TEMPLATE()
-   template<bool MUTABLE>
-   LANGULUS(INLINED)
-   typename ITERATOR()& TFactory<T, USAGE>::TIterator<MUTABLE>::operator ++ () noexcept {
+   TEMPLATE() template<bool MUTABLE> LANGULUS(INLINED)
+   typename ITERATOR()& FACTORY_IT()::operator ++ () noexcept {
       ++mElement;
       // Skip all invalid entries, until a valid one/sentinel is hit    
       while (mElement != mSentinel and 0 == mElement->mData.GetReferences())
@@ -498,10 +487,8 @@ namespace Langulus::Flow
    /// Suffix increment operator                                              
    ///   @attention assumes iterator points to a valid element                
    ///   @return the previous value of the iterator                           
-   TEMPLATE()
-   template<bool MUTABLE>
-   LANGULUS(INLINED)
-   typename ITERATOR() TFactory<T, USAGE>::TIterator<MUTABLE>::operator ++ (int) noexcept {
+   TEMPLATE() template<bool MUTABLE> LANGULUS(INLINED)
+   typename ITERATOR() FACTORY_IT()::operator ++ (int) noexcept {
       const auto backup = *this;
       operator ++ ();
       return backup;
@@ -510,51 +497,42 @@ namespace Langulus::Flow
    /// Compare iterators                                                      
    ///   @param rhs - the other iterator                                      
    ///   @return true if entries match                                        
-   TEMPLATE()
-   template<bool MUTABLE>
-   LANGULUS(INLINED)
-   bool TFactory<T, USAGE>::TIterator<MUTABLE>::operator == (const TIterator& rhs) const noexcept {
+   TEMPLATE() template<bool MUTABLE> LANGULUS(INLINED)
+   bool FACTORY_IT()::operator == (const TIterator& rhs) const noexcept {
       return mElement == rhs.mElement;
    }
       
    /// Iterator access operator                                               
    ///   @return a reference to the element at the current iterator position  
-   TEMPLATE()
-   template<bool MUTABLE>
-   LANGULUS(INLINED)
-   T& TFactory<T, USAGE>::TIterator<MUTABLE>::operator * () const noexcept requires (MUTABLE) {
+   TEMPLATE() template<bool MUTABLE> LANGULUS(INLINED)
+   T& FACTORY_IT()::operator * () const noexcept requires (MUTABLE) {
       return const_cast<T&>(mElement->mData);
    }
 
    /// Iterator access operator                                               
    ///   @return a reference to the element at the current iterator position  
-   TEMPLATE()
-   template<bool MUTABLE>
-   LANGULUS(INLINED)
-   const T& TFactory<T, USAGE>::TIterator<MUTABLE>::operator * () const noexcept requires (!MUTABLE) {
+   TEMPLATE() template<bool MUTABLE> LANGULUS(INLINED)
+   const T& FACTORY_IT()::operator * () const noexcept requires (!MUTABLE) {
       return mElement->mData;
    }
 
    /// Iterator access operator                                               
    ///   @return a reference to the element at the current iterator position  
-   TEMPLATE()
-   template<bool MUTABLE>
-   LANGULUS(INLINED)
-   T& TFactory<T, USAGE>::TIterator<MUTABLE>::operator -> () const noexcept requires (MUTABLE) {
+   TEMPLATE() template<bool MUTABLE> LANGULUS(INLINED)
+   T& FACTORY_IT()::operator -> () const noexcept requires (MUTABLE) {
       return const_cast<T&>(mElement->mData);
    }
 
    /// Iterator access operator                                               
    ///   @return a reference to the element at the current iterator position  
-   TEMPLATE()
-   template<bool MUTABLE>
-   LANGULUS(INLINED)
-   const T& TFactory<T, USAGE>::TIterator<MUTABLE>::operator -> () const noexcept requires (!MUTABLE) {
+   TEMPLATE() template<bool MUTABLE> LANGULUS(INLINED)
+   const T& FACTORY_IT()::operator -> () const noexcept requires (!MUTABLE) {
       return mElement->mData;
    }
 
 } // namespace Langulus::Flow
 
 #undef TEMPLATE
-#undef FACTORY
 #undef ITERATOR
+#undef FACTORY
+#undef FACTORY_IT

@@ -384,7 +384,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: Traits::Name") {
       const Code code = "Traits::Name";
-      const Any required = Traits::Name::GetTrait();
+      const Any required = MetaOf<Traits::Name>();
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();

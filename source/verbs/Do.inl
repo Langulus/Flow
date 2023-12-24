@@ -277,8 +277,6 @@ namespace Langulus::Flow
    ///   @return the number of successful executions                          
    template<bool RESOLVE, bool DISPATCH, bool DEFAULT>
    Count DispatchDeep(CT::Deep auto& context, CT::VerbBased auto& verb) {
-      using T = Deref<decltype(context)>;
-
       if (not context or verb.IsMonocast()) {
          if (context.IsInvalid()) {
             // Context is empty and doesn't have any relevant states,   

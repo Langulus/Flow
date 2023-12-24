@@ -90,7 +90,7 @@ namespace Langulus::Flow::Inner
                atLeastOneSuccess |= fork.Push(subcontent, environment);
             });
 
-            mContent.SmartPush(Abandon(fork.mContent));
+            mContent.SmartPush(IndexBack, Abandon(fork.mContent));
          }
          else {
             // Just nest                                                

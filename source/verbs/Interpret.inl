@@ -87,6 +87,7 @@ namespace Langulus::Verbs
    /// an argument automatically                                              
    template<CT::Data TO>
    InterpretAs<TO>::InterpretAs() {
+      static_assert(sizeof(InterpretAs) == sizeof(A::Verb));
       SetArgument(MetaOf<TO>());
    }
 

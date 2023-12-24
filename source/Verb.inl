@@ -33,11 +33,12 @@ namespace Langulus::Flow
    template<CT::Data T1, CT::Data...TAIL>
    requires CT::VerbMakable<T1, TAIL...> LANGULUS(INLINED)
    Verb::Verb(T1&& t1, TAIL&&...tail) {
-      if constexpr (sizeof...(TAIL) == 0) {
+      static_assert(sizeof(Verb) == sizeof(A::Verb));
+      if constexpr (sizeof...(TAIL) == 0 and not CT::Array<T1>) {
          using S = SemanticOf<T1>;
-         using ST = TypeOf<S>;
+         using T = TypeOf<S>;
 
-         if constexpr (CT::VerbBased<ST>) {
+         if constexpr (CT::VerbBased<T>) {
             decltype(auto) verb = DesemCast(t1);
             Any::operator = (S::Nest(t1).template Forward<Any>());
             Charge::operator = (verb);
@@ -72,18 +73,19 @@ namespace Langulus::Flow
    ///   @return a reference to this verb                                     
    LANGULUS(INLINED)
    Verb& Verb::operator = (CT::VerbAssignable auto&& rhs) {
-      using S = Decay<decltype(rhs)>;
+      using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
       if constexpr (CT::VerbBased<T>) {
-         Any::operator = (rhs.template Forward<Any>());
-         Charge::operator = (*rhs);
-         mVerb = rhs->mVerb;
-         mState = rhs->mState;
-         mSource = S::Nest(rhs->mSource);
-         mOutput = S::Nest(rhs->mOutput);
+         decltype(auto) verb = DesemCast(rhs);
+         Any::operator = (S::Nest(rhs).template Forward<Any>());
+         Charge::operator = (verb);
+         mVerb = verb.mVerb;
+         mState = verb.mState;
+         mSource = S::Nest(verb.mSource);
+         mOutput = S::Nest(verb.mOutput);
       }
-      else LANGULUS_ERROR("Bad verb assignment");
+      else Any::operator = (S::Nest(rhs));
       return *this;
    }
 
@@ -811,16 +813,19 @@ namespace Langulus::Flow
 
    template<class VERB> LANGULUS(INLINED)
    StaticVerb<VERB>& StaticVerb<VERB>::operator = (const StaticVerb& rhs) {
-      return operator = (Copy(rhs));
+      Verb::operator = (Copy(rhs));
+      return *this;
    }
 
    template<class VERB> LANGULUS(INLINED)
    StaticVerb<VERB>& StaticVerb<VERB>::operator = (StaticVerb&& rhs) {
-      return operator = (Move(rhs));
+      Verb::operator = (Move(rhs));
+      return *this;
    }
 
    template<class VERB> LANGULUS(INLINED)
    VMeta StaticVerb<VERB>::GetVerb() const noexcept {
+      static_assert(sizeof(StaticVerb) == sizeof(A::Verb));
       return (mVerb = MetaVerbOf<VERB>());
    }
 

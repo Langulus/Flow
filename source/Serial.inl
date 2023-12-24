@@ -64,7 +64,7 @@ namespace Langulus::Flow
          constexpr auto countCap = LANGULUS_MAX_DEBUGGABLE_ELEMENTS;
          const auto originalCount = block.GetCount();
          if (block.GetCount() > countCap)
-            block = block.Crop(0, countCap);
+            block = block.Crop<Block>(0, countCap);
 
          try {
             // Attempt converting to debug via reflected converters     
@@ -166,7 +166,6 @@ namespace Langulus::Anyness
    ///           serializing to binary (useful for standalone data)           
    ///   @tparam TO - what are we serializing to (deducible)                  
    ///   @tparam TO_ORIGINAL - keeps track what was the original TO           
-   ///   @param from - the block to serialize                                 
    ///   @param to - [out] the serialized block goes here                     
    ///   @return the number of written characters/bytes                       
    template<bool ENSCOPED, class TO, class TO_ORIGINAL>
@@ -649,14 +648,15 @@ namespace Langulus::Anyness
    /// Inner deserialization routine from binary                              
    ///   @tparam HEADER - true if you want to read a portability header       
    ///                    (useful for deserializing standalone data)          
-   ///   @param source - bytes to deserialize                                 
-   ///   @param result - [out] the resulting deserialized data                
-   ///   @param readOffset - offset to apply to serialized byte array         
+   ///   @param to - [out] the resulting deserialized data                    
    ///   @param header - environment header                                   
+   ///   @param readOffset - offset to apply to serialized byte array         
    ///   @param loader - loader for streaming                                 
    ///   @return the number of read/peek bytes from byte container            
    template<bool HEADER, CT::Block TO>
-   Size Bytes::Deserialize(TO& to, const Header& header, Offset readOffset, const Loader& loader) const {
+   Size Bytes::Deserialize(
+      TO& to, const Header& header, Offset readOffset, const Loader& loader
+   ) const {
       using namespace Flow;
       using namespace Serial;
 
@@ -682,7 +682,7 @@ namespace Langulus::Anyness
          if (not deserializedType)
             return read;
 
-         to.template Mutate<false>(deserializedType);
+         to.template Mutate<TO, void>(deserializedType);
       }
       else {
          // Don't read header - we have a predictable single element,   
@@ -842,7 +842,7 @@ namespace Langulus::Anyness
             }
 
             if constexpr (HEADER)
-               to.InsertBlock(element);
+               to.InsertBlock(IndexBack, element);
          }
 
          return read;
@@ -882,7 +882,7 @@ namespace Langulus::Flow::Serial
    ///   @return true if a scope is required around the block                 
    LANGULUS(INLINED)
    bool NeedsScope(const Block& block) noexcept {
-      return block.GetCount() > 1 || block.IsInvalid();
+      return block.GetCount() > 1 or block.IsInvalid();
    }
 
    /// Add a separator                                                        

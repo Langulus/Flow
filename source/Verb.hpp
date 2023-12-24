@@ -50,17 +50,19 @@ namespace Langulus::CT
    /// compatible to it, and is reflected as a verb                           
    template<class...T>
    concept Verb = VerbBased<T...> and ((
-         sizeof(T) == sizeof(A::Verb)
-         and (requires { {T::CTTI_Verb} -> Exact<Token>;} or requires {
-            {T::CTTI_PositiveVerb} -> Exact<Token>;
-            {T::CTTI_NegativeVerb} -> Exact<Token>;
-         })
-      ) and ...);
+         sizeof(T) == sizeof(A::Verb) and (
+            requires {
+               {T::CTTI_Verb} -> Similar<Token>;
+            } or requires {
+               {T::CTTI_PositiveVerb} -> Similar<Token>;
+               {T::CTTI_NegativeVerb} -> Similar<Token>;
+            }
+      )) and ...);
 
    /// Concept for recognizing arguments, with which a verb can be constructed
-   template<class...A>
-   concept VerbMakable = Inner::UnfoldInsertable<A...>
-        or (sizeof...(A) == 1 and VerbBased<Desem<FirstOf<A...>>>);
+   template<class T1, class...TN>
+   concept VerbMakable = Inner::UnfoldInsertable<T1, TN...>
+        or (sizeof...(TN) == 0 and VerbBased<Desem<T1>>);
 
    /// Concept for recognizing argument, with which a verb can be assigned    
    template<class A>

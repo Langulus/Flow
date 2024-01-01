@@ -160,7 +160,7 @@ namespace Langulus::Flow
 namespace Langulus::Anyness
 {
    
-   /// Serialize any block to any string format                               
+   /// Serialize any block to any string/binary format                        
    ///   @tparam ENSCOPED - whether or not the block is already enscoped, if  
    ///           text, or true if you want to write a portability header, if  
    ///           serializing to binary (useful for standalone data)           
@@ -168,7 +168,7 @@ namespace Langulus::Anyness
    ///   @tparam TO_ORIGINAL - keeps track what was the original TO           
    ///   @param to - [out] the serialized block goes here                     
    ///   @return the number of written characters/bytes                       
-   template<bool ENSCOPED, class TO, class TO_ORIGINAL>
+   template<bool ENSCOPED, CT::Block TO, CT::Block TO_ORIGINAL>
    Count Block::Serialize(TO& to) const {
       using namespace Flow;
       using namespace Serial;
@@ -365,7 +365,7 @@ namespace Langulus::Anyness
             }
             else if (CastsTo<Byte>()) {
                // Contained type is raw bytes, wrap it in byte scope    
-               auto raw_bytes = GetRaw();
+               auto raw_bytes = GetRawAs<Byte>();
                if (not IsOr()) {
                   to += Code {Code::OpenByte};
                   for (Offset i = 0; i < GetCount(); ++i)
@@ -485,18 +485,18 @@ namespace Langulus::Anyness
                // If data is POD, optimize by directly memcpying it     
                const auto denseStride = GetStride();
                const auto byteCount = denseStride * GetCount();
-               to.AllocateMore(to.GetCount() + byteCount);
+               to.template AllocateMore<TO>(to.GetCount() + byteCount);
 
                if (IsSparse()) {
                   // ... pointer by pointer if sparse                   
-                  auto p = GetRawSparse();
+                  auto p = GetRawSparseAs<Byte>();
                   const auto pEnd = p + GetCount();
                   while (p != pEnd)
                      to += Bytes {p++, denseStride};
                }
                else {
                   // ... at once if dense                               
-                  to += Bytes {GetRaw(), byteCount};
+                  to += Bytes {GetRawAs<Byte>(), byteCount};
                }
 
                return to.GetCount() - initial;
@@ -705,7 +705,7 @@ namespace Langulus::Anyness
          if (to.IsPOD()) {
             // If data is POD, optimize by directly memcpying it        
             if constexpr (HEADER)
-               to.template AllocateMore<false, true>(deserializedCount);
+               to.template AllocateMore<TO, false, true>(deserializedCount);
 
             const auto byteSize = to.GetBytesize();
             RequestMoreBytes(read, byteSize, loader);
@@ -986,13 +986,14 @@ namespace Langulus::Flow::Serial
          if (separate)
             to += Verbs::Conjunct::CTTI_PositiveOperator;
 
-         if (member.template Is<DMeta>())
+         const auto type = member.GetType();
+         if (type->template Is<DMeta>())
             SerializeMeta<DMeta>(from, to, &member);
-         else if (member.template Is<TMeta>())
+         else if (type->template Is<TMeta>())
             SerializeMeta<TMeta>(from, to, &member);
-         else if (member.template Is<VMeta>())
+         else if (type->template Is<VMeta>())
             SerializeMeta<VMeta>(from, to, &member);
-         else if (member.template Is<CMeta>())
+         else if (type->template Is<CMeta>())
             SerializeMeta<CMeta>(from, to, &member);
          else
             to += Serialize<TO, true, Block, TO_ORIGINAL>(from.GetMember(member));

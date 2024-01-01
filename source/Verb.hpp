@@ -52,10 +52,10 @@ namespace Langulus::CT
    concept Verb = VerbBased<T...> and ((
          sizeof(T) == sizeof(A::Verb) and (
             requires {
-               {T::CTTI_Verb} -> Similar<Token>;
+               {Decay<T>::CTTI_Verb} -> Similar<Token>;
             } or requires {
-               {T::CTTI_PositiveVerb} -> Similar<Token>;
-               {T::CTTI_NegativeVerb} -> Similar<Token>;
+               {Decay<T>::CTTI_PositiveVerb} -> Similar<Token>;
+               {Decay<T>::CTTI_NegativeVerb} -> Similar<Token>;
             }
       )) and ...);
 

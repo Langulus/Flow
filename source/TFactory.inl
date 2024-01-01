@@ -356,7 +356,7 @@ namespace Langulus::Flow
       }
       else {
          // Add new slot                                                
-         mData.Emplace(IndexBack, this, neat);
+         mData.template Emplace<false>(IndexBack, this, neat);
          result = &mData.Last();
       }
 
@@ -367,6 +367,7 @@ namespace Langulus::Flow
          found->mValue << result;
       else
          mHashmap.Insert(hash, result);
+
       ++mCount;
       return &result->mData;
    }

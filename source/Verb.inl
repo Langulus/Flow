@@ -669,7 +669,8 @@ namespace Langulus::Flow
       else {
          // Search for the ability via RTTI                             
          const auto meta = context.GetType();
-         if constexpr (CT::DerivedFrom<V, Verbs::Interpret> and requires { typename V::Type; }) {
+         if constexpr (CT::DerivedFrom<V, Verbs::Interpret>
+         and requires { typename V::Type; }) {
             // Scan for a reflected converter as statically as possible 
             using TO = typename V::Type;
             const auto found = meta->template GetConverter<TO>();
@@ -677,7 +678,7 @@ namespace Langulus::Flow
                // Converter was found, prioritize it                    
                // No escape from this scope                             
                auto result = Block::From<TO>();
-               result.AllocateFresh(result.RequestSize(1));
+               result.AllocateFresh(result.template RequestSize<TAny<TO>>(1));
                result.mCount = 1;
                found(context.GetRaw(), result.GetRaw());
                verb << Abandon(result);
@@ -693,7 +694,7 @@ namespace Langulus::Flow
                // Converter was found, prioritize it                    
                // No escape from this scope                             
                Block result {to};
-               result.AllocateFresh(result.RequestSize(1));
+               result.AllocateFresh(result.template RequestSize<Any>(1));
                result.mCount = 1;
                found(context.GetRaw(), result.GetRaw());
                verb << Abandon(result);

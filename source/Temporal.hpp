@@ -9,8 +9,7 @@
 #pragma once
 #include "Code.hpp"
 #include "Time.hpp"
-#include <Anyness/TOrderedMap.hpp>
-#include <Anyness/TUnorderedMap.hpp>
+#include <Anyness/TMap.hpp>
 
 
 namespace Langulus::Flow

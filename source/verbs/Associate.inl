@@ -80,7 +80,7 @@ namespace Langulus::Verbs
       // This will happen only if types are exactly the same            
       // This is a default (fallback) routine, let's keep things simple 
       try {
-         lhs.CallUnknownSemanticAssignment(
+         lhs.CallSemanticAssigners<Any>(
             lhs.GetCount(), Copy(rhs)
          );
       }

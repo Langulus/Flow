@@ -428,8 +428,8 @@ namespace Langulus::Anyness
    ///   @tparam FATAL_FAILURE - true to throw on failure, otherwise          
    ///                           return a default-initialized T on fail       
    ///   @return the first element, converted to T                            
-   template<CT::Data T, bool FATAL_FAILURE, CT::Index IDX>
-   T Block::AsCast(const IDX& index) const {
+   template<CT::Data T, bool FATAL_FAILURE>
+   T Block::AsCast(const CT::Index auto index) const {
       if (IsEmpty()) {
          if constexpr (FATAL_FAILURE)
             LANGULUS_THROW(Convert, "Unable to AsCast, container is empty");

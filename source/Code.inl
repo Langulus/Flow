@@ -72,11 +72,11 @@ namespace Langulus::Flow
       return asview.starts_with("//") or asview.starts_with("/*");
    }
 
-   /// Check if the Code code container begins with skippable elements        
+   /// Check if the Code container begins with skippable elements             
    ///   @return true if the first symbol is a spacer                         
    LANGULUS(INLINED)
    bool Code::EndsWithSkippable() const noexcept {
-      return last() > 0 and last() <= 32;
+      return *last() > 0 and *last() <= 32;
    }
 
    /// Check if the Code code container begins with a letter or underscore    
@@ -92,7 +92,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    bool Code::EndsWithLetter() const noexcept {
       const auto c = last();
-      return IsAlpha(c) or c == '_';
+      return IsAlpha(*c) or *c == '_';
    }
 
    /// Check if the Code code container begins with a number                  
@@ -106,7 +106,7 @@ namespace Langulus::Flow
    ///   @return true if the last symbol is a number                          
    LANGULUS(INLINED)
    bool Code::EndsWithDigit() const noexcept {
-      return IsDigit(last());
+      return IsDigit(*last());
    }
 
 } // namespace Langulus::Flow

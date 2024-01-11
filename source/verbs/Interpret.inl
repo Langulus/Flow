@@ -444,8 +444,8 @@ namespace Langulus::Anyness
 
       // Simplify the index as early as possible                        
       const auto idx = mType->Is<T>()
-         ? SimplifyIndex<T>(index)
-         : SimplifyIndex<void>(index);
+         ? SimplifyIndex<TAny<T>>(index)
+         : SimplifyIndex<Any>(index);
 
       // Attempt pointer arithmetic conversion first                    
       try { return As<T>(idx); }

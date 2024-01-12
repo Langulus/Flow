@@ -80,7 +80,7 @@ namespace Langulus::Verbs
       // This will happen only if types are exactly the same            
       // This is a default (fallback) routine, let's keep things simple 
       try {
-         lhs.Assign<Any>(Copy(rhs));
+         lhs.AssignSemantic(Copy(rhs));
       }
       catch (...) {
          return false;

@@ -627,14 +627,13 @@ namespace Langulus::Anyness
    /// Serialize a construct to a desired text type                           
    ///   @tparam T - type to serialize as                                     
    ///   @return the serialized container                                     
-   template<CT::Text T>
-   LANGULUS(INLINED)
+   template<CT::Text T> LANGULUS(INLINED)
    T Construct::SerializeAs() const {
-      T to;
-      to += GetType();
-      to += GetCharge().operator Debug();
-      to += GetDescriptor().template SerializeAs<T>();
-      return to;
+      return {
+         GetType(),
+         GetCharge().operator Debug(),
+         GetDescriptor().template SerializeAs<T>()
+      };
    }
 
    /// Explicit logging operator for Construct                                
@@ -899,8 +898,7 @@ namespace Langulus::Flow::Serial
    ///   @param from - the member block to serialize                          
    ///   @param to - [out] the serialized data                                
    ///   @param member - reflection data about the member                     
-   template<CT::Meta META, CT::Text TO>
-   LANGULUS(INLINED)
+   template<CT::Meta META, CT::Text TO> LANGULUS(INLINED)
    void SerializeMeta(const Block& from, TO& to, const RTTI::Member* member) {
       auto meta = member->template As<META>(from.GetRaw());
       if (meta)   to += meta->GetToken();

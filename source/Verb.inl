@@ -677,12 +677,10 @@ namespace Langulus::Flow
             if (found) {
                // Converter was found, prioritize it                    
                // No escape from this scope                             
-               auto result = Block::From<TO>();
-               result.AllocateFresh(result.template RequestSize<TAny<TO>>(1));
-               result.mCount = 1;
+               auto result = Any::From<TO>();
+               result.Reserve<true>(1);
                found(context.GetRaw(), result.GetRaw());
                verb << Abandon(result);
-               result.Free();
                return verb.IsDone();
             }
          }
@@ -693,12 +691,10 @@ namespace Langulus::Flow
             if (found) {
                // Converter was found, prioritize it                    
                // No escape from this scope                             
-               Block result {to};
-               result.AllocateFresh(result.template RequestSize<Any>(1));
-               result.mCount = 1;
+               auto result = Any::FromMeta(to);
+               result.Reserve<true>(1);
                found(context.GetRaw(), result.GetRaw());
                verb << Abandon(result);
-               result.Free();
                return verb.IsDone();
             }
          }

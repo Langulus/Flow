@@ -69,11 +69,10 @@ namespace Langulus::Flow
          try {
             // Attempt converting to debug via reflected converters     
             Debug result;
-            (void) block.template Serialize<HEADER, Debug, TO_ORIGINAL>(result);
+            (void) block.template Serialize<HEADER, Debug, TO_ORIGINAL, Any>(result);
             if (block.GetCount() != originalCount) {
-               result += " (";
-               result += originalCount - block.GetCount();
-               result += " more elements omitted)";
+               result += Text::TemplateRt(
+                  " ({} more elements omitted)", originalCount - block.GetCount());
             }
             return result;
          }
@@ -88,11 +87,10 @@ namespace Langulus::Flow
             // of redundant and irrelevant data, but better something   
             // than nothing...                                          
             Code result;
-            (void) block.template Serialize<HEADER, Code, TO_ORIGINAL>(result);
+            (void) block.template Serialize<HEADER, Code, TO_ORIGINAL, Any>(result);
             if (block.GetCount() != originalCount) {
-               result += " (";
-               result += originalCount - block.GetCount();
-               result += " more elements omitted)";
+               result += Text::TemplateRt(
+                  " ({} more elements omitted)", originalCount - block.GetCount());
             }
             return result;
          }
@@ -106,7 +104,7 @@ namespace Langulus::Flow
          // Code serializer is strict to allow for deserialization      
          try {
             TO_ORIGINAL result;
-            (void) block.template Serialize<HEADER, TO_ORIGINAL, TO_ORIGINAL>(result);
+            (void) block.template Serialize<HEADER, TO_ORIGINAL, TO_ORIGINAL, Any>(result);
             return result;
          }
          catch (const Except::Convert&) {}
@@ -168,7 +166,7 @@ namespace Langulus::Anyness
    ///   @tparam TO_ORIGINAL - keeps track what was the original TO           
    ///   @param to - [out] the serialized block goes here                     
    ///   @return the number of written characters/bytes                       
-   template<bool ENSCOPED, CT::Block TO, CT::Block TO_ORIGINAL>
+   template<bool ENSCOPED, CT::Block TO, CT::Block TO_ORIGINAL, CT::Block THIS>
    Count Block::Serialize(TO& to) const {
       using namespace Flow;
       using namespace Serial;
@@ -204,15 +202,16 @@ namespace Langulus::Anyness
             if (stateWritten)
                to += Text {' '};
 
-            if (IsDeep()) {
+            if (IsDeep<THIS>()) {
                // Nested serialization, wrap it in content scope        
                for (Offset i = 0; i < GetCount(); ++i) {
-                  to += Flow::Serialize<TO, false, Block, TO_ORIGINAL>(As<Block>(i));
+                  to += Flow::Serialize<TO, false, Block, TO_ORIGINAL>(
+                     As<Block>(i));
                   if (i < GetCount() - 1)
                      to += Separator(IsOr());
                }
             }
-            else if (Is<bool>()) {
+            else if (Is<THIS, bool>()) {
                // Contained type is boolean                             
                for (Offset i = 0; i < GetCount(); ++i) {
                   to += As<bool>(i) ? TO {"yes"} : TO {"no"};
@@ -220,7 +219,7 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (Is<Letter>()) {
+            else if (Is<THIS, Letter>()) {
                // Contained type is a character                         
                for (Offset i = 0; i < GetCount(); ++i) {
                   to += Code {Code::OpenCharacter};
@@ -230,37 +229,37 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (Is<Float>()) {
+            else if (Is<THIS, Float>()) {
                SerializeNumber<Float>(*this, to);
             }
-            else if (Is<Double>()) {
+            else if (Is<THIS, Double>()) {
                SerializeNumber<Double>(*this, to);
             }
-            else if (Is<uint8_t>()) {
+            else if (Is<THIS, uint8_t>()) {
                SerializeNumber<uint8_t>(*this, to);
             }
-            else if (Is<uint16_t>()) {
+            else if (Is<THIS, uint16_t>()) {
                SerializeNumber<uint16_t>(*this, to);
             }
-            else if (Is<uint32_t>()) {
+            else if (Is<THIS, uint32_t>()) {
                SerializeNumber<uint32_t>(*this, to);
             }
-            else if (Is<uint64_t>()) {
+            else if (Is<THIS, uint64_t>()) {
                SerializeNumber<uint64_t>(*this, to);
             }
-            else if (Is<int8_t>()) {
+            else if (Is<THIS, int8_t>()) {
                SerializeNumber<int8_t>(*this, to);
             }
-            else if (Is<int16_t>()) {
+            else if (Is<THIS, int16_t>()) {
                SerializeNumber<int16_t>(*this, to);
             }
-            else if (Is<int32_t>()) {
+            else if (Is<THIS, int32_t>()) {
                SerializeNumber<int32_t>(*this, to);
             }
-            else if (Is<int64_t>()) {
+            else if (Is<THIS, int64_t>()) {
                SerializeNumber<int64_t>(*this, to);
             }
-            else if (CastsTo<Code>()) {
+            else if (CastsTo<Code, false, THIS>()) {
                // Contained type is code, wrap it in code scope         
                for (Offset i = 0; i < GetCount(); ++i) {
                   auto& text = As<Code>(i);
@@ -271,7 +270,7 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (CastsTo<Text>()) {
+            else if (CastsTo<Text, false, THIS>()) {
                // Contained type is text, wrap it in string scope       
                for (Offset i = 0; i < GetCount(); ++i) {
                   auto& text = As<Text>(i);
@@ -282,7 +281,7 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (CastsTo<Trait>()) {
+            else if (CastsTo<Trait, false, THIS>()) {
                // Contained type is trait, serialize it                 
                for (Offset i = 0; i < GetCount(); ++i) {
                   auto& trait = As<Trait>(i);
@@ -296,7 +295,7 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (CastsTo<DMeta>()) {
+            else if (CastsTo<DMeta, false, THIS>()) {
                // Contained type is meta definitions, write the token   
                for (Offset i = 0; i < GetCount(); ++i) {
                   to += TO {As<DMeta>(i)};
@@ -304,7 +303,7 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (CastsTo<TMeta>()) {
+            else if (CastsTo<TMeta, false, THIS>()) {
                // Contained type is meta definitions, write the token   
                for (Offset i = 0; i < GetCount(); ++i) {
                   to += TO {As<TMeta>(i)};
@@ -312,7 +311,7 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (CastsTo<VMeta>()) {
+            else if (CastsTo<VMeta, false, THIS>()) {
                // Contained type is meta definitions, write the token   
                for (Offset i = 0; i < GetCount(); ++i) {
                   to += TO {As<VMeta>(i)};
@@ -320,7 +319,7 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (CastsTo<CMeta>()) {
+            else if (CastsTo<CMeta, false, THIS>()) {
                // Contained type is meta definitions, write the token   
                for (Offset i = 0; i < GetCount(); ++i) {
                   to += TO {As<CMeta>(i)};
@@ -328,7 +327,7 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (CastsTo<AMeta>()) {
+            else if (CastsTo<AMeta, false, THIS>()) {
                // Contained type is meta definitions, write the token   
                for (Offset i = 0; i < GetCount(); ++i) {
                   to += TO {As<AMeta>(i)};
@@ -336,7 +335,7 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (CastsTo<Verb>()) {
+            else if (CastsTo<Verb, false, THIS>()) {
                // Contained type is verb                                
                for (Offset i = 0; i < GetCount(); ++i) {
                   auto& verb = As<Verb>(i);
@@ -345,7 +344,7 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (CastsTo<Construct>()) {
+            else if (CastsTo<Construct, false, THIS>()) {
                // Contained type is Neat                                
                for (Offset i = 0; i < GetCount(); ++i) {
                   auto& construct = As<Construct>(i);
@@ -354,7 +353,7 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (CastsTo<Neat>()) {
+            else if (CastsTo<Neat, false, THIS>()) {
                // Contained type is Neat                                
                for (Offset i = 0; i < GetCount(); ++i) {
                   auto& neat = As<Neat>(i);
@@ -363,7 +362,7 @@ namespace Langulus::Anyness
                      to += Separator(IsOr());
                }
             }
-            else if (CastsTo<Byte>()) {
+            else if (CastsTo<Byte, false, THIS>()) {
                // Contained type is raw bytes, wrap it in byte scope    
                auto raw_bytes = GetRawAs<Byte>();
                if (not IsOr()) {
@@ -555,7 +554,7 @@ namespace Langulus::Anyness
 
                // Serialize all reflected members                       
                for (auto& member : element.GetType()->mMembers) {
-                  const auto memberBlock = element.GetMember(member);
+                  const auto memberBlock = element.GetMember(member, 0);
                   (void) memberBlock.Serialize<false>(to);
                }
             }
@@ -613,10 +612,11 @@ namespace Langulus::Anyness
             if (separator)
                to += ", ";
 
-            if (construct.mData.IsValid() or not construct.mCharge.IsDefault())
-               to += Flow::Serialize<T, false>(Construct(pair.mKey, construct.mData, construct.mCharge));
-            else
-               to += pair.mKey;
+            if (construct.mData.IsValid() or not construct.mCharge.IsDefault()) {
+               to += Flow::Serialize<T, false>(
+                  Construct(pair.mKey, construct.mData, construct.mCharge));
+            }
+            else to += pair.mKey;
             separator = true;
          }
       }
@@ -836,7 +836,7 @@ namespace Langulus::Anyness
 
             // Deserialize all reflected members                        
             for (auto& member : element.GetType()->mMembers) {
-               auto memberBlock = element.GetMember(member);
+               auto memberBlock = element.GetMember(member, 0);
                read = Deserialize<false>(memberBlock, header, read, loader);
             }
 
@@ -971,8 +971,7 @@ namespace Langulus::Flow::Serial
 
             const auto initial = to.GetCount();
             SerializeMembers<TO, TO_ORIGINAL>(
-               from.GetBaseMemory(base.mType, base), to
-            );
+               from.GetBaseMemory(base.mType, base), to);
 
             if (initial < to.GetCount())
                separate = true;
@@ -994,7 +993,8 @@ namespace Langulus::Flow::Serial
          else if (type->template Is<CMeta>())
             SerializeMeta<CMeta>(from, to, &member);
          else
-            to += Serialize<TO, true, Block, TO_ORIGINAL>(from.GetMember(member));
+            to += Serialize<TO, true, Block, TO_ORIGINAL>(
+               from.GetMember(member, 0), 0);
 
          separate = true;
       }

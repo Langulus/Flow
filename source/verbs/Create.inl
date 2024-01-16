@@ -151,7 +151,7 @@ namespace Langulus::Verbs
                }
 
                try {
-                  result.Emplace(IndexBack, descriptor.GetDescriptor());
+                  result.Emplace(IndexBack, Describe {descriptor.GetDescriptor()});
                }
                catch (...) {
                   ERROR_CREATION("Can't statelessly produce ", descriptor);
@@ -246,7 +246,7 @@ namespace Langulus::Verbs
                      if (sati)
                         ++satisfiedTraits.GetValue(sati);
                      else
-                        satisfiedTraits.Insert(meta, 1);
+                        satisfiedTraits.Insert(meta, Count {1});
 
                      VERBOSE_CREATION(Logger::Yellow, "Initialized ", 
                         selector.GetOutput(), " (", index, ")");
@@ -288,7 +288,7 @@ namespace Langulus::Verbs
                   if (sati)
                      ++satisfiedData.GetValue(sati);
                   else
-                     satisfiedData.Insert(meta, 1);
+                     satisfiedData.Insert(meta, Count {1});
 
                   VERBOSE_CREATION(Logger::Yellow,
                      "Initialized ", selector.GetOutput(), " (", index, ")");

@@ -105,7 +105,7 @@ namespace Langulus::Verbs
       TAny<const RTTI::Ability*> selectedAbilities;
 
       // Scan verb argument for anything but indices                    
-      verb.ForEachDeep([&](const Block& group) {
+      verb.ForEachDeep([&](const Any& group) {
          // Skip indices - they were gathered before the loop           
          if (group.Is<Index>())
             return;
@@ -139,7 +139,7 @@ namespace Langulus::Verbs
       if (containsOnlyIndices) {
          // Try selecting via indices only                              
          // This is allowed only if no metas were found in the argument 
-         PerIndex<MUTABLE>(context, selectedTraits, nullptr, nullptr, indices);
+         PerIndex<MUTABLE>(context, selectedTraits, TMeta {}, DMeta {}, indices);
       }
 
       // Output results if any, satisfying the verb                     
@@ -150,38 +150,43 @@ namespace Langulus::Verbs
 
    /// Select members by providing either meta data or meta trait             
    ///   @tparam MUTABLE - whether or not selection will be mutable           
-   ///   @tparam META - type of filter we're using                            
    ///   @param context - the thing we're searching in                        
    ///   @param selectedTraits - [out] found traits go here                   
    ///   @param resultingTrait - the type of trait to push to selectedTraits  
    ///   @param meta - the filter we'll be using                              
    ///   @param indices - optional indices (i.e. Nth trait of a kind          
    ///   @return true if at least one trait has been pushed to selectedTraits 
-   template<bool MUTABLE, class META>
-   bool Select::PerIndex(Block& context, TAny<Trait>& selectedTraits, TMeta resultingTrait, META meta, const TAny<Index>& indices) {
+   template<bool MUTABLE>
+   bool Select::PerIndex(Block& context, TAny<Trait>& selectedTraits, TMeta resultingTrait, CT::Meta auto meta, const TAny<Index>& indices) {
+      using META = decltype(meta);
       bool done = false;
-      if (not indices) {
-         // Meta is the only filter                                     
-         auto variable = context.GetMember(meta);
-         if constexpr (not MUTABLE)
-            variable.MakeConst();
+      static const Index fallbacki = 0;
+      const Index* i = indices ? indices.GetRaw() : &fallbacki;
 
-         if (variable.IsAllocated()) {
-            selectedTraits << Trait::From(resultingTrait, variable);
-            done = true;
-         }
-      }
-      else for (auto& idx : indices) {
+      do {
          // Search for each meta-index pair                             
-         auto variable = context.GetMember(meta, idx.GetOffset());
-         if constexpr (not MUTABLE)
-            variable.MakeConst();
+         const RTTI::Member* member {};
+         if constexpr (CT::Similar<META, DMeta>)
+            member = context.GetType()->GetMember(nullptr, meta, i->GetOffset());
+         else if constexpr (CT::Similar<META, TMeta>)
+            member = context.GetType()->GetMember(meta, nullptr, i->GetOffset());
+         else
+            LANGULUS_ERROR("Meta not supported for selecting members");
 
-         if (variable.IsAllocated()) {
-            selectedTraits << Trait::From(resultingTrait, variable);
-            done = true;
+         if (member) {
+            auto variable = context.GetMember(*member, 0);
+            if constexpr (not MUTABLE)
+               variable.MakeConst();
+
+            if (variable.IsAllocated()) {
+               selectedTraits << Trait::From(resultingTrait, variable);
+               done = true;
+            }
          }
-      }
+
+         if (indices)
+            ++i;
+      } while (i != indices.GetRawEnd() and i != &fallbacki);
 
       return done;
    }
@@ -204,7 +209,7 @@ namespace Langulus::Verbs
          }
          else for (auto& idx : indices) {
             // Retrieve specified abilities by index                    
-            Count counter {};
+            Count counter = 0;
             for (auto& ability : type->mAbilities) {
                if (counter == idx.GetOffset()) {
                   selectedVerbs << &ability.second;

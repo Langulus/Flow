@@ -23,47 +23,47 @@ namespace Langulus::Flow
    /// Flat check if block contains verbs                                     
    ///   @param block - the block to scan for verbs                           
    ///   @return true if the block contains immediate verbs                   
-   bool IsExecutable(const Block& block) noexcept {
+   bool IsExecutable(const Any& block) noexcept {
       if (block.Is<Verb>())
          return true;
 
-      bool executable = false;
+      bool exe = false;
       block.ForEach(
-         [&executable](const Trait& trait) noexcept {
+         [&exe](const Trait& trait) noexcept {
             // Scan deeper into traits, because they're not deep        
             // They are deep only with respect to execution             
-            executable = IsExecutable(trait);
-            return not executable;
+            exe = IsExecutable(trait);
+            return not exe;
          },
-         [&executable](const Construct& construct) noexcept {
+         [&exe](const Construct& cst) noexcept {
             // Scan deeper into constructs, because they're not deep    
             // They are deep only with respect to execution             
-            construct.GetDescriptor().ForEach([&executable](const Verb&) noexcept {
+            cst.GetDescriptor().ForEach([&exe](const Verb&) noexcept {
                // Counts as executable if containing at least one verb  
-               executable = true;
+               exe = true;
                return false;
             });
-            return not executable;
+            return not exe;
          }
       );
 
-      return executable;
+      return exe;
    }
 
    /// Deep (nested and slower) check if block contains verbs                 
    ///   @param block - the block to scan for verbs                           
    ///   @return true if the deep or flat block contains verbs                
-   bool IsExecutableDeep(const Block& block) noexcept {
+   bool IsExecutableDeep(const Any& block) noexcept {
       if (IsExecutable(block))
          return true;
 
-      bool executable = false;
-      block.ForEachDeep([&executable](const Block& group) noexcept {
-         executable = IsExecutable(group);
-         return not executable;
+      bool exe = false;
+      block.ForEachDeep([&exe](const Block& group) noexcept {
+         exe = IsExecutable(group);
+         return not exe;
       });
 
-      return executable;
+      return exe;
    }
 
    /// Nested AND/OR scope execution (discarding outputs)                     
@@ -71,7 +71,7 @@ namespace Langulus::Flow
    ///   @param flow - the flow to execute                                    
    ///   @param environment - the environment in which flow will be executed  
    ///   @return true of no errors occured                                    
-   bool Execute(const Block& flow, Any& environment) {
+   bool Execute(const Any& flow, Any& environment) {
       Any output;
       bool skipVerbs = false;
       return Execute(flow, environment, output, skipVerbs);
@@ -82,7 +82,7 @@ namespace Langulus::Flow
    ///   @param environment - the environment in which scope will be executed 
    ///   @param output - [out] verb result will be pushed here                
    ///   @return true of no errors occured                                    
-   bool Execute(const Block& flow, Any& environment, Any& output) {
+   bool Execute(const Any& flow, Any& environment, Any& output) {
       bool skipVerbs = false;
       return Execute(flow, environment, output, skipVerbs);
    }
@@ -93,7 +93,7 @@ namespace Langulus::Flow
    ///   @param output - [out] verb result will be pushed here                
    ///   @param skipVerbs - [in/out] whether to skip verbs after OR success   
    ///   @return true of no errors occured                                    
-   bool Execute(const Block& flow, Any& environment, Any& output, bool& skipVerbs) {
+   bool Execute(const Any& flow, Any& environment, Any& output, bool& skipVerbs) {
       auto results = Any::FromState(flow);
       if (flow) {
          VERBOSE_TAB("Executing scope: [", flow, ']');
@@ -120,10 +120,10 @@ namespace Langulus::Flow
    ///   @param output - [out] verb result will be pushed here                
    ///   @param skipVerbs - [in/out] whether to skip verbs after OR success   
    ///   @return true of no errors occured                                    
-   bool ExecuteAND(const Block& flow, Any& environment, Any& output, bool& skipVerbs) {
+   bool ExecuteAND(const Any& flow, Any& environment, Any& output, bool& skipVerbs) {
       Count executed {};
       if (flow.IsDeep()) {
-         executed = flow.ForEach([&](const Block& block) {
+         executed = flow.ForEach([&](const Any& block) {
             // Nest if deep                                             
             Any local;
             if (not Execute(block, environment, local, skipVerbs))
@@ -243,12 +243,12 @@ namespace Langulus::Flow
    ///   @param output - [out] verb result will be pushed here                
    ///   @param skipVerbs - [out] whether to skip verbs after OR success      
    ///   @return true of no errors occured                                    
-   bool ExecuteOR(const Block& flow, Any& environment, Any& output, bool& skipVerbs) {
+   bool ExecuteOR(const Any& flow, Any& environment, Any& output, bool& skipVerbs) {
       Count executed {};
       bool localSkipVerbs {};
 
       if (flow.IsDeep()) {
-         executed = flow.ForEach([&](const Block& block) {
+         executed = flow.ForEach([&](const Any& block) {
             // Nest if deep                                             
             Any local;
             if (Execute(block, environment, local, localSkipVerbs)) {

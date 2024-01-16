@@ -44,8 +44,8 @@ namespace Langulus::Verbs
    protected:
       template<bool MUTABLE>
       static bool DefaultSelect(Block&, Verb&);
-      template<bool MUTABLE, class META>
-      static bool PerIndex(Block&, TAny<Trait>&, TMeta, META, const TAny<Index>&);
+      template<bool MUTABLE>
+      static bool PerIndex(Block&, TAny<Trait>&, TMeta, CT::Meta auto, const TAny<Index>&);
       template<bool MUTABLE>
       static bool SelectByMeta(const TAny<Index>&, DMeta, Block&, TAny<Trait>&, TAny<const RTTI::Ability*>&);
    };

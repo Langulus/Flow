@@ -428,7 +428,7 @@ namespace Langulus::Anyness
    ///   @tparam FATAL_FAILURE - true to throw on failure, otherwise          
    ///                           return a default-initialized T on fail       
    ///   @return the first element, converted to T                            
-   template<CT::Data T, bool FATAL_FAILURE>
+   template<CT::Data T, bool FATAL_FAILURE, CT::Block THIS>
    T Block::AsCast(const CT::Index auto index) const {
       if (IsEmpty()) {
          if constexpr (FATAL_FAILURE)
@@ -443,9 +443,7 @@ namespace Langulus::Anyness
       }
 
       // Simplify the index as early as possible                        
-      const auto idx = mType->Is<T>()
-         ? SimplifyIndex<TAny<T>>(index)
-         : SimplifyIndex<Any>(index);
+      const auto idx = SimplifyIndex<THIS>(index);
 
       // Attempt pointer arithmetic conversion first                    
       try { return As<T>(idx); }
@@ -465,7 +463,7 @@ namespace Langulus::Anyness
       // dispatching Verbs::Interpret to the indicated element          
       const auto meta = MetaOf<T>();
       Verbs::Interpret interpreter {meta};
-      auto context = GetElementResolved(idx);
+      Any context = GetElementResolved(idx);
       if (Flow::DispatchDeep<false>(context, interpreter)) {
          // Success                                                     
          return interpreter->As<T>();

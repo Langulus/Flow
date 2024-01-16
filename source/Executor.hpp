@@ -17,16 +17,16 @@ namespace Langulus::Flow
    /// Tools for executing containers as flows                                
    ///                                                                        
    LANGULUS_API(FLOW)
-   bool Execute(const Block&, Any&);
+   bool Execute(const Any&, Any&);
    LANGULUS_API(FLOW)
-   bool Execute(const Block&, Any&, Any& output);
+   bool Execute(const Any&, Any&, Any& output);
    LANGULUS_API(FLOW)
-   bool Execute(const Block&, Any&, Any& output, bool& skipVerbs);
+   bool Execute(const Any&, Any&, Any& output, bool& skipVerbs);
 
    LANGULUS_API(FLOW)
-   bool ExecuteAND(const Block&, Any&, Any& output, bool& skipVerbs);
+   bool ExecuteAND(const Any&, Any&, Any& output, bool& skipVerbs);
    LANGULUS_API(FLOW)
-   bool ExecuteOR(const Block&, Any&, Any& output, bool& skipVerbs);
+   bool ExecuteOR(const Any&, Any&, Any& output, bool& skipVerbs);
 
    LANGULUS_API(FLOW)
    bool ExecuteVerb(Any&, Verb&);
@@ -34,8 +34,8 @@ namespace Langulus::Flow
    bool IntegrateVerb(Any&, Verb&);
 
    NOD() LANGULUS_API(FLOW)
-   bool IsExecutable(const Block&) noexcept;
+   bool IsExecutable(const Any&) noexcept;
    NOD() LANGULUS_API(FLOW)
-   bool IsExecutableDeep(const Block&) noexcept;
+   bool IsExecutableDeep(const Any&) noexcept;
 
 } // namespace Langulus::Flow

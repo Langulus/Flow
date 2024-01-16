@@ -305,7 +305,7 @@ namespace Langulus::Flow
          auto output = Any::FromState(context);
          for (Count i = 0; i < context.GetCount(); ++i) {
             const auto hits = DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(
-               context.template As<Block>(i), verb);
+               context.template As<Any>(i), verb);
             successCount += hits;
 
             if (verb.IsShortCircuited()) {
@@ -354,13 +354,13 @@ namespace Langulus::Anyness
    /// Execute a verb for all elements inside a type-erased constant block    
    ///   @param verb - the verb to execute                                    
    inline void Block::Run(Flow::Verb& verb) const {
-      DispatchDeep(*this, verb);
+      DispatchDeep(reinterpret_cast<const Any&>(*this), verb);
    }
 
    /// Execute a verb for all elements inside a type-erased block             
    ///   @param verb - the verb to execute                                    
    inline void Block::Run(Flow::Verb& verb) {
-      DispatchDeep(*this, verb);
+      DispatchDeep(reinterpret_cast<Any&>(*this), verb);
    }
 
 } // namespace Langulus::Anyness

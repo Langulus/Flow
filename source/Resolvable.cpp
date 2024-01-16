@@ -117,14 +117,19 @@ namespace Langulus::Flow
    ///   @param trait - the trait to search for                               
    ///   @return the static mutable memory block representing the member      
    Block Resolvable::GetMember(TMeta trait) noexcept {
-      return GetBlock().GetMember(trait);
+      auto member = mClassType->GetMember(trait);
+      if (member)
+         return GetBlock().GetMember(*member, 0);
+      return {};
    }
 
    /// Get the first member matching a runtime trait definition (const)       
    ///   @param trait - the trait to search for                               
    ///   @return the static constant memory block representing the member     
    Block Resolvable::GetMember(TMeta trait) const noexcept {
-      return GetBlock().GetMember(trait);
+      auto r = const_cast<Resolvable*>(this)->GetMember(trait);
+      r.MakeConst();
+      return r;
    }
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -132,14 +137,14 @@ namespace Langulus::Flow
    ///   @param trait - the trait to search for                               
    ///   @return the static mutable memory block representing the member      
    Block Resolvable::GetMember(const Token& trait) noexcept {
-      return GetBlock().GetMember(RTTI::GetMetaTrait(trait));
+      return GetMember(RTTI::GetMetaTrait(trait));
    }
 
    /// Get the first member matching a runtime trait token (const)            
    ///   @param trait - the trait to search for                               
    ///   @return the static constant memory block representing the member     
    Block Resolvable::GetMember(const Token& trait) const noexcept {
-      return GetBlock().GetMember(RTTI::GetMetaTrait(trait));
+      return GetMember(RTTI::GetMetaTrait(trait));
    }
 #endif
 

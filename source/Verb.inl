@@ -678,7 +678,7 @@ namespace Langulus::Flow
                // Converter was found, prioritize it                    
                // No escape from this scope                             
                auto result = Any::From<TO>();
-               result.Reserve<true>(1);
+               result.template Reserve<true>(1);
                found(context.GetRaw(), result.GetRaw());
                verb << Abandon(result);
                return verb.IsDone();
@@ -692,7 +692,7 @@ namespace Langulus::Flow
                // Converter was found, prioritize it                    
                // No escape from this scope                             
                auto result = Any::FromMeta(to);
-               result.Reserve<true>(1);
+               result.template Reserve<true>(1);
                found(context.GetRaw(), result.GetRaw());
                verb << Abandon(result);
                return verb.IsDone();

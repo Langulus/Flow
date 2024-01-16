@@ -68,8 +68,7 @@ namespace Langulus::Flow
    /// Check if context interprets as a static type                           
    ///   @tparam T - the type to check for                                    
    ///   @return true if this context can be dynamically interpreted as T     
-   template<CT::Data T>
-   LANGULUS(INLINED)
+   template<CT::Data T> LANGULUS(INLINED)
    bool Resolvable::CastsTo() const {
       return mClassType->template CastsTo<T>();
    }
@@ -77,8 +76,7 @@ namespace Langulus::Flow
    /// Check if context is an exact static type                               
    ///   @tparam T - the type to check for                                    
    ///   @return true if this context can be dynamically interpreted as T     
-   template<CT::Data T>
-   LANGULUS(INLINED)
+   template<CT::Data T> LANGULUS(INLINED)
    bool Resolvable::Is() const {
       return mClassType->template Is<T>();
    }
@@ -88,8 +86,7 @@ namespace Langulus::Flow
    ///   @tparam DEFAULT - whether to allow default/stateless verbs on fail   
    ///   @param verb - the verb to execute in this resolved type              
    ///   @return a reference to the verb's output                             
-   template<bool DISPATCH, bool DEFAULT>
-   LANGULUS(INLINED)
+   template<bool DISPATCH, bool DEFAULT> LANGULUS(INLINED)
    Any Resolvable::Run(CT::VerbBased auto& verb) {
       auto environment = GetBlock();
       DispatchFlat<false, DISPATCH, DEFAULT>(environment, verb);
@@ -101,8 +98,7 @@ namespace Langulus::Flow
    ///   @tparam DEFAULT - whether to allow default/stateless verbs on fail   
    ///   @param verb - the verb to execute in this resolved type              
    ///   @return a reference to the verb's output                             
-   template<bool DISPATCH, bool DEFAULT>
-   LANGULUS(INLINED)
+   template<bool DISPATCH, bool DEFAULT> LANGULUS(INLINED)
    Any Resolvable::Run(CT::VerbBased auto&& verb) {
       auto environment = GetBlock();
       auto moved = Move(verb);
@@ -152,8 +148,7 @@ namespace Langulus::Flow
    ///   @tparam T - the trait to search for                                  
    ///   @param data - [out] the data to set                                  
    ///   @return true if trait was found, and data was set                    
-   template<CT::Trait T>
-   LANGULUS(INLINED)
+   template<CT::Trait T> LANGULUS(INLINED)
    bool Resolvable::GetTrait(CT::Data auto& data) const {
       auto found = GetBlock().GetMember(MetaOf<T>());
       try {
@@ -183,8 +178,7 @@ namespace Langulus::Flow
    ///                    is considerably faster (false by default)           
    ///   @param data - [out] the data to copy                                 
    ///   @return true if trait was found and overwritten                      
-   template<CT::Trait T, bool DIRECT>
-   LANGULUS(INLINED)
+   template<CT::Trait T, bool DIRECT> LANGULUS(INLINED)
    bool Resolvable::SetTrait(const CT::Data auto& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<T>();
@@ -207,8 +201,7 @@ namespace Langulus::Flow
    ///                    is considerably faster (false by default)           
    ///   @param data - [out] the data to move                                 
    ///   @return true if trait was found and overwritten                      
-   template<CT::Trait T, bool DIRECT>
-   LANGULUS(INLINED)
+   template<CT::Trait T, bool DIRECT> LANGULUS(INLINED)
    bool Resolvable::SetTrait(CT::Data auto&& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<T>();
@@ -230,8 +223,7 @@ namespace Langulus::Flow
    ///                    is considerably faster (false by default)           
    ///   @param data - [out] the data to copy                                 
    ///   @return true if data was found and overwritten                       
-   template<bool DIRECT>
-   LANGULUS(INLINED)
+   template<bool DIRECT> LANGULUS(INLINED)
    bool Resolvable::SetValue(const CT::Data auto& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<Deref<decltype(data)>>();
@@ -253,8 +245,7 @@ namespace Langulus::Flow
    ///                    is considerably faster (false by default)           
    ///   @param data - [out] the data to move                                 
    ///   @return true if data was found and overwritten                       
-   template<bool DIRECT>
-   LANGULUS(INLINED)
+   template<bool DIRECT> LANGULUS(INLINED)
    bool Resolvable::SetValue(CT::Data auto&& data) {
       if constexpr (DIRECT) {
          auto found = GetBlock().GetMember<Deref<decltype(data)>>();

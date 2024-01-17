@@ -575,7 +575,7 @@ namespace Langulus::Anyness
    /// Serialize a Neat container                                             
    ///   @tparam T - text type to serialize as                                
    ///   @return the serialized data                                          
-   template<CT::Text T>
+   template<CT::TextBased T>
    T Neat::SerializeAs() const {
       using Flow::Code;
       T to;
@@ -627,7 +627,7 @@ namespace Langulus::Anyness
    /// Serialize a construct to a desired text type                           
    ///   @tparam T - type to serialize as                                     
    ///   @return the serialized container                                     
-   template<CT::Text T> LANGULUS(INLINED)
+   template<CT::TextBased T> LANGULUS(INLINED)
    T Construct::SerializeAs() const {
       return {
          GetType(),

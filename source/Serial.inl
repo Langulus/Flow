@@ -114,7 +114,7 @@ namespace Langulus::Flow
          // Byte serializer is strict to allow for deserialization      
          try {
             TO_ORIGINAL result;
-            (void) block.template Serialize<HEADER>(result);
+            (void) block.template Serialize<HEADER, TO_ORIGINAL, TO_ORIGINAL, Any>(result);
             return result;
          }
          catch (const Except::Convert&) {}

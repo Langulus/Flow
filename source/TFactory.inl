@@ -364,7 +364,7 @@ namespace Langulus::Flow
       const auto hash = result->mData.GetHash();
       const auto found = mHashmap.FindIt(hash);
       if (found)
-         found->mValue << result;
+         *found.mValue << result;
       else
          mHashmap.Insert(hash, result);
 

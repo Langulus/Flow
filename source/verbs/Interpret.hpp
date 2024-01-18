@@ -30,7 +30,7 @@ namespace Langulus::Verbs
       template<CT::Dense T, CT::Data... A>
       static constexpr auto Of() noexcept;
 
-      template<class TO, class FROM>
+      template<CT::Decayed TO, CT::Decayed FROM>
       static TO To(const FROM&);
 
       template<CT::Dense T>

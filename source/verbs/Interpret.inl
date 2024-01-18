@@ -117,47 +117,36 @@ namespace Langulus::Verbs
    /// Statically optimized interpret verb                                    
    ///   @param from - the element to convert                                 
    ///   @return the converted element                                        
-   template<class TO, class FROM>
+   template<CT::Decayed TO, CT::Decayed FROM>
    TO Interpret::To(const FROM& from) {
-      if constexpr (CT::Same<TO, FROM>) {
-         // Types are the same                                          
+      if constexpr (CT::Similar<TO, FROM>) {
+         // Types are already the same                                  
          return from;
       }
-      else if constexpr (CT::Same<TO, Any>) {
+      else if constexpr (CT::Similar<TO, Any>) {
          // Always interpreted as deserialization                       
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            if constexpr (CT::SameAsOneOf<FROM, Code, Bytes>)
-               return Flow::Deserialize(from);
+         // Read it as "interpret to anything that comes out of it"     
+         return Flow::Deserialize(from);
+      }
+      else if constexpr (not CT::Deep<FROM>) {
+         if constexpr (CT::Convertible<FROM, TO>) {
+            // Directly convert if static conversion exists             
+            // Works only if source isn't a deep container              
+            if constexpr (requires { TO {from}; })
+               return TO {from};
+            else if constexpr (requires { TO {from.operator TO()}; })
+               return TO {from.operator TO()};
+            else if constexpr (requires { static_cast<TO>(from); })
+               return static_cast<TO>(from);
             else
-               LANGULUS_ERROR("No deserializer exists between these types");
-         #else
-            LANGULUS_ERROR(
-               "No deserializer exists between these types"
-               " (managed reflection is disabled)");
-         #endif
+               LANGULUS_ERROR("Unhandled conversion route for non-deep");
+         }
+         else LANGULUS_ERROR("Non-deep type has no converter to the desired type");
       }
-      else if constexpr (CT::Convertible<FROM, TO> and not CT::Deep<FROM>) {
-         // Directly convert if static conversion exists                
-         if constexpr (requires { TO {from}; }) {
-            return TO {from};
-         }
-         else if constexpr (requires { TO {from.operator TO()}; }) {
-            return TO {from.operator TO()};
-         }
-         else if constexpr (requires { static_cast<Debug>(from); }) {
-            return static_cast<TO>(from);
-         }
-         else LANGULUS_ERROR("Unhandled conversion route");
-      }
-      else if constexpr (CT::Text<TO> or CT::Bytes<TO>) {
-         // No constructor/conversion operator exists, that would do    
-         // the conversion, but we can rely on the serializer,          
-         // if TO is supported                                          
+      else {
+         // We're converting a container, so relay to the serializer    
          return Flow::Serialize<TO>(from);
       }
-      else LANGULUS_ERROR(
-         "No static conversion routine, or dynamic serializer "
-         "exists between these types");
    }
 
 } // namespace Langulus::Verbs
@@ -257,12 +246,11 @@ namespace fmt
          return ctx.begin();
       }
 
-      template<class CONTEXT>
-      LANGULUS(INLINED)
+      template<class CONTEXT> LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
 
-         const auto asText = Verbs::Interpret::To<Flow::Debug>(element);
+         const auto asText = Verbs::Interpret::To<Anyness::Text>(element);
          return fmt::format_to(ctx.out(), "{}",
             static_cast<Logger::TextView>(asText));
       }
@@ -278,8 +266,7 @@ namespace fmt
          return ctx.begin();
       }
 
-      template<class CONTEXT>
-      LANGULUS(INLINED)
+      template<class CONTEXT> LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
 
@@ -300,12 +287,11 @@ namespace fmt
          return ctx.begin();
       }
 
-      template<class CONTEXT>
-      LANGULUS(INLINED)
+      template<class CONTEXT> LANGULUS(INLINED)
       auto format(Langulus::Anyness::Neat const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
 
-         const auto asText = Verbs::Interpret::To<Flow::Debug>(element);
+         const auto asText = Verbs::Interpret::To<Anyness::Text>(element);
          return fmt::format_to(ctx.out(), "{}",
             static_cast<Logger::TextView>(asText));
       }
@@ -321,12 +307,11 @@ namespace fmt
          return ctx.begin();
       }
 
-      template<class CONTEXT>
-      LANGULUS(INLINED)
+      template<class CONTEXT> LANGULUS(INLINED)
       auto format(Langulus::Anyness::Construct const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
 
-         const auto asText = Verbs::Interpret::To<Flow::Debug>(element);
+         const auto asText = Verbs::Interpret::To<Anyness::Text>(element);
          return fmt::format_to(ctx.out(), "{}",
             static_cast<Logger::TextView>(asText));
       }
@@ -342,8 +327,7 @@ namespace fmt
          return ctx.begin();
       }
 
-      template<class CONTEXT>
-      LANGULUS(INLINED)
+      template<class CONTEXT> LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
 
@@ -365,8 +349,7 @@ namespace fmt
          return ctx.begin();
       }
 
-      template<class CONTEXT>
-      LANGULUS(INLINED)
+      template<class CONTEXT> LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
 
@@ -397,8 +380,7 @@ namespace fmt
          return ctx.begin();
       }
 
-      template<class CONTEXT>
-      LANGULUS(INLINED)
+      template<class CONTEXT> LANGULUS(INLINED)
       auto format(T const& element, CONTEXT& ctx) {
          using namespace ::Langulus;
 

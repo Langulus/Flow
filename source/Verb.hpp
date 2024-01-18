@@ -81,7 +81,7 @@ namespace Langulus::Flow
    /// theory found on verbs, so this is the natural name for such thing      
    ///                                                                        
    struct Verb : A::Verb {
-      LANGULUS_CONVERSIONS(Code, Debug);
+      LANGULUS_CONVERSIONS(Code, Text);
       LANGULUS_BASES(A::Verb);
 
       ///                                                                     
@@ -224,7 +224,7 @@ namespace Langulus::Flow
       Verb& operator >>= (CT::Inner::UnfoldInsertable auto&&);
 
       NOD() LANGULUS_API(FLOW) explicit operator Code() const;
-      NOD() LANGULUS_API(FLOW) explicit operator Debug() const;
+      NOD() LANGULUS_API(FLOW) explicit operator Text() const;
 
       template<CT::Dense T>
       bool GenericAvailableFor() const noexcept;

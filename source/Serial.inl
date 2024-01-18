@@ -745,7 +745,7 @@ namespace Langulus::Anyness
 
             return read;
          }
-         else if (to.template IsExact<DMeta, TMeta, CMeta, VMeta>()) {
+         else if (to.GetType()->IsExact<DMeta, TMeta, CMeta, VMeta>()) {
             // Deserialize data definition                              
             if constexpr (HEADER)
                to.New(deserializedCount);

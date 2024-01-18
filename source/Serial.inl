@@ -589,7 +589,7 @@ namespace Langulus::Anyness
             if (group.IsValid())
                to += Flow::Serialize<T, false>(group);
             else
-               to += pair.mKey;
+               to += T {pair.mKey};
             separator = true;
          }
       }
@@ -602,7 +602,7 @@ namespace Langulus::Anyness
             if (trait.IsValid())
                to += Flow::Serialize<T, false>(Trait::From(pair.mKey, trait));
             else
-               to += pair.mKey;
+               to += T {pair.mKey};
             separator = true;
          }
       }
@@ -616,7 +616,7 @@ namespace Langulus::Anyness
                to += Flow::Serialize<T, false>(
                   Construct(pair.mKey, construct.mData, construct.mCharge));
             }
-            else to += pair.mKey;
+            else to += T {pair.mKey};
             separator = true;
          }
       }
@@ -722,7 +722,7 @@ namespace Langulus::Anyness
                const auto pEnd = p + to.GetCount();
                const auto size = to.GetType()->mSize;
                while (p != pEnd) {
-                  p.New(start, temporary);
+                  p.Create(start, temporary);
                   start += size;
                }
             }

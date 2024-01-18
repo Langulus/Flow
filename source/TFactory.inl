@@ -124,7 +124,7 @@ namespace Langulus::Flow
       // Destroy only elements that have a single reference             
       // Some of the elements might be used in other modules, and their 
       // destruction, as well as the destruction of the mData.mEntry    
-      // will commence automatically after their use have ceased.       
+      // will commence automatically after their use have ceased        
       auto raw = mData.GetRaw();
       const auto rawEnd = mData.GetRawEnd();
 

@@ -22,7 +22,6 @@ namespace Langulus::Flow
    ///                                                                        
    struct LANGULUS_API(FLOW) Resolvable : Referenced {
       LANGULUS(ABSTRACT) true;
-      LANGULUS(UNINSERTABLE) true;
       LANGULUS_CONVERSIONS(Debug);
 
    private:

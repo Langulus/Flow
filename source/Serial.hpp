@@ -10,41 +10,25 @@
 #include "Code.hpp"
 
 
-namespace Langulus::Flow
+namespace Langulus::CT
 {
 
-   ///                                                                        
-   ///   Serializer interface                                                 
-   ///                                                                        
-   template<CT::Block TO, bool HEADER = true, CT::Dense FROM, CT::Block TO_ORIGINAL = TO>
-   NOD() TO Serialize(const FROM&);
-   template<CT::Block TO, bool HEADER = true, CT::Sparse FROM, CT::Block TO_ORIGINAL = TO>
-   NOD() TO Serialize(FROM);
+   /// A serializer is any Block type, that has an inner type called          
+   /// SerializationRules, which holds instructions on how data is assembled  
+   template<class...T>
+   concept Serial = ((Block<T...>
+       and requires { typename T::SerializationRules; }) and ...);
 
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      template<CT::Block FROM>
-      NOD() Any Deserialize(const FROM&);
-   #endif
+} // namespace Langulus::CT
 
-   namespace Serial
-   {
 
-      ///                                                                     
-      ///   General Code/Debug serializer tools                               
-      ///                                                                     
-      void ToHex(const Byte&, Text&);
-      NOD() bool NeedsScope(const Block&) noexcept;
-      NOD() Text Separator(bool isOr);
+namespace Langulus::Anyness
+{
 
-      template<class T, CT::Text TO>
-      void SerializeNumber(const Block&, TO&);
+   template<bool HEADER = true>
+   NOD() Count Serialize(const CT::Decayed auto&, CT::Serial auto&);
 
-      template<CT::Meta META, CT::Text TO>
-      void SerializeMeta(const Block&, TO&, const RTTI::Member*);
+   template<bool HEADER = true>
+   NOD() Count Deserialize(const CT::Serial auto&, CT::Decayed auto&);
 
-      template<CT::Text TO, CT::Block TO_ORIGINAL>
-      void SerializeMembers(const Block&, TO&);
-
-   } // namespace Langulus::Flow::Serial
-
-} // namespace Langulus::Flow
+} // namespace Langulus::Anyness

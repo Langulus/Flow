@@ -66,9 +66,9 @@ namespace Langulus::Flow
       // Priority stack, i.e. the order of things that happen NOW       
       Any mPriorityStack;
       // Verb temporal stack, i.e. things that happen at specific time  
-      TOrderedMap<Time, Temporal*> mTimeStack;
+      //TOrderedMap<Time, Temporal*> mTimeStack;
       // Verb frequency stack, i.e. things that happen periodically     
-      TUnorderedMap<Time, Temporal*> mFrequencyStack;
+      //TUnorderedMap<Time, Temporal*> mFrequencyStack;
 
    protected:
       LANGULUS_API(FLOW) static Any Collapse(const Block&);

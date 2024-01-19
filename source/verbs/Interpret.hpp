@@ -44,7 +44,7 @@ namespace Langulus::Verbs
    ///   Statically optimized interpret verb                                  
    ///   @tparam AS - what are we converting to?                              
    ///                                                                        
-   /*template<CT::Data AS>
+   template<CT::Data AS>
    struct InterpretAs : Interpret {
       LANGULUS_BASES(Interpret);
       using Interpret::Interpret;
@@ -52,6 +52,6 @@ namespace Langulus::Verbs
 
       InterpretAs();
       static bool ExecuteDefault(const Block&, Verb&);
-   };*/
+   };
 
 } // namespace Langulus::Verbs

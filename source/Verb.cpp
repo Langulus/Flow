@@ -7,9 +7,8 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #include "Verb.hpp"
-#include "Serial.inl"
 
-#define DELEGATION_VERBOSE(a) pcLogSelfVerbose << a
+#define DELEGATION_VERBOSE(a) Logger::Verbose(a)
 
 LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
 
@@ -128,7 +127,7 @@ namespace Langulus::Flow
 
    /// Serialize verb for logger                                              
    Verb::operator Text() const {
-      return SerializeVerb<Debug>();
+      return SerializeVerb<Text>();
    }
 
 } // namespace Langulus::Flow

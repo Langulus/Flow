@@ -8,7 +8,6 @@
 ///                                                                           
 #pragma once
 #include "TFactory.hpp"
-#include "Serial.inl"
 
 #define TEMPLATE()   template<class T, FactoryUsage USAGE>
 #define FACTORY()    TFactory<T, USAGE>

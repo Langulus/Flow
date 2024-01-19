@@ -18,6 +18,7 @@
    const auto tabs = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
 #define VERBOSE_FUTURE(...) 
 
+
 namespace Langulus::Flow::Inner
 {
 
@@ -295,7 +296,7 @@ namespace Langulus::Flow::Inner
          }
       );
 
-      if (!found) {
+      if (not found) {
          // Anything else just gets propagated                          
          result = Any {scope};
       }
@@ -306,21 +307,18 @@ namespace Langulus::Flow::Inner
    }
 
    /// Log the missing point                                                  
-   inline Missing::operator Debug() const {
-      Code result;
-      result += Code::OpenScope;
-      result += Verbs::Interpret::To<Debug>(mFilter);
-      if (mPriority != NoPriority) {
-         result += " !";
-         result += Text {mPriority};
-      }
+   inline Missing::operator Text() const {
+      Text result;
+      result += '(';
+      result += mFilter.Serialize<Text>();
 
-      if (mContent) {
-         result += ", ";
-         result += Verbs::Interpret::To<Debug>(mContent);
-      }
+      if (mPriority != NoPriority)
+         result += Text {" !", mPriority};
 
-      result += Code::CloseScope;
+      if (mContent)
+         result += Text {", ", mContent.Serialize<Text>()};
+
+      result += ')';
       return result;
    }
 

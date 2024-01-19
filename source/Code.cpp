@@ -7,7 +7,6 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #include "Code.inl"
-#include "Serial.hpp"
 #include "Verb.hpp"
 
 #include "verbs/Do.inl"

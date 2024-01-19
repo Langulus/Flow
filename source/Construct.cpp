@@ -6,7 +6,6 @@
 /// Distributed under GNU General Public License v3+                          
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
-#include "Serial.hpp"
 #include "verbs/Interpret.inl"
 #include "verbs/Do.inl"
 #include "verbs/Create.inl"

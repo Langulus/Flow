@@ -100,7 +100,7 @@ struct Producible : Referenced, ProducedFrom<Producer> {
       return mDescriptor == rhs.mDescriptor;
    }
 
-   operator Debug () const {
+   operator Text () const {
       return "Producible";
    }
 };

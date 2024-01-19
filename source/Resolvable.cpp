@@ -56,14 +56,14 @@ namespace Langulus::Flow
    }
 
    /// Stringify the context (shows class type and an identifier)             
-   Resolvable::operator Debug() const {
+   Resolvable::operator Text() const {
       return IdentityOf(mClassType->mToken, this);
    }
 
    /// Convenience function that logs this's identity and suffixes with ": "  
    /// Useful when used like: Logger::Verbose() << Self() << "etc..."         
-   Debug Resolvable::Self() const {
-      auto temp = operator Debug();
+   Text Resolvable::Self() const {
+      auto temp = operator Text();
       temp += ": ";
       return Abandon(temp);
    }

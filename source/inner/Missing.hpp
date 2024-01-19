@@ -23,7 +23,7 @@ namespace Langulus::Flow::Inner
    ///   A missing point inside a flow                                        
    ///                                                                        
    struct Missing {
-      LANGULUS_CONVERSIONS(Debug);
+      LANGULUS_CONVERSIONS(Text);
 
       TAny<DMeta> mFilter;
       Any mContent;
@@ -41,7 +41,7 @@ namespace Langulus::Flow::Inner
       Any Collapse() const;
 
       // Needs to be implicit, so that inherited structs use converters 
-      operator Debug() const;
+      operator Text() const;
    };
 
 

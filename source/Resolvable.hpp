@@ -22,7 +22,7 @@ namespace Langulus::Flow
    ///                                                                        
    struct LANGULUS_API(FLOW) Resolvable : Referenced {
       LANGULUS(ABSTRACT) true;
-      LANGULUS_CONVERSIONS(Debug);
+      LANGULUS_CONVERSIONS(Text);
 
    private:
       // Concrete type of the resolvable                                
@@ -89,12 +89,12 @@ namespace Langulus::Flow
       template<bool DIRECT = false>
       bool SetValue(CT::Data auto&&);
 
-      // All inheritances of Resolvable will become convertible to Debug
+      // All inheritances of Resolvable will become convertible to Text 
       // and will share the reflected conversions list, but with one    
       // condition: the conversion operator must remain implicit.       
-      NOD() operator Debug() const;
+      NOD() operator Text() const;
 
-      Debug Self() const;
+      Text Self() const;
    };
    
 } // namespace Langulus::Flow

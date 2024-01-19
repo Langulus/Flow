@@ -42,7 +42,7 @@ namespace Langulus::Flow
    /// complete your scripts at runtime.                                      
    ///                                                                        
    class Temporal final {
-      LANGULUS_CONVERSIONS(Code, Debug);
+      LANGULUS_CONVERSIONS(Code, Text);
       friend struct Inner::Missing;
 
    private:
@@ -92,7 +92,7 @@ namespace Langulus::Flow
       operator Code() const;
 
       NOD() LANGULUS_API(FLOW)
-      operator Debug() const;
+      operator Text() const;
 
       NOD() LANGULUS_API(FLOW)
       bool operator == (const Temporal&) const;

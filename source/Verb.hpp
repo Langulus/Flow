@@ -242,7 +242,7 @@ namespace Langulus::Flow
       Count CompleteDispatch(const Count, Abandoned<Any>&&);
 
    protected:
-      template<CT::Text T>
+      template<CT::TextBased T>
       T SerializeVerb() const;
    };
 
@@ -269,3 +269,27 @@ namespace Langulus::Flow
    };
 
 } // namespace Langulus::Flow
+
+namespace fmt
+{
+   
+   ///                                                                        
+   /// Extend FMT to be capable of logging any verb                           
+   ///                                                                        
+   template<Langulus::CT::VerbBased T>
+   struct formatter<T> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT> LANGULUS(INLINED)
+      auto format(const T& element, CONTEXT& ctx) {
+         using namespace Langulus;
+         static_assert(CT::Complete<T>, "T isn't complete");
+         auto& me = const_cast<T&>(element);
+         return fmt::format_to(ctx.out(), "{}", static_cast<Anyness::Text>(me));
+      }
+   };
+
+} // namespace fmt

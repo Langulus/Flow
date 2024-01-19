@@ -10,11 +10,10 @@
 #include "Interpret.hpp"
 #include "Create.hpp"
 #include "Do.hpp"
-#include "../Serial.hpp"
 
-#include <Anyness/View/Any.hpp>
-#include <Anyness/View/Map.hpp>
-#include <Anyness/View/Set.hpp>
+#include <Anyness/Any.hpp>
+#include <Anyness/Map.hpp>
+#include <Anyness/Set.hpp>
 #include <Anyness/Pair.hpp>
 #include <Anyness/Own.hpp>
 #include <Anyness/Ref.hpp>
@@ -84,7 +83,7 @@ namespace Langulus::Verbs
 
    /// Specialized interpret verb default construction adds the TO type as    
    /// an argument automatically                                              
-   /*template<CT::Data TO>
+   template<CT::Data TO>
    InterpretAs<TO>::InterpretAs() {
       static_assert(sizeof(InterpretAs) == sizeof(A::Verb));
       SetArgument(MetaOf<TO>());
@@ -95,7 +94,7 @@ namespace Langulus::Verbs
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
-   template<CT::Data TO>
+   /*template<CT::Data TO>
    bool InterpretAs<TO>::ExecuteDefault(const Block& context, Verb& verb) {
       if constexpr (CT::Text<TO>) {
          const auto from = context.GetType();

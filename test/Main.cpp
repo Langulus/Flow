@@ -14,17 +14,15 @@
 LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
 
 int main(int argc, char* argv[]) {
-   static_assert(CT::Convertible<Thing, Debug>,
-      "Thing must be convertible to Debug string");
-   static_assert(CT::Convertible<Verb, Debug>,
-      "Verb must be convertible to Debug string");
+   static_assert(CT::Convertible<Thing, Text>,
+      "Thing must be convertible to Text");
    static_assert(CT::Convertible<Verb, Code>,
-      "Verb must be convertible to Code string");
+      "Verb must be convertible to Code");
 
-   static_assert(CT::Debuggable<Thing>,
-      "Thing must be convertible to Debug string");
-   static_assert(CT::Debuggable<Verb>,
-      "Verb must be convertible to Debug string");
+   static_assert(CT::Stringifiable<Thing>,
+      "Thing must be convertible to Text");
+   static_assert(CT::Stringifiable<Verb>,
+      "Verb must be convertible to Text");
 
    Catch::Session session;
    return session.run(argc, argv);

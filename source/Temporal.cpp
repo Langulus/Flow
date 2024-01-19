@@ -7,7 +7,6 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #include "Time.inl"
-#include "Serial.inl"
 #include "Code.inl"
 #include "Resolvable.inl"
 #include "inner/Missing.inl"
@@ -44,7 +43,7 @@ namespace Langulus::Flow
    }
 
    /// Serialize temporal as debug string                                     
-   Temporal::operator Debug() const {
+   Temporal::operator Text() const {
       return IdentityOf(this);
    }
 

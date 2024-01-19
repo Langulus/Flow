@@ -81,12 +81,12 @@ SCENARIO("Text capsulation in verbs", "[verbs]") {
 
       WHEN("Stringified") {
          // Calling static_cast here produces errors due to MSVC bug    
-         const auto toDebug = test.operator Debug();
-         const auto toCode = test.operator Code();
+         const auto toText = static_cast<Text>(test); // test.operator Text();
+         const auto toCode = static_cast<Code>(test); // test.operator Code();
 
          THEN("The block's reference count must increase") {
-            REQUIRE(toDebug == toCode);
-            REQUIRE(toDebug == ".");
+            REQUIRE(toText == toCode);
+            REQUIRE(toText == ".");
          }
       }
    }

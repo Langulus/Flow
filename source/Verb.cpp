@@ -127,7 +127,7 @@ namespace Langulus::Flow
    }
 
    /// Serialize verb for logger                                              
-   Verb::operator Debug() const {
+   Verb::operator Text() const {
       return SerializeVerb<Debug>();
    }
 

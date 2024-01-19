@@ -34,12 +34,12 @@ namespace Langulus::Flow
    ///   @tparam FROM - the type of the item (deducible)                      
    ///   @param item - the item to serialize                                  
    ///   @return the serialized item                                          
-   template<CT::Block TO, bool HEADER, CT::Sparse FROM, CT::Block TO_ORIGINAL>
+   /*template<CT::Block TO, bool HEADER, CT::Sparse FROM, CT::Block TO_ORIGINAL>
    TO Serialize(FROM item) {
       if (not item)
          return "<null>";
       return Serialize<TO, HEADER, Deptr<FROM>, TO_ORIGINAL>(*item);
-   }
+   }*/
 
    /// Conversion routine, that is specialized for serialization              
    ///   @tparam TO - the type we're serializing to                           
@@ -51,7 +51,7 @@ namespace Langulus::Flow
    ///   @tparam FROM - the type of the item (deducible)                      
    ///   @param item - the item to serialize                                  
    ///   @return the serialized item                                          
-   template<CT::Block TO, bool HEADER, CT::Dense FROM, CT::Block TO_ORIGINAL>
+   /*template<CT::Block TO, bool HEADER, CT::Dense FROM, CT::Block TO_ORIGINAL>
    TO Serialize(const FROM& item) {
       Block block = Block::From(const_cast<FROM&>(item));
 
@@ -128,14 +128,14 @@ namespace Langulus::Flow
          "` (final target being `", NameOf<TO_ORIGINAL>(), "`)"
       );
       return {};
-   }
+   }*/
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    /// Deserialize from text or binary                                        
    ///   @tparam FROM - the type we're deserializing from (deducible)         
    ///   @param item - the item to deserialize                                
    ///   @return the deserialized contents inside a container                 
-   template<CT::Block FROM>
+   /*template<CT::Block FROM>
    Any Deserialize(const FROM& from) {
       if constexpr (CT::Text<FROM>) {
          // Assume it's code and attempt to parse it                    
@@ -149,7 +149,7 @@ namespace Langulus::Flow
          return Abandon(result);
       }
       else LANGULUS_ERROR("Deserializer not implemented");
-   }
+   }*/
 #endif
 
 } // namespace Langulus::Flow
@@ -166,7 +166,7 @@ namespace Langulus::Anyness
    ///   @tparam TO_ORIGINAL - keeps track what was the original TO           
    ///   @param to - [out] the serialized block goes here                     
    ///   @return the number of written characters/bytes                       
-   template<bool ENSCOPED, CT::Block TO, CT::Block TO_ORIGINAL, CT::Block THIS>
+   /*template<bool ENSCOPED, CT::Block TO, CT::Block TO_ORIGINAL, CT::Block THIS>
    Count Block::Serialize(TO& to) const {
       using namespace Flow;
       using namespace Serial;
@@ -998,7 +998,7 @@ namespace Langulus::Flow::Serial
 
          separate = true;
       }
-   }
+   }*/
 
 } // namespace Langulus::Flow::Serial
 

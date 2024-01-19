@@ -68,16 +68,15 @@ namespace Langulus::Verbs
    }
 
    /// Execute the default verb in an immutable context                       
+   /// It simply invokes Block::Convert and relies on reflected converters    
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
    inline bool Interpret::ExecuteDefault(const Block& context, Verb& verb) {
       verb.ForEach([&](DMeta to) {
-         if (to->CastsTo<A::Text>())
-            return not InterpretAs<Text>::ExecuteDefault(context, verb);
-
-         //TODO check reflected morphisms?
-         return true;
+         auto result = Any::FromMeta(to);
+         if (context.ConvertTo(result))
+            verb << Abandon(result);
       });
 
       return verb.IsDone();
@@ -85,7 +84,7 @@ namespace Langulus::Verbs
 
    /// Specialized interpret verb default construction adds the TO type as    
    /// an argument automatically                                              
-   template<CT::Data TO>
+   /*template<CT::Data TO>
    InterpretAs<TO>::InterpretAs() {
       static_assert(sizeof(InterpretAs) == sizeof(A::Verb));
       SetArgument(MetaOf<TO>());
@@ -123,115 +122,35 @@ namespace Langulus::Verbs
          // Types are already the same                                  
          return from;
       }
-      else if constexpr (CT::Similar<TO, Any>) {
-         // Always interpreted as deserialization                       
-         // Read it as "interpret to anything that comes out of it"     
-         return Flow::Deserialize(from);
+      else if constexpr (CT::Serial<FROM> and not CT::Serial<TO>) {
+         // Deserialize                                                 
+         TO result;
+         return Anyness::Deserialize(from, result);
       }
-      else if constexpr (not CT::Deep<FROM>) {
-         if constexpr (CT::Convertible<FROM, TO>) {
-            // Directly convert if static conversion exists             
-            // Works only if source isn't a deep container              
-            if constexpr (requires { TO {from}; })
-               return TO {from};
-            else if constexpr (requires { TO {from.operator TO()}; })
-               return TO {from.operator TO()};
-            else if constexpr (requires { static_cast<TO>(from); })
-               return static_cast<TO>(from);
-            else
-               LANGULUS_ERROR("Unhandled conversion route for non-deep");
-         }
-         else LANGULUS_ERROR("Non-deep type has no converter to the desired type");
+      else if constexpr (CT::Serial<TO> and not CT::Serial<FROM>) {
+         // Serialize                                                   
+         TO result;
+         return Anyness::Serialize(from, result);
       }
-      else {
-         // We're converting a container, so relay to the serializer    
-         return Flow::Serialize<TO>(from);
+      else if constexpr (CT::Convertible<FROM, TO> and not CT::Deep<FROM>) {
+         // Just regular conversion with source not being a container   
+         if constexpr (requires { TO {from}; })
+            return TO {from};
+         else if constexpr (requires { TO {from.operator TO()}; })
+            return TO {from.operator TO()};
+         else if constexpr (requires { static_cast<TO>(from); })
+            return static_cast<TO>(from);
+         else
+            LANGULUS_ERROR("Unhandled conversion route for non-deep");
       }
-   }
+      else if constexpr (CT::Deep<FROM>) {
+         // We're converting a container to something else              
+         return from.Convert<TO>();
+      }
+      else LANGULUS_ERROR("Interpretation impossible");
+   }*/
 
 } // namespace Langulus::Verbs
-
-namespace Langulus::Flow
-{
-      
-   /// Serialize verb to any form of text                                     
-   ///   @tparam T - the type of text to serialize to                         
-   ///   @return the serialized verb                                          
-   template<CT::Text T>
-   LANGULUS(INLINED)
-   T Verb::SerializeVerb() const {
-      Code result;
-
-      if (mSuccesses) {
-         // If verb has been executed, just dump the output             
-         result += Verbs::Interpret::To<T>(mOutput);
-         return result;
-      }
-
-      // If reached, then verb hasn't been executed yet                 
-      // Let's check if there's a source in which verb is executed      
-      if (mSource.IsValid())
-         result += Verbs::Interpret::To<T>(mSource);
-
-      // After the source, we decide whether to write verb token or     
-      // verb operator, depending on the verb definition, state and     
-      // charge                                                         
-      bool enscope = true;
-      if (not mVerb) {
-         // An invalid verb is always written as token                  
-         result += RTTI::MetaVerb::DefaultToken;
-      }
-      else {
-         // A valid verb is written either as token, or as operator     
-         if (mMass < 0) {
-            if (not mVerb->mOperatorReverse.empty() and (GetCharge() * -1).IsDefault() and mState.IsDefault()) {
-               // Write as operator                                     
-               result += mVerb->mOperatorReverse;
-               enscope = GetCount() > 1 or (not IsEmpty() and CastsTo<Verb>());
-            }
-            else {
-               // Write as token                                        
-               if (mSource.IsValid())
-                  result += Text {' '};
-               result += mVerb->mTokenReverse;
-               result += Verbs::Interpret::To<T>(GetCharge() * -1);
-            }
-         }
-         else {
-            if (not mVerb->mOperator.empty() and GetCharge().IsDefault() and mState.IsDefault()) {
-               // Write as operator                                     
-               result += mVerb->mOperator;
-               enscope = GetCount() > 1 or (not IsEmpty() and CastsTo<Verb>());
-            }
-            else {
-               // Write as token                                        
-               if (mSource.IsValid())
-                  result += Text {' '};
-               result += mVerb->mToken;
-               result += Verbs::Interpret::To<T>(GetCharge());
-            }
-         }
-      }
-
-      if (IsLongCircuited())
-         result += " long ";
-
-      if (IsMonocast())
-         result += " mono ";
-
-      if (enscope)
-         result += Code::OpenScope;
-
-      if (IsValid())
-         result += Verbs::Interpret::To<T>(GetArgument());
-
-      if (enscope)
-         result += Code::CloseScope;
-
-      return result;
-   }
-
-} // namespace Langulus::CT
 
 namespace fmt
 {

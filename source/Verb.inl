@@ -796,7 +796,82 @@ namespace Langulus::Flow
       }
    }
 
-   
+   /// Serialize verb to any form of text                                     
+   ///   @tparam T - the type of text to serialize to                         
+   ///   @return the serialized verb                                          
+   template<CT::TextBased T>
+   T Verb::SerializeVerb() const {
+      Code result;
+
+      if (mSuccesses) {
+         // If verb has been executed, just dump the output             
+         result += Verbs::Interpret::To<T>(mOutput);
+         return result;
+      }
+
+      // If reached, then verb hasn't been executed yet                 
+      // Let's check if there's a source in which verb is executed      
+      if (mSource.IsValid())
+         result += Verbs::Interpret::To<T>(mSource);
+
+      // After the source, we decide whether to write verb token or     
+      // verb operator, depending on the verb definition, state and     
+      // charge                                                         
+      bool enscope = true;
+      if (not mVerb) {
+         // An invalid verb is always written as token                  
+         result += RTTI::MetaVerb::DefaultToken;
+      }
+      else {
+         // A valid verb is written either as token, or as operator     
+         if (mMass < 0) {
+            if (not mVerb->mOperatorReverse.empty() and (GetCharge() * -1).IsDefault() and mState.IsDefault()) {
+               // Write as operator                                     
+               result += mVerb->mOperatorReverse;
+               enscope = GetCount() > 1 or (not IsEmpty() and CastsTo<Verb>());
+            }
+            else {
+               // Write as token                                        
+               if (mSource.IsValid())
+                  result += Text {' '};
+               result += mVerb->mTokenReverse;
+               result += Verbs::Interpret::To<T>(GetCharge() * -1);
+            }
+         }
+         else {
+            if (not mVerb->mOperator.empty() and GetCharge().IsDefault() and mState.IsDefault()) {
+               // Write as operator                                     
+               result += mVerb->mOperator;
+               enscope = GetCount() > 1 or (not IsEmpty() and CastsTo<Verb>());
+            }
+            else {
+               // Write as token                                        
+               if (mSource.IsValid())
+                  result += Text {' '};
+               result += mVerb->mToken;
+               result += Verbs::Interpret::To<T>(GetCharge());
+            }
+         }
+      }
+
+      if (IsLongCircuited())
+         result += " long ";
+
+      if (IsMonocast())
+         result += " mono ";
+
+      if (enscope)
+         result += Code::OpenScope;
+
+      if (IsValid())
+         result += Verbs::Interpret::To<T>(GetArgument());
+
+      if (enscope)
+         result += Code::CloseScope;
+
+      return result;
+   }
+
    ///                                                                        
    ///   Static verb implementation                                           
    ///                                                                        

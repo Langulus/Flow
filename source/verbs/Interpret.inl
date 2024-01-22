@@ -27,7 +27,7 @@ namespace Langulus::Verbs
    
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Dense T, CT::Data... A>
+   template<CT::Dense T, CT::Data...A>
    constexpr bool Interpret::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Interpret(v); };
@@ -37,7 +37,7 @@ namespace Langulus::Verbs
 
    /// Get the verb functor for the given type and arguments                  
    ///   @return the function, or nullptr if not available                    
-   template<CT::Dense T, CT::Data... A>
+   template<CT::Dense T, CT::Data...A>
    constexpr auto Interpret::Of() noexcept {
       if constexpr (CT::Constant<T>) {
          return [](const void* context, Flow::Verb& verb, A... args) {
@@ -74,7 +74,7 @@ namespace Langulus::Verbs
    inline bool Interpret::ExecuteDefault(const Block& context, Verb& verb) {
       verb.ForEach([&](DMeta to) {
          auto result = Any::FromMeta(to);
-         if (context.ConvertTo(result))
+         if (context.Convert(result))
             verb << Abandon(result);
       });
 
@@ -94,9 +94,28 @@ namespace Langulus::Verbs
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
-   /*template<CT::Data TO>
+   template<CT::Data TO>
    bool InterpretAs<TO>::ExecuteDefault(const Block& context, Verb& verb) {
-      if constexpr (CT::Text<TO>) {
+      if constexpr (CT::Serial<TO>) {
+         // Serialze                                                    
+         TO serialized;
+         if (context.Serialize(serialized)) {
+            verb << Abandon(serialized);
+            return true;
+         }
+      }
+      else {
+         // Convert elements                                            
+         TAny<TO> converted;
+         if (context.Convert(converted)) {
+            verb << Abandon(converted);
+            return true;
+         }
+      }
+
+      return false;
+
+      /*if constexpr (CT::Text<TO>) {
          const auto from = context.GetType();
 
          // Stringify context, if it matches any of its named values    
@@ -109,12 +128,13 @@ namespace Langulus::Verbs
 
          return false;
       }
-      else return false;
+      else return false;*/
    }
 
    /// Statically optimized interpret verb                                    
-   ///   @param from - the element to convert                                 
-   ///   @return the converted element                                        
+   ///   @tparam TO - what are we converting to?                              
+   ///   @param from - what to convert                                        
+   ///   @return the converted                                                
    template<CT::Decayed TO, CT::Decayed FROM>
    TO Interpret::To(const FROM& from) {
       if constexpr (CT::Similar<TO, FROM>) {
@@ -123,13 +143,14 @@ namespace Langulus::Verbs
       }
       else if constexpr (CT::Serial<FROM> and not CT::Serial<TO>) {
          // Deserialize                                                 
-         TO result;
-         return Anyness::Deserialize(from, result);
+         return from.template Deserialize<TO>();
       }
       else if constexpr (CT::Serial<TO> and not CT::Serial<FROM>) {
          // Serialize                                                   
-         TO result;
-         return Anyness::Serialize(from, result);
+         if constexpr (CT::Block<FROM>)
+            return from.template Serialize<TO>();
+         else
+            return TAny<FROM>::From(from).template Serialize<TO>();
       }
       else if constexpr (CT::Convertible<FROM, TO> and not CT::Deep<FROM>) {
          // Just regular conversion with source not being a container   
@@ -144,10 +165,10 @@ namespace Langulus::Verbs
       }
       else if constexpr (CT::Deep<FROM>) {
          // We're converting a container to something else              
-         return from.Convert<TO>();
+         return from.template Convert<TO>();
       }
       else LANGULUS_ERROR("Interpretation impossible");
-   }*/
+   }
 
 } // namespace Langulus::Verbs
 

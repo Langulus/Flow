@@ -105,7 +105,7 @@ namespace Langulus::Flow
    ///   @param offset - the index of the match to return                     
    ///   @return the static mutable memory block representing the member      
    LANGULUS(INLINED)
-   Block Resolvable::GetMember(TMeta trait, const CT::Index auto& offset) noexcept {
+   Block Resolvable::GetMember(TMeta trait, CT::Index auto offset) noexcept {
       auto member = mClassType->GetMember(trait, {}, offset);
       if (member)
          return GetBlock().GetMember(*member, 0);
@@ -113,7 +113,7 @@ namespace Langulus::Flow
    }
 
    LANGULUS(INLINED)
-   Block Resolvable::GetMember(TMeta trait, const CT::Index auto& offset) const noexcept {
+   Block Resolvable::GetMember(TMeta trait, CT::Index auto offset) const noexcept {
       auto member = mClassType->GetMember(trait, {}, offset);
       if (member)
          return GetBlock().GetMember(*member, 0);
@@ -126,12 +126,12 @@ namespace Langulus::Flow
    ///   @param offset - the index of the match to return                     
    ///   @return the static mutable memory block representing the member      
    LANGULUS(INLINED)
-   Block Resolvable::GetMember(const Token& trait, const CT::Index auto& offset) noexcept {
+   Block Resolvable::GetMember(const Token& trait, CT::Index auto offset) noexcept {
       return GetMember(RTTI::GetMetaTrait(trait), offset);
    }
 
    LANGULUS(INLINED)
-   Block Resolvable::GetMember(const Token& trait, const CT::Index auto& offset) const noexcept {
+   Block Resolvable::GetMember(const Token& trait, CT::Index auto offset) const noexcept {
       return GetMember(RTTI::GetMetaTrait(trait), offset);
    }
 #endif

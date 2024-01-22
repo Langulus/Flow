@@ -87,23 +87,17 @@ namespace Langulus::Flow
    ///   @param verb - the verb to execute in this resolved type              
    ///   @return a reference to the verb's output                             
    template<bool DISPATCH, bool DEFAULT> LANGULUS(INLINED)
-   Any Resolvable::Run(CT::VerbBased auto& verb) {
-      auto environment = GetBlock();
-      DispatchFlat<false, DISPATCH, DEFAULT>(environment, verb);
-      return verb.GetOutput();
-   }
-
-   /// Invoke a verb on the resolved type                                     
-   ///   @tparam DISPATCH - whether to allow custom dispatchers               
-   ///   @tparam DEFAULT - whether to allow default/stateless verbs on fail   
-   ///   @param verb - the verb to execute in this resolved type              
-   ///   @return a reference to the verb's output                             
-   template<bool DISPATCH, bool DEFAULT> LANGULUS(INLINED)
    Any Resolvable::Run(CT::VerbBased auto&& verb) {
       auto environment = GetBlock();
-      auto moved = Move(verb);
-      DispatchFlat<false, DISPATCH, DEFAULT>(environment, moved);
-      return Abandon(moved.GetOutput());
+      if constexpr (CT::Mutable<Deref<decltype(verb)>>) {
+         DispatchFlat<false, DISPATCH, DEFAULT>(environment, verb);
+         return Abandon(verb.GetOutput());
+      }
+      else {
+         auto moved = Move(verb);
+         DispatchFlat<false, DISPATCH, DEFAULT>(environment, moved);
+         return Abandon(moved.GetOutput());
+      }
    }
 
    /// Get Nth reflected member by trait definition                           
@@ -112,16 +106,18 @@ namespace Langulus::Flow
    ///   @return the static mutable memory block representing the member      
    LANGULUS(INLINED)
    Block Resolvable::GetMember(TMeta trait, const CT::Index auto& offset) noexcept {
-      return GetBlock().GetMember(trait, offset);
+      auto member = mClassType->GetMember(trait, {}, offset);
+      if (member)
+         return GetBlock().GetMember(*member, 0);
+      return {};
    }
 
-   /// Get Nth reflected member by trait definition (const)                   
-   ///   @param trait - the type of trait to search for (nullptr for any)     
-   ///   @param offset - the index of the match to return                     
-   ///   @return the static constant memory block representing the member     
    LANGULUS(INLINED)
    Block Resolvable::GetMember(TMeta trait, const CT::Index auto& offset) const noexcept {
-      return GetBlock().GetMember(trait, offset);
+      auto member = mClassType->GetMember(trait, {}, offset);
+      if (member)
+         return GetBlock().GetMember(*member, 0);
+      return {};
    }
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -131,16 +127,12 @@ namespace Langulus::Flow
    ///   @return the static mutable memory block representing the member      
    LANGULUS(INLINED)
    Block Resolvable::GetMember(const Token& trait, const CT::Index auto& offset) noexcept {
-      return GetBlock().GetMember(RTTI::GetMetaTrait(trait), offset);
+      return GetMember(RTTI::GetMetaTrait(trait), offset);
    }
 
-   /// Get Nth reflected member by trait token (const)                        
-   ///   @param trait - the trait token                                       
-   ///   @param offset - the index of the match to return                     
-   ///   @return the static constant memory block representing the member     
    LANGULUS(INLINED)
    Block Resolvable::GetMember(const Token& trait, const CT::Index auto& offset) const noexcept {
-      return GetBlock().GetMember(RTTI::GetMetaTrait(trait), offset);
+      return GetMember(RTTI::GetMetaTrait(trait), offset);
    }
 #endif
 
@@ -170,29 +162,6 @@ namespace Langulus::Flow
       return true;
    }
 
-   /// Set a statically typed trait by shallow copy                           
-   ///   @tparam T - the trait to search for                                  
-   ///   @tparam DIRECT - if true, will directly set the trait, without       
-   ///                    using a dynamically dispatched Verbs::Associate;    
-   ///                    this will not notify the context of the change, but 
-   ///                    is considerably faster (false by default)           
-   ///   @param data - [out] the data to copy                                 
-   ///   @return true if trait was found and overwritten                      
-   template<CT::Trait T, bool DIRECT> LANGULUS(INLINED)
-   bool Resolvable::SetTrait(const CT::Data auto& data) {
-      if constexpr (DIRECT) {
-         auto found = GetBlock().GetMember<T>();
-         if (not found)
-            return false;
-         return found.Copy(Block::From(data)) > 0;
-      }
-      else {
-         Verbs::Associate verb {T {data}};
-         Run(verb);
-         return verb.IsDone();
-      }
-   }
-
    /// Set a statically typed trait by move                                   
    ///   @tparam T - the trait to search for                                  
    ///   @tparam DIRECT - if true, will directly set the trait, without       
@@ -210,29 +179,7 @@ namespace Langulus::Flow
          return found.Copy(Block::From(data)) > 0;
       }
       else {
-         Verbs::Associate verb {T {Move(data)}};
-         Run(verb);
-         return verb.IsDone();
-      }
-   }
-
-   /// Set a statically typed data by shallow copy                            
-   ///   @tparam DIRECT - if true, will directly set the trait, without       
-   ///                    using a dynamically dispatched Verbs::Associate;    
-   ///                    this will not notify the context of the change, but 
-   ///                    is considerably faster (false by default)           
-   ///   @param data - [out] the data to copy                                 
-   ///   @return true if data was found and overwritten                       
-   template<bool DIRECT> LANGULUS(INLINED)
-   bool Resolvable::SetValue(const CT::Data auto& data) {
-      if constexpr (DIRECT) {
-         auto found = GetBlock().GetMember<Deref<decltype(data)>>();
-         if (not found)
-            return false;
-         return found.Copy(Block::From(data)) > 0;
-      }
-      else {
-         Verbs::Associate verb {data};
+         Verbs::Associate verb {T {Forward<Deref<decltype(data)>>(data)}};
          Run(verb);
          return verb.IsDone();
       }
@@ -254,7 +201,7 @@ namespace Langulus::Flow
          return found.Copy(Block::From(data)) > 0;
       }
       else {
-         Verbs::Associate verb {data};
+         Verbs::Associate verb {Forward<Deref<decltype(data)>>(data)};
          Run(verb);
          return verb.IsDone();
       }

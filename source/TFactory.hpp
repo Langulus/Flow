@@ -9,6 +9,7 @@
 #pragma once
 #include "Common.hpp"
 #include <Anyness/Neat.hpp>
+#include <Anyness/THive.hpp>
 
 
 namespace Langulus::Flow
@@ -45,7 +46,7 @@ namespace Langulus::Flow
    /// with the same descriptor twice.                                        
    ///                                                                        
    template<class T, FactoryUsage USAGE = FactoryUsage::Default>
-   class TFactory {
+   class TFactory : public Anyness::THive<T> {
    public:
       static_assert(CT::Complete<T>, "T must be a complete type");
       static_assert(CT::Dense<T>, "T must be a dense type");
@@ -55,31 +56,26 @@ namespace Langulus::Flow
       static_assert(not CT::Abstract<T>, "T can't be abstract");
 
       LANGULUS(TYPED) T;
+      using Base = Anyness::THive<T>;
       using Producer = CT::ProducerOf<T>;
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
 
    protected: IF_LANGULUS_TESTING(public:)
-      struct Element;
+      using typename Base::Cell;
 
       // Each factory is bound to a producer instance                   
       // Every produced T will also be bound to that instance           
       // If factory moved, all contents will be remapped to the new     
       // instance                                                       
       Producer* mFactoryOwner {};
-      // Elements are allocated here, so they are cache-friendly and    
-      // iterated fast, rarely ever moving                              
-      TAny<Element> mData;
-      // The start of the reusable chain                                
-      Element* mReusable {};
+
       // A hash map for fast retrieval of elements                      
-      TUnorderedMap<Hash, TAny<Element*>> mHashmap;
-      // Number of initialized elements                                 
-      Count mCount {};
+      TUnorderedMap<Hash, TAny<Cell*>> mHashmap;
 
       NOD() T* Produce(const Neat&);
       void CreateInner(Verb&, int, const Neat& = {});
-      void Destroy(Element*);
-      NOD() Element* Find(const Neat&) const;
+      void Destroy(Cell*);
+      NOD() Cell* Find(const Neat&) const;
 
    public:
       /// Factories can't be default-, move- or copy-constructed              
@@ -98,28 +94,8 @@ namespace Langulus::Flow
    public:
       void Reset();
 
-      NOD() bool IsEmpty() const noexcept;
-
-      NOD() constexpr explicit operator bool() const noexcept;
-
       void Create(Verb&);
       void Select(Verb&);
-
-      ///                                                                     
-      ///   Iteration                                                         
-      ///                                                                     
-      template<bool MUTABLE>
-      struct TIterator;
-
-      using Iterator = TIterator<true>;
-      using ConstIterator = TIterator<false>;
-
-      NOD() Iterator begin() noexcept;
-      NOD() Iterator end() noexcept;
-      NOD() Iterator last() noexcept;
-      NOD() ConstIterator begin() const noexcept;
-      NOD() ConstIterator end() const noexcept;
-      NOD() ConstIterator last() const noexcept;
 
       IF_SAFE(void Dump() const);
    };
@@ -154,71 +130,6 @@ namespace Langulus::Flow
       const Neat& GetNeat() const noexcept;
       Hash GetHash() const noexcept;
       T* GetProducer() const noexcept;
-   };
-
-
-   ///                                                                        
-   ///   Factory element (for internal usage)                                 
-   ///                                                                        
-   template<class T, FactoryUsage USAGE>
-   struct TFactory<T, USAGE>::Element {
-   protected: IF_LANGULUS_TESTING(public:)
-      friend class TFactory<T, USAGE>;
-      union {
-         // When element is in use, this pointer points to the          
-         // factory who produced, and owns the element                  
-         TFactory* mFactory;
-         // When element is not in use, this pointer points to the      
-         // next free entry in the factory                              
-         Element* mNextFreeElement;
-      };
-
-      // Counts the uses of a factory element, because T should be      
-      // referencable. If references are zero, element is unused, and   
-      // mNextFreeElement is set. Still in use after destruction!       
-      // Referencable's destructor should make sure references are zero 
-      // in memory, after destruction                                   
-      T mData;
-
-   public:
-      Element() = delete;
-
-      Element(TFactory*, const Neat&);
-
-      template<template<class> class S>
-      requires CT::SemanticMakableAlt<S<T>>
-      Element(S<Element>&&);
-   };
-
-
-   ///                                                                        
-   ///   Factory iterator                                                     
-   ///                                                                        
-   template<class T, FactoryUsage USAGE>
-   template<bool MUTABLE>
-   struct TFactory<T, USAGE>::TIterator {
-   protected:
-      friend class TFactory<T, USAGE>;
-
-      const Element* mElement;
-      const Element* mSentinel;
-
-      TIterator(const Element*, const Element*) noexcept;
-
-   public:
-      NOD() bool operator == (const TIterator&) const noexcept;
-
-      NOD() T& operator * () const noexcept requires (MUTABLE);
-      NOD() const T& operator * () const noexcept requires (not MUTABLE);
-
-      NOD() T& operator -> () const noexcept requires (MUTABLE);
-      NOD() const T& operator -> () const noexcept requires (not MUTABLE);
-
-      // Prefix operator                                                
-      TIterator& operator ++ () noexcept;
-
-      // Suffix operator                                                
-      NOD() TIterator operator ++ (int) noexcept;
    };
 
 } // namespace Langulus::Flow

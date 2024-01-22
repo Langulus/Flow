@@ -54,8 +54,6 @@ namespace Langulus::Flow
       NOD() Block GetBlock() const noexcept;
 
       template<bool DISPATCH = true, bool DEFAULT = true>
-      Any Run(CT::VerbBased auto&);
-      template<bool DISPATCH = true, bool DEFAULT = true>
       Any Run(CT::VerbBased auto&&);
 
       Any Run(const Code&);
@@ -80,10 +78,6 @@ namespace Langulus::Flow
       bool GetTrait(CT::Data auto&) const;
       bool GetValue(CT::Data auto&) const;
 
-      template<CT::Trait, bool DIRECT = false>
-      bool SetTrait(const CT::Data auto&);
-      template<bool DIRECT = false>
-      bool SetValue(const CT::Data auto&);
       template<CT::Trait, bool DIRECT = false>
       bool SetTrait(CT::Data auto&&);
       template<bool DIRECT = false>

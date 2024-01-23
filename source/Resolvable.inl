@@ -142,12 +142,15 @@ namespace Langulus::Flow
    ///   @return true if trait was found, and data was set                    
    template<CT::Trait T> LANGULUS(INLINED)
    bool Resolvable::GetTrait(CT::Data auto& data) const {
-      auto found = GetBlock().GetMember(MetaOf<T>());
-      try {
-         data = found.template AsCast<Deref<decltype(data)>>();
-         return true;
+      using D = Deref<decltype(data)>;
+      auto member = mClassType->GetMember(MetaOf<T>());
+      if (member) {
+         try {
+            data = GetBlock().GetMember(*member, 0).template AsCast<D>();
+            return true;
+         }
+         catch (...) {}
       }
-      catch (...) {}
       return false;
    }
 
@@ -157,9 +160,12 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    bool Resolvable::GetValue(CT::Data auto& data) const {
       using D = Deref<decltype(data)>;
-      auto found = GetBlock().GetMember<D>();
-      data = found.template As<D>();
-      return true;
+      auto member = mClassType->GetMember({}, MetaDataOf<D>());
+      if (member) {
+         data = GetBlock().GetMember(*member, 0).template As<D>();
+         return true;
+      }
+      return false;
    }
 
    /// Set a statically typed trait by move                                   
@@ -172,14 +178,16 @@ namespace Langulus::Flow
    ///   @return true if trait was found and overwritten                      
    template<CT::Trait T, bool DIRECT> LANGULUS(INLINED)
    bool Resolvable::SetTrait(CT::Data auto&& data) {
+      using D = Deref<decltype(data)>;
       if constexpr (DIRECT) {
-         auto found = GetBlock().GetMember<T>();
-         if (not found)
-            return false;
-         return found.Copy(Block::From(data)) > 0;
+         auto member = mClassType->GetMember(MetaOf<T>());
+         if (member)
+            return GetBlock().GetMember(*member, 0)
+               .Copy(Block::From(data)) > 0;
+         else return false;
       }
       else {
-         Verbs::Associate verb {T {Forward<Deref<decltype(data)>>(data)}};
+         Verbs::Associate verb {T {Forward<D>(data)}};
          Run(verb);
          return verb.IsDone();
       }
@@ -194,14 +202,16 @@ namespace Langulus::Flow
    ///   @return true if data was found and overwritten                       
    template<bool DIRECT> LANGULUS(INLINED)
    bool Resolvable::SetValue(CT::Data auto&& data) {
+      using D = Deref<decltype(data)>;
       if constexpr (DIRECT) {
-         auto found = GetBlock().GetMember<Deref<decltype(data)>>();
-         if (not found)
-            return false;
-         return found.Copy(Block::From(data)) > 0;
+         auto member = mClassType->GetMember({}, MetaDataOf<D>());
+         if (member)
+            return GetBlock().GetMember(*member, 0)
+               .Copy(Block::From(data)) > 0;
+         else return false;
       }
       else {
-         Verbs::Associate verb {Forward<Deref<decltype(data)>>(data)};
+         Verbs::Associate verb {Forward<D>(data)};
          Run(verb);
          return verb.IsDone();
       }

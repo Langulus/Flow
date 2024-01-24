@@ -57,22 +57,22 @@ namespace Langulus::Flow
    ///   @param other - the flow to compare with                              
    ///   @return true if both flows are the same                              
    bool Temporal::operator == (const Temporal& other) const {
-      return /*mFrequencyStack == other.mFrequencyStack
+      return mFrequencyStack == other.mFrequencyStack
          and mTimeStack == other.mTimeStack
-         and*/ mPriorityStack == other.mPriorityStack;
+         and mPriorityStack == other.mPriorityStack;
    }
 
    /// Check if flow contains anything executable                             
    ///   @return true if flow contains at least one verb                      
    bool Temporal::IsValid() const {
-      return /*mFrequencyStack or mTimeStack or*/ not mPriorityStack.IsEmpty();
+      return mFrequencyStack or mTimeStack or not mPriorityStack.IsEmpty();
    }
 
    /// Dump the contents of the flow to the log                               
    void Temporal::Dump() const {
       Logger::Verbose(mPriorityStack);
-      /*Logger::Verbose(mTimeStack);
-      Logger::Verbose(mFrequencyStack);*/
+      Logger::Verbose(mTimeStack);
+      Logger::Verbose(mFrequencyStack);
    }
 
    /// Advance the flow - moves time forward, executes stacks                 
@@ -110,7 +110,7 @@ namespace Langulus::Flow
       mCurrentTime += dt;
 
       // Execute flows that occur periodically                          
-      /*for (auto pair : mFrequencyStack) {
+      for (auto pair : mFrequencyStack) {
          pair.mValue->mDuration += dt;
          if (pair.mValue->mDuration >= pair.mKey) {
             // Time to execute the periodic flow                        
@@ -134,7 +134,7 @@ namespace Langulus::Flow
          // Update the time flow                                        
          // It might have periodic flows inside                         
          pair.mValue->Update(dt);
-      }*/
+      }
 
       return true;
    }
@@ -146,7 +146,7 @@ namespace Langulus::Flow
       mPriorityStack += other.mPriorityStack;
 
       // Merge time stacks                                              
-      /*for (auto pair : other.mTimeStack) {
+      for (auto pair : other.mTimeStack) {
          const auto found = mTimeStack.Find(pair.mKey);
          if (not found) {
             const State state {
@@ -180,7 +180,7 @@ namespace Langulus::Flow
          }
 
          mFrequencyStack[pair.mKey]->Merge(*pair.mValue);
-      };*/
+      };
    }
 
    /// Push a scope of verbs and data to the flow                             

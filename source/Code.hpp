@@ -110,6 +110,7 @@ namespace Langulus::Flow
       };
 
       using Text::Text;
+      using Text::operator ==;
 
       LANGULUS_API(FLOW) Code(const Text&);
       LANGULUS_API(FLOW) Code(Text&&);

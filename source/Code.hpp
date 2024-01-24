@@ -12,9 +12,40 @@
 
 namespace Langulus::Flow
 {
+   struct Code;
+}
+
+namespace Langulus::CT
+{
+   namespace Inner
+   {
+   
+      /// Do types have an explicit or implicit cast operator to Code         
+      template<class...T>
+      concept CodifiableByOperator = requires (T&...a) {
+         ((a.operator ::Langulus::Flow::Code()), ...); };
+
+      /// Does Code has an explicit/implicit constructor that accepts T       
+      template<class...T>
+      concept CodifiableByConstructor = requires (T&...a) {
+         ((::Langulus::Flow::Code {a}), ...); };
+
+   } // namespace Langulus::CT::Inner
+
+   /// A codifiable type is one that has either an implicit or explicit       
+   /// cast operator to Code type, or can be used to explicitly initialize a  
+   /// Code container                                                         
+   template<class...T>
+   concept Codifiable = ((Inner::CodifiableByOperator<T>
+        or Inner::CodifiableByConstructor<T>) and ...);
+
+} // namespace Langulus::CT
+
+namespace Langulus::Flow
+{
 
    ///                                                                        
-   ///   Langulus code container and parser, as well as keyword database      
+   ///   Langulus code container, parser, serializer and deserializer         
    ///                                                                        
    struct Code : Text {
       LANGULUS_BASES(Text);
@@ -98,8 +129,14 @@ namespace Langulus::Flow
       NOD() LANGULUS_API(FLOW) bool EndsWithDigit() const noexcept;
       NOD() LANGULUS_API(FLOW) bool StartsWithOperator(Offset) const noexcept;
 
-      using Text::operator +=;
-      LANGULUS_API(FLOW) Code& operator += (Operator);
+      ///                                                                     
+      ///   Concatenation                                                     
+      ///                                                                     
+      template<class T> requires CT::Codifiable<Desem<T>>
+      NOD() Code operator + (T&&) const;
+
+      template<class T> requires CT::Codifiable<Desem<T>>
+      Code& operator += (T&&);
 
       template<class T>
       Code& TypeSuffix();

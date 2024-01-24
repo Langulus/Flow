@@ -36,7 +36,7 @@ namespace Langulus::Flow
    ///   @return a shallow-copied container with the correct offset           
    LANGULUS(INLINED)
    Code Code::RightOf(Offset o) const {
-      return Code {Text::Crop(o, GetCount() - o)};
+      return Text::Crop(o);
    }
 
    /// Remove elements from the right side of Code code                       
@@ -44,7 +44,7 @@ namespace Langulus::Flow
    ///   @return a shallow-copied container with the correct offset           
    LANGULUS(INLINED)
    Code Code::LeftOf(Offset o) const {
-      return Code {Text::Crop(0, o)};
+      return Text::Crop(0, o);
    }
 
    /// Check if the Code container begins with special elements, such as      
@@ -107,6 +107,72 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    bool Code::EndsWithDigit() const noexcept {
       return IsDigit(*last());
+   }
+   
+   /// Concatenate two text containers                                        
+   ///   @param rhs - right hand side                                         
+   ///   @return the concatenated text container                              
+   template<class T> requires CT::Codifiable<Desem<T>>
+   Code Code::operator + (T&& rhs) const {
+      using S = SemanticOf<T>;
+      using B = TypeOf<S>;
+
+      if constexpr (CT::Block<B>) {
+         if constexpr (CT::Typed<B>) {
+            if constexpr (CT::Similar<Letter, TypeOf<B>>) {
+               // We can concat directly                                
+               return Block::ConcatBlock<Code>(S::Nest(rhs));
+            }
+            else if constexpr (CT::DenseCharacter<TypeOf<B>>) {
+               // We're concatenating with different type of characters 
+               // - do UTF conversions here                             
+               TODO();
+            }
+            else LANGULUS_ERROR("Can't concatenate with this container");
+         }
+         else {
+            // Type-erased concat                                       
+            return Block::ConcatBlock<Code>(S::Nest(rhs));
+         }
+      }
+      else {
+         // RHS isn't Block, try to convert it to Text, and nest        
+         return operator + (static_cast<Code>(DesemCast(rhs)));
+      }
+   }
+
+   /// Concatenate (destructively) text containers                            
+   ///   @param rhs - right hand side                                         
+   ///   @return a reference to this container                                
+   template<class T> requires CT::Codifiable<Desem<T>>
+   Code& Code::operator += (T&& rhs) {
+      using S = SemanticOf<T>;
+      using B = TypeOf<S>;
+
+      if constexpr (CT::Block<B>) {
+         if constexpr (CT::Typed<B>) {
+            if constexpr (CT::Similar<Letter, TypeOf<B>>) {
+               // We can concat directly                                
+               Block::InsertBlock<Code, void>(IndexBack, S::Nest(rhs));
+            }
+            else if constexpr (CT::DenseCharacter<TypeOf<B>>) {
+               // We're concatenating with different type of characters 
+               // - do UTF conversions here                             
+               TODO();
+            }
+            else LANGULUS_ERROR("Can't concatenate with this container");
+         }
+         else {
+            // Type-erased concat                                       
+            Block::InsertBlock<Code, void>(IndexBack, S::Nest(rhs));
+         }
+      }
+      else {
+         // RHS isn't Block, try to convert it to Text, and nest        
+         return operator += (static_cast<Code>(DesemCast(rhs)));
+      }
+
+      return *this;
    }
 
 } // namespace Langulus::Flow

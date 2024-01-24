@@ -120,10 +120,10 @@ namespace Langulus::Flow
    /// Append a built-in operator to the code                                 
    ///   @param o - the built-in operator enumerator                          
    ///   @return a reference to this code for chaining                        
-   Code& Code::operator += (Operator o) {
+   /*Code& Code::operator += (Operator o) {
       Text::operator += (GlobalOperators[o].mToken);
       return *this;
-   }
+   }*/
 
    /// Compare two tokens, ignoring case                                      
    ///   @param lhs - the left token                                          

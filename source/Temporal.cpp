@@ -417,7 +417,7 @@ namespace Langulus::Flow
             // Continue linking only if the stack is branched           
             return not (stack.IsOr() and atLeastOneSuccess);
          },
-         [&](Verb& substack) {
+         [&](Verb& substack) -> LoopControl {
             if (Link(scope, substack.GetArgument())) {
                atLeastOneSuccess = true;
                // Continue linking only if the stack is branched        
@@ -429,7 +429,7 @@ namespace Langulus::Flow
                return not stack.IsOr();
             }
 
-            return Flow::Continue;
+            return Loop::Continue;
          },
          [&](Inner::MissingFuture& future) {
             atLeastOneSuccess |= Link(scope, future);

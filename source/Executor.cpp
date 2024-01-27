@@ -198,13 +198,13 @@ namespace Langulus::Flow
             [&](const Verb& constVerb) {
                // Execute verbs                                         
                if (skipVerbs)
-                  return Flow::Break;
+                  return Loop::Break;
 
                if (constVerb.GetCharge().IsFlowDependent()) {
                   // The verb hasn't been integrated into a flow, just  
                   // forward it                                         
                   output.SmartPush(IndexBack, constVerb);
-                  return Flow::Continue;
+                  return Loop::Continue;
                }
 
                // Shallow-copy the verb to make it mutable              
@@ -222,7 +222,7 @@ namespace Langulus::Flow
                   LANGULUS_OOPS(Flow, "Verb AND failure: ", flow);
 
                output.SmartPush(IndexBack, Abandon(verb.GetOutput()));
-               return Flow::Continue;
+               return Loop::Continue;
             }
          );
       }
@@ -323,13 +323,13 @@ namespace Langulus::Flow
             [&](const Verb& constVerb) {
                // Execute verbs                                         
                if (localSkipVerbs)
-                  return Flow::Break;
+                  return Loop::Break;
 
                if (constVerb.GetCharge().IsFlowDependent()) {
                   // The verb hasn't been integrated into a flow, just  
                   // forward it                                         
                   output.SmartPush(IndexBack, constVerb);
-                  return Flow::Continue;
+                  return Loop::Continue;
                }
 
                // Shallow-copy the verb to make it mutable              
@@ -342,11 +342,11 @@ namespace Langulus::Flow
                );
 
                if (not ExecuteVerb(environment, verb))
-                  return Flow::Continue;
+                  return Loop::Continue;
 
                executed = true;
                output.SmartPush(IndexBack, Abandon(verb.GetOutput()));
-               return Flow::Continue;
+               return Loop::Continue;
             }
          );
       }

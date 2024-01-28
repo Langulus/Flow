@@ -352,7 +352,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       conjunct.SetSource(pastMissing);
       conjunct.SetPriority(4);
 
-      Any required = Any::WrapAs<Verb>(catenate, conjunct);
+      Any required = Any::Wrap<Verb>(catenate, conjunct);
       required.MakeOr();
 
       WHEN("Parsed") {
@@ -424,7 +424,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       Verbs::Select third {futureMissing};
       third.SetSource(pastMissing);
 
-      Any required = Any::WrapAs<Verb>(first, second, third);
+      Any required = Any::Wrap<Verb>(first, second, third);
       required.MakeOr();
 
       WHEN("Parsed") {

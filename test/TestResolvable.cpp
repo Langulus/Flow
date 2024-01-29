@@ -22,7 +22,7 @@ SCENARIO("Test resolvables", "[resolvable]") {
 				REQUIRE(concreteptr == abstractptr);
 				REQUIRE(pack.IsSparse());
 				REQUIRE(pack.IsExact<Resolvable*>());
-				REQUIRE(pack.GetResolved().IsExact<Thing2>());
+				REQUIRE(pack.GetResolved().IsExact<Any, Thing2>());
 				REQUIRE(pack.GetResolved().Get<Thing2>().mMember == 777);
 				REQUIRE(pack.GetResolved().Get<Thing>().mMember == 666);
 				REQUIRE(pack.GetResolved().As<Resolvable>().CastsTo<Thing>());
@@ -38,7 +38,7 @@ SCENARIO("Test resolvables", "[resolvable]") {
 				REQUIRE(concreteptr == abstractptr);
 				REQUIRE(pack.IsSparse());
 				REQUIRE(pack.IsExact<Thing*>());
-				REQUIRE(pack.GetResolved().IsExact<Thing2>());
+				REQUIRE(pack.GetResolved().IsExact<Any, Thing2>());
 				REQUIRE(pack.GetResolved().Get<Thing2>().mMember == 777);
 				REQUIRE(pack.GetResolved().As<Thing>().mMember == 666);
 				REQUIRE(pack.GetResolved().As<Resolvable>().CastsTo<Thing>());

@@ -218,11 +218,11 @@ namespace Langulus::Flow
          verb.SetSource(context.GetElement(i));
 
          if constexpr (RESOLVE) {
-            auto resolved = verb.GetSource().GetResolved();
+            Any resolved = verb.GetSource().GetResolved();
             Execute<DISPATCH, DEFAULT, false>(resolved, verb);
          }
          else {
-            auto resolved = verb.GetSource().GetDense();
+            Any resolved = verb.GetSource().GetDense();
             Execute<DISPATCH, DEFAULT, false>(resolved, verb);
          }
 

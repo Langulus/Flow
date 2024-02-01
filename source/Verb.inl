@@ -35,7 +35,7 @@ namespace Langulus::Flow
    Verb::Verb(T1&& t1, TAIL&&...tail) {
       static_assert(sizeof(Verb) == sizeof(A::Verb));
       if constexpr (sizeof...(TAIL) == 0 and not CT::Array<T1>) {
-         using S = SemanticOf<T1>;
+         using S = SemanticOf<decltype(t1)>;
          using T = TypeOf<S>;
 
          if constexpr (CT::VerbBased<T>) {

@@ -24,11 +24,12 @@ namespace Langulus::Flow
    /// Concept for determining if a type is producible from a factory         
    /// The type must have a producer defined, not be abstract, be dense, and  
    /// be referencable                                                        
-   template<class T>
-   concept FactoryProducible = CT::Producible<T>
-                       and not CT::Abstract<T>
-                       and     CT::Dense<T>
-                       and     CT::Referencable<T>;
+   template<class...T>
+   concept FactoryProducible = ((CT::Producible<T>
+         and not CT::Abstract<T>
+         and     CT::Dense<T>
+         and     CT::Referencable<T>)
+      and ...);
 
 
    ///                                                                        

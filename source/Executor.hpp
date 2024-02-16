@@ -33,9 +33,4 @@ namespace Langulus::Flow
    LANGULUS_API(FLOW)
    bool IntegrateVerb(Any&, Verb&);
 
-   NOD() LANGULUS_API(FLOW)
-   bool IsExecutable(const Any&) noexcept;
-   NOD() LANGULUS_API(FLOW)
-   bool IsExecutableDeep(const Any&) noexcept;
-
 } // namespace Langulus::Flow

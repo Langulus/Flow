@@ -17,21 +17,23 @@
 #include "verbs/Conjunct.inl"
 #include "verbs/Interpret.inl"
 
-#define ENABLE_VERBOSE() 0
+LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
+
+#define ENABLE_VERBOSE() 1
 
 #define VERBOSE_INNER(...) \
       Logger::Verbose("Flow::Code: ", Logger::Push, Logger::Cyan, __VA_ARGS__ \
          , Logger::Pop, " at ", progress, ": " \
-         , Logger::NewLine, Logger::DarkYellow, "+-- [" \
-         , input.LeftOf(progress), Logger::Push, Logger::Red, Logger::Underline \
-         , input.RightOf(progress), Logger::Pop, ']')
+         , Logger::NewLine, "+-[", Logger::Push, Logger::Green, Logger::Underline \
+         , input. LeftOf(progress).Replace('\n', "\\n"), Logger::Pop, Logger::Push, Logger::White \
+         , input.RightOf(progress).Replace('\n', "\\n"), Logger::Pop, ']')
 
 #define PRETTY_ERROR(...) { \
       Logger::Error("Flow::Code: ", Logger::Push, Logger::DarkYellow, __VA_ARGS__ \
          , Logger::Pop, " at ", progress, ": " \
-         , Logger::NewLine, Logger::DarkYellow, "+-- [" \
-         , input.LeftOf(progress), Logger::Push, Logger::Red, Logger::Underline \
-         , input.RightOf(progress), Logger::Pop, ']'); \
+         , Logger::NewLine, "+-[", Logger::Push, Logger::DarkYellow, Logger::Underline \
+         , input. LeftOf(progress).Replace('\n', "\\n"), Logger::Pop \
+         , input.RightOf(progress).Replace('\n', "\\n"), ']'); \
       LANGULUS_THROW(Flow, "Parse error"); \
    }
 
@@ -97,33 +99,24 @@ namespace Langulus::Flow
       return output;
    }
    
-   /// Check if the Code code container begins with an operator               
+   /// Check if the code container begins with an operator                    
    ///   @param i - the operator to check for                                 
    ///   @return true if the operator matches                                 
    bool Code::StartsWithOperator(Offset i) const noexcept {
-      const Size tokenSize = GlobalOperators[i].mToken.size();
-      if (not tokenSize or GetCount() < tokenSize)
+      const Code token {static_cast<Operator>(i)};
+      if (not token or GetCount() < token.GetCount())
          return false;
 
-      const auto token = Code(GlobalOperators[i].mToken);
-      const auto remainder = RightOf(tokenSize);
-      const auto endsWithALetter = token.EndsWithLetter();
-      return tokenSize > 0 and MatchesLoose(token) == tokenSize
-         and (GetCount() == tokenSize 
+      const Code remainder = RightOf(token.GetCount());
+      const bool endsWithALetter = token.EndsWithLetter();
+      return token.GetCount() > 0
+         and (GetCount() == token.GetCount()
             or (endsWithALetter and (
                not     remainder.StartsWithLetter()
                and not remainder.StartsWithDigit()))
-            or not endsWithALetter
-         );
+            or not endsWithALetter)
+         and MatchesLoose(token) == token.GetCount();
    }
-
-   /// Append a built-in operator to the code                                 
-   ///   @param o - the built-in operator enumerator                          
-   ///   @return a reference to this code for chaining                        
-   /*Code& Code::operator += (Operator o) {
-      Text::operator += (GlobalOperators[o].mToken);
-      return *this;
-   }*/
 
    /// Compare two tokens, ignoring case                                      
    ///   @param lhs - the left token                                          
@@ -163,7 +156,7 @@ namespace Langulus::Flow
    ///   @param text - the text to check                                      
    ///   @return true if text is reserved                                     
    bool Code::IsReserved(const Text& text) {
-      for (auto& a : GlobalOperators) {
+      for (auto& a : SerializationRules::Operators) {
          if (CompareOperators(text, a.mToken))
             return true;
       }
@@ -332,16 +325,14 @@ namespace Langulus::Flow
    ///   @param allowCharge - whether to parse charge (internal use)          
    ///   @return number of parsed characters                                  
    Offset Code::KeywordParser::Parse(const Code& input, Any& lhs, bool allowCharge) {
-      Offset progress = 0;
-      VERBOSE_TAB("Parsing keyword");
-
       // Isolate the keyword                                            
+      Offset progress = 0;
       const auto keyword = Isolate(input);
       if (keyword.empty())
          PRETTY_ERROR("No keyword parsed");
 
       progress += keyword.size();
-      VERBOSE("Keyword isolated: ", keyword);
+      VERBOSE_TAB("Keyword isolated: ", keyword);
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       // Search for an exact token in meta definitions                  
@@ -353,7 +344,7 @@ namespace Langulus::Flow
          // Exact non-ambiguous data definition found                   
          if (allowCharge) {
             const auto relevant = input.RightOf(progress);
-            if (ChargeParser::Peek(relevant) != NoOperator) {
+            if (ChargeParser::Peek(relevant) != Operator::NoOperator) {
                // Parse charge for the keyword                          
                Charge charge;
                progress += ChargeParser::Parse(relevant, charge);
@@ -388,7 +379,7 @@ namespace Langulus::Flow
          if (dmeta) {
             if (allowCharge) {
                const auto relevant = input.RightOf(progress);
-               if (ChargeParser::Peek(relevant) != NoOperator) {
+               if (ChargeParser::Peek(relevant) != Operator::NoOperator) {
                   // Parse charge for the keyword                       
                   Charge charge;
                   progress += ChargeParser::Parse(relevant, charge);
@@ -408,7 +399,7 @@ namespace Langulus::Flow
          }
       }
 
-      VERBOSE("Keyword parsed: `", keyword, "` as ", lhs, " (", lhs.GetToken(), ")");
+      VERBOSE("Keyword parsed: `", keyword, "` as ", lhs, " (of type ", lhs.GetToken(), ")");
       return progress;
    #else    // LANGULUS_FEATURE(MANAGED_REFLECTION)
       (void)lhs;
@@ -468,12 +459,12 @@ namespace Langulus::Flow
    ///   @param input - the code to peek into                                 
    ///   @return true if input begins with an operators                       
    Code::Operator Code::OperatorParser::PeekBuiltin(const Code& input) noexcept {
-      for (Offset i = 0; i < Code::OpCounter; ++i) {
-         if (not GlobalOperators[i].mCharge and input.StartsWithOperator(i))
+      for (Offset i = 0; i < Operator::OpCounter; ++i) {
+         if (not SerializationRules::Operators[i].mCharge and input.StartsWithOperator(i))
             return Operator(i);
       }
 
-      return NoOperator;
+      return Operator::NoOperator;
    }
 
    /// Peek inside input, and return true if it begins with one of the        
@@ -482,21 +473,21 @@ namespace Langulus::Flow
    ///   @return true if input begins with an operators                       
    Code::Operator Code::OperatorParser::Peek(const Code& input) noexcept {
       const auto builtin = PeekBuiltin(input);
-      if (builtin != NoOperator)
+      if (builtin != Operator::NoOperator)
          return builtin;
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          const auto word = Isolate(input);
          auto found = RTTI::GetOperator(word);
          if (found)
-            return ReflectedOperator;
+            return Operator::ReflectedOperator;
 
          found = RTTI::GetMetaVerb(word);
          if (found)
-            return ReflectedVerb;
+            return Operator::ReflectedVerb;
       #endif
 
-      return NoOperator;
+      return Operator::NoOperator;
    }
 
    /// Isolate an operator                                                    
@@ -516,7 +507,7 @@ namespace Langulus::Flow
          if (KeywordParser::Peek(relevant)
             or NumberParser::Peek(relevant)
             or SkippedParser::Peek(relevant)
-            or PeekBuiltin(relevant) != NoOperator)
+            or PeekBuiltin(relevant) != Operator::NoOperator)
             break;
          ++progress;
       }
@@ -535,45 +526,48 @@ namespace Langulus::Flow
    ///   @param priority - the priority of the last parsed element            
    ///   @param optimize - the priority of the last parsed element            
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::Parse(Operator op, const Code& input, Any& lhs, Real priority, bool optimize) {
+   Offset Code::OperatorParser::Parse(
+      Operator op, const Code& input, Any& lhs, Real priority, bool optimize
+   ) {
       Offset progress = 0;
-      if (op < NoOperator) {
+      if (op < Operator::NoOperator) {
          // Handle a built-in operator                                  
-         if (GlobalOperators[op].mPrecedence and priority >= GlobalOperators[op].mPrecedence) {
+         /*if (GlobalOperators[op].mPrecedence and priority >= GlobalOperators[op].mPrecedence) {
             VERBOSE(Logger::Yellow, 
                "Delaying built-in operator [", GlobalOperators[op].mToken,
                "] due to a prioritized operation");
             return 0;
-         }
+         }*/
 
          // Skip the operator, we already know it                       
-         progress += GlobalOperators[op].mToken.size();
-         VERBOSE_TAB("Parsing built-in operator: [", GlobalOperators[op].mToken, ']');
+         progress += SerializationRules::Operators[op].mToken.size();
+         VERBOSE_TAB("Parsing built-in operator: [",
+            SerializationRules::Operators[op].mToken, ']');
          const Code relevant = input.RightOf(progress);
 
          switch (op) {
             // Handle built-in operators first                          
-         case OpenScope:
+         case Operator::OpenScope:
             return progress + ParseContent(relevant, lhs, optimize);
-         case CloseScope:
+         case Operator::CloseScope:
             return 0;
-         case OpenString:
-         case OpenStringAlt:
-         case OpenCode:
-         case OpenCharacter:
+         case Operator::OpenString:
+         case Operator::OpenStringAlt:
+         case Operator::OpenCode:
+         case Operator::OpenCharacter:
             return progress + ParseString(op, relevant, lhs);
-         case OpenByte:
+         case Operator::OpenByte:
             return progress + ParseBytes(relevant, lhs);
-         case Past:
-         case Future:
+         case Operator::Past:
+         case Operator::Future:
             return progress + ParsePhase(op, lhs);
-         case Constant:
+         case Operator::Constant:
             return progress + ParseConst(lhs);
          default:
             PRETTY_ERROR("Unhandled built-in operator");
          }
       }
-      else if (op == ReflectedOperator) {
+      else if (op == Operator::ReflectedOperator) {
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Handle a reflected operator                                 
          const auto word = Isolate(input);
@@ -611,8 +605,8 @@ namespace Langulus::Flow
             return 0;
          }
 
-         VERBOSE_TAB("Parsing reflected verb: [", word, "] (", found, ")");
          progress += word.size();
+         VERBOSE_TAB("Parsing reflected verb: [", word, "] (", found, ")");
          const Code relevant = input.RightOf(progress);
          auto operation = Verb::FromMeta(found);
          if (CompareOperators(word, found->mTokenReverse))
@@ -638,12 +632,12 @@ namespace Langulus::Flow
 
       // We don't know what to expect, so we attempt blind parse        
       Any rhs;
-      progress = UnknownParser::Parse(input, rhs, GlobalOperators[OpenScope].mPrecedence, optimize);
-      if (not input.RightOf(progress).StartsWithOperator(CloseScope))
+      progress = UnknownParser::Parse(input, rhs, 0, optimize);
+      if (not input.RightOf(progress).StartsWithOperator(Operator::CloseScope))
          PRETTY_ERROR("Missing closing bracket");
 
       // Account for the closing content scope                          
-      progress += GlobalOperators[CloseScope].mToken.size();
+      progress += SerializationRules::Operators[Operator::CloseScope].mToken.size();
 
       // Insert to new content in rhs to the already available lhs      
       InsertContent(rhs, lhs);
@@ -669,7 +663,7 @@ namespace Langulus::Flow
       }
       else if (lhs.Is<DMeta>()) {
          // The content is for an uninstantiated data scope             
-         const auto meta = lhs.As<DMeta>(-1);
+         const auto meta = lhs.As<DMeta>(IndexLast);
          LANGULUS_ASSERT(meta, Flow, "Bad data id");
 
          if (meta->Is<Verb>()) {
@@ -681,7 +675,8 @@ namespace Langulus::Flow
             lhs.SmartPush(IndexBack, Trait {Move(rhs)});
          }
          else {
-            if (not rhs and not meta->mProducerRetriever and meta->mDefaultConstructor) {
+            if (not rhs and not meta->mProducerRetriever
+            and meta->mDefaultConstructor) {
                // Invoke default-construction                           
                Any constExpr;
                constExpr.SetType(meta);
@@ -751,7 +746,9 @@ namespace Langulus::Flow
    ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] parsed content goes here (lhs)                 
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseString(const Code::Operator op, const Code& input, Any& lhs) {
+   Offset Code::OperatorParser::ParseString(
+      const Code::Operator op, const Code& input, Any& lhs
+   ) {
       Offset progress = 0;
       Offset depth = 1;
       while (progress < input.GetCount()) {
@@ -760,40 +757,45 @@ namespace Langulus::Flow
          const auto relevant = input.RightOf(progress);
 
          switch (op) {
-         case Code::OpenString:
-         case Code::OpenStringAlt: {
+         case Operator::OpenString:
+         case Operator::OpenStringAlt: {
             // Finish up a "string" or `string`                         
             //TODO handle escapes!
-            const auto closer = op == OpenString ? CloseString : CloseStringAlt;
+            const auto closer = op == Operator::OpenString
+               ? Operator::CloseString : Operator::CloseStringAlt;
+
             if (relevant.StartsWithOperator(closer)) {
-               const auto tokenSize = GlobalOperators[closer].mToken.size();
+               const auto tokenSize = SerializationRules::Operators
+                  [closer].mToken.size();
                lhs << Text {input.LeftOf(progress)};
                VERBOSE("String parsed: ", lhs);
                return tokenSize + progress;
             }
             break;
          }
-         case Code::OpenCharacter: {
+         case Operator::OpenCharacter: {
             // Finish up a 'c'haracter                                  
             //TODO handle escapes!
-            if (relevant.StartsWithOperator(CloseCharacter)) {
-               const auto tokenSize = GlobalOperators[CloseCharacter].mToken.size();
+            if (relevant.StartsWithOperator(Operator::CloseCharacter)) {
+               const auto tokenSize = SerializationRules::Operators
+                  [Operator::CloseCharacter].mToken.size();
                lhs << input[0];
                VERBOSE("Character parsed: ", lhs);
                return tokenSize + progress;
             }
             break;
          }
-         case Code::OpenCode: {
+         case Operator::OpenCode: {
             // Finish up a [code]                                       
             // Nested code scopes are handled gracefully                
-            if (relevant.StartsWithOperator(OpenCode))
+            if (relevant.StartsWithOperator(Operator::OpenCode))
                ++depth;
-            else if (relevant.StartsWithOperator(CloseCode)) {
+            else if (relevant.StartsWithOperator(Operator::CloseCode)) {
                --depth;
 
                if (0 == depth) {
-                  const auto tokenSize = GlobalOperators[CloseCode].mToken.size();
+                  const auto tokenSize = SerializationRules::Operators
+                     [Operator::CloseCode].mToken.size();
                   lhs << input.LeftOf(progress);
                   VERBOSE("Code parsed: ", lhs);
                   return tokenSize + progress;
@@ -865,7 +867,7 @@ namespace Langulus::Flow
    ///   @param lhs - [in/out] phased content goes here                       
    ///   @return number of parsed characters                                  
    Offset Code::OperatorParser::ParsePhase(const Code::Operator op, Any& lhs) {
-      if (op == Code::Past)
+      if (op == Operator::Past)
          lhs.MakePast();
       else
          lhs.MakeFuture();
@@ -887,12 +889,14 @@ namespace Langulus::Flow
    ///   @param lhs - [in/out] result of the operator goes here               
    ///   @param optimize - whether or not to attempt executing at compile-time
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseReflected(Verb& op, const Code& input, Any& lhs, bool optimize) {
+   Offset Code::OperatorParser::ParseReflected(
+      Verb& op, const Code& input, Any& lhs, bool optimize
+   ) {
       Offset progress = 0;
       Code relevant = input;
 
       // Parse charge if any                                            
-      if (ChargeParser::Peek(relevant) != NoOperator) {
+      if (ChargeParser::Peek(relevant) != Operator::NoOperator) {
          progress += ChargeParser::Parse(relevant, op);
          relevant = input.RightOf(progress);
       }
@@ -938,12 +942,13 @@ namespace Langulus::Flow
       }
 
       // Find the charge operator                                    
-      for (Offset i = 0; i < Code::OpCounter; ++i) {
-         if (GlobalOperators[i].mCharge and relevant.StartsWithOperator(i))
+      for (Offset i = 0; i < Operator::OpCounter; ++i) {
+         if (SerializationRules::Operators[i].mCharge
+         and relevant.StartsWithOperator(i))
             return Operator(i);
       }
 
-      return NoOperator;
+      return Operator::NoOperator;
    }
 
    /// Parse mass/time/frequency/priority operators                           
@@ -967,11 +972,12 @@ namespace Langulus::Flow
          }
 
          // Find the charge operator                                    
-         Operator op = NoOperator;
-         for (Offset i = 0; i < Code::OpCounter; ++i) {
-            if (GlobalOperators[i].mCharge and relevant.StartsWithOperator(i)) {
+         auto op = Operator::NoOperator;
+         for (Offset i = 0; i < Operator::OpCounter; ++i) {
+            if (SerializationRules::Operators[i].mCharge
+            and relevant.StartsWithOperator(i)) {
                op = Operator(i);
-               progress += GlobalOperators[i].mToken.size();
+               progress += SerializationRules::Operators[i].mToken.size();
                relevant = input.RightOf(progress);
                break;
             }
@@ -980,7 +986,8 @@ namespace Langulus::Flow
          if (op == Operator::NoOperator)
             return progress;
 
-         VERBOSE("Parsing charge operator: [", GlobalOperators[op].mToken, ']');
+         VERBOSE("Parsing charge operator: [",
+            SerializationRules::Operators[op].mToken, ']');
 
          // Skip any spacing and consume '-' operators here             
          bool reverse = false;
@@ -1020,20 +1027,21 @@ namespace Langulus::Flow
             asReal *= Real {-1};
 
          switch (op) {
-         case Code::Mass:
+         case Operator::Mass:
             charge.mMass = asReal;
             break;
-         case Code::Rate:
+         case Operator::Rate:
             charge.mRate = asReal;
             break;
-         case Code::Time:
+         case Operator::Time:
             charge.mTime = asReal;
             break;
-         case Code::Priority:
+         case Operator::Priority:
             charge.mPriority = asReal;
             break;
          default:
-            PRETTY_ERROR("Invalid charge operator: ", GlobalOperators[op].mToken);
+            PRETTY_ERROR("Invalid charge operator: ",
+               SerializationRules::Operators[op].mToken);
          }
       }
 

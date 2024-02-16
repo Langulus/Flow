@@ -22,7 +22,7 @@ namespace Langulus::Flow
    ///                                                                        
    struct LANGULUS_API(FLOW) Resolvable : Referenced {
       LANGULUS(ABSTRACT) true;
-      LANGULUS_CONVERSIONS(Text);
+      LANGULUS_CONVERTS_TO(Text);
 
    private:
       // Concrete type of the resolvable                                

@@ -7,18 +7,20 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../Verb.hpp"
+#include "../TVerb.hpp"
 
 
 namespace Langulus::Verbs
 {
+
    using namespace Flow;
+
 
    ///                                                                        
    ///   Select/Deselect verb                                                 
    /// Used to focus on a part of a container, or access members              
    ///                                                                        
-   struct Select : StaticVerb<Select> {
+   struct Select : TVerb<Select> {
       LANGULUS(POSITIVE_VERB) "Select";
       LANGULUS(NEGATIVE_VERB) "Deselect";
       LANGULUS(POSITIVE_OPERATOR) ".";
@@ -27,15 +29,14 @@ namespace Langulus::Verbs
       LANGULUS(INFO)
          "Used to focus on a part of a container, or access members";
 
-      using StaticVerb::StaticVerb;
+      using TVerb::TVerb;
 
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr auto Of() noexcept;
 
-      template<CT::Dense T>
-      static bool ExecuteIn(T&, Verb&);
+      static bool ExecuteIn(CT::Dense auto&, Verb&);
 
       static bool ExecuteDefault(const Block&, Verb&);
       static bool ExecuteDefault(Block&, Verb&);
@@ -49,4 +50,5 @@ namespace Langulus::Verbs
       template<bool MUTABLE>
       static bool SelectByMeta(const TAny<Index>&, DMeta, Block&, TAny<Trait>&, TAny<const RTTI::Ability*>&);
    };
-}
+
+} // namespace Langulus::Verbs

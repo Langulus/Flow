@@ -6,9 +6,9 @@
 /// Distributed under GNU General Public License v3+                          
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
-#include "Main.hpp"
 #include <Flow/Temporal.hpp>
-#include <catch2/catch.hpp>
+#include "Common.hpp"
+
 
 SCENARIO("Temporal flow", "[temporal]") {
    ///                                                                        
@@ -54,10 +54,6 @@ SCENARIO("Temporal flow", "[temporal]") {
          flow.Push("st"_text);
          flow.Push(" game"_text);
          flow.Push(GAME);
-
-         THEN("The generated temporal flow should be correct") {
-
-         }
       }
    }
 }

@@ -23,12 +23,12 @@ namespace Langulus
    ///   @return text containing the generated identity                       
    LANGULUS(INLINED)
    Anyness::Text IdentityOf(const Token& token, const auto& instance) {
-      using Flow::Code;
-      Code result;
+      using Anyness::Text;
+      Text result;
       result += token;
-      result += Code::OpenScope;
+      result += Text::Operator::OpenScope;
       #if not LANGULUS(PARANOID) and LANGULUS(DEBUG)
-         // Feel like getting doxxed - directly dump the memory address 
+         // Feel like getting doxxed? Directly dump the memory address  
          result += Anyness::Text {
             fmt::format("{:X}",
                reinterpret_cast<intptr_t>(&DenseCast(instance))
@@ -40,7 +40,7 @@ namespace Langulus
             fmt::format("{:X}", HashOf(&DenseCast(instance)).mHash)
          };
       #endif
-      result += Code::CloseScope;
+      result += Text::Operator::CloseScope;
       return Abandon(result);
    }
 

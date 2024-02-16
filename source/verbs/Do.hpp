@@ -7,27 +7,29 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../Verb.hpp"
+#include "../TVerb.hpp"
 
 
 namespace Langulus::Verbs
 {
+
    using namespace Flow;
+
 
    ///                                                                        
    ///   Do/Undo verb                                                         
    /// Used as a runtime dispatcher of composite types                        
    ///                                                                        
-   struct Do : StaticVerb<Do> {
+   struct Do : TVerb<Do> {
       LANGULUS(POSITIVE_VERB) "Do";
       LANGULUS(NEGATIVE_VERB) "Undo";
       LANGULUS(INFO) "Used as a runtime dispatcher of composite types";
 
-      using StaticVerb::StaticVerb;
+      using TVerb::TVerb;
 
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr auto Of() noexcept;
 
       static bool ExecuteIn(CT::Dense auto&, Verb&);
@@ -35,27 +37,28 @@ namespace Langulus::Verbs
       static bool ExecuteDefault(Block&, Verb&);
       static bool ExecuteStateless(Verb&);
    };
-}
+
+} // namespace Langulus::Verbs
 
 namespace Langulus::Flow
 {
 
    template<bool DISPATCH, bool DEFAULT, bool FALLBACK>
-   Count Execute(CT::Data auto& context, CT::VerbBased auto& verb);
+   Count Execute(CT::Data auto&, CT::VerbBased auto&);
 
    template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class... BASES>
-   Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb, Types<BASES...>);
+   Count ExecuteInBases(CT::Data auto&, CT::VerbBased auto&, Types<BASES...>);
 
    namespace Inner
    {
       template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class BASE>
-      Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb);
+      Count ExecuteInBases(CT::Data auto&, CT::VerbBased auto&);
    }
 
    template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true>
-   Count DispatchFlat(CT::Deep auto& context, CT::VerbBased auto& verb);
+   Count DispatchFlat(CT::Deep auto&, CT::VerbBased auto&);
 
    template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true>
-   Count DispatchDeep(CT::Deep auto& context, CT::VerbBased auto& verb);
+   Count DispatchDeep(CT::Deep auto&, CT::VerbBased auto&);
 
-}
+} // namespace Langulus::Flow

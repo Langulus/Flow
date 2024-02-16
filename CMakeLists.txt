@@ -23,18 +23,19 @@ if(PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
 	fetch_langulus_module(Anyness GIT_TAG 385514b4b55fb95a92c592e08854b6ececc98c7c)
 endif()
 
+file(GLOB_RECURSE
+	LANGULUS_FLOW_SOURCES 
+	LIST_DIRECTORIES FALSE CONFIGURE_DEPENDS
+	source/*.cpp
+)
+
 # Build and install Flow library                                            
 add_library(LangulusFlow ${LANGULUS_LIBRARY_TYPE}
     $<TARGET_OBJECTS:LangulusLogger>
     $<TARGET_OBJECTS:LangulusRTTI>
     $<$<BOOL:${LANGULUS_FEATURE_MANAGED_MEMORY}>:$<TARGET_OBJECTS:LangulusFractalloc>>
     $<TARGET_OBJECTS:LangulusAnyness>
-    source/Code.cpp
-    source/Construct.cpp
-    source/Executor.cpp
-    source/Temporal.cpp
-    source/Verb.cpp
-    source/Resolvable.cpp
+	${LANGULUS_FLOW_SOURCES}
 )
 
 target_include_directories(LangulusFlow PUBLIC include

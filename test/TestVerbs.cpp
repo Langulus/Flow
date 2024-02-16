@@ -6,9 +6,9 @@
 /// Distributed under GNU General Public License v3+                          
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
-#include "Main.hpp"
 #include <Flow/Verbs/Select.hpp>
-#include <catch2/catch.hpp>
+#include "Common.hpp"
+
 
 SCENARIO("Text capsulation in verbs", "[verbs]") {
    GIVEN("A templated utf8 text container") {
@@ -20,59 +20,43 @@ SCENARIO("Text capsulation in verbs", "[verbs]") {
       WHEN("Wrapped inside a verb's output") {
          Verb wrapper = Verbs::Do().SetOutput(&text);
          Verb wrapper2 = wrapper;
-         THEN("The block's reference count must increase") {
-            REQUIRE(text.GetUses() == 1);
-            REQUIRE(text == "tests");
-         }
+         REQUIRE(text.GetUses() == 1);
+         REQUIRE(text == "tests");
 
          wrapper.Reset();
          wrapper2.Reset();
-         THEN("The block's reference count must decrease") {
-            REQUIRE(text.GetUses() == 1);
-            REQUIRE(text == "tests");
-         }
+         REQUIRE(text.GetUses() == 1);
+         REQUIRE(text == "tests");
       }
 
       WHEN("Wrapped inside a verb's argument") {
          Verbs::Do wrapper {&text};
-         THEN("The block's reference count must increase") {
-            REQUIRE(text.GetUses() == 1);
-            REQUIRE(text == "tests");
-         }
+         REQUIRE(text.GetUses() == 1);
+         REQUIRE(text == "tests");
 
          wrapper.Reset();
-         THEN("The block's reference count must decrease") {
-            REQUIRE(text.GetUses() == 1);
-            REQUIRE(text == "tests");
-         }
+         REQUIRE(text.GetUses() == 1);
+         REQUIRE(text == "tests");
       }
 
       WHEN("Wrapped inside a verb's source") {
          Verb wrapper = Verbs::Do().SetSource(&text);
-         THEN("The block's reference count must increase") {
-            REQUIRE(text.GetUses() == 1);
-            REQUIRE(text == "tests");
-         }
+         REQUIRE(text.GetUses() == 1);
+         REQUIRE(text == "tests");
 
          wrapper.Reset();
-         THEN("The block's reference count must decrease") {
-            REQUIRE(text.GetUses() == 1);
-            REQUIRE(text == "tests");
-         }
+         REQUIRE(text.GetUses() == 1);
+         REQUIRE(text == "tests");
       }
 
       WHEN("Wrapped everywhere inside a verb") {
          Verb wrapper = Verbs::Do(&text).SetSource(&text).SetOutput(&text);
-         THEN("The block's reference count must increase") {
-            REQUIRE(text.GetUses() == 1);
-            REQUIRE(text == "tests");
-         }
+         REQUIRE(text.GetUses() == 1);
+         REQUIRE(text == "tests");
 
          wrapper.Reset();
-         THEN("The block's reference count must decrease") {
-            REQUIRE(text.GetUses() == 1);
-            REQUIRE(text == "tests");
-         }
+         REQUIRE(text.GetUses() == 1);
+         REQUIRE(text == "tests");
       }
    }
 
@@ -80,14 +64,11 @@ SCENARIO("Text capsulation in verbs", "[verbs]") {
       Verbs::Select test;
 
       WHEN("Stringified") {
-         // Calling static_cast here produces errors due to MSVC bug    
-         const auto toText = static_cast<Text>(test); // test.operator Text();
-         const auto toCode = static_cast<Code>(test); // test.operator Code();
+         const auto toText = static_cast<Text>(test);
+         const auto toCode = static_cast<Code>(test);
 
-         THEN("The block's reference count must increase") {
-            REQUIRE(toText == toCode);
-            REQUIRE(toText == ".");
-         }
+         REQUIRE(toText == toCode);
+         REQUIRE(toText == ".");
       }
    }
 }

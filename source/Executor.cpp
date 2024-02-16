@@ -20,52 +20,6 @@
 namespace Langulus::Flow
 {
 
-   /// Flat check if block contains verbs                                     
-   ///   @param block - the block to scan for verbs                           
-   ///   @return true if the block contains immediate verbs                   
-   bool IsExecutable(const Any& block) noexcept {
-      if (block.Is<Verb>())
-         return true;
-
-      bool exe = false;
-      block.ForEach(
-         [&exe](const Trait& trait) noexcept {
-            // Scan deeper into traits, because they're not deep        
-            // They are deep only with respect to execution             
-            exe = IsExecutable(trait);
-            return not exe;
-         },
-         [&exe](const Construct& cst) noexcept {
-            // Scan deeper into constructs, because they're not deep    
-            // They are deep only with respect to execution             
-            cst.GetDescriptor().ForEach([&exe](const Verb&) noexcept {
-               // Counts as executable if containing at least one verb  
-               exe = true;
-               return false;
-            });
-            return not exe;
-         }
-      );
-
-      return exe;
-   }
-
-   /// Deep (nested and slower) check if block contains verbs                 
-   ///   @param block - the block to scan for verbs                           
-   ///   @return true if the deep or flat block contains verbs                
-   bool IsExecutableDeep(const Any& block) noexcept {
-      if (IsExecutable(block))
-         return true;
-
-      bool exe = false;
-      block.ForEachDeep([&exe](const Block& group) noexcept {
-         exe = IsExecutable(group);
-         return not exe;
-      });
-
-      return exe;
-   }
-
    /// Nested AND/OR scope execution (discarding outputs)                     
    /// TODO optimize for unneeded outputs                                     
    ///   @param flow - the flow to execute                                    

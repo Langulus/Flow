@@ -6,7 +6,6 @@
 /// Distributed under GNU General Public License v3+                          
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
-#include "Main.hpp"
 #include <Flow/Temporal.hpp>
 #include <Flow/Verbs/Associate.hpp>
 #include <Flow/Verbs/Create.hpp>
@@ -14,9 +13,7 @@
 #include <Flow/Verbs/Catenate.hpp>
 #include <Flow/Verbs/Conjunct.hpp>
 #include <Flow/Verbs/Interpret.hpp>
-#include <catch2/catch.hpp>
-
-LANGULUS_EXCEPTION_HANDLER
+#include "Common.hpp"
 
 
 SCENARIO("Parsing scripts with corner cases", "[flow]") {
@@ -29,7 +26,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    futureMissing.MakeFuture();
 
    // Required for constants, such as single, many, etc.                
-   (void)MetaOf<Index>();
+   (void) MetaOf<Index>();
 
    GIVEN("The script with line comments") {
       const auto code = "//some comment\n`plural` associate many //same line comment with no new line"_code;
@@ -39,9 +36,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
    
@@ -53,9 +48,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
    
@@ -67,9 +60,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -81,9 +72,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -95,9 +84,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -109,9 +96,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -123,9 +108,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -137,9 +120,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -151,9 +132,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -165,9 +144,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -179,9 +156,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -193,9 +168,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -207,9 +180,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -227,9 +198,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -242,9 +211,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -260,9 +227,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -276,9 +241,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -292,9 +255,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -317,9 +278,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -332,9 +291,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -358,9 +315,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -376,9 +331,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -389,9 +342,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -403,9 +354,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -430,9 +379,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -444,9 +391,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -457,9 +402,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -474,9 +417,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -490,9 +431,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -507,9 +446,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -524,9 +461,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -541,9 +476,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -558,9 +491,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -575,9 +506,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 
@@ -592,9 +521,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
-         THEN("The parsed contents must match the requirements") {
-            REQUIRE(parsed == required);
-         }
+         REQUIRE(parsed == required);
       }
    }
 }

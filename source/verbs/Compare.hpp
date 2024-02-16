@@ -7,33 +7,35 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../Verb.hpp"
+#include "../TVerb.hpp"
 
 
 namespace Langulus::Verbs
 {
+
    using namespace Flow;
+
 
    ///                                                                        
    ///   Compare verb                                                         
    /// Used to compare for equality, or for largeness/smallness               
    ///                                                                        
-   struct Compare : StaticVerb<Compare> {
+   struct Compare : TVerb<Compare> {
       LANGULUS(VERB) "Compare";
       LANGULUS(OPERATOR) " == ";
       LANGULUS(PRECEDENCE) 3;
       LANGULUS(INFO) "Used to compare for equality, or largeness/smallness";
 
-      using StaticVerb::StaticVerb;
+      using TVerb::TVerb;
 
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr auto Of() noexcept;
 
-      template<CT::Dense T>
-      static bool ExecuteIn(T&, Verb&);
+      static bool ExecuteIn(CT::Dense auto&, Verb&);
 
       static bool ExecuteDefault(const Block&, Verb&);
    };
-}
+
+} // namespace Langulus::Verbs

@@ -7,19 +7,21 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../Verb.hpp"
+#include "../TVerb.hpp"
 
 
 namespace Langulus::Verbs
 {
+
    using namespace Flow;
+
 
    ///                                                                        
    ///   Associate/Disassociate verb                                          
-   /// Either performs a shallow copy, or aggregates associations,            
+   /// Either performs a shallow copy, or excites/inhibits associations,      
    /// depending on the context's complexity                                  
    ///                                                                        
-   struct Associate : StaticVerb<Associate> {
+   struct Associate : TVerb<Associate> {
       LANGULUS(POSITIVE_VERB) "Associate";
       LANGULUS(NEGATIVE_VERB) "Disassociate";
       LANGULUS(POSITIVE_OPERATOR) " = ";
@@ -29,16 +31,16 @@ namespace Langulus::Verbs
          "Either performs a shallow copy, or aggregates associations, "
          "depending on the context's complexity";
 
-      using StaticVerb::StaticVerb;
+      using TVerb::TVerb;
 
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr auto Of() noexcept;
 
-      template<CT::Dense T>
-      static bool ExecuteIn(T&, Verb&);
+      static bool ExecuteIn(CT::Dense auto&, Verb&);
 
       static bool ExecuteDefault(Block&, Verb&);
    };
-}
+
+} // namespace Langulus::Verbs

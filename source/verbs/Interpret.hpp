@@ -7,34 +7,35 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../Verb.hpp"
+#include "../TVerb.hpp"
 
 
 namespace Langulus::Verbs
 {
+
    using namespace Flow;
+
 
    ///                                                                        
    ///   Interpret                                                            
    /// Performs conversion                                                    
    ///                                                                        
-   struct Interpret : StaticVerb<Interpret> {
+   struct Interpret : TVerb<Interpret> {
       LANGULUS(VERB) "Interpret";
       LANGULUS(OPERATOR) " => ";
       LANGULUS(INFO) "Performs conversion";
 
-      using StaticVerb::StaticVerb;
+      using TVerb::TVerb;
 
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr auto Of() noexcept;
 
       template<CT::Decayed TO, CT::Decayed FROM>
       static TO To(const FROM&);
 
-      template<CT::Dense T>
-      static bool ExecuteIn(T&, Verb&);
+      static bool ExecuteIn(CT::Dense auto&, Verb&);
 
       static bool ExecuteDefault(const Block&, Verb&);
    };

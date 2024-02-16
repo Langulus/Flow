@@ -6,9 +6,9 @@
 /// Distributed under GNU General Public License v3+                          
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
-#include "Main.hpp"
 #include <Flow/Verbs/Interpret.hpp>
-#include <catch2/catch.hpp>
+#include "Common.hpp"
+
 
 SCENARIO("Serialization", "[serialization]") {
 	GIVEN("An empty Any instance") {
@@ -16,15 +16,11 @@ SCENARIO("Serialization", "[serialization]") {
 
 		WHEN("Pack is serialized as binary") {
 			auto serialized = Verbs::Interpret::To<Bytes>(pack);
-			THEN("The serialized binary pack must match some criteria") {
-				REQUIRE(serialized.Is<Byte>());
-			}
+			REQUIRE(serialized.Is<Byte>());
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 				auto deserialized = Verbs::Interpret::To<Any>(serialized);
-				THEN("The deserialized binary pack must be completely identical with the original") {
-					REQUIRE(deserialized == pack);
-				}
+			   REQUIRE(deserialized == pack);
 			#endif
 		}
 	}
@@ -38,9 +34,7 @@ SCENARIO("Serialization", "[serialization]") {
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 				auto deserialized = Verbs::Interpret::To<Any>(serialized);
-				THEN("The deserialized binary pack must be completely identical with the original") {
-					REQUIRE(deserialized == pack);
-				}
+				REQUIRE(deserialized == pack);
 			#endif
 		}
 	}
@@ -54,9 +48,7 @@ SCENARIO("Serialization", "[serialization]") {
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 				auto deserialized = Verbs::Interpret::To<Any>(serialized);
-				THEN("The deserialized binary pack must be completely identical with the original") {
-					REQUIRE(deserialized == pack);
-				}
+				REQUIRE(deserialized == pack);
 			#endif
 		}
 	}
@@ -73,9 +65,7 @@ SCENARIO("Serialization", "[serialization]") {
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 				auto deserialized = Verbs::Interpret::To<Any>(serialized);
-				THEN("The deserialized binary pack must be completely identical with the original") {
-					REQUIRE(deserialized == pack);
-				}
+				REQUIRE(deserialized == pack);
 			#endif
 		}
 	}
@@ -92,9 +82,7 @@ SCENARIO("Serialization", "[serialization]") {
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 				auto deserialized = Verbs::Interpret::To<Any>(serialized);
-				THEN("The deserialized binary pack must be completely identical with the original") {
-					REQUIRE(deserialized == pack);
-				}
+				REQUIRE(deserialized == pack);
 			#endif
 		}
 	}
@@ -107,9 +95,7 @@ SCENARIO("Serialization", "[serialization]") {
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 				auto deserialized = Verbs::Interpret::To<Any>(serialized);
-				THEN("The deserialized binary pack must be completely identical with the original") {
-					REQUIRE(deserialized == pack);
-				}
+				REQUIRE(deserialized == pack);
 			#endif
 		}
 	}
@@ -122,9 +108,7 @@ SCENARIO("Serialization", "[serialization]") {
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 				auto deserialized = Verbs::Interpret::To<Any>(serialized);
-				THEN("The deserialized binary pack must be completely identical with the original") {
-					REQUIRE(deserialized == pack);
-				}
+				REQUIRE(deserialized == pack);
 			#endif
 		}
 	}
@@ -143,10 +127,7 @@ SCENARIO("Serialization", "[serialization]") {
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 				auto deserialized = Verbs::Interpret::To<Any>(serialized);
-
-				THEN("Deserialized data must match original stuff completely") {
-					REQUIRE(deserialized == pack);
-				}
+				REQUIRE(deserialized == pack);
 			#endif
 		}
 	}

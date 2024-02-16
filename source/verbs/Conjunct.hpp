@@ -7,19 +7,21 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../Verb.hpp"
+#include "../TVerb.hpp"
 
 
 namespace Langulus::Verbs
 {
+
    using namespace Flow;
+
 
    ///                                                                        
    ///   Conjunct/Disjunct verb                                               
    /// Either combines LHS and RHS as one AND container, or separates them    
    /// as one OR container - does only shallow copying                        
    ///                                                                        
-   struct Conjunct : StaticVerb<Conjunct> {
+   struct Conjunct : TVerb<Conjunct> {
       LANGULUS(POSITIVE_VERB) "Conjunct";
       LANGULUS(NEGATIVE_VERB) "Disjunct";
       LANGULUS(POSITIVE_OPERATOR) ", ";
@@ -29,17 +31,17 @@ namespace Langulus::Verbs
          "Either combines LHS and RHS as one AND container, or separates them "
          "as one OR container (does only shallow copying)";
 
-      using StaticVerb::StaticVerb;
+      using TVerb::TVerb;
 
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr auto Of() noexcept;
 
-      template<CT::Dense T>
-      static bool ExecuteIn(T&, Verb&);
+      static bool ExecuteIn(CT::Dense auto&, Verb&);
 
       static bool ExecuteDefault(const Block&, Verb&);
       static bool ExecuteStateless(Verb&);
    };
-}
+
+} // namespace Langulus::Verbs

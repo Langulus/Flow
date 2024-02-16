@@ -7,18 +7,20 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../Verb.hpp"
+#include "../TVerb.hpp"
 
 
 namespace Langulus::Verbs
 {
+
    using namespace Flow;
+
 
    ///                                                                        
    ///   Catenate/Split verb                                                  
    /// Catenates anything catenable, or split stuff apart using a mask        
    ///                                                                        
-   struct Catenate : StaticVerb<Catenate> {
+   struct Catenate : TVerb<Catenate> {
       LANGULUS(POSITIVE_VERB) "Catenate";
       LANGULUS(NEGATIVE_VERB) "Split";
       LANGULUS(POSITIVE_OPERATOR) " >< ";
@@ -26,18 +28,18 @@ namespace Langulus::Verbs
       LANGULUS(PRECEDENCE) 7;
       LANGULUS(INFO) "Catenates, or splits stuff apart";
 
-      using StaticVerb::StaticVerb;
+      using TVerb::TVerb;
 
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr auto Of() noexcept;
 
-      template<CT::Dense T>
-      static bool ExecuteIn(T&, Verb&);
+      static bool ExecuteIn(CT::Dense auto&, Verb&);
 
       static bool ExecuteDefault(const Block&, Verb&);
       static bool ExecuteDefault(Block&, Verb&);
       static bool ExecuteStateless(Verb&);
    };
-}
+
+} // namespace Langulus::Verbs

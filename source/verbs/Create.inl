@@ -8,7 +8,7 @@
 ///                                                                           
 #pragma once
 #include "Create.hpp"
-#include "../Verb.inl"
+#include "../TVerb.inl"
 #include "Associate.inl"
 #include "Select.inl"
 #include "Interpret.inl"
@@ -23,26 +23,26 @@ namespace Langulus::Verbs
 
    /// Check if the verb is available in a type, and with given arguments     
    ///   @return true if verb is available in T with arguments A...           
-   template<CT::Dense T, CT::Data... A>
+   template<CT::Dense T, CT::Data...A>
    constexpr bool Create::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Create(v); };
       else
-         return requires (T& t, Verb& v, A... a) { t.Create(v, a...); };
+         return requires (T& t, Verb& v, A...a) { t.Create(v, a...); };
    }
 
    /// Get the verb functor for the given type and arguments                  
    ///   @return the function, or nullptr if not available                    
-   template<CT::Dense T, CT::Data... A>
+   template<CT::Dense T, CT::Data...A>
    constexpr auto Create::Of() noexcept {
       if constexpr (CT::Constant<T>) {
-         return [](const void* context, Flow::Verb& verb, A... args) {
+         return [](const void* context, Flow::Verb& verb, A...args) {
             auto typedContext = static_cast<const T*>(context);
             typedContext->Create(verb, args...);
          };
       }
       else {
-         return [](void* context, Flow::Verb& verb, A... args) {
+         return [](void* context, Flow::Verb& verb, A...args) {
             auto typedContext = static_cast<T*>(context);
             typedContext->Create(verb, args...);
          };
@@ -57,8 +57,7 @@ namespace Langulus::Verbs
    bool Create::ExecuteIn(T& context, Verb& verb) {
       static_assert(Create::AvailableFor<T>(),
          "Verb is not available for this context, "
-         "this shouldn't be reached by flow"
-      );
+         "this shouldn't be reached by flow");
       context.Create(verb);
       return verb.IsDone();
    }

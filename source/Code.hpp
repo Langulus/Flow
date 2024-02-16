@@ -51,71 +51,20 @@ namespace Langulus::Flow
       LANGULUS_BASES(Text);
       LANGULUS(FILES) "flow";
 
-      enum Operator {
-         OpenScope = 0,
-         CloseScope,
-         OpenCode,
-         CloseCode,
-         OpenComment,
-         CloseComment,
-         OpenString,
-         CloseString,
-         OpenStringAlt,
-         CloseStringAlt,
-         OpenCharacter,
-         CloseCharacter,
-         OpenByte,
-         Future,
-         Past,
-         Constant,
-         Mass,
-         Rate,
-         Time,
-         Priority,
-
-         OpCounter,
-         NoOperator = OpCounter,
-         ReflectedOperator,
-         ReflectedVerb
+      /// The presence of this structure makes Code a serializer              
+      struct SerializationRules : Text::SerializationRules {
+         // Code serializer can't be lossy - it's isomorphic            
+         static constexpr bool CriticalFailure = true;
+         static constexpr bool SkipElements = false;
       };
 
-      struct OperatorProperties {
-         Token mToken;
-         Real mPrecedence;
-         bool mCharge;
-      };
-
-      /// Built-in operator properties                                        
-      static constexpr OperatorProperties GlobalOperators[Code::OpCounter] = {
-         { "(", 0, false },      // OpenScope
-         { ")", 0, false },      // CloseScope
-         { "[", 0, false },      // OpenCode
-         { "]", 0, false },      // CloseCode
-         { "/*", 0, false },     // OpenComment
-         { "*/", 0, false },     // CloseComment
-         { "\"", 0, false },     // OpenString
-         { "\"", 0, false },     // CloseString
-         { "`", 0, false },      // OpenStringAlt
-         { "`", 0, false },      // CloseStringAlt
-         { "'", 0, false },      // OpenCharacter
-         { "'", 0, false },      // CloseCharacter
-         { "0x", 0, false },     // OpenByte
-         { "??", 0, false },     // Future
-         { "?", 0, false },      // Past
-         { "const", 0, false },  // Constant
-         { "*", 0, true },       // Mass
-         { "^", 0, true },       // Rate
-         { "@", 0, true },       // Time
-         { "!", 0, true }        // Priority
-      };
+      using Operator = SerializationRules::Operator;
 
       using Text::Text;
       using Text::operator ==;
 
       LANGULUS_API(FLOW) Code(const Text&);
       LANGULUS_API(FLOW) Code(Text&&);
-
-      LANGULUS_API(FLOW) explicit Code(Operator);
 
       NOD() LANGULUS_API(FLOW) Any Parse(bool optimize = true) const;
 

@@ -7,33 +7,34 @@
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
 #pragma once
-#include "../Verb.hpp"
+#include "../TVerb.hpp"
 
 
 namespace Langulus::Verbs
 {
+
    using namespace Flow;
+
 
    ///                                                                        
    ///   Interact                                                             
    /// Used for processing user events, such as mouse movement, keyboard,     
    /// joystick and any other input                                           
    ///                                                                        
-   struct Interact : StaticVerb<Interact> {
+   struct Interact : TVerb<Interact> {
       LANGULUS(VERB) "Interact";
       LANGULUS(INFO) 
          "Used for processing user events, such as mouse movement, "
          "keyboard, joystick and any other input";
 
-      using StaticVerb::StaticVerb;
+      using TVerb::TVerb;
 
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense T, CT::Data... A>
+      template<CT::Dense, CT::Data...>
       static constexpr auto Of() noexcept;
 
-      template<CT::Dense T>
-      static bool ExecuteIn(T&, Verb&);
+      static bool ExecuteIn(CT::Dense auto&, Verb&);
    };
 
-}
+} // namespace Langulus::Verbs

@@ -6,10 +6,10 @@
 /// Distributed under GNU General Public License v3+                          
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
-#include "Main.hpp"
 #include <Flow/Verbs/Create.hpp>
 #include <Flow/Verbs/Interpret.hpp>
-#include <catch2/catch.hpp>
+#include "Common.hpp"
+
 
 SCENARIO("Test factories", "[factory]") {
 	Producer producer;
@@ -48,21 +48,21 @@ SCENARIO("Test factories", "[factory]") {
 			REQUIRE(out2.IsExact<Producible*>());
 			REQUIRE(out2.IsSparse());
 
-			REQUIRE(factory.mReusable == nullptr);
-			REQUIRE(factory.mHashmap.GetCount() == 1);
+         REQUIRE(factory.mReusable == factory.mFrames[0].GetRaw() + 2);
+         REQUIRE(factory.mHashmap.GetCount() == 1);
 			REQUIRE(factory.GetCount() == 2);
 			REQUIRE(factory.GetType() == MetaOf<Producible>());
-			REQUIRE(factory.mFrames[0][0].mData == Producible {&producer});
-			REQUIRE(factory.mFrames[0][0].mData.GetNeat() == Neat {});
-			REQUIRE(factory.mFrames[0][0].mData.GetHash() == hash);
-			REQUIRE(factory.mFrames[0][0].mData.GetNeat() == normalized);
-			REQUIRE(factory.mFrames[0][1].mData == Producible {&producer});
-			REQUIRE(factory.mFrames[0][1].mData.GetNeat() == Neat {});
-			REQUIRE(factory.mFrames[0][1].mData.GetHash() == hash);
-			REQUIRE(factory.mFrames[0][1].mData.GetNeat() == normalized);
+			REQUIRE(factory.mFrames[0].GetRaw()[0].mData == Producible {&producer});
+			REQUIRE(factory.mFrames[0].GetRaw()[0].mData.GetNeat() == Neat {});
+			REQUIRE(factory.mFrames[0].GetRaw()[0].mData.GetHash() == hash);
+			REQUIRE(factory.mFrames[0].GetRaw()[0].mData.GetNeat() == normalized);
+			REQUIRE(factory.mFrames[0].GetRaw()[1].mData == Producible {&producer});
+			REQUIRE(factory.mFrames[0].GetRaw()[1].mData.GetNeat() == Neat {});
+			REQUIRE(factory.mFrames[0].GetRaw()[1].mData.GetHash() == hash);
+			REQUIRE(factory.mFrames[0].GetRaw()[1].mData.GetNeat() == normalized);
 			REQUIRE(factory.mHashmap[hash].GetCount() == 2);
-			REQUIRE(factory.mHashmap[hash][0] == &factory.mFrames[0][0]);
-			REQUIRE(factory.mHashmap[hash][1] == &factory.mFrames[0][1]);
+			REQUIRE(factory.mHashmap[hash][0] == &factory.mFrames[0].GetRaw()[0]);
+			REQUIRE(factory.mHashmap[hash][1] == &factory.mFrames[0].GetRaw()[1]);
 		}
 	}
 
@@ -98,16 +98,16 @@ SCENARIO("Test factories", "[factory]") {
 			REQUIRE(out2.IsExact<Producible*>());
 			REQUIRE(out2.IsSparse());
 
-			REQUIRE(factory.mReusable == nullptr);
-			REQUIRE(factory.mHashmap.GetCount() == 1);
+         REQUIRE(factory.mReusable == factory.mFrames[0].GetRaw() + 1);
+         REQUIRE(factory.mHashmap.GetCount() == 1);
 			REQUIRE(factory.GetCount() == 1);
 			REQUIRE(factory.GetType() == MetaOf<Producible>());
-			REQUIRE(factory.mFrames[0][0].mData == Producible {&producer});
-			REQUIRE(factory.mFrames[0][0].mData.GetNeat() == Neat {});
-			REQUIRE(factory.mFrames[0][0].mData.GetHash() == hash);
-			REQUIRE(factory.mFrames[0][0].mData.GetNeat() == normalized);
+			REQUIRE(factory.mFrames[0].GetRaw()[0].mData == Producible {&producer});
+			REQUIRE(factory.mFrames[0].GetRaw()[0].mData.GetNeat() == Neat {});
+			REQUIRE(factory.mFrames[0].GetRaw()[0].mData.GetHash() == hash);
+			REQUIRE(factory.mFrames[0].GetRaw()[0].mData.GetNeat() == normalized);
 			REQUIRE(factory.mHashmap[hash].GetCount() == 1);
-			REQUIRE(factory.mHashmap[hash][0] == &factory.mFrames[0][0]);
+			REQUIRE(factory.mHashmap[hash][0] == &factory.mFrames[0].GetRaw()[0]);
 		}
 	}
 }

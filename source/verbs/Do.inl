@@ -8,7 +8,7 @@
 ///                                                                           
 #pragma once
 #include "Do.hpp"
-#include "../Verb.inl"
+#include "../TVerb.inl"
 
 
 namespace Langulus::Verbs
@@ -16,26 +16,26 @@ namespace Langulus::Verbs
 
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Dense T, CT::Data... A>
+   template<CT::Dense T, CT::Data...A>
    constexpr bool Do::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Do(v); };
       else
-         return requires (T& t, Verb& v, A... a) { t.Do(v, a...); };
+         return requires (T& t, Verb& v, A...a) { t.Do(v, a...); };
    }
 
    /// Get the verb functor for the given type and arguments                  
    ///   @return the function, or nullptr if not available                    
-   template<CT::Dense T, CT::Data... A>
+   template<CT::Dense T, CT::Data...A>
    constexpr auto Do::Of() noexcept {
       if constexpr (CT::Constant<T>) {
-         return [](const void* context, Flow::Verb& verb, A... args) {
+         return [](const void* context, Flow::Verb& verb, A...args) {
             auto typedContext = static_cast<const T*>(context);
             typedContext->Do(verb, args...);
          };
       }
       else {
-         return [](void* context, Flow::Verb& verb, A... args) {
+         return [](void* context, Flow::Verb& verb, A...args) {
             auto typedContext = static_cast<T*>(context);
             typedContext->Do(verb, args...);
          };
@@ -74,7 +74,7 @@ namespace Langulus::Verbs
    ///   @param verb - the do/undo verb                                       
    ///   @return true if verb was satisfied                                   
    inline bool Do::ExecuteStateless(Verb& verb) {
-      if (!verb)
+      if (not verb)
          return false;
 
       //TODO execute

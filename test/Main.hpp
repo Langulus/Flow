@@ -13,8 +13,6 @@
 using namespace Langulus;
 using namespace Langulus::Flow;
 
-#define CATCH_CONFIG_ENABLE_BENCHMARKING
-
 
 /// A mockup of Langulus::Thing, for testing purposes                         
 struct Thing : Resolvable {
@@ -78,7 +76,7 @@ struct Session : Resolvable {
 };
 
 /// A mockup of a fraction                                                    
-/*struct Fraction : public Resolvable {
+/*struct Fraction : Resolvable {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
    LANGULUS_BASES(Resolvable);
@@ -114,10 +112,3 @@ void DumpResults(const INPUT& in, const OUTPUT& out, const REQUIRED& required) {
    Logger::Special("Required: ", required);
    Logger::Special("-------------");
 }
-
-/// See https://github.com/catchorg/Catch2/blob/devel/docs/tostring.md        
-#define LANGULUS_EXCEPTION_HANDLER \
-   CATCH_TRANSLATE_EXCEPTION(::Langulus::Exception const& ex) { \
-      const Text serialized {ex}; \
-      return ::std::string {Token {serialized}}; \
-   }

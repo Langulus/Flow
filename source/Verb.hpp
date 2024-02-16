@@ -19,6 +19,7 @@ namespace Langulus::A
    /// Abstract verb, dictating canonical verb size, used in various concepts 
    ///                                                                        
    struct Verb : Anyness::Any, Flow::Charge {
+      LANGULUS(NAME) "AVerb";
       LANGULUS(POD) false;
       LANGULUS(NULLIFIABLE) false;
       LANGULUS(DEEP) false;
@@ -81,7 +82,8 @@ namespace Langulus::Flow
    /// theory found on verbs, so this is the natural name for such thing      
    ///                                                                        
    struct Verb : A::Verb {
-      LANGULUS_CONVERSIONS(Code, Text);
+      LANGULUS(NAME) "Verb";
+      LANGULUS_CONVERTS_TO(Code, Text);
       LANGULUS_BASES(A::Verb);
 
       ///                                                                     
@@ -95,138 +97,163 @@ namespace Langulus::Flow
       requires CT::VerbMakable<T1, TAIL...>
       Verb(T1&&, TAIL&&...);
 
-      LANGULUS_API(FLOW) ~Verb();
+      LANGULUS_API(FLOW) ~Verb() = default;
 
       template<CT::Verb>
       NOD() static Verb From(const Charge& = {}, VerbState = {});
       template<CT::Verb>
       NOD() static Verb From(CT::Inner::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
       NOD() static Verb FromMeta(VMeta, CT::Inner::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
+      NOD() static Verb FromMeta(VMeta, const Charge& = {}, VerbState = {});
 
-      NOD() LANGULUS_API(FLOW)
-      static Verb FromMeta(VMeta, const Charge& = {}, VerbState = {});
-
-      NOD() LANGULUS_API(FLOW)
-      Verb PartialCopy() const noexcept;
+      template<CT::VerbBased THIS = Verb>
+      NOD() THIS PartialCopy() const noexcept;
 
       ///                                                                     
       ///   Assignment                                                        
       ///                                                                     
       LANGULUS_API(FLOW) Verb& operator = (const Verb&);
       LANGULUS_API(FLOW) Verb& operator = (Verb&&);
+
       Verb& operator = (CT::VerbAssignable auto&&);
 
-      template<CT::Data T1, CT::Data... TAIL>
+      template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TAIL>
       requires CT::Inner::UnfoldInsertable<T1, TAIL...>
-      Verb& SetSource(T1&&, TAIL&&...);
+      THIS& SetSource(T1&&, TAIL&&...);
       
-      template<CT::Data T1, CT::Data... TAIL>
+      template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TAIL>
       requires CT::Inner::UnfoldInsertable<T1, TAIL...>
-      Verb& SetArgument(T1&&, TAIL&&...);
+      THIS& SetArgument(T1&&, TAIL&&...);
       
-      template<CT::Data T1, CT::Data... TAIL>
+      template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TAIL>
       requires CT::Inner::UnfoldInsertable<T1, TAIL...>
-      Verb& SetOutput(T1&&, TAIL&&...);
+      THIS& SetOutput(T1&&, TAIL&&...);
 
-      LANGULUS_API(FLOW) Verb  operator *  (const Real&) const;
-      LANGULUS_API(FLOW) Verb  operator ^  (const Real&) const;
+      ///                                                                     
+      ///   Charge arithmetics                                                
+      ///                                                                     
+      template<CT::VerbBased THIS = Verb>
+      THIS operator * (Real) const;
+      template<CT::VerbBased THIS = Verb>
+      THIS operator ^ (Real) const;
 
-      LANGULUS_API(FLOW) Verb& operator *= (const Real&) noexcept;
-      LANGULUS_API(FLOW) Verb& operator ^= (const Real&) noexcept;
+      template<CT::VerbBased THIS = Verb>
+      THIS& operator *= (Real) noexcept;
+      template<CT::VerbBased THIS = Verb>
+      THIS& operator ^= (Real) noexcept;
 
       ///                                                                     
       ///   Capsulation                                                       
       ///                                                                     
-      NOD() LANGULUS_API(FLOW) Hash GetHash() const;
+      template<CT::VerbBased THIS = Verb>
+      NOD() Hash GetHash() const;
 
-      NOD() LANGULUS_API(FLOW) const Charge& GetCharge() const noexcept;
-      NOD() LANGULUS_API(FLOW) Real GetMass() const noexcept;
-      NOD() LANGULUS_API(FLOW) Real GetRate() const noexcept;
-      NOD() LANGULUS_API(FLOW) Real GetTime() const noexcept;
-      NOD() LANGULUS_API(FLOW) Real GetPriority() const noexcept;
+      NOD() const Charge& GetCharge() const noexcept;
+      NOD() Real GetMass() const noexcept;
+      NOD() Real GetRate() const noexcept;
+      NOD() Real GetTime() const noexcept;
+      NOD() Real GetPriority() const noexcept;
 
-      NOD() LANGULUS_API(FLOW)       Any& GetSource() noexcept;
-      NOD() LANGULUS_API(FLOW) const Any& GetSource() const noexcept;
+      NOD()       Any& GetSource() noexcept;
+      NOD() const Any& GetSource() const noexcept;
 
-      NOD() LANGULUS_API(FLOW)       Any& GetArgument() noexcept;
-      NOD() LANGULUS_API(FLOW) const Any& GetArgument() const noexcept;
+      NOD()       Any& GetArgument() noexcept;
+      NOD() const Any& GetArgument() const noexcept;
 
-      NOD() LANGULUS_API(FLOW)       Any& GetOutput() noexcept;
-      NOD() LANGULUS_API(FLOW) const Any& GetOutput() const noexcept;
+      NOD()       Any& GetOutput() noexcept;
+      NOD() const Any& GetOutput() const noexcept;
 
       NOD() const Any* operator -> () const noexcept;
       NOD()       Any* operator -> () noexcept;
       
-      NOD() LANGULUS_API(FLOW) Token GetToken() const;
-      NOD() LANGULUS_API(FLOW) Count GetSuccesses() const noexcept;
-      NOD() LANGULUS_API(FLOW) const VerbState& GetVerbState() const noexcept;
-      NOD() LANGULUS_API(FLOW) bool IsDone() const noexcept;
+      NOD() Count GetSuccesses() const noexcept;
+      NOD() const VerbState& GetVerbState() const noexcept;
+      NOD() bool IsDone() const noexcept;
 
       NOD() constexpr bool IsMulticast() const noexcept;
       NOD() constexpr bool IsMonocast() const noexcept;
       NOD() constexpr bool IsShortCircuited() const noexcept;
       NOD() constexpr bool IsLongCircuited() const noexcept;
 
-      NOD() LANGULUS_API(FLOW) bool IsMissing() const noexcept;
-      NOD() LANGULUS_API(FLOW) bool IsMissingDeep() const noexcept;
-      NOD() LANGULUS_API(FLOW) bool Validate(const Index&) const noexcept;
+      NOD() bool IsMissing() const noexcept;
+      NOD() bool IsMissingDeep() const noexcept;
+      NOD() bool Validate(const Index&) const noexcept;
 
-      LANGULUS_API(FLOW) Verb& ShortCircuit(bool) noexcept;
-      LANGULUS_API(FLOW) Verb& Multicast(bool) noexcept;
-      LANGULUS_API(FLOW) Verb& SetVerbState(const VerbState&) noexcept;
+      template<CT::VerbBased THIS = Verb>
+      THIS& ShortCircuit(bool) noexcept;
+      template<CT::VerbBased THIS = Verb>
+      THIS& Multicast(bool) noexcept;
+      template<CT::VerbBased THIS = Verb>
+      THIS& SetVerbState(VerbState) noexcept;
 
-      LANGULUS_API(FLOW) void Done(Count) noexcept;
-      LANGULUS_API(FLOW) void Done() noexcept;
-      LANGULUS_API(FLOW) void Undo() noexcept;
-      LANGULUS_API(FLOW) Verb& Invert() noexcept;
+      void Done(Count) noexcept;
+      void Done() noexcept;
+      void Undo() noexcept;
 
-      LANGULUS_API(FLOW) Verb& SetMass(Real) noexcept;
-      LANGULUS_API(FLOW) Verb& SetRate(Real) noexcept;
-      LANGULUS_API(FLOW) Verb& SetTime(Real) noexcept;
-      LANGULUS_API(FLOW) Verb& SetPriority(Real) noexcept;
-      LANGULUS_API(FLOW) Verb& SetCharge(const Charge&) noexcept;
+      template<CT::VerbBased THIS = Verb>
+      THIS& Invert() noexcept;
+
+      template<CT::VerbBased THIS = Verb>
+      THIS& SetMass(Real) noexcept;
+      template<CT::VerbBased THIS = Verb>
+      THIS& SetRate(Real) noexcept;
+      template<CT::VerbBased THIS = Verb>
+      THIS& SetTime(Real) noexcept;
+      template<CT::VerbBased THIS = Verb>
+      THIS& SetPriority(Real) noexcept;
+      template<CT::VerbBased THIS = Verb>
+      THIS& SetCharge(const Charge&) noexcept;
 
       ///                                                                     
       ///   RTTI                                                              
       ///                                                                     
-      NOD() LANGULUS_API(FLOW)
-      bool VerbIs(VMeta) const noexcept;
+      template<CT::VerbBased = Verb>
+      NOD() constexpr Token GetToken() const;
 
-      template<CT::Verb, CT::Verb...>
-      NOD() bool VerbIs() const noexcept;
+      template<CT::VerbBased = Verb>
+      NOD() constexpr bool IsVerb(VMeta) const noexcept;
+      template<CT::VerbBased, CT::Verb, CT::Verb...>
+      NOD() constexpr bool IsVerb() const noexcept;
+
+      template<CT::VerbBased = Verb>
+      NOD() constexpr VMeta GetVerb() const noexcept;
 
       template<CT::Verb>
       Verb& SetVerb();
-
-            LANGULUS_API(FLOW) Verb& SetVerb(VMeta) noexcept;
-      NOD() LANGULUS_API(FLOW) VMeta GetVerb() const noexcept;
+      LANGULUS_API(FLOW)
+      Verb& SetVerb(VMeta) noexcept;
 
       ///                                                                     
       ///   Comparison                                                        
       ///                                                                     
-      NOD() LANGULUS_API(FLOW) bool operator == (const Verb&) const;
-      NOD() LANGULUS_API(FLOW) bool operator == (VMeta) const noexcept;
-      NOD() LANGULUS_API(FLOW) bool operator == (bool) const noexcept;
+      template<CT::VerbBased = Verb>
+      NOD() bool operator == (const CT::VerbBased auto&) const;
+      template<CT::VerbBased = Verb>
+      NOD() bool operator == (VMeta) const noexcept;
 
-      NOD() LANGULUS_API(FLOW) bool operator <  (const Verb&) const noexcept;
-      NOD() LANGULUS_API(FLOW) bool operator >  (const Verb&) const noexcept;
+      NOD() bool operator <  (const Verb&) const noexcept;
+      NOD() bool operator >  (const Verb&) const noexcept;
 
-      NOD() LANGULUS_API(FLOW) bool operator >= (const Verb&) const noexcept;
-      NOD() LANGULUS_API(FLOW) bool operator <= (const Verb&) const noexcept;
+      NOD() bool operator <= (const Verb&) const noexcept;
+      NOD() bool operator >= (const Verb&) const noexcept;
 
       ///                                                                     
       ///   Insertion                                                         
       ///                                                                     
-      Verb& operator <<  (CT::Inner::UnfoldInsertable auto&&);
-      Verb& operator >>  (CT::Inner::UnfoldInsertable auto&&);
+      template<CT::VerbBased THIS = Verb>
+      THIS& operator <<  (CT::Inner::UnfoldInsertable auto&&);
+      template<CT::VerbBased THIS = Verb>
+      THIS& operator >>  (CT::Inner::UnfoldInsertable auto&&);
       
-      Verb& operator <<= (CT::Inner::UnfoldInsertable auto&&);
-      Verb& operator >>= (CT::Inner::UnfoldInsertable auto&&);
+      template<CT::VerbBased THIS = Verb>
+      THIS& operator <<= (CT::Inner::UnfoldInsertable auto&&);
+      template<CT::VerbBased THIS = Verb>
+      THIS& operator >>= (CT::Inner::UnfoldInsertable auto&&);
 
-      NOD() LANGULUS_API(FLOW) explicit operator Code() const;
-      NOD() LANGULUS_API(FLOW) explicit operator Text() const;
+      NOD() explicit operator Code() const;
+      NOD() explicit operator Text() const;
 
-      template<CT::Dense T>
+      template<CT::Dense>
       bool GenericAvailableFor() const noexcept;
       static bool GenericExecuteIn(CT::Dense auto&, CT::VerbBased auto&);
       static bool GenericExecuteDefault(const Block&, CT::VerbBased auto&);
@@ -236,36 +263,21 @@ namespace Langulus::Flow
       ///                                                                     
       ///   Removal                                                           
       ///                                                                     
-      LANGULUS_API(FLOW) void Reset();
+      void Reset();
 
       template<bool OR>
       Count CompleteDispatch(const Count, Abandoned<Any>&&);
 
    protected:
-      template<CT::TextBased T>
-      T SerializeVerb() const;
+      template<CT::VerbBased>
+      void SerializeVerb(CT::Serial auto&) const;
+
+   private:
+      // Functionality graveyard                                        
+      using Any::Serialize;
    };
 
    /// A handy container for verbs                                            
    using Script = TAny<Verb>;
-
-
-   ///                                                                        
-   /// Statically typed verb, used as CRTP for all specific verbs             
-   ///                                                                        
-   template<class VERB>
-   struct StaticVerb : Verb {
-      LANGULUS_BASES(Verb);
-
-      using Verb::Verb;
-      StaticVerb(const StaticVerb&);
-      StaticVerb(StaticVerb&&);
-
-      using Verb::operator =;
-      StaticVerb& operator = (const StaticVerb&);
-      StaticVerb& operator = (StaticVerb&&);
-
-      NOD() VMeta GetVerb() const noexcept;
-   };
 
 } // namespace Langulus::Flow

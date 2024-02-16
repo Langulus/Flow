@@ -310,13 +310,15 @@ namespace Langulus::Flow::Inner
    inline Missing::operator Text() const {
       Text result;
       result += '(';
-      result += mFilter.Serialize<Text>();
+      mFilter.Serialize(result);
 
       if (mPriority != NoPriority)
          result += Text {" !", mPriority};
 
-      if (mContent)
-         result += Text {", ", mContent.Serialize<Text>()};
+      if (mContent) {
+         result += ", ";
+         mContent.Serialize(result);
+      }
 
       result += ')';
       return result;

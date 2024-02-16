@@ -42,7 +42,7 @@ namespace Langulus::Flow
    /// complete your scripts at runtime.                                      
    ///                                                                        
    class Temporal final {
-      LANGULUS_CONVERSIONS(Code, Text);
+      LANGULUS_CONVERTS_TO(Code, Text);
       friend struct Inner::Missing;
 
    private:

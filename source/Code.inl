@@ -25,26 +25,20 @@ namespace Langulus::Flow
    Code::Code(Text&& other)
       : Text {Forward<Text>(other)} { }
 
-   /// Generate code from operator                                            
-   ///   @param op - the operator to stringify                                
-   LANGULUS(INLINED)
-   Code::Code(Operator op)
-      : Text {Disown(GlobalOperators[op].mToken.data())} { }
-
    /// Remove elements from the left side of Code code                        
    ///   @param offset - the number of elements to discard from the front     
    ///   @return a shallow-copied container with the correct offset           
    LANGULUS(INLINED)
-   Code Code::RightOf(Offset o) const {
-      return Text::Crop(o);
+   Code Code::RightOf(Offset offset) const {
+      return offset < mCount ? Text::Crop(offset) : Code {};
    }
 
    /// Remove elements from the right side of Code code                       
    ///   @param offset - the number of elements to remain in container        
    ///   @return a shallow-copied container with the correct offset           
    LANGULUS(INLINED)
-   Code Code::LeftOf(Offset o) const {
-      return Text::Crop(0, o);
+   Code Code::LeftOf(Offset offset) const {
+      return offset > 0 ? Text::Crop(0, offset) : Code {};
    }
 
    /// Check if the Code container begins with special elements, such as      

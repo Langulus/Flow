@@ -42,14 +42,14 @@ namespace Langulus::Flow
             decltype(auto) verb = DesemCast(t1);
             Any::operator = (S::Nest(t1).template Forward<Any>());
             Charge::operator = (verb);
-            mVerb = verb.mVerb;
-            mState = verb.mState;
+            mVerb = verb.GetVerb();
+            mState = verb.GetVerbState();
             mSource = S::Nest(verb.mSource);
             mOutput = S::Nest(verb.mOutput);
          }
          else Any::operator = (Forward<T1>(t1));
       }
-      else Any::Insert(0, Forward<T1>(t1), Forward<TAIL>(tail)...);
+      else Any::Insert(IndexBack, Forward<T1>(t1), Forward<TAIL>(tail)...);
    }
 
    /// Verb shallow-copy assignment                                           
@@ -80,8 +80,8 @@ namespace Langulus::Flow
          decltype(auto) verb = DesemCast(rhs);
          Any::operator = (S::Nest(rhs).template Forward<Any>());
          Charge::operator = (verb);
-         mVerb = verb.mVerb;
-         mState = verb.mState;
+         mVerb = verb.GetVerb();
+         mState = verb.GetVerbState();
          mSource = S::Nest(verb.mSource);
          mOutput = S::Nest(verb.mOutput);
       }
@@ -139,12 +139,151 @@ namespace Langulus::Flow
       return result;
    }
 
+   /// Hash the verb                                                          
+   ///   @return the hash of the content                                      
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   Hash Verb::GetHash() const {
+      return HashOf(GetVerb<THIS>()->mHash, mSource, GetArgument(), mOutput);
+   }
+
+   /// Multiply verb mass                                                     
+   ///   @param rhs - the mass to multiply by                                 
+   ///   @return a new verb, with the modified mass                           
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS Verb::operator * (Real rhs) const {
+      auto shallowCopy = *reinterpret_cast<const THIS*>(this);
+      shallowCopy.mMass *= rhs;
+      return shallowCopy;
+   }
+
+   /// Multiply verb frequency                                                
+   ///   @param rhs - the frequency to multiply by                            
+   ///   @return a new verb, with the modified frequency                      
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS Verb::operator ^ (Real rhs) const {
+      auto shallowCopy = *reinterpret_cast<const THIS*>(this);
+      shallowCopy.mRate *= rhs;
+      return shallowCopy;
+   }
+
+   /// Multiply verb mass (destructively)                                     
+   ///   @param rhs - the mass to multiply by                                 
+   ///   @return a reference to this verb                                     
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::operator *= (Real rhs) noexcept {
+      mMass *= rhs;
+      return *reinterpret_cast<const THIS*>(this);
+   }
+
+   /// Multiply verb frequency (destructively)                                
+   ///   @param rhs - the frequency to multiply by                            
+   ///   @return a reference to this verb                                     
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::operator ^= (Real rhs) noexcept {
+      mRate *= rhs;
+      return *reinterpret_cast<const THIS*>(this);
+   }
+
+   /// Partial copy, copies only charge, verb, and short-circuitness          
+   ///   @param other - the verb to use as base                               
+   ///   @return the partially copied verb                                    
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS Verb::PartialCopy() const noexcept {
+      if constexpr (CT::Verb<THIS>)
+         return THIS::From(GetCharge(), mState);
+      else
+         return THIS::FromMeta(mVerb, GetCharge(), mState);
+   }
+
+   /// Reset all verb members and energy                                      
+   LANGULUS(INLINED)
+   void Verb::Reset() {
+      mVerb = {};
+      Any::Reset();
+      Charge::Reset();
+      mSource.Reset();
+      mOutput.Reset();
+      mSuccesses = {};
+   };
+
+   /// Check if a verb is valid for the given priority                        
+   ///   @param priority - the priority to check                              
+   ///   @return true if this verb's priority matches the provided one        
+   LANGULUS(INLINED)
+   bool Verb::Validate(const Index& priority) const noexcept {
+      return int(mPriority) == priority.mIndex or priority == IndexAll;
+   }
+
+   /// Change the verb's circuitry                                            
+   ///   @param toggle - enable or disable short-circuit                      
+   ///   @return a reference to this verb for chaining                        
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::ShortCircuit(bool toggle) noexcept {
+      if (toggle)
+         mState -= VerbState::LongCircuited;
+      else
+         mState += VerbState::LongCircuited;
+      return *reinterpret_cast<THIS*>(this);
+   }
+
+   /// Change the verb's castness                                             
+   ///   @param toggle - enable or disable multicast                          
+   ///   @return a reference to this verb for chaining                        
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::Multicast(bool toggle) noexcept {
+      if (toggle)
+         mState -= VerbState::Monocast;
+      else
+         mState += VerbState::Monocast;
+      return *reinterpret_cast<THIS*>(this);
+   }
+
    /// Check if verb is matches one of the provided verb types                
    ///   @tparam V1, VN... - the verbs to compare against                     
    ///   @return true if at least one verb matches                            
-   template<CT::Verb V1, CT::Verb...VN> LANGULUS(INLINED)
-   bool Verb::VerbIs() const noexcept {
-      return mVerb == MetaVerbOf<V1>() or ((mVerb == MetaVerbOf<VN>()) or ...);
+   template<CT::VerbBased THIS, CT::Verb V1, CT::Verb...VN> LANGULUS(INLINED)
+   constexpr bool Verb::IsVerb() const noexcept {
+      if constexpr (CT::Verb<THIS>)
+         return CT::Same<V1, THIS> or (CT::Same<VN, THIS> or ...);
+      else
+         return mVerb == MetaVerbOf<V1>() or ((mVerb == MetaVerbOf<VN>()) or ...);
+   }
+
+   /// Get the verb id                                                        
+   ///   @return verb ID                                                      
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   constexpr VMeta Verb::GetVerb() const noexcept {
+      if constexpr (CT::Verb<THIS>)
+         return (mVerb = MetaVerbOf<THIS>());
+      else
+         return mVerb;
+   }
+   
+   /// Check if verb id matches                                               
+   ///   @param id - the verb id to check                                     
+   ///   @return true if verb id matches                                      
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   constexpr bool Verb::IsVerb(VMeta id) const noexcept {
+      if constexpr (CT::Verb<THIS>)
+         return GetVerb<THIS>()->Is(id);
+      else
+         return not mVerb ? not id : mVerb->Is(id);
+   }
+
+   /// Get the verb token                                                     
+   ///   @return the token as a literal                                       
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   constexpr Token Verb::GetToken() const {
+      if constexpr (CT::Verb<THIS>) {
+         return mMass < 0
+            ? GetVerb<THIS>()->mTokenReverse
+            : GetVerb<THIS>()->mToken;
+      }
+      else {
+         if (not mVerb)
+            return RTTI::MetaVerb::DefaultToken;
+         return mMass < 0 ? mVerb->mTokenReverse : mVerb->mToken;
+      }
    }
 
    /// Check if verb has been satisfied at least once                         
@@ -192,10 +331,10 @@ namespace Langulus::Flow
    /// Set the verb state                                                     
    ///   @param state - the verb state                                        
    ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::SetVerbState(const VerbState& state) noexcept {
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::SetVerbState(VerbState state) noexcept {
       mState = state;
-      return *this;
+      return *reinterpret_cast<THIS*>(this);
    }
 
    /// Get the number of successful execution of the verb                     
@@ -244,10 +383,10 @@ namespace Langulus::Flow
 
    /// Invert the verb (use the antonym)                                      
    ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::Invert() noexcept {
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::Invert() noexcept {
       mMass *= Real {-1};
-      return *this;
+      return *reinterpret_cast<const THIS*>(this);
    }
 
    /// Set the verb type                                                      
@@ -271,113 +410,119 @@ namespace Langulus::Flow
    /// Set the verb mass                                                      
    ///   @param mass - the mass to set                                        
    ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetMass(const Real mass) noexcept {
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::SetMass(const Real mass) noexcept {
       mMass = mass;
-      return *this;
+      return *reinterpret_cast<THIS*>(this);
    }
 
    /// Set the verb frequency                                                 
    ///   @param rate - the rate to set                                        
    ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetRate(const Real rate) noexcept {
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::SetRate(const Real rate) noexcept {
       mRate = rate;
-      return *this;
+      return *reinterpret_cast<THIS*>(this);
    }
 
    /// Set the verb time                                                      
    ///   @param time - the time to set                                        
    ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetTime(const Real time) noexcept {
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::SetTime(const Real time) noexcept {
       mTime = time;
-      return *this;
+      return *reinterpret_cast<THIS*>(this);
    }
 
    /// Set the verb priority                                                  
    ///   @param priority - the priority to set                                
    ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetPriority(const Real priority) noexcept {
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::SetPriority(const Real priority) noexcept {
       mPriority = priority;
-      return *this;
+      return *reinterpret_cast<THIS*>(this);
    }
 
    /// Set the verb mass, frequency, time, and priority (a.k.a. charge)       
    ///   @param charge - the charge to set                                    
    ///   @return a reference to self                                          
-   LANGULUS(INLINED)
-   Verb& Verb::SetCharge(const Charge& charge) noexcept {
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::SetCharge(const Charge& charge) noexcept {
       Charge::operator = (charge);
-      return *this;
+      return *reinterpret_cast<THIS*>(this);
    }
 
    /// Set the verb's source                                                  
    ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
-   template<CT::Data T1, CT::Data... TAIL>
+   template<CT::VerbBased THIS, CT::Data T1, CT::Data...TAIL>
    requires CT::Inner::UnfoldInsertable<T1, TAIL...> LANGULUS(INLINED)
-   Verb& Verb::SetSource(T1&& t1, TAIL&&...tail) {
+   THIS& Verb::SetSource(T1&& t1, TAIL&&...tail) {
       mSource = Any {Forward<T1>(t1), Forward<TAIL>(tail)...};
       // We guarantee that source is exactly Any, so we unconstrain it  
       // in order to be safely able to overwrite it anytime             
       mSource.MakeTypeConstrained(false);
-      return *this;
+      return *reinterpret_cast<THIS*>(this);
    }
    
    /// Set the verb's argument                                                
    ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
-   template<CT::Data T1, CT::Data... TAIL>
+   template<CT::VerbBased THIS, CT::Data T1, CT::Data...TAIL>
    requires CT::Inner::UnfoldInsertable<T1, TAIL...> LANGULUS(INLINED)
-   Verb& Verb::SetArgument(T1&& t1, TAIL&&...tail) {
+   THIS& Verb::SetArgument(T1&& t1, TAIL&&...tail) {
       Any::operator = (Any {Forward<T1>(t1), Forward<TAIL>(tail)...});
       // We guarantee that argument is exactly Any, so we unconstrain it
       // in order to be safely able to overwrite it anytime             
       MakeTypeConstrained(false);
-      return *this;
+      return *reinterpret_cast<THIS*>(this);
    }
    
    /// Set the verb's output                                                  
    ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
-   template<CT::Data T1, CT::Data... TAIL>
+   template<CT::VerbBased THIS, CT::Data T1, CT::Data...TAIL>
    requires CT::Inner::UnfoldInsertable<T1, TAIL...> LANGULUS(INLINED)
-   Verb& Verb::SetOutput(T1&& t1, TAIL&&...tail) {
+   THIS& Verb::SetOutput(T1&& t1, TAIL&&...tail) {
       mOutput = Any {Forward<T1>(t1), Forward<TAIL>(tail)...};
       // We guarantee that output is exactly Any, so we unconstrain it  
       // in order to be safely able to overwrite it anytime             
       mOutput.MakeTypeConstrained(false);
-      return *this;
+      return *reinterpret_cast<THIS*>(this);
    }
 
    /// Compare verbs                                                          
    ///   @param rhs - the verb to compare against                             
    ///   @return true if verbs match                                          
-   LANGULUS(INLINED)
-   bool Verb::operator == (const Verb& rhs) const {
-      return mVerb == rhs.mVerb
-         and mSource == rhs.mSource
-         and Any::operator == (rhs.GetArgument())
-         and mOutput == rhs.mOutput
-         and mState == rhs.mState;
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   bool Verb::operator == (const CT::VerbBased auto& rhs) const {
+      using OTHER = Deref<decltype(rhs)>;
+
+      if constexpr (CT::Verb<THIS, OTHER>) {
+         if constexpr (not CT::Similar<typename THIS::VerbType, typename OTHER::VerbType>)
+            return false;
+         else {
+            return mSource == rhs.mSource
+               and Any::operator == (rhs.GetArgument())
+               and mOutput == rhs.mOutput
+               and mState == rhs.mState;
+         }
+      }
+      else {
+         return mVerb == rhs.GetVerb()
+            and mSource == rhs.mSource
+            and Any::operator == (rhs.GetArgument())
+            and mOutput == rhs.mOutput
+            and mState == rhs.mState;
+      }
    }
 
    /// Compare verb types for equality                                        
    ///   @param rhs - the verb to compare against                             
    ///   @return true if verbs match                                          
-   LANGULUS(INLINED)
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
    bool Verb::operator == (VMeta rhs) const noexcept {
-      return mVerb == rhs;
-   }
-
-   /// Check if verb is satisfied at least once                               
-   ///   @param rhs - flag to compare against                                 
-   ///   @return true if verb satisfaction matches rhs                        
-   LANGULUS(INLINED)
-   bool Verb::operator == (const bool rhs) const noexcept {
-      return IsDone() == rhs; 
+      return GetVerb<THIS>() == rhs;
    }
 
    /// Compare verb priorities                                                
@@ -410,13 +555,6 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    bool Verb::operator <= (const Verb& rhs) const noexcept {
       return mPriority <= rhs.mPriority;
-   }
-
-   /// Get the verb id                                                        
-   ///   @return verb ID                                                      
-   LANGULUS(INLINED)
-   VMeta Verb::GetVerb() const noexcept {
-      return mVerb;
    }
 
    /// Get the verb id and charge                                             
@@ -514,8 +652,8 @@ namespace Langulus::Flow
    ///   @attention nullptrs are never pushed and don't satisfy verb          
    ///   @param rhs - the data (and semantic) to push                         
    ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator <<  (CT::Inner::UnfoldInsertable auto&& rhs) {
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::operator << (CT::Inner::UnfoldInsertable auto&& rhs) {
       using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
@@ -523,22 +661,22 @@ namespace Langulus::Flow
          if constexpr (CT::PointerRelated<T>) {
             // Push a pointer, but check if valid first                 
             if (not DesemCast(rhs))
-               return *this;
+               return *reinterpret_cast<THIS*>(this);
          }
 
          if (mOutput.SmartPush(IndexBack, S::Nest(rhs)))
             Done();
       }
 
-      return *this;
+      return *reinterpret_cast<THIS*>(this);
    }
 
    /// Push anything to the front of the outputs, satisfying the verb         
    ///   @attention nullptrs are never pushed and don't satisfy verb          
    ///   @param rhs - the data (and semantic) to push                         
    ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator >>  (CT::Inner::UnfoldInsertable auto&& rhs) {
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::operator >> (CT::Inner::UnfoldInsertable auto&& rhs) {
       using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
@@ -546,21 +684,21 @@ namespace Langulus::Flow
          if constexpr (CT::PointerRelated<T>) {
             // Push a pointer, but check if valid first                 
             if (not DesemCast(rhs))
-               return *this;
+               return *reinterpret_cast<THIS*>(this);
          }
 
          if (mOutput.SmartPush(IndexFront, S::Nest(rhs)))
             Done();
       }
 
-      return *this;
+      return *reinterpret_cast<THIS*>(this);
    }
 
    /// Merge anything to output's back by a semantic                          
    ///   @param rhs - the data (and semantic) to merge                        
    ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator <<= (CT::Inner::UnfoldInsertable auto&& rhs) {
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::operator <<= (CT::Inner::UnfoldInsertable auto&& rhs) {
       using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
@@ -568,25 +706,25 @@ namespace Langulus::Flow
          if constexpr (CT::PointerRelated<TypeOf<S>>) {
             // Push a pointer, but check if valid first                 
             if (not DesemCast(rhs))
-               return *this;
+               return *reinterpret_cast<THIS*>(this);
          }
 
          auto ptr = PointerDecay(DesemCast(rhs));
          if (mOutput.Find(ptr))
-            return *this;
+            return *reinterpret_cast<THIS*>(this);
 
          if (mOutput.SmartPush(IndexBack, ptr))
             Done();
       }
 
-      return *this;
+      return *reinterpret_cast<THIS*>(this);
    }
 
    /// Merge anything to output's front by a semantic                         
    ///   @param rhs - the data (and semantic) to merge                        
    ///   @return a reference to this verb for chaining                        
-   LANGULUS(INLINED)
-   Verb& Verb::operator >>= (CT::Inner::UnfoldInsertable auto&& rhs) {
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS& Verb::operator >>= (CT::Inner::UnfoldInsertable auto&& rhs) {
       using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
@@ -594,18 +732,18 @@ namespace Langulus::Flow
          if constexpr (CT::PointerRelated<TypeOf<S>>) {
             // Push a pointer, but check if valid first                 
             if (not DesemCast(rhs))
-               return *this;
+               return *reinterpret_cast<THIS*>(this);
          }
 
          auto ptr = PointerDecay(DesemCast(rhs));
          if (mOutput.Find(ptr))
-            return *this;
+            return *reinterpret_cast<THIS*>(this);
 
          if (mOutput.SmartPush(IndexBack, ptr))
             Done();
       }
 
-      return *this;
+      return *reinterpret_cast<THIS*>(this);
    }
 
    /// Finalize a dispatch execution by setting satisfaction state and output 
@@ -618,10 +756,7 @@ namespace Langulus::Flow
       if (IsShortCircuited()) {
          // If reached, this will result in failure in OR-context, or   
          // success if AND, as long as the verb is short-circuited      
-         if constexpr (OR)
-            mSuccesses = 0;
-         else
-            mSuccesses = successes;
+         mSuccesses = OR ? 0 : successes;
       }
       else {
          // If verb is not short-circuited, then a single success       
@@ -634,7 +769,6 @@ namespace Langulus::Flow
          mOutput = output.Forward<Any>();
       else
          mOutput.Reset();
-
       return mSuccesses;
    }
 
@@ -668,44 +802,37 @@ namespace Langulus::Flow
       }
       else {
          // Search for the ability via RTTI                             
-         const auto meta = context.GetType();
+         const DMeta fromMeta = context.GetType();
+         DMeta toMeta;
+
          if constexpr (CT::DerivedFrom<V, Verbs::Interpret>
          and requires { typename V::Type; }) {
             // Scan for a reflected converter as statically as possible 
-            using TO = typename V::Type;
-            const auto found = meta->template GetConverter<TO>();
-            if (found) {
-               // Converter was found, prioritize it                    
-               // No escape from this scope                             
-               auto result = Any::From<TO>();
-               result.template Reserve<true>(1);
-               found(context.GetRaw(), result.GetRaw());
-               verb << Abandon(result);
-               return verb.IsDone();
-            }
+            toMeta = MetaDataOf<typename V::Type>();
          }
-         else if (verb.template VerbIs<Verbs::Interpret>()) {
+         else if (verb.template IsVerb<V, Verbs::Interpret>()) {
             // Scan for a reflected converter by scanning argument      
-            const auto to = verb.template As<DMeta>();
-            const auto found = meta->GetConverter(to);
-            if (found) {
-               // Converter was found, prioritize it                    
-               // No escape from this scope                             
-               auto result = Any::FromMeta(to);
-               result.template Reserve<true>(1);
-               found(context.GetRaw(), result.GetRaw());
-               verb << Abandon(result);
-               return verb.IsDone();
-            }
+            toMeta = verb.template As<DMeta>();
+         }
+
+         const auto foundConverter = fromMeta->GetConverter(toMeta);
+         if (foundConverter) {
+            // Converter was found, prioritize it                       
+            // No escape from this scope                                
+            auto result = Any::FromMeta(toMeta);
+            result.template Reserve<true>(1);
+            foundConverter(context.GetRaw(), result.GetRaw());
+            verb << Abandon(result);
+            return verb.IsDone();
          }
 
          // Scan for any other runtime ability                          
-         const auto found = meta->template
+         const auto foundAbility = fromMeta->template
             GetAbility<CT::Mutable<T>>(verb.mVerb, verb.GetType());
-         if (not found)
+         if (not foundAbility)
             return false;
 
-         found(context.GetRaw(), verb);
+         foundAbility(context.GetRaw(), verb);
       }
 
       return verb.IsDone();
@@ -797,108 +924,103 @@ namespace Langulus::Flow
    }
 
    /// Serialize verb to any form of text                                     
-   ///   @tparam T - the type of text to serialize to                         
    ///   @return the serialized verb                                          
-   template<CT::TextBased T>
-   T Verb::SerializeVerb() const {
-      Code result;
-
+   template<CT::VerbBased THIS>
+   void Verb::SerializeVerb(CT::Serial auto& out) const {
       if (mSuccesses) {
          // If verb has been executed, just dump the output             
-         result += Verbs::Interpret::To<T>(mOutput);
-         return result;
+         mOutput.Serialize(out);
+         return;
       }
 
       // If reached, then verb hasn't been executed yet                 
       // Let's check if there's a source in which verb is executed      
       if (mSource.IsValid())
-         result += Verbs::Interpret::To<T>(mSource);
+         mSource.Serialize(out);
+
+      // Write any special qualifiers before the verb token             
+      if (IsLongCircuited()) {
+         if (mSource.IsValid())
+            out += ' ';
+         out += Text::Operator::Long;
+      }
+
+      if (IsMonocast()) {
+         if (mSource.IsValid() or IsLongCircuited())
+            out += ' ';
+         out += Text::Operator::Mono;
+      }
+
+      // Make sure mVerb is available, if possible                      
+      (void) GetVerb<THIS>();
 
       // After the source, we decide whether to write verb token or     
       // verb operator, depending on the verb definition, state and     
       // charge                                                         
-      bool enscope = true;
+      bool writtenAsToken = false;
       if (not mVerb) {
          // An invalid verb is always written as token                  
-         result += RTTI::MetaVerb::DefaultToken;
+         if (mSource.IsValid() or IsLongCircuited() or IsMonocast())
+            out += ' ';
+         out += NameOf<Verb>();
       }
       else {
          // A valid verb is written either as token, or as operator     
          if (mMass < 0) {
-            if (not mVerb->mOperatorReverse.empty() and (GetCharge() * -1).IsDefault() and mState.IsDefault()) {
+            if (not mVerb->mOperatorReverse.empty() and (GetCharge() * -1).IsDefault()) {
                // Write as operator                                     
-               result += mVerb->mOperatorReverse;
-               enscope = GetCount() > 1 or (not IsEmpty() and CastsTo<Verb>());
+               out += mVerb->mOperatorReverse;
             }
             else {
                // Write as token                                        
-               if (mSource.IsValid())
-                  result += Text {' '};
-               result += mVerb->mTokenReverse;
-               result += Verbs::Interpret::To<T>(GetCharge() * -1);
+               if (mSource.IsValid() or IsLongCircuited() or IsMonocast())
+                  out += ' ';
+               out += mVerb->mTokenReverse;
+               out += static_cast<Text>(GetCharge() * -1);
+               writtenAsToken = true;
             }
          }
          else {
-            if (not mVerb->mOperator.empty() and GetCharge().IsDefault() and mState.IsDefault()) {
+            if (not mVerb->mOperator.empty() and GetCharge().IsDefault()) {
                // Write as operator                                     
-               result += mVerb->mOperator;
-               enscope = GetCount() > 1 or (not IsEmpty() and CastsTo<Verb>());
+               out += mVerb->mOperator;
             }
             else {
                // Write as token                                        
-               if (mSource.IsValid())
-                  result += Text {' '};
-               result += mVerb->mToken;
-               result += Verbs::Interpret::To<T>(GetCharge());
+               if (mSource.IsValid() or IsLongCircuited() or IsMonocast())
+                  out += ' ';
+               out += mVerb->mToken;
+               out += static_cast<Text>(GetCharge());
+               writtenAsToken = true;
             }
          }
       }
 
-      if (IsLongCircuited())
-         result += " long ";
+      if (not IsValid())
+         return;
+      
+      using OUT = Deref<decltype(out)>;
+      if (not OUT::SerializationRules::BeginScope(GetArgument(), out)
+      and writtenAsToken)
+         out += ' ';
+      GetArgument().Serialize(out);
+      OUT::SerializationRules::EndScope(GetArgument(), out);
+   }
 
-      if (IsMonocast())
-         result += " mono ";
-
-      if (enscope)
-         result += Code::OpenScope;
-
-      if (IsValid())
-         result += Verbs::Interpret::To<T>(GetArgument());
-
-      if (enscope)
-         result += Code::CloseScope;
-
+   /// Serialize verb to code                                                 
+   LANGULUS(INLINED)
+   Verb::operator Code() const {
+      Code result;
+      SerializeVerb<Verb>(result);
       return result;
    }
 
-   ///                                                                        
-   ///   Static verb implementation                                           
-   ///                                                                        
-   template<class VERB> LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb(const StaticVerb& other)
-      : Verb {Copy(other)} {}
-
-   template<class VERB> LANGULUS(INLINED)
-   StaticVerb<VERB>::StaticVerb(StaticVerb&& other)
-      : Verb {Move(other)} {}
-
-   template<class VERB> LANGULUS(INLINED)
-   StaticVerb<VERB>& StaticVerb<VERB>::operator = (const StaticVerb& rhs) {
-      Verb::operator = (Copy(rhs));
-      return *this;
-   }
-
-   template<class VERB> LANGULUS(INLINED)
-   StaticVerb<VERB>& StaticVerb<VERB>::operator = (StaticVerb&& rhs) {
-      Verb::operator = (Move(rhs));
-      return *this;
-   }
-
-   template<class VERB> LANGULUS(INLINED)
-   VMeta StaticVerb<VERB>::GetVerb() const noexcept {
-      static_assert(sizeof(StaticVerb) == sizeof(A::Verb));
-      return (mVerb = MetaVerbOf<VERB>());
+   /// Serialize verb for logger                                              
+   LANGULUS(INLINED)
+   Verb::operator Text() const {
+      Text result;
+      SerializeVerb<Verb>(result);
+      return result;
    }
 
 } // namespace Langulus::Flow

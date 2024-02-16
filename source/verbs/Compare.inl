@@ -8,7 +8,7 @@
 ///                                                                           
 #pragma once
 #include "Compare.hpp"
-#include "../Verb.inl"
+#include "../TVerb.inl"
 
 #define VERBOSE_COMPARE(...) //Logger::Verbose(__VA_ARGS__)
 
@@ -18,7 +18,7 @@ namespace Langulus::Verbs
 
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Dense T, CT::Data... A>
+   template<CT::Dense T, CT::Data...A>
    constexpr bool Compare::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0) {
          return requires (const T& t, Verb& v) { t.Compare(v); }
@@ -44,7 +44,7 @@ namespace Langulus::Verbs
 
    /// Get the verb functor for the given type and arguments                  
    ///   @return the function, or nullptr if not available                    
-   template<CT::Dense T, CT::Data... A>
+   template<CT::Dense T, CT::Data...A>
    constexpr auto Compare::Of() noexcept {
       if constexpr (CT::Constant<T>) {
          return [](const void* context, Flow::Verb& verb, A... args) {

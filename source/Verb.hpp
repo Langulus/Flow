@@ -36,6 +36,12 @@ namespace Langulus::A
       Any mSource;
       // The container where output goes after execution                
       Any mOutput;
+
+      LANGULUS_MEMBERS(
+         &Verb::mVerb,
+         &Verb::mState,
+         &Verb::mSource
+      );
    };
 
 } // namespace Langulus::A
@@ -93,9 +99,8 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) Verb(const Verb&);
       LANGULUS_API(FLOW) Verb(Verb&&);
 
-      template<CT::Data T1, CT::Data...TAIL>
-      requires CT::VerbMakable<T1, TAIL...>
-      Verb(T1&&, TAIL&&...);
+      template<CT::Data T1, CT::Data...TN> requires CT::VerbMakable<T1, TN...>
+      Verb(T1&&, TN&&...);
 
       LANGULUS_API(FLOW) ~Verb() = default;
 
@@ -117,17 +122,17 @@ namespace Langulus::Flow
 
       Verb& operator = (CT::VerbAssignable auto&&);
 
-      template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TAIL>
-      requires CT::Inner::UnfoldInsertable<T1, TAIL...>
-      THIS& SetSource(T1&&, TAIL&&...);
+      template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TN>
+      requires CT::Inner::UnfoldInsertable<T1, TN...>
+      THIS& SetSource(T1&&, TN&&...);
       
-      template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TAIL>
-      requires CT::Inner::UnfoldInsertable<T1, TAIL...>
-      THIS& SetArgument(T1&&, TAIL&&...);
+      template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TN>
+      requires CT::Inner::UnfoldInsertable<T1, TN...>
+      THIS& SetArgument(T1&&, TN&&...);
       
-      template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TAIL>
-      requires CT::Inner::UnfoldInsertable<T1, TAIL...>
-      THIS& SetOutput(T1&&, TAIL&&...);
+      template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TN>
+      requires CT::Inner::UnfoldInsertable<T1, TN...>
+      THIS& SetOutput(T1&&, TN&&...);
 
       ///                                                                     
       ///   Charge arithmetics                                                

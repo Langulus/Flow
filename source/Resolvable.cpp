@@ -19,9 +19,9 @@ namespace Langulus::Flow
    Resolvable::Resolvable(DMeta type) IF_UNSAFE(noexcept)
       : mClassType {type}
       , mClassOffset {0} {
-      LANGULUS_ASSUME(DevAssumes, type,
+      LANGULUS_ASSUME(DevAssumes, mClassType,
          "Bad resolvable type");
-      LANGULUS_ASSUME(DevAssumes, type->mOrigin,
+      LANGULUS_ASSUME(DevAssumes, mClassType->mOrigin,
          "Resolvable type is incomplete");
 
       // Precalculate offset, no need to do it at runtime               
@@ -33,7 +33,8 @@ namespace Langulus::Flow
 
    /// Get the class name token                                               
    ///   @return the token                                                    
-   Token Resolvable::GetToken() const noexcept {
+   Token Resolvable::GetToken() const IF_UNSAFE(noexcept) {
+      LANGULUS_ASSUME(DevAssumes, mClassType, "Bad resolvable type");
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          return mClassType->GetShortestUnambiguousToken();
       #else
@@ -44,7 +45,10 @@ namespace Langulus::Flow
    /// Check if context interprets as a type                                  
    ///   @param type - the type to check for                                  
    ///   @return true if this context can be dynamically interpreted to type  
-   bool Resolvable::CastsTo(DMeta type) const noexcept {
+   bool Resolvable::CastsTo(DMeta type) const IF_UNSAFE(noexcept) {
+      LANGULUS_ASSUME(DevAssumes, mClassType,
+         "Bad resolvable type");
+
       return mClassType->CastsTo(type);
    }
 
@@ -52,20 +56,18 @@ namespace Langulus::Flow
    ///   @param type - the type to check for                                  
    ///   @return true if this context can be dynamically interpreted to type  
    bool Resolvable::Is(DMeta type) const noexcept {
-      return mClassType->Is(type);
+      return mClassType | type;
    }
 
    /// Stringify the context (shows class type and an identifier)             
    Resolvable::operator Text() const {
-      return IdentityOf(mClassType->mToken, this);
+      return IdentityOf(GetToken(), this);
    }
 
    /// Convenience function that logs this's identity and suffixes with ": "  
    /// Useful when used like: Logger::Verbose() << Self() << "etc..."         
    Text Resolvable::Self() const {
-      auto temp = operator Text();
-      temp += ": ";
-      return Abandon(temp);
+      return Text {operator Text(), ": "};
    }
 
    /// Wrap this context instance in a static memory block                    

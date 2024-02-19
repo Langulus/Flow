@@ -32,6 +32,7 @@ namespace Langulus::Verbs
          "as one OR container (does only shallow copying)";
 
       using TVerb::TVerb;
+      using TVerb::operator ==;
 
       template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;

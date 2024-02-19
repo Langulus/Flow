@@ -19,7 +19,7 @@
 
 LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
 
-#define ENABLE_VERBOSE() 1
+#define ENABLE_VERBOSE() 0
 
 #define VERBOSE_INNER(...) \
       Logger::Verbose("Flow::Code: ", Logger::Push, Logger::Cyan, __VA_ARGS__ \

@@ -46,17 +46,17 @@ namespace Langulus::Flow
       ///                                                                     
       ///   Assignment                                                        
       ///                                                                     
-      template<CT::Data T1, CT::Data...TAIL>
-      requires CT::Inner::UnfoldInsertable<T1, TAIL...>
-      VERB& SetSource(T1&&, TAIL&&...);
+      template<CT::Data T1, CT::Data...TN>
+      requires CT::Inner::UnfoldInsertable<T1, TN...>
+      VERB& SetSource(T1&&, TN&&...);
       
-      template<CT::Data T1, CT::Data...TAIL>
-      requires CT::Inner::UnfoldInsertable<T1, TAIL...>
-      VERB& SetArgument(T1&&, TAIL&&...);
+      template<CT::Data T1, CT::Data...TN>
+      requires CT::Inner::UnfoldInsertable<T1, TN...>
+      VERB& SetArgument(T1&&, TN&&...);
       
-      template<CT::Data T1, CT::Data...TAIL>
-      requires CT::Inner::UnfoldInsertable<T1, TAIL...>
-      VERB& SetOutput(T1&&, TAIL&&...);
+      template<CT::Data T1, CT::Data...TN>
+      requires CT::Inner::UnfoldInsertable<T1, TN...>
+      VERB& SetOutput(T1&&, TN&&...);
 
       ///                                                                     
       ///   Charge arithmetics                                                
@@ -75,9 +75,7 @@ namespace Langulus::Flow
       VERB& ShortCircuit(bool) noexcept;
       VERB& Multicast(bool) noexcept;
       VERB& SetVerbState(VerbState) noexcept;
-
       VERB& Invert() noexcept;
-
       VERB& SetMass(Real) noexcept;
       VERB& SetRate(Real) noexcept;
       VERB& SetTime(Real) noexcept;

@@ -26,6 +26,7 @@ namespace Langulus::Verbs
       LANGULUS(INFO) "Performs conversion";
 
       using TVerb::TVerb;
+      using TVerb::operator ==;
 
       template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;

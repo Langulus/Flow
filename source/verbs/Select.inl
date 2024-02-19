@@ -98,7 +98,7 @@ namespace Langulus::Verbs
          return false;
 
       TAny<Index> indices;
-      indices.GatherFrom(verb);
+      indices.GatherFrom(verb.GetArgument());
       bool containsOnlyIndices = not indices.IsEmpty();
 
       TAny<Trait> selectedTraits;

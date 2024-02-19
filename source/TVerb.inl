@@ -69,22 +69,22 @@ namespace Langulus::Flow
       return result;
    }
 
-   TEMPLATE() template<CT::Data T1, CT::Data...TAIL>
-   requires CT::Inner::UnfoldInsertable<T1, TAIL...> LANGULUS(INLINED)
-   VERB& TME()::SetSource(T1&& t1, TAIL&&...tn) {
-      return Verb::SetSource<VERB>(Forward<T1>(t1), Forward<TAIL>(tn)...);
+   TEMPLATE() template<CT::Data T1, CT::Data...TN>
+   requires CT::Inner::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
+   VERB& TME()::SetSource(T1&& t1, TN&&...tn) {
+      return Verb::SetSource<VERB>(Forward<T1>(t1), Forward<TN>(tn)...);
    }
       
-   TEMPLATE() template<CT::Data T1, CT::Data...TAIL>
-   requires CT::Inner::UnfoldInsertable<T1, TAIL...> LANGULUS(INLINED)
-   VERB& TME()::SetArgument(T1&& t1, TAIL&&...tn) {
-      return Verb::SetArgument<VERB>(Forward<T1>(t1), Forward<TAIL>(tn)...);
+   TEMPLATE() template<CT::Data T1, CT::Data...TN>
+   requires CT::Inner::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
+   VERB& TME()::SetArgument(T1&& t1, TN&&...tn) {
+      return Verb::SetArgument<VERB>(Forward<T1>(t1), Forward<TN>(tn)...);
    }
       
-   TEMPLATE() template<CT::Data T1, CT::Data...TAIL>
-   requires CT::Inner::UnfoldInsertable<T1, TAIL...> LANGULUS(INLINED)
-   VERB& TME()::SetOutput(T1&& t1, TAIL&&...tn) {
-      return Verb::SetOutput<VERB>(Forward<T1>(t1), Forward<TAIL>(tn)...);
+   TEMPLATE() template<CT::Data T1, CT::Data...TN>
+   requires CT::Inner::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
+   VERB& TME()::SetOutput(T1&& t1, TN&&...tn) {
+      return Verb::SetOutput<VERB>(Forward<T1>(t1), Forward<TN>(tn)...);
    }
 
    TEMPLATE() LANGULUS(INLINED)

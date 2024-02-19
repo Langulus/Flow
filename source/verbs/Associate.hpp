@@ -32,6 +32,7 @@ namespace Langulus::Verbs
          "depending on the context's complexity";
 
       using TVerb::TVerb;
+      using TVerb::operator ==;
 
       template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;

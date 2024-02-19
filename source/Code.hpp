@@ -48,8 +48,8 @@ namespace Langulus::Flow
    ///   Langulus code container, parser, serializer and deserializer         
    ///                                                                        
    struct Code : Text {
-      LANGULUS_BASES(Text);
       LANGULUS(FILES) "flow";
+      LANGULUS_BASES(Text);
 
       /// The presence of this structure makes Code a serializer              
       struct SerializationRules : Text::SerializationRules {

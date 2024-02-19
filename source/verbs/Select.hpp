@@ -30,6 +30,7 @@ namespace Langulus::Verbs
          "Used to focus on a part of a container, or access members";
 
       using TVerb::TVerb;
+      using TVerb::operator ==;
 
       template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;

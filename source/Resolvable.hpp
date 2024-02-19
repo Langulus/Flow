@@ -41,7 +41,7 @@ namespace Langulus::Flow
       Resolvable& operator = (const Resolvable&) noexcept = default;
       Resolvable& operator = (Resolvable&&) noexcept = default;
 
-      NOD() bool CastsTo(DMeta) const noexcept;
+      NOD() bool CastsTo(DMeta) const IF_UNSAFE(noexcept);
       template<CT::Data T>
       NOD() bool CastsTo() const;
 
@@ -49,7 +49,7 @@ namespace Langulus::Flow
       template<CT::Data T>
       NOD() bool Is() const;
 
-      NOD() Token GetToken() const noexcept;
+      NOD() Token GetToken() const IF_UNSAFE(noexcept);
       NOD() constexpr DMeta GetType() const noexcept;
       NOD() Block GetBlock() const noexcept;
 

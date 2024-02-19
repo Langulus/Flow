@@ -196,7 +196,7 @@ namespace Langulus::Flow
    ///   4. Future and past points might have priority, which decides what    
    ///      kind of verbs are allowed inside. Priorities are set when a       
    ///      verb is inserted. A verb of higher-or-equal priority can never be 
-   ///      inserted   in a point of lower priority. A verb of higher-or-equal
+   ///      inserted in a point of lower priority. A verb of higher-or-equal  
    ///      priority can only wrap lower-or-equal priority scopes in itself.  
    ///   5. Future and past points might have branches, which forces shallow  
    ///      duplication of missing future/past content when linking           

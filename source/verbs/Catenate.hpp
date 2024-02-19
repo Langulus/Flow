@@ -29,6 +29,7 @@ namespace Langulus::Verbs
       LANGULUS(INFO) "Catenates, or splits stuff apart";
 
       using TVerb::TVerb;
+      using TVerb::operator ==;
 
       template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;

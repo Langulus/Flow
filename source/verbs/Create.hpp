@@ -32,6 +32,7 @@ namespace Langulus::Verbs
          "or that producer will be created automatically for you, if possible";
 
       using TVerb::TVerb;
+      using TVerb::operator ==;
 
       template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;

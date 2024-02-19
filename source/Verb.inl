@@ -30,11 +30,11 @@ namespace Langulus::Flow
 
    /// Generic constructor                                                    
    ///   @param other - the verb/argument and semantic to construct with      
-   template<CT::Data T1, CT::Data...TAIL>
-   requires CT::VerbMakable<T1, TAIL...> LANGULUS(INLINED)
-   Verb::Verb(T1&& t1, TAIL&&...tail) {
+   template<CT::Data T1, CT::Data...TN>
+   requires CT::VerbMakable<T1, TN...> LANGULUS(INLINED)
+   Verb::Verb(T1&& t1, TN&&...tn) {
       static_assert(sizeof(Verb) == sizeof(A::Verb));
-      if constexpr (sizeof...(TAIL) == 0 and not CT::Array<T1>) {
+      if constexpr (sizeof...(TN) == 0 and not CT::Array<T1>) {
          using S = SemanticOf<decltype(t1)>;
          using T = TypeOf<S>;
 
@@ -49,7 +49,7 @@ namespace Langulus::Flow
          }
          else Any::operator = (Forward<T1>(t1));
       }
-      else Any::Insert(IndexBack, Forward<T1>(t1), Forward<TAIL>(tail)...);
+      else Any::Insert(IndexBack, Forward<T1>(t1), Forward<TN>(tn)...);
    }
 
    /// Verb shallow-copy assignment                                           
@@ -455,10 +455,10 @@ namespace Langulus::Flow
    /// Set the verb's source                                                  
    ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
-   template<CT::VerbBased THIS, CT::Data T1, CT::Data...TAIL>
-   requires CT::Inner::UnfoldInsertable<T1, TAIL...> LANGULUS(INLINED)
-   THIS& Verb::SetSource(T1&& t1, TAIL&&...tail) {
-      mSource = Any {Forward<T1>(t1), Forward<TAIL>(tail)...};
+   template<CT::VerbBased THIS, CT::Data T1, CT::Data...TN>
+   requires CT::Inner::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
+   THIS& Verb::SetSource(T1&& t1, TN&&...tn) {
+      mSource = Any {Forward<T1>(t1), Forward<TN>(tn)...};
       // We guarantee that source is exactly Any, so we unconstrain it  
       // in order to be safely able to overwrite it anytime             
       mSource.MakeTypeConstrained(false);
@@ -468,10 +468,10 @@ namespace Langulus::Flow
    /// Set the verb's argument                                                
    ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
-   template<CT::VerbBased THIS, CT::Data T1, CT::Data...TAIL>
-   requires CT::Inner::UnfoldInsertable<T1, TAIL...> LANGULUS(INLINED)
-   THIS& Verb::SetArgument(T1&& t1, TAIL&&...tail) {
-      Any::operator = (Any {Forward<T1>(t1), Forward<TAIL>(tail)...});
+   template<CT::VerbBased THIS, CT::Data T1, CT::Data...TN>
+   requires CT::Inner::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
+   THIS& Verb::SetArgument(T1&& t1, TN&&...tn) {
+      Any::operator = (Any {Forward<T1>(t1), Forward<TN>(tn)...});
       // We guarantee that argument is exactly Any, so we unconstrain it
       // in order to be safely able to overwrite it anytime             
       MakeTypeConstrained(false);
@@ -481,10 +481,10 @@ namespace Langulus::Flow
    /// Set the verb's output                                                  
    ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
-   template<CT::VerbBased THIS, CT::Data T1, CT::Data...TAIL>
-   requires CT::Inner::UnfoldInsertable<T1, TAIL...> LANGULUS(INLINED)
-   THIS& Verb::SetOutput(T1&& t1, TAIL&&...tail) {
-      mOutput = Any {Forward<T1>(t1), Forward<TAIL>(tail)...};
+   template<CT::VerbBased THIS, CT::Data T1, CT::Data...TN>
+   requires CT::Inner::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
+   THIS& Verb::SetOutput(T1&& t1, TN&&...tn) {
+      mOutput = Any {Forward<T1>(t1), Forward<TN>(tn)...};
       // We guarantee that output is exactly Any, so we unconstrain it  
       // in order to be safely able to overwrite it anytime             
       mOutput.MakeTypeConstrained(false);
@@ -927,6 +927,7 @@ namespace Langulus::Flow
    ///   @return the serialized verb                                          
    template<CT::VerbBased THIS>
    void Verb::SerializeVerb(CT::Serial auto& out) const {
+      using OUT = Deref<decltype(out)>;
       if (mSuccesses) {
          // If verb has been executed, just dump the output             
          mOutput.Serialize(out);
@@ -935,8 +936,11 @@ namespace Langulus::Flow
 
       // If reached, then verb hasn't been executed yet                 
       // Let's check if there's a source in which verb is executed      
-      if (mSource.IsValid())
+      if (mSource.IsValid()) {
+         OUT::SerializationRules::BeginScope(mSource, out);
          mSource.Serialize(out);
+         OUT::SerializationRules::EndScope(mSource, out);
+      }
 
       // Write any special qualifiers before the verb token             
       if (IsLongCircuited()) {
@@ -999,7 +1003,6 @@ namespace Langulus::Flow
       if (not IsValid())
          return;
       
-      using OUT = Deref<decltype(out)>;
       if (not OUT::SerializationRules::BeginScope(GetArgument(), out)
       and writtenAsToken)
          out += ' ';

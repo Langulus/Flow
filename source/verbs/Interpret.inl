@@ -114,21 +114,6 @@ namespace Langulus::Verbs
       }
 
       return false;
-
-      /*if constexpr (CT::Text<TO>) {
-         const auto from = context.GetType();
-
-         // Stringify context, if it matches any of its named values    
-         for (auto& named : from->mNamedValues) {
-            if (from->mComparer(named->mPtrToValue, context.GetRaw())) {
-               verb << Text {named};
-               return true;
-            }
-         }
-
-         return false;
-      }
-      else return false;*/
    }
 
    /// Statically optimized interpret verb                                    

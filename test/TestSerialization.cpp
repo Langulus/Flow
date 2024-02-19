@@ -9,14 +9,18 @@
 #include <Flow/Verbs/Interpret.hpp>
 #include "Common.hpp"
 
+constexpr Count SerialBlock = sizeof(Count) * 2 + sizeof(DataState);
+
 
 SCENARIO("Serialization", "[serialization]") {
 	GIVEN("An empty Any instance") {
 		Any pack;
 
 		WHEN("Pack is serialized as binary") {
-			auto serialized = Verbs::Interpret::To<Bytes>(pack);
+         const auto serialized = Verbs::Interpret::To<Bytes>(pack);
+
 			REQUIRE(serialized.Is<Byte>());
+			REQUIRE(serialized.GetCount() == SerialBlock);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 				auto deserialized = Verbs::Interpret::To<Any>(serialized);
@@ -30,7 +34,14 @@ SCENARIO("Serialization", "[serialization]") {
 		pack << Any {1} << Any {2} << Any {3};
 
 		WHEN("Pack is serialized as binary") {
-			auto serialized = Verbs::Interpret::To<Bytes>(pack);
+         const auto serialized = Verbs::Interpret::To<Bytes>(pack);
+         const auto intToken = MetaDataOf<int>()->mToken.size();
+         const auto anyToken = MetaDataOf<Any>()->mToken.size();
+         const auto requiredSize = 
+              SerialBlock * 4             // 4 blocks
+            + sizeof(int) * 3             // + three ints
+            + intToken * 3 + anyToken;    // + three 'int' tokens and one 'Any' token
+         REQUIRE(serialized.GetCount() == requiredSize);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 				auto deserialized = Verbs::Interpret::To<Any>(serialized);
@@ -53,15 +64,27 @@ SCENARIO("Serialization", "[serialization]") {
 		}
 	}
 
+   const Text texts[3] = {
+      "hello"_text,
+      "i love you"_text,
+      "won't you tell me your name"_text
+   };
+   const auto txtToken = MetaDataOf<Text>()->mToken.size();
+   const auto traitToken = MetaDataOf<Traits::Name>()->mToken.size();
+
 	GIVEN("An Any instance containing Text") {
 		Any pack;
-		pack
-			<< "hello"_text
-			<< "i love you"_text
-			<< "won't you tell me your name"_text;
+		pack << texts[0] << texts[1] << texts[2];
 
 		WHEN("Pack is serialized as binary") {
-			auto serialized = Verbs::Interpret::To<Bytes>(pack);
+			const auto serialized = Verbs::Interpret::To<Bytes>(pack);
+         const auto requiredSize =
+            SerialBlock                   // 1 block
+            + txtToken
+            + texts[0].GetCount() + sizeof(Count)
+            + texts[1].GetCount() + sizeof(Count)
+            + texts[2].GetCount() + sizeof(Count);
+         REQUIRE(serialized.GetCount() == requiredSize);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 				auto deserialized = Verbs::Interpret::To<Any>(serialized);
@@ -72,13 +95,19 @@ SCENARIO("Serialization", "[serialization]") {
 
 	GIVEN("An Any instance containing Trait") {
 		Any pack;
-		pack
-			<< Traits::Name("hello"_text)
-			<< Traits::Name("i love you"_text)
-			<< Traits::Name("won't you tell me your name"_text);
+		pack  << Traits::Name(texts[0])
+		      << Traits::Name(texts[1])
+		      << Traits::Name(texts[2]);
 
 		WHEN("Pack is serialized as binary") {
 			auto serialized = Verbs::Interpret::To<Bytes>(pack);
+         const auto requiredSize =
+            SerialBlock * 4               // 4 blocks
+            + traitToken + txtToken*3
+            + texts[0].GetCount() + sizeof(Count)
+            + texts[1].GetCount() + sizeof(Count)
+            + texts[2].GetCount() + sizeof(Count);
+         REQUIRE(serialized.GetCount() == requiredSize);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 				auto deserialized = Verbs::Interpret::To<Any>(serialized);

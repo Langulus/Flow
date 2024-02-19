@@ -27,6 +27,7 @@ namespace Langulus::Verbs
       LANGULUS(INFO) "Used to compare for equality, or largeness/smallness";
 
       using TVerb::TVerb;
+      using TVerb::operator ==;
 
       template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;

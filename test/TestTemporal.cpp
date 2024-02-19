@@ -14,16 +14,38 @@ SCENARIO("Temporal flow", "[temporal]") {
    ///                                                                        
    /// The following tests rely on this ontology sequence                     
    const auto HI = "? create Thing(User)"_code.Parse();
+   Logger::Info("HI -> ", HI);
+
    const auto COMMA = "(number? >< number??) or (? Conjunct!4 ??)"_code.Parse();
+   Logger::Info("COMMA -> ", COMMA);
+
    const auto DOT = "? Conjunct!8 ??"_code.Parse();
+   Logger::Info("DOT -> ", DOT);
+
    const auto MY = "?.Thing(User).??"_code.Parse();
-   const auto NAME = "Traits::Name"_code.Parse();
+   Logger::Info("MY -> ", MY);
+
+   const auto NAME = "Name"_code.Parse();
+   Logger::Info("NAME -> ", NAME);
+
    const auto IS = "? = ??"_code.Parse();
+   Logger::Info("IS -> ", IS);
+
    const auto APOSTROPHE_S = "(? = ??) or (?.Thing(Session or User)) or (?.??)"_code.Parse();
+   Logger::Info("APOSTROPHE_S -> ", APOSTROPHE_S);
+
    const auto MAKE = "? create ??"_code.Parse();
+   Logger::Info("MAKE -> ", MAKE);
+
    const auto AA = "single"_code.Parse();
+   Logger::Info("AA -> ", AA);
+
    const auto GAME = "Thing(Universe, Window, Temporal)"_code.Parse();
+   Logger::Info("GAME -> ", GAME);
+
    const auto CALLED = "? create Name(a::text??)"_code.Parse();
+   Logger::Info("CALLED -> ", CALLED);
+
 
    GIVEN("An empty temporal flow") {
       Temporal flow {new Thing {}};

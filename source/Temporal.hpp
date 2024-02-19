@@ -88,11 +88,8 @@ namespace Langulus::Flow
 
       LANGULUS_API(FLOW) Temporal& operator = (Temporal&&) noexcept = default;
 
-      NOD() LANGULUS_API(FLOW)
-      operator Code() const;
-
-      NOD() LANGULUS_API(FLOW)
-      operator Text() const;
+      NOD() LANGULUS_API(FLOW) operator Code() const;
+      NOD() LANGULUS_API(FLOW) operator Text() const;
 
       NOD() LANGULUS_API(FLOW)
       bool operator == (const Temporal&) const;

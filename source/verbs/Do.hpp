@@ -26,6 +26,7 @@ namespace Langulus::Verbs
       LANGULUS(INFO) "Used as a runtime dispatcher of composite types";
 
       using TVerb::TVerb;
+      using TVerb::operator ==;
 
       template<CT::Dense, CT::Data...>
       static constexpr bool AvailableFor() noexcept;
@@ -39,6 +40,7 @@ namespace Langulus::Verbs
    };
 
 } // namespace Langulus::Verbs
+
 
 namespace Langulus::Flow
 {

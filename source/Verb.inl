@@ -9,7 +9,6 @@
 #pragma once
 #include "Verb.hpp"
 #include "Code.inl"
-#include "VerbState.inl"
 #include "verbs/Interpret.inl"
 
 

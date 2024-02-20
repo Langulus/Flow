@@ -47,9 +47,9 @@ namespace Langulus::Flow
    ///                                                                        
    ///   Langulus code container, parser, serializer and deserializer         
    ///                                                                        
-   struct Code : Text {
+   struct Code : A::Code {
       LANGULUS(FILES) "flow";
-      LANGULUS_BASES(Text);
+      LANGULUS_BASES(A::Code);
 
       /// The presence of this structure makes Code a serializer              
       struct SerializationRules : Text::SerializationRules {
@@ -60,11 +60,11 @@ namespace Langulus::Flow
 
       using Operator = SerializationRules::Operator;
 
-      using Text::Text;
-      using Text::operator ==;
+      using A::Code::Code;
+      using A::Code::operator ==;
 
-      LANGULUS_API(FLOW) Code(const Text&);
-      LANGULUS_API(FLOW) Code(Text&&);
+      /*Code(const Text&);
+      Code(Text&&);*/
 
       NOD() LANGULUS_API(FLOW) Any Parse(bool optimize = true) const;
 

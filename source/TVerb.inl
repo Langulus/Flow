@@ -56,17 +56,15 @@ namespace Langulus::Flow
    /// Serialize verb to code                                                 
    TEMPLATE() LANGULUS(INLINED)
    TME()::operator Code() const {
-      Code result;
-      Verb::SerializeVerb<VERB>(result);
-      return result;
+      mVerb = MetaVerbOf<VERB>();
+      return Verb::operator Code();
    }
 
    /// Serialize verb for logger                                              
    TEMPLATE() LANGULUS(INLINED)
    TME()::operator Text() const {
-      Text result;
-      Verb::SerializeVerb<VERB>(result);
-      return result;
+      mVerb = MetaVerbOf<VERB>();
+      return Verb::operator Text();
    }
 
    TEMPLATE() template<CT::Data T1, CT::Data...TN>

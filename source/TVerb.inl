@@ -165,9 +165,9 @@ namespace Langulus::Flow
       return Verb::IsVerb<VERB>(meta);
    }
 
-   TEMPLATE() template<CT::Verb V1, CT::Verb...VN> LANGULUS(INLINED)
+   TEMPLATE() template<CT::Verb V1> LANGULUS(INLINED)
    constexpr bool TME()::IsVerb() const noexcept {
-      return Verb::IsVerb<VERB, V1, VN...>();
+      return Verb::IsVerb<V1, VERB>();
    }
 
    TEMPLATE() LANGULUS(INLINED)

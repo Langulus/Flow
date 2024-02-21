@@ -112,7 +112,7 @@ namespace Langulus::Flow
 
       template<CT::VerbBased = Verb>
       NOD() constexpr bool IsVerb(VMeta) const noexcept;
-      template<CT::VerbBased, CT::Verb, CT::Verb...>
+      template<CT::Verb, CT::VerbBased = Verb>
       NOD() constexpr bool IsVerb() const noexcept;
 
       template<CT::VerbBased = Verb>

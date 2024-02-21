@@ -362,26 +362,21 @@ namespace Langulus::Anyness
 
       // Attempt pointer arithmetic conversion first                    
       try { return As<T>(idx); }
-      catch (...) {}
+      catch (...) { }
 
       // If reached, then pointer arithmetic conversion failed, and we  
-      // need more advanced conversions                                 
+      // need more advanced runtime conversions                         
+      Verbs::Interpret interpreter {MetaOf<T>()};
+      Any context = GetElementResolved(idx);
+      if (Flow::DispatchDeep<false>(context, interpreter))
+         return interpreter->As<T>();
+
       if constexpr (CT::Inner::DescriptorMakable<T>) {
          // If this is reached, we attempt runtime conversion by        
          // invoking descriptor constructor of T, with the desired      
-         // element, as descriptor                                      
+         // element, as descriptor. This is generally the slowest path  
          try { return T {Describe(GetElement(idx))}; }
          catch (...) {}
-      }
-
-      // Alternatively, we attempt runtime conversion by                
-      // dispatching Verbs::Interpret to the indicated element          
-      const auto meta = MetaOf<T>();
-      Verbs::Interpret interpreter {meta};
-      Any context = GetElementResolved(idx);
-      if (Flow::DispatchDeep<false>(context, interpreter)) {
-         // Success                                                     
-         return interpreter->As<T>();
       }
 
       // Failure if reached                                             

@@ -111,7 +111,9 @@ namespace Langulus::Flow
    ///   @return the hash of the content                                      
    template<CT::VerbBased THIS> LANGULUS(INLINED)
    Hash Verb::GetHash() const {
-      return HashOf(GetVerb<THIS>()->mHash, mSource, GetArgument(), mOutput);
+      if constexpr (CT::Verb<THIS>)
+         (void) GetVerb<THIS>();
+      return A::Verb::GetHash();
    }
 
    /// Multiply verb mass                                                     
@@ -187,16 +189,15 @@ namespace Langulus::Flow
       return *reinterpret_cast<THIS*>(this);
    }
 
-   /// Check if verb is matches one of the provided verb types                
-   ///   @tparam V1, VN... - the verbs to compare against                     
-   ///   @return true if at least one verb matches                            
-   template<CT::VerbBased THIS, CT::Verb V1, CT::Verb...VN> LANGULUS(INLINED)
+   /// Check if verb is matches the provided V1                               
+   ///   @tparam V1 - the verb to compare against                             
+   ///   @return true if verb matches                                         
+   template<CT::Verb V1, CT::VerbBased THIS> LANGULUS(INLINED)
    constexpr bool Verb::IsVerb() const noexcept {
       if constexpr (CT::Verb<THIS>)
-         return CT::Same<V1, THIS> or (CT::Same<VN, THIS> or ...);
+         return CT::Same<V1, THIS>;
       else
-         return mVerb == MetaVerbOf<V1>()
-           or ((mVerb == MetaVerbOf<VN>()) or ...);
+         return mVerb == MetaVerbOf<V1>();
    }
 
    /// Get the verb id                                                        
@@ -546,7 +547,7 @@ namespace Langulus::Flow
             // Scan for a reflected converter as statically as possible 
             toMeta = MetaDataOf<typename V::Type>();
          }
-         else if (verb.template IsVerb<V, Verbs::Interpret>()) {
+         else if (verb.template IsVerb<Verbs::Interpret>()) {
             // Scan for a reflected converter by scanning argument      
             toMeta = verb.template As<DMeta>();
          }
@@ -564,7 +565,7 @@ namespace Langulus::Flow
 
          // Scan for any other runtime ability                          
          const auto foundAbility = fromMeta->template
-            GetAbility<CT::Mutable<T>>(verb.mVerb, verb.GetType());
+            GetAbility<CT::Mutable<T>>(verb.GetVerb(), verb.GetType());
          if (not foundAbility)
             return false;
 

@@ -24,10 +24,12 @@ namespace Langulus::Flow
          using S = SemanticOf<decltype(t1)>;
          using T = TypeOf<S>;
 
-         if constexpr (CT::VerbBased<T>)
+         if constexpr (CT::VerbBased<T>) {
+            // Make sure the VMeta is initialized                       
+            (void) DesemCast(t1).GetVerb();
             new (this) A::Verb {S::Nest(t1).template Forward<A::Verb>()};
-         else
-            Any::operator = (Forward<T1>(t1));
+         }
+         else Any::operator = (Forward<T1>(t1));
       }
       else Any::Insert(IndexBack, Forward<T1>(t1), Forward<TN>(tn)...);
    }
@@ -40,10 +42,12 @@ namespace Langulus::Flow
       using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
-      if constexpr (CT::VerbBased<T>)
+      if constexpr (CT::VerbBased<T>) {
+         // Make sure the VMeta is initialized                          
+         (void) DesemCast(rhs).GetVerb();
          A::Verb::operator = (S::Nest(rhs).template Forward<A::Verb>());
-      else
-         Any::operator = (S::Nest(rhs));
+      }
+      else Any::operator = (S::Nest(rhs));
       return *this;
    }
 

@@ -87,7 +87,7 @@ namespace Langulus::Flow
       ///                                                                     
       NOD() constexpr Token GetToken() const;
       NOD() constexpr bool  IsVerb(VMeta) const noexcept;
-      template<CT::Verb, CT::Verb...>
+      template<CT::Verb>
       NOD() constexpr bool  IsVerb() const noexcept;
       NOD() constexpr VMeta GetVerb() const noexcept;
 

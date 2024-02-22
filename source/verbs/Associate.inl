@@ -78,10 +78,10 @@ namespace Langulus::Verbs
          // Can't associate unrelated types                             
          return false;
 
-      // Attempt directly copying, if possible                          
+      // Attempt directly refering, if possible                         
       // This will happen only if types are exactly the same            
       // This is a default (fallback) routine, let's keep things simple 
-      try { lhs.AssignSemantic(Copy(rhs)); }
+      try { lhs.AssignSemantic(Refer(rhs)); }
       catch (...) { return false; }
 
       // At this point, context has a copy of verb's argument           

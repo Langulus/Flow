@@ -63,9 +63,6 @@ namespace Langulus::Flow
       using A::Code::Code;
       using A::Code::operator ==;
 
-      /*Code(const Text&);
-      Code(Text&&);*/
-
       NOD() LANGULUS_API(FLOW) Any Parse(bool optimize = true) const;
 
       NOD() LANGULUS_API(FLOW) Code RightOf(Offset) const;

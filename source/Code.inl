@@ -13,18 +13,6 @@
 namespace Langulus::Flow
 {
 
-   /// Copy-constructor from Text                                             
-   ///   @param other - the Text container to shallow-copy                    
-   /*LANGULUS(INLINED)
-   Code::Code(const Text& other)
-      : A::Code {other} { }
-
-   /// Move-constructor from Text                                             
-   ///   @param other - the Text container to move                            
-   LANGULUS(INLINED)
-   Code::Code(Text&& other)
-      : A::Code {Forward<Text>(other)} { }*/
-
    /// Remove elements from the left side of Code code                        
    ///   @param offset - the number of elements to discard from the front     
    ///   @return a shallow-copied container with the correct offset           

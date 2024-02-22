@@ -348,7 +348,7 @@ namespace Langulus::Flow
                // Parse charge for the keyword                          
                Charge charge;
                progress += ChargeParser::Parse(relevant, charge);
-               lhs << Construct {dmeta, {}, charge};
+               lhs << Construct {dmeta, Any {}, charge};
             }
             else lhs << dmeta;
          }
@@ -383,7 +383,7 @@ namespace Langulus::Flow
                   // Parse charge for the keyword                       
                   Charge charge;
                   progress += ChargeParser::Parse(relevant, charge);
-                  lhs << Construct {dmeta, {}, charge};
+                  lhs << Construct {dmeta, Any {}, charge};
                }
                else lhs << dmeta;
             }

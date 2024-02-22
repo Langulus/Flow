@@ -19,7 +19,7 @@ namespace Langulus::Flow
 
    TEMPLATE() LANGULUS(INLINED)
    TME()::TVerb(const TVerb& other)
-      : Verb {Copy(other)} {}
+      : Verb {Refer(other)} {}
 
    TEMPLATE() LANGULUS(INLINED)
    TME()::TVerb(TVerb&& other)
@@ -43,7 +43,7 @@ namespace Langulus::Flow
 
    TEMPLATE() LANGULUS(INLINED)
    TME()& TME()::operator = (const TVerb& rhs) {
-      Verb::operator = (Copy(rhs));
+      Verb::operator = (Refer(rhs));
       return *this;
    }
 

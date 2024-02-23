@@ -82,8 +82,9 @@ namespace Langulus::Flow
       Temporal(const Temporal&) = delete;
       Temporal& operator = (const Temporal&) = delete;
 
+      LANGULUS_API(FLOW) Temporal();
       LANGULUS_API(FLOW) Temporal(Temporal*, const State&);
-      LANGULUS_API(FLOW) Temporal(const Any& environment = {});
+      //LANGULUS_API(FLOW) Temporal(const Any& environment = {});
       LANGULUS_API(FLOW) Temporal(Temporal&&) noexcept = default;
 
       LANGULUS_API(FLOW) Temporal& operator = (Temporal&&) noexcept = default;

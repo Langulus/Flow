@@ -48,7 +48,7 @@ SCENARIO("Temporal flow", "[temporal]") {
 
 
    GIVEN("An empty temporal flow") {
-      Temporal flow {new Thing {}};
+      Temporal flow;// {new Thing {}};
 
       WHEN("Code is pushed to the flow") {
          flow.Push(HI);

@@ -24,10 +24,16 @@ namespace Langulus::Flow
 
    /// Default constructor, add the initial missing future point              
    ///   @param environment - the initial flow environment                    
-   Temporal::Temporal(const Any& environment) {
-      mEnvironment = environment;
+   Temporal::Temporal() {
       mPriorityStack << Inner::MissingFuture {};
    }
+   
+   /// Default constructor, add the initial missing future point              
+   ///   @param environment - the initial flow environment                    
+   /*Temporal::Temporal(const Any& environment) {
+      mEnvironment = environment;
+      mPriorityStack << Inner::MissingFuture {};
+   }*/
 
    /// Construct as a sub-flow                                                
    ///   @attention assumes parent is a valid pointer                         

@@ -16,56 +16,6 @@
 namespace Langulus::Flow
 {
 
-   /// Move a produced item                                                   
-   ///   @param other - the item to move                                      
-   template<class T> LANGULUS(INLINED)
-   ProducedFrom<T>::ProducedFrom(ProducedFrom&& other)
-      : ProducedFrom {Move(other)} {}
-
-   /// Semantic construction                                                  
-   ///   @param other - semantic and element to initialize with               
-   template<class T> template<template<class> class S>
-   requires CT::Semantic<S<Neat>> LANGULUS(INLINED)
-   ProducedFrom<T>::ProducedFrom(S<ProducedFrom<T>>&& other)
-      // mProducer intentionally not overwritten                        
-      : mDescriptor {S<Neat> {other->mDescriptor}} {}
-
-   /// Construct a produced item                                              
-   ///   @param producer - the item's producer                                
-   ///   @param neat - the item's neat descriptor                             
-   template<class T> LANGULUS(INLINED)
-   ProducedFrom<T>::ProducedFrom(T* producer, const Neat& neat)
-      : mDescriptor {neat}
-      , mProducer {producer} {
-      LANGULUS_ASSUME(DevAssumes, producer, "Invalid producer");
-      // Remove parents, as they're ignored on hashing and comparison   
-      // - they can create circular dependencies, that we best avoid    
-      mDescriptor.RemoveTrait<Traits::Parent, true>();
-   }
-
-   /// Get the normalized descriptor of the produced item                     
-   ///   @return the normalized descriptor                                    
-   template<class T> LANGULUS(INLINED)
-   const Neat& ProducedFrom<T>::GetNeat() const noexcept {
-      return mDescriptor;
-   }
-
-   /// Get the hash of the normalized descriptor (cached and efficient)       
-   ///   @return the hash                                                     
-   template<class T> LANGULUS(INLINED)
-   Hash ProducedFrom<T>::GetHash() const noexcept {
-      return mDescriptor.GetHash();
-   }
-
-   /// Return the producer of the item (a.k.a. the owner of the factory)      
-   ///   @return a pointer to the producer instance                           
-   template<class T> LANGULUS(INLINED)
-   T* ProducedFrom<T>::GetProducer() const noexcept {
-      return mProducer;
-   }
-
-
-
    /// Construction of a factory                                              
    ///   @param owner - the factory owner                                     
    TEMPLATE() LANGULUS(INLINED)
@@ -296,6 +246,57 @@ namespace Langulus::Flow
 
       // Destroy the element                                            
       Base::Destroy(item);
+   }
+   
+
+
+
+   /// Move a produced item                                                   
+   ///   @param other - the item to move                                      
+   template<class T> LANGULUS(INLINED)
+   ProducedFrom<T>::ProducedFrom(ProducedFrom&& other)
+      : ProducedFrom {Move(other)} {}
+
+   /// Semantic construction                                                  
+   ///   @param other - semantic and element to initialize with               
+   template<class T> template<template<class> class S>
+   requires CT::Semantic<S<Neat>> LANGULUS(INLINED)
+   ProducedFrom<T>::ProducedFrom(S<ProducedFrom<T>>&& other)
+      // mProducer intentionally not overwritten                        
+      : mDescriptor {S<Neat> {other->mDescriptor}} {}
+
+   /// Construct a produced item                                              
+   ///   @param producer - the item's producer                                
+   ///   @param neat - the item's neat descriptor                             
+   template<class T> LANGULUS(INLINED)
+   ProducedFrom<T>::ProducedFrom(T* producer, const Neat& neat)
+      : mDescriptor {neat}
+      , mProducer {producer} {
+      LANGULUS_ASSUME(DevAssumes, producer, "Invalid producer");
+      // Remove parents, as they're ignored on hashing and comparison   
+      // - they can create circular dependencies, that we best avoid    
+      mDescriptor.RemoveTrait<Traits::Parent, true>();
+   }
+
+   /// Get the normalized descriptor of the produced item                     
+   ///   @return the normalized descriptor                                    
+   template<class T> LANGULUS(INLINED)
+   const Neat& ProducedFrom<T>::GetNeat() const noexcept {
+      return mDescriptor;
+   }
+
+   /// Get the hash of the normalized descriptor (cached and efficient)       
+   ///   @return the hash                                                     
+   template<class T> LANGULUS(INLINED)
+   Hash ProducedFrom<T>::GetHash() const noexcept {
+      return mDescriptor.GetHash();
+   }
+
+   /// Return the producer of the item (a.k.a. the owner of the factory)      
+   ///   @return a pointer to the producer instance                           
+   template<class T> LANGULUS(INLINED)
+   T* ProducedFrom<T>::GetProducer() const noexcept {
+      return mProducer;
    }
 
 } // namespace Langulus::Flow

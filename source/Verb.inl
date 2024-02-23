@@ -595,12 +595,16 @@ namespace Langulus::Flow
       }
       else {
          // Execute appropriate default routine by RTTI                 
-         if (verb.mVerb->mDefaultInvocationMutable) {
-            verb.mVerb->mDefaultInvocationMutable(context, verb);
+         const auto vmeta = verb.GetVerb();
+         if (not vmeta)
+            return false;
+
+         if (vmeta->mDefaultInvocationMutable) {
+            vmeta->mDefaultInvocationMutable(context, verb);
             return verb.IsDone();
          }
-         else if (verb.mVerb->mDefaultInvocationConstant) {
-            verb.mVerb->mDefaultInvocationConstant(context, verb);
+         else if (vmeta->mDefaultInvocationConstant) {
+            vmeta->mDefaultInvocationConstant(context, verb);
             return verb.IsDone();
          }
          else return false;
@@ -627,8 +631,12 @@ namespace Langulus::Flow
       }
       else {
          // Execute appropriate default routine by RTTI                 
-         if (verb.mVerb->mDefaultInvocationConstant) {
-            verb.mVerb->mDefaultInvocationConstant(context, verb);
+         const auto vmeta = verb.GetVerb();
+         if (not vmeta)
+            return false;
+
+         if (vmeta->mDefaultInvocationConstant) {
+            vmeta->mDefaultInvocationConstant(context, verb);
             return verb.IsDone();
          }
          else return false;
@@ -652,8 +660,12 @@ namespace Langulus::Flow
       }
       else {
          // Execute appropriate stateless routine by RTTI               
-         if (verb.mVerb->mStatelessInvocation) {
-            verb.mVerb->mStatelessInvocation(verb);
+         const auto vmeta = verb.GetVerb();
+         if (not vmeta)
+            return false;
+
+         if (vmeta->mStatelessInvocation) {
+            vmeta->mStatelessInvocation(verb);
             return verb.IsDone();
          }
          else return false;

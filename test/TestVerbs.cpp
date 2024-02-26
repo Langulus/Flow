@@ -11,6 +11,8 @@
 
 
 SCENARIO("Text capsulation in verbs", "[verbs]") {
+   static Allocator::State memoryState;
+
    GIVEN("A templated utf8 text container") {
       Text text = "tests";
 
@@ -71,4 +73,6 @@ SCENARIO("Text capsulation in verbs", "[verbs]") {
          REQUIRE(toText == ".");
       }
    }
+
+   REQUIRE(memoryState.Assert());
 }

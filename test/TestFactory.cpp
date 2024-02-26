@@ -12,6 +12,8 @@
 
 
 SCENARIO("Test factories", "[factory]") {
+   static Allocator::State memoryState;
+
 	Producer producer;
 
 	GIVEN("A factory with default usage") {
@@ -112,4 +114,6 @@ SCENARIO("Test factories", "[factory]") {
 			REQUIRE(factory.mHashmap[hash][0] == &factory.mFrames[0].GetRaw()[0]);
 		}
 	}
+
+   REQUIRE(memoryState.Assert());
 }

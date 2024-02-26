@@ -17,6 +17,8 @@
 
 
 SCENARIO("Parsing scripts with corner cases", "[flow]") {
+   static Allocator::State memoryState;
+
    static_assert(CT::Complete<Temporal>);
 
    Any pastMissing;
@@ -524,4 +526,6 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
          REQUIRE(parsed == required);
       }
    }
+
+   REQUIRE(memoryState.Assert());
 }

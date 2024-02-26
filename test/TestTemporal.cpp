@@ -11,6 +11,8 @@
 
 
 SCENARIO("Temporal flow", "[temporal]") {
+   static Allocator::State memoryState;
+
    ///                                                                        
    /// The following tests rely on this ontology sequence                     
    const auto HI = "? create Thing(User)"_code.Parse();
@@ -78,4 +80,6 @@ SCENARIO("Temporal flow", "[temporal]") {
          flow.Push(GAME);
       }
    }
+
+   REQUIRE(memoryState.Assert());
 }

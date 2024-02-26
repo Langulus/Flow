@@ -13,6 +13,8 @@ constexpr Count SerialBlock = sizeof(Count) * 2 + sizeof(DataState);
 
 
 SCENARIO("Serialization", "[serialization]") {
+   static Allocator::State memoryState;
+
 	GIVEN("An empty Any instance") {
 		Any pack;
 
@@ -160,4 +162,6 @@ SCENARIO("Serialization", "[serialization]") {
 			#endif
 		}
 	}
+
+   REQUIRE(memoryState.Assert());
 }

@@ -43,10 +43,12 @@ SCENARIO("Test factories", "[factory]") {
 
 			REQUIRE(out1.GetCount() == 1);
 			REQUIRE(out1.IsExact<Producible*>());
+			REQUIRE(out1.As<Producible*>()->GetReferences() == 1);
 			REQUIRE(out1.IsSparse());
 			REQUIRE(out2.GetCount() == 1);
 			REQUIRE(out2.IsExact<Producible*>());
-			REQUIRE(out2.IsSparse());
+         REQUIRE(out2.As<Producible*>()->GetReferences() == 1);
+         REQUIRE(out2.IsSparse());
 
          REQUIRE(factory.mReusable == factory.mFrames[0].GetRaw() + 2);
          REQUIRE(factory.mHashmap.GetCount() == 1);

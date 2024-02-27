@@ -63,7 +63,13 @@ namespace Langulus
       using Base::duration;
       using Base::operator +;
 
-      constexpr Time() noexcept;
+      constexpr Time() noexcept
+         : duration {zero()} {
+         using Representation = typename Base::rep;
+         static_assert(sizeof(Representation) == sizeof(Time),
+            "Size mismatch");
+      }
+
       constexpr Time(const duration&) noexcept;
       Time(Describe&&);
 

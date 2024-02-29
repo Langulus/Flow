@@ -35,28 +35,11 @@ namespace Langulus
       return *this != min();
    }
 
-   /// Default time duration construction, defaults to zero                   
-   /*LANGULUS(INLINED)
-   constexpr Time::Time() noexcept
-      : duration {zero()} {
-      using Representation = typename Base::rep;
-      static_assert(sizeof(Representation) == sizeof(Time),
-         "Size mismatch");
-   }*/
-
    /// Copy-construction                                                      
    ///   @param a - duration to copy                                          
    LANGULUS(INLINED)
    constexpr Time::Time(const duration& a) noexcept
       : duration {a} {}
-
-   /// Descriptor-construction                                                
-   ///   @param a - descriptor to scan for relevant data                      
-   LANGULUS(INLINED)
-   Time::Time(Describe&&)
-      : duration {zero()} {
-      TODO();
-   }
 
    /// Check if time duration is anything but zero                            
    ///   @return true if not zero                                             

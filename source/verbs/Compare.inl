@@ -19,7 +19,7 @@ namespace Langulus::Verbs
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
    template<CT::Dense T, CT::Data...A>
-   constexpr bool Compare::AvailableFor() noexcept {
+   consteval bool Compare::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0) {
          return requires (const T& t, Verb& v) { t.Compare(v); }
              or requires (const T& t) { {t == t} -> CT::Bool; }
@@ -45,15 +45,15 @@ namespace Langulus::Verbs
    /// Get the verb functor for the given type and arguments                  
    ///   @return the function, or nullptr if not available                    
    template<CT::Dense T, CT::Data...A>
-   constexpr auto Compare::Of() noexcept {
+   consteval auto Compare::Of() noexcept {
       if constexpr (CT::Constant<T>) {
-         return [](const void* context, Flow::Verb& verb, A... args) {
+         return [](const void* context, Flow::Verb& verb, A...args) {
             auto typedContext = static_cast<const T*>(context);
             typedContext->Compare(verb, args...);
          };
       }
       else {
-         return [](void* context, Flow::Verb& verb, A... args) {
+         return [](void* context, Flow::Verb& verb, A...args) {
             auto typedContext = static_cast<T*>(context);
             typedContext->Compare(verb, args...);
          };

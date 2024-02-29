@@ -29,9 +29,9 @@ namespace Langulus::Verbs
       using TVerb::operator ==;
 
       template<CT::Dense, CT::Data...>
-      static constexpr bool AvailableFor() noexcept;
+      static consteval bool AvailableFor() noexcept;
       template<CT::Dense, CT::Data...>
-      static constexpr auto Of() noexcept;
+      static consteval auto Of() noexcept;
 
       static bool ExecuteIn(CT::Dense auto&, Verb&);
       static bool ExecuteDefault(const Block&, Verb&);
@@ -48,7 +48,7 @@ namespace Langulus::Flow
    template<bool DISPATCH, bool DEFAULT, bool FALLBACK>
    Count Execute(CT::Data auto&, CT::VerbBased auto&);
 
-   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class... BASES>
+   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class...BASES>
    Count ExecuteInBases(CT::Data auto&, CT::VerbBased auto&, Types<BASES...>);
 
    namespace Inner

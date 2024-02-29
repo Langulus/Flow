@@ -71,7 +71,6 @@ namespace Langulus
       }
 
       constexpr Time(const duration&) noexcept;
-      Time(Describe&&);
 
       constexpr explicit operator bool() const noexcept;
 

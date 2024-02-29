@@ -6,6 +6,7 @@
 /// Distributed under GNU General Public License v3+                          
 /// See LICENSE file, or https://www.gnu.org/licenses                         
 ///                                                                           
+#include <Anyness/Serial.hpp>
 #include <Flow/Verbs/Interpret.hpp>
 #include "Common.hpp"
 

@@ -8,6 +8,7 @@
 ///                                                                           
 #include <Flow/Verbs/Create.hpp>
 #include <Flow/Verbs/Interpret.hpp>
+#include <Flow/Factory.hpp>
 #include "Common.hpp"
 
 

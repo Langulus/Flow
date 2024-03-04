@@ -17,7 +17,7 @@ namespace Langulus::Verbs
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
    template<CT::Dense T, CT::Data...A>
-   consteval bool Do::AvailableFor() noexcept {
+   constexpr bool Do::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Do(v); };
       else
@@ -27,7 +27,7 @@ namespace Langulus::Verbs
    /// Get the verb functor for the given type and arguments                  
    ///   @return the function, or nullptr if not available                    
    template<CT::Dense T, CT::Data...A>
-   consteval auto Do::Of() noexcept {
+   constexpr auto Do::Of() noexcept {
       if constexpr (CT::Constant<T>) {
          return [](const void* context, Flow::Verb& verb, A...args) {
             auto typedContext = static_cast<const T*>(context);
@@ -353,14 +353,16 @@ namespace Langulus::Anyness
 
    /// Execute a verb for all elements inside a type-erased constant block    
    ///   @param verb - the verb to execute                                    
-   inline void Block::Run(Flow::Verb& verb) const {
+   inline Flow::Verb& Block::Run(Flow::Verb& verb) const {
       DispatchDeep(reinterpret_cast<const Any&>(*this), verb);
+      return verb;
    }
 
    /// Execute a verb for all elements inside a type-erased block             
    ///   @param verb - the verb to execute                                    
-   inline void Block::Run(Flow::Verb& verb) {
+   inline Flow::Verb& Block::Run(Flow::Verb& verb) {
       DispatchDeep(reinterpret_cast<Any&>(*this), verb);
+      return verb;
    }
 
 } // namespace Langulus::Anyness

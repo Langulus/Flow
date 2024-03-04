@@ -71,9 +71,9 @@ namespace Langulus::Flow
    TEMPLATE() LANGULUS(INLINED)
    typename FACTORY()::Cell* FACTORY()::Find(const Neat& descriptor) const {
       const auto hash = descriptor.GetHash();
-      const auto found = mHashmap.Find(hash);
+      const auto found = mHashmap.FindIt(hash);
       if (found) {
-         for (auto cell : mHashmap.GetValue(found)) {
+         for (auto cell : *found.mValue) {
             if (cell->mData.GetNeat() != descriptor)
                continue;
             return cell;
@@ -275,9 +275,15 @@ namespace Langulus::Flow
       LANGULUS_ASSUME(DevAssumes, producer, "Invalid producer");
       // Remove parents, as they're ignored on hashing and comparison   
       // - they can create circular dependencies, that we best avoid    
-      mDescriptor.RemoveTrait<Traits::Parent, true>();
+      //mDescriptor.RemoveTrait<Traits::Parent, true>();
    }
 
+   /// Reset the descriptor to remove circular dependencies                   
+   template<class T> LANGULUS(INLINED)
+   void ProducedFrom<T>::Detach() {
+      return mDescriptor.Reset();
+   }
+   
    /// Get the normalized descriptor of the produced item                     
    ///   @return the normalized descriptor                                    
    template<class T> LANGULUS(INLINED)

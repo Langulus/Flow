@@ -85,19 +85,18 @@ namespace Langulus::Flow
    ///   @tparam DISPATCH - whether to allow custom dispatchers               
    ///   @tparam DEFAULT - whether to allow default/stateless verbs on fail   
    ///   @param verb - the verb to execute in this resolved type              
-   ///   @return a reference to the verb's output                             
+   ///   @attention unlike other Run methods, this one outputs into the verb  
    template<bool DISPATCH, bool DEFAULT> LANGULUS(INLINED)
-   Any Resolvable::Run(CT::VerbBased auto&& verb) {
+   auto& Resolvable::Run(CT::VerbBased auto&& verb) {
+      static_assert(CT::Mutable<Deref<decltype(verb)>>);
       auto environment = GetBlock();
-      if constexpr (CT::Mutable<Deref<decltype(verb)>>) {
+      //if constexpr (CT::Mutable<Deref<decltype(verb)>>)
          DispatchFlat<false, DISPATCH, DEFAULT>(environment, verb);
-         return Abandon(verb.GetOutput());
-      }
-      else {
+      /*else {
          auto moved = Move(verb);
          DispatchFlat<false, DISPATCH, DEFAULT>(environment, moved);
-         return Abandon(moved.GetOutput());
-      }
+      }*/
+      return verb;
    }
 
    /// Get Nth reflected member by trait definition                           

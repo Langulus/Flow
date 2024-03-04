@@ -103,6 +103,11 @@ namespace Langulus::Flow
    ///                                                                        
    ///   An element, that is factory produced (used as CRTP)                  
    ///                                                                        
+   /// Saves the descriptor by which the item was made with, in order to      
+   /// compare creation requests                                              
+   ///   @attention mDerscriptor is known to cause circular dependencies, so  
+   ///      it will be reset the moment owning TFactory is destroyed          
+   ///                                                                        
    template<class T>
    class ProducedFrom {
       LANGULUS(PRODUCER) T;
@@ -123,6 +128,7 @@ namespace Langulus::Flow
       requires CT::Semantic<S<Neat>>
       ProducedFrom(S<ProducedFrom>&&);
 
+      void Detach();
       const Neat& GetNeat() const noexcept;
       Hash GetHash() const noexcept;
       T* GetProducer() const noexcept;

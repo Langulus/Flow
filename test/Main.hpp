@@ -22,7 +22,9 @@ struct Thing : Resolvable {
    LANGULUS_BASES(Resolvable);
    Thing() : Resolvable(MetaOf<Thing>()) {}
    Thing(DMeta type) : Resolvable(type) {}
-   virtual ~Thing() = default;
+   virtual ~Thing() {
+      Reference(-1);
+   }
 
    virtual void Update() {}
 
@@ -84,12 +86,16 @@ struct Session : Resolvable {
 };*/
 
 /// A mockup of a producer                                                    
-struct Producer {};
+struct Producer : Referenced {};
 
 /// A mockup of a producible                                                  
 struct Producible : Referenced, ProducedFrom<Producer> {
    Producible(Producer* producer, const Neat& neat = {})
       : ProducedFrom {producer, neat} {}
+
+   ~Producible() {
+      Logger::Special("Destroying Producible");
+   }
 
    /*Producible(Abandoned<Producible>&& other)
       : ProducedFrom(other.Forward<ProducedFrom>()) {}*/

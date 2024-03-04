@@ -9,7 +9,6 @@
 #pragma once
 #include "Verb.hpp"
 #include "Temporal.hpp"
-#include <Anyness/Referenced.hpp>
 
 
 namespace Langulus::Flow
@@ -54,7 +53,7 @@ namespace Langulus::Flow
       NOD() Block GetBlock() const noexcept;
 
       template<bool DISPATCH = true, bool DEFAULT = true>
-      Any Run(CT::VerbBased auto&&);
+      auto& Run(CT::VerbBased auto&&);
 
       Any Run(const Code&);
       Any Run(const Any&);

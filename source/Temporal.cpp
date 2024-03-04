@@ -162,7 +162,7 @@ namespace Langulus::Flow
             };
 
             //TODO make this more elegant
-            Ptr<Temporal> newt;
+            Ref<Temporal> newt;
             newt.New(this, state);
             mTimeStack.Insert(pair.mKey, newt.Get());
          }
@@ -180,7 +180,7 @@ namespace Langulus::Flow
                pair.mKey
             };
 
-            Ptr<Temporal> newt;
+            Ref<Temporal> newt;
             newt.New(this, state);
             mFrequencyStack.Insert(pair.mKey, newt.Get());
          }

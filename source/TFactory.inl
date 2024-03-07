@@ -97,15 +97,7 @@ namespace Langulus::Flow
                ::std::floor(construct.GetCharge().mMass * verb.GetMass())
             );
 
-            try { CreateInner(verb, count, construct.GetDescriptor()); }
-            catch (const Exception& e) {
-               Logger::Error(
-                  "Unable to ", MetaOf<FACTORY()>(), "::Create `", Logger::Push,
-                  Logger::DarkYellow, construct.GetType(), Logger::Pop, '`'
-               );
-               Logger::Error("Due to exception: ", e);
-               return;
-            }
+            CreateInner(verb, count, construct.GetDescriptor());
          },
          [&](const DMeta& type) {
             // For each type...                                         
@@ -116,15 +108,7 @@ namespace Langulus::Flow
                ::std::floor(verb.GetMass())
             );
 
-            try { CreateInner(verb, count); }
-            catch (const Exception& e) {
-               Logger::Error(
-                  "Unable to ", MetaOf<FACTORY()>(), "::Create `", Logger::Push,
-                  Logger::DarkYellow, type, Logger::Pop, '`'
-               );
-               Logger::Error("Due to exception: ", e);
-               return;
-            }
+            CreateInner(verb, count);
          }
       );
    }
@@ -222,6 +206,9 @@ namespace Langulus::Flow
    T* FACTORY()::Produce(const Neat& neat) {
       // Register entry in the hashmap, for fast search by descriptor   
       auto result = Base::NewInner(mFactoryOwner, neat);
+      if (not result)
+         return nullptr;
+
       const auto hash = result->mData.GetHash();
       const auto found = mHashmap.FindIt(hash);
       if (found)
@@ -273,9 +260,6 @@ namespace Langulus::Flow
       : mDescriptor {neat}
       , mProducer {producer} {
       LANGULUS_ASSUME(DevAssumes, producer, "Invalid producer");
-      // Remove parents, as they're ignored on hashing and comparison   
-      // - they can create circular dependencies, that we best avoid    
-      //mDescriptor.RemoveTrait<Traits::Parent, true>();
    }
 
    /// Reset the descriptor to remove circular dependencies                   

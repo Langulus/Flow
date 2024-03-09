@@ -679,5 +679,23 @@ namespace Langulus::Flow
       SerializeVerb(result);
       return result;
    }
+   
+   /// Execute a verb in the resulting output of this one                     
+   ///   @param verb - the verb to execute                                    
+   ///   @return a reference to the new verb                                  
+   template<CT::VerbBased V>
+   V& Verb::Then(V& verb) const {
+      DispatchDeep(mOutput, verb);
+      return verb;
+   }
+
+   /// Execute a verb in the resulting output of this one                     
+   ///   @param verb - the verb to execute                                    
+   ///   @return a reference to the new verb                                  
+   template<CT::VerbBased V>
+   V& Verb::Then(V& verb) {
+      DispatchDeep(mOutput, verb);
+      return verb;
+   }
 
 } // namespace Langulus::Flow

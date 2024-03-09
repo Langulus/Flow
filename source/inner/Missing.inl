@@ -232,7 +232,7 @@ namespace Langulus::Flow::Inner
             try {
                result << Construct {
                   construct.GetType(), 
-                  Link(construct.GetDescriptor().MakeMessy(), environment, consumedPast) //TODO MakeMessy is slow, probably a specialized Link would be better
+                  Link(construct.GetDescriptor(), environment, consumedPast)
                };
             }
             catch (const Except::Link&) {
@@ -303,6 +303,50 @@ namespace Langulus::Flow::Inner
 
       if (result.GetCount() < 2)
          result.MakeAnd();
+      return Abandon(result);
+   }
+
+   /// Links the missing past points of the provided Neat, using mContent as  
+   /// the past, and returns a viable overwrite for mContent                  
+   ///   @attention assumes argument is a valid scope                         
+   ///   @param neat - the Neat to link                                       
+   ///   @param environment - a fallback past provided by Temporal            
+   ///   @param consumedPast - [out] set to true if anythingin this point has 
+   ///      been used in any scope missing past                               
+   ///   @return the linked equivalent to the provided Neat                   
+   Any Missing::Link(const Neat& neat, const Block& environment, bool& consumedPast) const {
+      Neat result;
+      neat.ForEachTrait([&](const Trait& trait) {
+         try {
+            result << Trait::From(
+               trait.GetTrait(),
+               Link(trait, environment, consumedPast)
+            );
+         }
+         catch (const Except::Link&) {
+            VERBOSE_MISSING_POINT(Logger::DarkYellow,
+               "Skipped branch: ", trait);
+         }
+      });
+
+      neat.ForEachConstruct([&](const Construct& construct) {
+         try {
+            result << Construct {
+               construct.GetType(),
+               Link(construct.GetDescriptor(), environment, consumedPast)
+            };
+         }
+         catch (const Except::Link&) {
+            VERBOSE_MISSING_POINT(Logger::DarkYellow,
+               "Skipped branch: ", construct);
+         }
+      });
+
+      neat.ForEachTail([&](const Block& group) {
+         // Compile anything else                                       
+         result << Link(group, environment, consumedPast);
+      });
+
       return Abandon(result);
    }
 

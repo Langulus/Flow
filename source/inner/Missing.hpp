@@ -38,6 +38,7 @@ namespace Langulus::Flow::Inner
 
       bool Push(const Any&, const Block& environment);
       Any Link(const Block&, const Block& environment, bool& consumedPast) const;
+      Any Link(const Neat&, const Block& environment, bool& consumedPast) const;
       Any Collapse() const;
 
       // Needs to be implicit, so that its inherited                    

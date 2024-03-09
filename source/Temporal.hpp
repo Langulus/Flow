@@ -72,7 +72,10 @@ namespace Langulus::Flow
 
    protected:
       LANGULUS_API(FLOW) static Any Collapse(const Block&);
+      LANGULUS_API(FLOW) static Any Collapse(const Neat&);
+
       LANGULUS_API(FLOW) static Any Compile(const Block&, Real priority);
+      LANGULUS_API(FLOW) static Any Compile(const Neat&, Real priority);
 
       LANGULUS_API(FLOW) bool Link(const Any&, Block&) const;
       LANGULUS_API(FLOW) bool Link(const Any&, Neat&) const;

@@ -90,12 +90,7 @@ namespace Langulus::Flow
    auto& Resolvable::Run(CT::VerbBased auto&& verb) {
       static_assert(CT::Mutable<Deref<decltype(verb)>>);
       auto environment = GetBlock();
-      //if constexpr (CT::Mutable<Deref<decltype(verb)>>)
-         DispatchFlat<false, DISPATCH, DEFAULT>(environment, verb);
-      /*else {
-         auto moved = Move(verb);
-         DispatchFlat<false, DISPATCH, DEFAULT>(environment, moved);
-      }*/
+      DispatchFlat<false, DISPATCH, DEFAULT>(environment, verb);
       return verb;
    }
 

@@ -156,6 +156,14 @@ namespace Langulus::Flow
       template<bool OR>
       Count CompleteDispatch(Count, Abandoned<Any>&&);
 
+      ///                                                                     
+      ///   Flow                                                              
+      ///                                                                     
+      template<CT::VerbBased V>
+      V& Then(V&) const;
+      template<CT::VerbBased V>
+      V& Then(V&);
+
    private:
       // Functionality graveyard                                        
       using Any::Serialize;

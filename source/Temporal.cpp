@@ -261,7 +261,7 @@ namespace Langulus::Flow
          },
          [&](const Construct& subscope) {
             // Collapse constructs                                      
-            auto collapsed = Collapse(subscope.GetDescriptor().MakeMessy()); //TODO MakeMessy is slow, probably a specialized Collapse would be better
+            auto collapsed = Collapse(subscope.GetDescriptor());
             if (collapsed) {
                result << Construct {
                   subscope.GetType(),
@@ -300,6 +300,15 @@ namespace Langulus::Flow
       if (result.GetCount() < 2)
          result.MakeAnd();
       return Abandon(result);
+   }
+
+   /// This will omit any compile-time junk that remains in the provided      
+   /// scope, so we can execute it conventionally                             
+   ///   @param scope - the scope to collapse                                 
+   ///   @return the collapsed scope                                          
+   Any Temporal::Collapse(const Neat& scope) {
+      TODO();
+      return {};
    }
 
    /// Compiles a scope into an intermediate form, used by the flow           
@@ -343,7 +352,7 @@ namespace Langulus::Flow
             // Compile constructs                                       
             result << Construct {
                subscope.GetType(),
-               Compile(subscope.GetDescriptor().MakeMessy(), priority), //TODO MakeMessy is slow, probably a specialized Compile would be better
+               Compile(subscope.GetDescriptor(), priority),
                subscope.GetCharge()
             };
          },
@@ -359,10 +368,43 @@ namespace Langulus::Flow
          }
       );
 
-      if (!done) {
+      if (not done) {
          // Just propagate content                                      
          result = scope;
       }
+
+      return Abandon(result);
+   }
+
+   /// Compiles a neat descriptor into an intermediate form, used by the flow 
+   ///   @attention assumes argument is a valid scope                         
+   ///   @param neat - the Neat to compile                                    
+   ///   @param priority - the priority to set for any missing point created  
+   ///                     for the provided scope                             
+   ///   @return the compiled scope                                           
+   Any Temporal::Compile(const Neat& neat, Real priority) {
+      Neat result;
+      neat.ForEachTrait([&](const Trait& subscope) {
+         // Compile traits                                              
+         result << Trait::From(
+            subscope.GetTrait(),
+            Compile(subscope, priority)
+         );
+      });
+
+      neat.ForEachConstruct([&](const Construct& subscope) {
+         // Compile constructs                                          
+         result << Construct {
+            subscope.GetType(),
+            Compile(subscope.GetDescriptor(), priority),
+            subscope.GetCharge()
+         };
+      });
+
+      neat.ForEachTail([&](const Block& group) {
+         // Compile anything else                                       
+         result << Compile(group, priority);
+      });
 
       return Abandon(result);
    }

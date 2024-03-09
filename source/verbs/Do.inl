@@ -353,16 +353,18 @@ namespace Langulus::Anyness
 
    /// Execute a verb for all elements inside a type-erased constant block    
    ///   @param verb - the verb to execute                                    
-   inline Flow::Verb& Block::Run(Flow::Verb& verb) const {
+   /*template<CT::VerbBased V>
+   V& Block::Run(V& verb) const {
       DispatchDeep(reinterpret_cast<const Any&>(*this), verb);
       return verb;
    }
 
    /// Execute a verb for all elements inside a type-erased block             
    ///   @param verb - the verb to execute                                    
-   inline Flow::Verb& Block::Run(Flow::Verb& verb) {
+   template<CT::VerbBased V>
+   V& Block::Run(V& verb) {
       DispatchDeep(reinterpret_cast<Any&>(*this), verb);
       return verb;
-   }
+   }*/
 
 } // namespace Langulus::Anyness

@@ -35,12 +35,6 @@ namespace Langulus
       return *this != min();
    }
 
-   /// Copy-construction                                                      
-   ///   @param a - duration to copy                                          
-   LANGULUS(INLINED)
-   constexpr Time::Time(const duration& a) noexcept
-      : duration {a} {}
-
    /// Check if time duration is anything but zero                            
    ///   @return true if not zero                                             
    LANGULUS(INLINED)
@@ -49,8 +43,7 @@ namespace Langulus
    }
 
    /// Get time duration in seconds, represented by type T                    
-   template<CT::DenseBuiltinNumber T>
-   LANGULUS(INLINED)
+   template<CT::DenseBuiltinNumber T> LANGULUS(INLINED)
    T Time::Seconds() const noexcept {
       auto& asBase = static_cast<const Base&>(*this);
       return std::chrono::duration<T>(asBase).count();

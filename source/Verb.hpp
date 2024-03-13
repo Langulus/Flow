@@ -173,3 +173,21 @@ namespace Langulus::Flow
    using Script = TAny<Verb>;
 
 } // namespace Langulus::Flow
+
+namespace Langulus::Verbs
+{
+
+   // These cause hard to debug incomplete type errors, better to avoid 
+   /*struct Associate;
+   struct Catenate;
+   struct Compare;
+   struct Conjunct;
+   struct Create;
+   struct Do;
+   struct Interact;
+   struct Interpret;
+   template<CT::Data AS>
+   struct InterpretAs;
+   struct Select;*/
+
+} // namespace Langulus::Verbs

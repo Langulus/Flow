@@ -70,7 +70,8 @@ namespace Langulus
             "Size mismatch");
       }
 
-      constexpr Time(const duration&) noexcept;
+      constexpr Time(const duration& a) noexcept
+         : duration {a} {}
 
       constexpr explicit operator bool() const noexcept;
 

@@ -306,7 +306,7 @@ namespace Langulus::Flow
    /// scope, so we can execute it conventionally                             
    ///   @param scope - the scope to collapse                                 
    ///   @return the collapsed scope                                          
-   Any Temporal::Collapse(const Neat& scope) {
+   Any Temporal::Collapse(const Neat&) {
       TODO();
       return {};
    }

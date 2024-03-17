@@ -12,6 +12,8 @@
 #define TEMPLATE()   template<class T, FactoryUsage USAGE>
 #define FACTORY()    TFactory<T, USAGE>
 
+#define VERBOSE_FACTORY(...) Logger::Verbose(__VA_ARGS__)
+
 
 namespace Langulus::Flow
 {
@@ -70,6 +72,7 @@ namespace Langulus::Flow
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE() LANGULUS(INLINED)
    typename FACTORY()::Cell* FACTORY()::Find(const Neat& descriptor) const {
+      VERBOSE_FACTORY("Seeking for ", descriptor);
       const auto hash = descriptor.GetHash();
       const auto found = mHashmap.FindIt(hash);
       if (found) {
@@ -205,6 +208,7 @@ namespace Langulus::Flow
    TEMPLATE()
    T* FACTORY()::Produce(const Neat& neat) {
       // Register entry in the hashmap, for fast search by descriptor   
+      VERBOSE_FACTORY("Producing: ", neat);
       auto result = Base::NewInner(mFactoryOwner, neat);
       if (not result)
          return nullptr;

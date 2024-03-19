@@ -16,12 +16,13 @@ namespace Langulus::Flow
    ///                                                                        
    ///   Refresh rates                                                        
    ///                                                                        
-   /// Represents the frequency at which data is computed                     
-   /// Many of these states map onto shader stages                            
+   /// Represents the frequency at which data is recomputed                   
+   /// Many of these rates map onto shader stages                             
    ///                                                                        
    struct RefreshRate {
       LANGULUS(POD) true;
       LANGULUS(NULLIFIABLE) true;
+      LANGULUS(NAME) "Rate";
       LANGULUS(INFO) "Refresh rate";
 
       using Type = uint8_t;
@@ -124,7 +125,5 @@ namespace Langulus::Flow
          return static_cast<Enum>(mMode);
       }
    };
-
-   using Rate = RefreshRate;
 
 } // namespace Langulus::Flow

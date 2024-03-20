@@ -158,11 +158,22 @@ namespace Langulus::Flow
    ///   @param other - the verb to use as base                               
    ///   @return the partially copied verb                                    
    template<CT::VerbBased THIS> LANGULUS(INLINED)
-   THIS Verb::PartialCopy() const noexcept {
-      if constexpr (CT::Verb<THIS>)
-         return THIS::From(GetCharge(), mState);
-      else
-         return THIS::FromMeta(mVerb, GetCharge(), mState);
+   THIS Verb::Fork(auto&&...args) const noexcept {
+      if constexpr (CT::Verb<THIS>) {
+         return THIS::From(
+            Any {Forward<Deref<decltype(args)>>(args)...},
+            GetCharge(),
+            mState
+         );
+      }
+      else {
+         return THIS::FromMeta(
+            mVerb,
+            Any {Forward<Deref<decltype(args)>>(args)...},
+            GetCharge(),
+            mState
+         );
+      }
    }
 
    /// Change the verb's circuitry                                            

@@ -37,8 +37,8 @@ namespace Langulus::Flow
    }
 
    TEMPLATE() LANGULUS(INLINED)
-   VERB TME()::PartialCopy() const noexcept {
-      return Verb::PartialCopy<VERB>();
+   VERB TME()::Fork(auto&&...a) const noexcept {
+      return Verb::Fork<VERB>(Forward<Deref<decltype(a)>>(a)...);
    }
 
    TEMPLATE() LANGULUS(INLINED)

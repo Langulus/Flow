@@ -113,9 +113,9 @@ namespace Langulus::Verbs
          group.ForEach(
             [&](const Construct& construct) {
                containsOnlyIndices = false;
-               auto nested = verb.PartialCopy().SetArgument(construct.GetDescriptor());
+               auto nested = verb.Fork(construct.GetDescriptor());
                ExecuteDefault(context, nested);
-               verb << nested.GetOutput();
+               verb << Abandon(nested.GetOutput());
             },
             [&](const Trait& trait) {
                containsOnlyIndices = false;

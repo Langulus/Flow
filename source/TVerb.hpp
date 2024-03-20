@@ -31,7 +31,7 @@ namespace Langulus::Flow
       NOD() static VERB From(const Charge& = {}, VerbState = {});
       NOD() static VERB From(CT::Inner::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
 
-      NOD() VERB PartialCopy() const noexcept;
+      NOD() VERB Fork(auto&&...) const noexcept;
 
       ///                                                                     
       ///   Assignment                                                        
@@ -85,11 +85,11 @@ namespace Langulus::Flow
       ///                                                                     
       ///   RTTI                                                              
       ///                                                                     
-      NOD() constexpr Token GetToken() const;
-      NOD() constexpr bool  IsVerb(VMeta) const noexcept;
       template<CT::Verb>
       NOD() constexpr bool  IsVerb() const noexcept;
+      NOD() constexpr bool  IsVerb(VMeta) const noexcept;
       NOD() constexpr VMeta GetVerb() const noexcept;
+      NOD() constexpr Token GetToken() const;
 
       ///                                                                     
       ///   Comparison                                                        

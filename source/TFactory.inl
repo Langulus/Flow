@@ -72,7 +72,7 @@ namespace Langulus::Flow
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE() LANGULUS(INLINED)
    typename FACTORY()::Cell* FACTORY()::Find(const Neat& descriptor) const {
-      VERBOSE_FACTORY("Seeking for ", descriptor);
+      VERBOSE_FACTORY(NameOf<FACTORY()>(), " seeking for ", descriptor);
       const auto hash = descriptor.GetHash();
       const auto found = mHashmap.FindIt(hash);
       if (found) {
@@ -208,7 +208,7 @@ namespace Langulus::Flow
    TEMPLATE()
    T* FACTORY()::Produce(const Neat& neat) {
       // Register entry in the hashmap, for fast search by descriptor   
-      VERBOSE_FACTORY("Producing: ", neat);
+      VERBOSE_FACTORY(NameOf<FACTORY()>(), " producing: ", neat);
       auto result = Base::NewInner(mFactoryOwner, neat);
       if (not result)
          return nullptr;

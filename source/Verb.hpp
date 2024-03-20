@@ -43,7 +43,7 @@ namespace Langulus::Flow
       NOD() static Verb FromMeta(VMeta, const Charge& = {}, VerbState = {});
 
       template<CT::VerbBased THIS = Verb>
-      NOD() THIS PartialCopy() const noexcept;
+      NOD() THIS Fork(auto&&...) const noexcept;
 
       ///                                                                     
       ///   Assignment                                                        

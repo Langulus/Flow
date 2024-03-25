@@ -19,7 +19,7 @@ namespace Langulus::Flow
    ///                                                                        
    /// Holds a reflected class type and context state                         
    ///                                                                        
-   struct LANGULUS_API(FLOW) Resolvable : Referenced {
+   struct LANGULUS_API(FLOW) Resolvable : virtual Referenced {
       LANGULUS(ABSTRACT) true;
       LANGULUS_CONVERTS_TO(Text);
 
@@ -31,7 +31,6 @@ namespace Langulus::Flow
 
    public:
       Resolvable() = delete;
-
       Resolvable(const Resolvable&) noexcept = default;
       Resolvable(Resolvable&&) noexcept = default;
       Resolvable(DMeta) IF_UNSAFE(noexcept);
@@ -49,7 +48,7 @@ namespace Langulus::Flow
       NOD() bool Is() const;
 
       NOD() Token GetToken() const IF_UNSAFE(noexcept);
-      NOD() constexpr DMeta GetType() const noexcept;
+      NOD() DMeta GetType()  const noexcept;
       NOD() Block GetBlock() const noexcept;
 
       template<bool DISPATCH = true, bool DEFAULT = true>

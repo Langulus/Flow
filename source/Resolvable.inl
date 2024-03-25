@@ -61,7 +61,8 @@ namespace Langulus::Flow
 
    /// Get the class meta                                                     
    ///   @return the meta data for the class type                             
-   constexpr DMeta Resolvable::GetType() const noexcept {
+   LANGULUS(INLINED)
+   DMeta Resolvable::GetType() const noexcept {
       return mClassType;
    }
 

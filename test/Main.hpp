@@ -20,8 +20,12 @@ struct Thing : Resolvable {
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
-   Thing() : Resolvable(MetaOf<Thing>()) {}
-   Thing(DMeta type) : Resolvable(type) {}
+
+   Thing() : Resolvable {this} {}
+
+   template<class T>
+   Thing(const T* c) : Resolvable {c} {}
+
    virtual ~Thing() {
       Reference(-1);
    }
@@ -34,7 +38,7 @@ struct Thing : Resolvable {
 /// A mockup of more concrete Langulus::Thing, for testing purposes           
 struct Thing2 : Thing {
    LANGULUS_BASES(Thing);
-   Thing2() : Thing {MetaOf<Thing2>()} {}
+   Thing2() : Thing {this} {}
 
    void Update() final {}
 
@@ -47,7 +51,7 @@ struct Universe : Resolvable {
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
-   Universe() : Resolvable(MetaOf<Universe>()) {}
+   Universe() : Resolvable {this} {}
 };
 
 /// A mockup of a window component, for testing purposes                      
@@ -56,7 +60,7 @@ struct Window : Resolvable {
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
-   Window() : Resolvable(MetaOf<Window>()) {}
+   Window() : Resolvable {this} {}
 };
 
 /// A mockup of a user component, for testing purposes                        
@@ -65,7 +69,7 @@ struct User : Resolvable {
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
-   User() : Resolvable(MetaOf<User>()) {}
+   User() : Resolvable {this} {}
 };
 
 /// A mockup of a session component, for testing purposes                     
@@ -74,7 +78,7 @@ struct Session : Resolvable {
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
-   Session() : Resolvable(MetaOf<Session>()) {}
+   Session() : Resolvable {this} {}
 };
 
 /// A mockup of a fraction                                                    

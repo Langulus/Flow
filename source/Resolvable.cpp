@@ -12,25 +12,6 @@
 namespace Langulus::Flow
 {
 
-   /// Constructor                                                            
-   ///   @attention type is assumed valid and complete                        
-   ///   @attention type is assumed derived from Resolvable                   
-   ///   @param type - type of the resolvable                                 
-   Resolvable::Resolvable(DMeta type) IF_UNSAFE(noexcept)
-      : mClassType {type}
-      , mClassOffset {0} {
-      LANGULUS_ASSUME(DevAssumes, mClassType,
-         "Bad resolvable type");
-      LANGULUS_ASSUME(DevAssumes, mClassType->mOrigin,
-         "Resolvable type is incomplete");
-
-      // Precalculate offset, no need to do it at runtime               
-      RTTI::Base base;
-      UNUSED() bool found = type->template GetBase<Resolvable>(0, base);
-      LANGULUS_ASSUME(DevAssumes, found, "Unrelated type provided to Resolvable");
-      const_cast<Offset&>(mClassOffset) = base.mOffset;
-   }
-
    /// Get the class name token                                               
    ///   @return the token                                                    
    Token Resolvable::GetToken() const IF_UNSAFE(noexcept) {
@@ -75,13 +56,7 @@ namespace Langulus::Flow
    /// You can invoke this function via Block::GetElementResolved()           
    ///   @return the static memory block representing this instance           
    Block Resolvable::GetBlock() const noexcept {
-      // 'this' pointer points to Resolvable object, so we need to      
-      // compensate this, by offsetting 'this' by the relative class    
-      // type offset. I like to live dangerously <3                     
-      // But seriously, this is well tested                             
-      auto thisint = reinterpret_cast<Offset>(this);
-      auto offsetd = reinterpret_cast<void*>(thisint - mClassOffset);
-      return Block {DataState::Static, mClassType, 1, offsetd};
+      return Block {DataState::Static, mClassType, 1, const_cast<void*>(mClassPointer)};
    }
 
    /// Parse and execute a scope in the resolved context                      

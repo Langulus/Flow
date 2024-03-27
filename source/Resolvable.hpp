@@ -27,25 +27,26 @@ namespace Langulus::Flow
       // Concrete type of the resolvable                                
       DMeta mClassType;
       // Byte offset from an instance of Resolvable, to the derived     
-      Offset mClassOffset;
+      const void* mClassPointer;
 
    public:
       Resolvable() = delete;
       Resolvable(const Resolvable&) noexcept = default;
       Resolvable(Resolvable&&) noexcept = default;
-      Resolvable(DMeta) IF_UNSAFE(noexcept);
+      template<class T>
+      Resolvable(const T*) IF_UNSAFE(noexcept);
       virtual ~Resolvable() = default;
 
       Resolvable& operator = (const Resolvable&) noexcept = default;
       Resolvable& operator = (Resolvable&&) noexcept = default;
 
-      NOD() bool CastsTo(DMeta) const IF_UNSAFE(noexcept);
-      template<CT::Data T>
+      template<CT::Data>
       NOD() bool CastsTo() const;
+      NOD() bool CastsTo(DMeta) const IF_UNSAFE(noexcept);
 
-      NOD() bool Is(DMeta) const noexcept;
-      template<CT::Data T>
+      template<CT::Data>
       NOD() bool Is() const;
+      NOD() bool Is(DMeta) const noexcept;
 
       NOD() Token GetToken() const IF_UNSAFE(noexcept);
       NOD() DMeta GetType()  const noexcept;

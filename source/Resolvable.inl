@@ -15,7 +15,7 @@
 
 namespace Langulus
 {
-
+   
    /// Get a string representing an instance in memory                        
    /// Used all across framework to stringify short instance IDs              
    ///   @param type - the resolved type, from which token is taken           
@@ -58,6 +58,26 @@ namespace Langulus
 
 namespace Langulus::Flow
 {
+   
+   /// Constructor                                                            
+   ///   @attention type is assumed valid and complete                        
+   ///   @attention type is assumed derived from Resolvable                   
+   ///   @param type - type of the resolvable                                 
+   template<class T>
+   Resolvable::Resolvable(const T* type) IF_UNSAFE(noexcept)
+      : mClassType {MetaDataOf<T>()} {
+      LANGULUS_ASSUME(DevAssumes, mClassType,
+         "Bad resolvable type");
+      LANGULUS_ASSUME(DevAssumes, mClassType->mOrigin,
+         "Resolvable type is incomplete");
+
+      // Precalculate offset, no need to do it at runtime               
+      /*RTTI::Base base;
+      UNUSED() bool found = type->template GetBase<Resolvable>(0, base);
+      LANGULUS_ASSUME(DevAssumes, found, "Unrelated type provided to Resolvable");
+      const_cast<Offset&>(mClassOffset) = base.mOffset;*/
+      mClassPointer = type;
+   }
 
    /// Get the class meta                                                     
    ///   @return the meta data for the class type                             

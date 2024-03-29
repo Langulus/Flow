@@ -119,10 +119,9 @@ namespace Langulus::Flow
       T* const mProducer {};
 
    public:
-      ProducedFrom() = delete;
       ProducedFrom(const ProducedFrom&) = delete;
       ProducedFrom(ProducedFrom&&);
-      ProducedFrom(T*, const Neat&);
+      ProducedFrom(T* = nullptr, const Neat& = {});
 
       template<template<class> class S>
       requires CT::Semantic<S<Neat>>

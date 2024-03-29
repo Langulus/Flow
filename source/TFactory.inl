@@ -262,9 +262,7 @@ namespace Langulus::Flow
    template<class T> LANGULUS(INLINED)
    ProducedFrom<T>::ProducedFrom(T* producer, const Neat& neat)
       : mDescriptor {neat}
-      , mProducer {producer} {
-      LANGULUS_ASSUME(DevAssumes, producer, "Invalid producer");
-   }
+      , mProducer {producer} {}
 
    /// Reset the descriptor to remove circular dependencies                   
    template<class T> LANGULUS(INLINED)

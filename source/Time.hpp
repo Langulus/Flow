@@ -112,7 +112,7 @@ namespace fmt
       }
 
       template<class CONTEXT> LANGULUS(INLINED)
-      auto format(Langulus::Time const& element, CONTEXT& ctx) {
+      auto format(Langulus::Time const& element, CONTEXT& ctx) const {
          return fmt::format_to(ctx.out(), "{}",
             static_cast<const Langulus::Time::Base&>(element));
       }

@@ -180,7 +180,7 @@ namespace fmt
       }
 
       template<class CONTEXT> LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) {
+      auto format(T const& element, CONTEXT& ctx) const {
          using namespace ::Langulus;
 
          const auto asText = Verbs::Interpret::To<Anyness::Text>(element);
@@ -200,7 +200,7 @@ namespace fmt
       }
 
       template<class CONTEXT> LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) {
+      auto format(T const& element, CONTEXT& ctx) const {
          using namespace ::Langulus;
 
          return fmt::vformat_to(ctx.out(), "Pair({}, {})",
@@ -221,7 +221,7 @@ namespace fmt
       }
 
       template<class CONTEXT> LANGULUS(INLINED)
-      auto format(Langulus::Anyness::Neat const& element, CONTEXT& ctx) {
+      auto format(Langulus::Anyness::Neat const& element, CONTEXT& ctx) const {
          using namespace ::Langulus;
 
          const auto asText = Verbs::Interpret::To<Anyness::Text>(element);
@@ -241,7 +241,7 @@ namespace fmt
       }
 
       template<class CONTEXT> LANGULUS(INLINED)
-      auto format(Langulus::Anyness::Construct const& element, CONTEXT& ctx) {
+      auto format(Langulus::Anyness::Construct const& element, CONTEXT& ctx) const {
          using namespace ::Langulus;
 
          const auto asText = Verbs::Interpret::To<Anyness::Text>(element);
@@ -261,7 +261,7 @@ namespace fmt
       }
 
       template<class CONTEXT> LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) {
+      auto format(T const& element, CONTEXT& ctx) const {
          using namespace ::Langulus;
 
          const auto type = element.GetTrait();
@@ -283,7 +283,7 @@ namespace fmt
       }
 
       template<class CONTEXT> LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) {
+      auto format(T const& element, CONTEXT& ctx) const {
          using namespace ::Langulus;
 
          fmt::format_to(ctx.out(), "Map(");
@@ -314,7 +314,7 @@ namespace fmt
       }
 
       template<class CONTEXT> LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) {
+      auto format(T const& element, CONTEXT& ctx) const {
          using namespace ::Langulus;
 
          fmt::format_to(ctx.out(), "Set(");

@@ -25,7 +25,13 @@ namespace Langulus::Flow
 
    private:
       // Concrete type of the resolvable                                
-      DMeta mClassType;
+      #if LANGULUS_COMPILER(MSVC)
+         #pragma warning(suppress: 4251)
+         DMeta mClassType;
+      #else
+         DMeta mClassType;
+      #endif
+
       // Byte offset from an instance of Resolvable, to the derived     
       const void* mClassPointer;
 

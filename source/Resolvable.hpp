@@ -19,7 +19,12 @@ namespace Langulus::Flow
    ///                                                                        
    /// Holds a reflected class type and context state                         
    ///                                                                        
+ #if LANGULUS_COMPILER(MSVC)
+   #pragma warning(suppress: 4275)
    struct LANGULUS_API(FLOW) Resolvable : virtual Referenced {
+#else
+   struct LANGULUS_API(FLOW) Resolvable : virtual Referenced {
+#endif
       LANGULUS(ABSTRACT) true;
       LANGULUS_CONVERTS_TO(Text);
 

@@ -371,11 +371,11 @@ namespace Langulus::Anyness
       if (Flow::DispatchDeep<false>(context, interpreter))
          return interpreter->As<T>();
 
-      if constexpr (CT::Inner::DescriptorMakable<T>) {
+      if constexpr (CT::DescriptorMakable<T>) {
          // If this is reached, we attempt runtime conversion by        
          // invoking descriptor constructor of T, with the desired      
          // element, as descriptor. This is generally the slowest path  
-         try { return T {Describe(GetElement(idx))}; }
+         try { return T (Describe(GetElement(idx))); }
          catch (...) {}
       }
 

@@ -43,7 +43,7 @@ namespace Langulus
    }
 
    /// Get time duration in seconds, represented by type T                    
-   template<CT::DenseBuiltinNumber T> LANGULUS(INLINED)
+   template<CT::BuiltinNumber T> LANGULUS(INLINED)
    T Time::Seconds() const noexcept {
       auto& asBase = static_cast<const Base&>(*this);
       return std::chrono::duration<T>(asBase).count();

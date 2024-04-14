@@ -31,7 +31,7 @@ namespace Langulus::Flow
    }
 
    TEMPLATE() LANGULUS(INLINED)
-   VERB TME()::From(CT::Inner::UnfoldInsertable auto&& contents, const Charge& charge, VerbState state) {
+   VERB TME()::From(CT::UnfoldInsertable auto&& contents, const Charge& charge, VerbState state) {
       using T = Deref<decltype(contents)>;
       return Verb::From<VERB>(Forward<T>(contents), charge, state);
    }
@@ -68,19 +68,19 @@ namespace Langulus::Flow
    }
 
    TEMPLATE() template<CT::Data T1, CT::Data...TN>
-   requires CT::Inner::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
+   requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    VERB& TME()::SetSource(T1&& t1, TN&&...tn) {
       return Verb::SetSource<VERB>(Forward<T1>(t1), Forward<TN>(tn)...);
    }
       
    TEMPLATE() template<CT::Data T1, CT::Data...TN>
-   requires CT::Inner::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
+   requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    VERB& TME()::SetArgument(T1&& t1, TN&&...tn) {
       return Verb::SetArgument<VERB>(Forward<T1>(t1), Forward<TN>(tn)...);
    }
       
    TEMPLATE() template<CT::Data T1, CT::Data...TN>
-   requires CT::Inner::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
+   requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    VERB& TME()::SetOutput(T1&& t1, TN&&...tn) {
       return Verb::SetOutput<VERB>(Forward<T1>(t1), Forward<TN>(tn)...);
    }
@@ -196,7 +196,7 @@ namespace Langulus::Flow
    ///   @param rhs - the data (and semantic) to push                         
    ///   @return a reference to this verb for chaining                        
    TEMPLATE() LANGULUS(INLINED)
-   VERB& TME()::operator << (CT::Inner::UnfoldInsertable auto&& rhs) {
+   VERB& TME()::operator << (CT::UnfoldInsertable auto&& rhs) {
       using T = Deref<decltype(rhs)>;
       return Verb::operator << <VERB>(Forward<T>(rhs));
    }
@@ -206,7 +206,7 @@ namespace Langulus::Flow
    ///   @param rhs - the data (and semantic) to push                         
    ///   @return a reference to this verb for chaining                        
    TEMPLATE() LANGULUS(INLINED)
-   VERB& TME()::operator >> (CT::Inner::UnfoldInsertable auto&& rhs) {
+   VERB& TME()::operator >> (CT::UnfoldInsertable auto&& rhs) {
       using T = Deref<decltype(rhs)>;
       return Verb::operator >> <VERB>(Forward<T>(rhs));
    }
@@ -215,7 +215,7 @@ namespace Langulus::Flow
    ///   @param rhs - the data (and semantic) to merge                        
    ///   @return a reference to this verb for chaining                        
    TEMPLATE() LANGULUS(INLINED)
-   VERB& TME()::operator <<= (CT::Inner::UnfoldInsertable auto&& rhs) {
+   VERB& TME()::operator <<= (CT::UnfoldInsertable auto&& rhs) {
       using T = Deref<decltype(rhs)>;
       return Verb::operator <<= <VERB>(Forward<T>(rhs));
    }
@@ -224,7 +224,7 @@ namespace Langulus::Flow
    ///   @param rhs - the data (and semantic) to merge                        
    ///   @return a reference to this verb for chaining                        
    TEMPLATE() LANGULUS(INLINED)
-   VERB& TME()::operator >>= (CT::Inner::UnfoldInsertable auto&& rhs) {
+   VERB& TME()::operator >>= (CT::UnfoldInsertable auto&& rhs) {
       using T = Deref<decltype(rhs)>;
       return Verb::operator >>= <VERB>(Forward<T>(rhs));
    }

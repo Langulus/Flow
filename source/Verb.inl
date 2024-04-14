@@ -69,7 +69,7 @@ namespace Langulus::Flow
    ///   @return the new Verb instance                                        
    template<CT::Verb V> LANGULUS(INLINED)
    Verb Verb::From(
-      CT::Inner::UnfoldInsertable auto&& a,
+      CT::UnfoldInsertable auto&& a,
       const Charge& charge, VerbState state
    ) {
       using S = SemanticOf<decltype(a)>;
@@ -84,7 +84,7 @@ namespace Langulus::Flow
    ///   @return the new Verb instance                                        
    LANGULUS(INLINED)
    Verb Verb::FromMeta(
-      VMeta verb, CT::Inner::UnfoldInsertable auto&& a,
+      VMeta verb, CT::UnfoldInsertable auto&& a,
       const Charge& charge, VerbState state
    ) {
       using S = SemanticOf<decltype(a)>;
@@ -332,7 +332,7 @@ namespace Langulus::Flow
    ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
    template<CT::VerbBased THIS, CT::Data T1, CT::Data...TN>
-   requires CT::Inner::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
+   requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    THIS& Verb::SetSource(T1&& t1, TN&&...tn) {
       mSource = Any {Forward<T1>(t1), Forward<TN>(tn)...};
       // We guarantee that source is exactly Any, so we unconstrain it  
@@ -345,7 +345,7 @@ namespace Langulus::Flow
    ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
    template<CT::VerbBased THIS, CT::Data T1, CT::Data...TN>
-   requires CT::Inner::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
+   requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    THIS& Verb::SetArgument(T1&& t1, TN&&...tn) {
       Any::operator = (Any {Forward<T1>(t1), Forward<TN>(tn)...});
       // We guarantee that argument is exactly Any, so we unconstrain it
@@ -358,7 +358,7 @@ namespace Langulus::Flow
    ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
    template<CT::VerbBased THIS, CT::Data T1, CT::Data...TN>
-   requires CT::Inner::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
+   requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    THIS& Verb::SetOutput(T1&& t1, TN&&...tn) {
       mOutput = Any {Forward<T1>(t1), Forward<TN>(tn)...};
       // We guarantee that output is exactly Any, so we unconstrain it  
@@ -401,7 +401,7 @@ namespace Langulus::Flow
    ///   @param rhs - the data (and semantic) to push                         
    ///   @return a reference to this verb for chaining                        
    template<CT::VerbBased THIS> LANGULUS(INLINED)
-   THIS& Verb::operator << (CT::Inner::UnfoldInsertable auto&& rhs) {
+   THIS& Verb::operator << (CT::UnfoldInsertable auto&& rhs) {
       using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
@@ -424,7 +424,7 @@ namespace Langulus::Flow
    ///   @param rhs - the data (and semantic) to push                         
    ///   @return a reference to this verb for chaining                        
    template<CT::VerbBased THIS> LANGULUS(INLINED)
-   THIS& Verb::operator >> (CT::Inner::UnfoldInsertable auto&& rhs) {
+   THIS& Verb::operator >> (CT::UnfoldInsertable auto&& rhs) {
       using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
@@ -446,7 +446,7 @@ namespace Langulus::Flow
    ///   @param rhs - the data (and semantic) to merge                        
    ///   @return a reference to this verb for chaining                        
    template<CT::VerbBased THIS> LANGULUS(INLINED)
-   THIS& Verb::operator <<= (CT::Inner::UnfoldInsertable auto&& rhs) {
+   THIS& Verb::operator <<= (CT::UnfoldInsertable auto&& rhs) {
       using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
@@ -472,7 +472,7 @@ namespace Langulus::Flow
    ///   @param rhs - the data (and semantic) to merge                        
    ///   @return a reference to this verb for chaining                        
    template<CT::VerbBased THIS> LANGULUS(INLINED)
-   THIS& Verb::operator >>= (CT::Inner::UnfoldInsertable auto&& rhs) {
+   THIS& Verb::operator >>= (CT::UnfoldInsertable auto&& rhs) {
       using S = SemanticOf<decltype(rhs)>;
       using T = TypeOf<S>;
 

@@ -26,9 +26,7 @@ namespace Langulus::Flow
    /// be referencable                                                        
    template<class...T>
    concept FactoryProducible = ((CT::Producible<T>
-         and not CT::Abstract<T>
-         and     CT::Dense<T>
-         and     CT::Referencable<T>)
+         and not CT::Abstract<T> and CT::Dense<T> and CT::Referencable<T>)
       and ...);
 
 

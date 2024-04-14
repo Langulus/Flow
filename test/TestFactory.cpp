@@ -33,23 +33,22 @@ SCENARIO("Test factories", "[factory]") {
          const auto descriptor = Construct::From<Producible>();
          Verbs::Create creator {descriptor};
          const Producible prototype {&producer, descriptor.GetDescriptor()};
+         const Neat normalized {};
+         const auto hash = normalized.GetHash();
 
 			factory.Create(creator);
 			auto out1 = creator.GetOutput();
 			REQUIRE(creator.IsDone());
+         REQUIRE(out1.GetCount() == 1);
+         REQUIRE(out1.IsExact<Producible*>());
+         REQUIRE(out1.As<Producible*>()->Reference(0) == 2);
+         REQUIRE(out1.IsSparse());
 
 			creator.Undo();
+
 			factory.Create(creator);
 			REQUIRE(creator.IsDone());
 			auto out2 = creator.GetOutput();
-
-			const Neat normalized {};
-			const auto hash = normalized.GetHash();
-
-			REQUIRE(out1.GetCount() == 1);
-			REQUIRE(out1.IsExact<Producible*>());
-			REQUIRE(out1.As<Producible*>()->Reference(0) == 2);
-			REQUIRE(out1.IsSparse());
 			REQUIRE(out2.GetCount() == 1);
 			REQUIRE(out2.IsExact<Producible*>());
          REQUIRE(out2.As<Producible*>()->Reference(0) == 2);

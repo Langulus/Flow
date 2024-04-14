@@ -29,7 +29,7 @@ namespace Langulus::Flow
       TVerb(TVerb&&);
 
       NOD() static VERB From(const Charge& = {}, VerbState = {});
-      NOD() static VERB From(CT::Inner::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
+      NOD() static VERB From(CT::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
 
       NOD() VERB Fork(auto&&...) const noexcept;
 
@@ -47,15 +47,15 @@ namespace Langulus::Flow
       ///   Assignment                                                        
       ///                                                                     
       template<CT::Data T1, CT::Data...TN>
-      requires CT::Inner::UnfoldInsertable<T1, TN...>
+      requires CT::UnfoldInsertable<T1, TN...>
       VERB& SetSource(T1&&, TN&&...);
       
       template<CT::Data T1, CT::Data...TN>
-      requires CT::Inner::UnfoldInsertable<T1, TN...>
+      requires CT::UnfoldInsertable<T1, TN...>
       VERB& SetArgument(T1&&, TN&&...);
       
       template<CT::Data T1, CT::Data...TN>
-      requires CT::Inner::UnfoldInsertable<T1, TN...>
+      requires CT::UnfoldInsertable<T1, TN...>
       VERB& SetOutput(T1&&, TN&&...);
 
       ///                                                                     
@@ -100,11 +100,11 @@ namespace Langulus::Flow
       ///                                                                     
       ///   Insertion                                                         
       ///                                                                     
-      VERB& operator <<  (CT::Inner::UnfoldInsertable auto&&);
-      VERB& operator >>  (CT::Inner::UnfoldInsertable auto&&);
+      VERB& operator <<  (CT::UnfoldInsertable auto&&);
+      VERB& operator >>  (CT::UnfoldInsertable auto&&);
       
-      VERB& operator <<= (CT::Inner::UnfoldInsertable auto&&);
-      VERB& operator >>= (CT::Inner::UnfoldInsertable auto&&);
+      VERB& operator <<= (CT::UnfoldInsertable auto&&);
+      VERB& operator >>= (CT::UnfoldInsertable auto&&);
 
    private:
       // Functionality graveyard                                        

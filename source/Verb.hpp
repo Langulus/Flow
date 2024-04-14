@@ -38,8 +38,8 @@ namespace Langulus::Flow
       template<CT::Verb>
       NOD() static Verb From(const Charge& = {}, VerbState = {});
       template<CT::Verb>
-      NOD() static Verb From(CT::Inner::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
-      NOD() static Verb FromMeta(VMeta, CT::Inner::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
+      NOD() static Verb From(CT::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
+      NOD() static Verb FromMeta(VMeta, CT::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
       NOD() static Verb FromMeta(VMeta, const Charge& = {}, VerbState = {});
 
       template<CT::VerbBased THIS = Verb>
@@ -53,15 +53,15 @@ namespace Langulus::Flow
       Verb& operator = (CT::VerbAssignable auto&&);
 
       template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TN>
-      requires CT::Inner::UnfoldInsertable<T1, TN...>
+      requires CT::UnfoldInsertable<T1, TN...>
       THIS& SetSource(T1&&, TN&&...);
       
       template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TN>
-      requires CT::Inner::UnfoldInsertable<T1, TN...>
+      requires CT::UnfoldInsertable<T1, TN...>
       THIS& SetArgument(T1&&, TN&&...);
       
       template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TN>
-      requires CT::Inner::UnfoldInsertable<T1, TN...>
+      requires CT::UnfoldInsertable<T1, TN...>
       THIS& SetOutput(T1&&, TN&&...);
 
       ///                                                                     
@@ -135,14 +135,14 @@ namespace Langulus::Flow
       ///   Insertion                                                         
       ///                                                                     
       template<CT::VerbBased THIS = Verb>
-      THIS& operator <<  (CT::Inner::UnfoldInsertable auto&&);
+      THIS& operator <<  (CT::UnfoldInsertable auto&&);
       template<CT::VerbBased THIS = Verb>
-      THIS& operator >>  (CT::Inner::UnfoldInsertable auto&&);
+      THIS& operator >>  (CT::UnfoldInsertable auto&&);
       
       template<CT::VerbBased THIS = Verb>
-      THIS& operator <<= (CT::Inner::UnfoldInsertable auto&&);
+      THIS& operator <<= (CT::UnfoldInsertable auto&&);
       template<CT::VerbBased THIS = Verb>
-      THIS& operator >>= (CT::Inner::UnfoldInsertable auto&&);
+      THIS& operator >>= (CT::UnfoldInsertable auto&&);
 
       template<CT::Dense>
       bool GenericAvailableFor() const noexcept;
@@ -173,21 +173,3 @@ namespace Langulus::Flow
    using Script = TAny<Verb>;
 
 } // namespace Langulus::Flow
-
-namespace Langulus::Verbs
-{
-
-   // These cause hard to debug incomplete type errors, better to avoid 
-   /*struct Associate;
-   struct Catenate;
-   struct Compare;
-   struct Conjunct;
-   struct Create;
-   struct Do;
-   struct Interact;
-   struct Interpret;
-   template<CT::Data AS>
-   struct InterpretAs;
-   struct Select;*/
-
-} // namespace Langulus::Verbs

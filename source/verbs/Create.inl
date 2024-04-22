@@ -86,14 +86,14 @@ namespace Langulus::Verbs
          else {
             // Create                                                   
             // First allocate and default-initialize the results        
-            auto created = Any::FromMeta(construct.GetType());
+            auto created = Many::FromMeta(construct.GetType());
             created.New(Count(construct.GetCharge().mMass));
             auto& arguments = construct.GetDescriptor();
 
             // Then forward the constructors to each element            
             if (arguments) {
                for (Count i = 0; i < created.GetCount(); ++i) {
-                  Any element = created.GetElement(i);
+                  Many element = created.GetElement(i);
 
                   // First attempt delegating                           
                   VERBOSE_CREATION(Logger::Yellow,
@@ -138,7 +138,7 @@ namespace Langulus::Verbs
          // Charged creation of a type                                  
          const auto type = descriptor.GetType();
          const auto count = static_cast<Count>(descriptor.GetCharge().mMass * verb.GetMass());
-         auto result = Any::FromMeta(type);
+         auto result = Many::FromMeta(type);
 
          if (type->mDescriptorConstructor and descriptor.GetDescriptor()) {
             for (Offset i = 0; i < count; ++i) {
@@ -212,7 +212,7 @@ namespace Langulus::Verbs
    ///   @param context - the contexts to analyze                             
    ///   @param data - the data to set to                                     
    ///   @return true if at least one member in one element was set           
-   inline void Create::SetMembers(Any& context, const Any& data) {
+   inline void Create::SetMembers(Many& context, const Many& data) {
       TUnorderedMap<TMeta, Count> satisfiedTraits;
       TUnorderedMap<DMeta, Count> satisfiedData;
 
@@ -222,7 +222,7 @@ namespace Langulus::Verbs
          // Search for similar data in the current context              
          // in an attempt to overwrite member variables and such        
          for (Count i = 0; i < group.GetCount(); ++i) {
-            Any element = group.GetElementResolved(i);
+            Many element = group.GetElementResolved(i);
             if (element.Is<Trait>()) {
                // Search for the trait                                  
                const auto meta = element.Get<Trait>().GetTrait();

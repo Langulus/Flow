@@ -154,7 +154,7 @@ namespace Langulus::Flow
       NOD() explicit operator Code() const;
 
       template<bool OR>
-      Count CompleteDispatch(Count, Abandoned<Any>&&);
+      Count CompleteDispatch(Count, Abandoned<Many>&&);
 
       ///                                                                     
       ///   Flow                                                              
@@ -166,10 +166,10 @@ namespace Langulus::Flow
 
    private:
       // Functionality graveyard                                        
-      using Any::Serialize;
+      using Many::Serialize;
    };
 
    /// A handy container for verbs                                            
-   using Script = TAny<Verb>;
+   using Script = TMany<Verb>;
 
 } // namespace Langulus::Flow

@@ -59,7 +59,7 @@ namespace Langulus::Verbs
    ///   @param context - the block to execute in                             
    ///   @param verb - conjunction/disjunction verb                           
    inline bool Conjunct::ExecuteDefault(const Block&, Verb& verb) {
-      Any joined;
+      Many joined;
       if (verb.GetMass() < 0) {
          joined.SmartPush(IndexBack, verb.GetSource(), DataState::Or);
          joined.SmartPush(IndexBack, verb.GetArgument(), DataState::Or);

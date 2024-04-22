@@ -53,7 +53,7 @@ namespace Langulus::Flow
       };
       
       // A default execution context                                    
-      Any mEnvironment;
+      Many mEnvironment;
       // A parent flow                                                  
       Temporal* mParent {};
       // Background charge                                              
@@ -64,22 +64,22 @@ namespace Langulus::Flow
       // Accumulated flow duration                                      
       Time mDuration;
       // Priority stack, i.e. the order of things that happen NOW       
-      Any mPriorityStack;
+      Many mPriorityStack;
       // Verb temporal stack, i.e. things that happen at specific time  
       TOrderedMap<Time, Temporal*> mTimeStack;
       // Verb frequency stack, i.e. things that happen periodically     
       TUnorderedMap<Time, Temporal*> mFrequencyStack;
 
    protected:
-      LANGULUS_API(FLOW) static Any Collapse(const Block&);
-      LANGULUS_API(FLOW) static Any Collapse(const Neat&);
+      LANGULUS_API(FLOW) static Many Collapse(const Block&);
+      LANGULUS_API(FLOW) static Many Collapse(const Neat&);
 
-      LANGULUS_API(FLOW) static Any Compile(const Block&, Real priority);
-      LANGULUS_API(FLOW) static Any Compile(const Neat&, Real priority);
+      LANGULUS_API(FLOW) static Many Compile(const Block&, Real priority);
+      LANGULUS_API(FLOW) static Many Compile(const Neat&, Real priority);
 
-      LANGULUS_API(FLOW) bool Link(const Any&, Block&) const;
-      LANGULUS_API(FLOW) bool Link(const Any&, Neat&) const;
-      LANGULUS_API(FLOW) bool Link(const Any&, Inner::MissingFuture&) const;
+      LANGULUS_API(FLOW) bool Link(const Many&, Block&) const;
+      LANGULUS_API(FLOW) bool Link(const Many&, Neat&) const;
+      LANGULUS_API(FLOW) bool Link(const Many&, Inner::MissingFuture&) const;
 
    public:
       Temporal(const Temporal&) = delete;
@@ -87,7 +87,7 @@ namespace Langulus::Flow
 
       LANGULUS_API(FLOW) Temporal();
       LANGULUS_API(FLOW) Temporal(Temporal*, const State&);
-      //LANGULUS_API(FLOW) Temporal(const Any& environment = {});
+      //LANGULUS_API(FLOW) Temporal(const Many& environment = {});
       LANGULUS_API(FLOW) Temporal(Temporal&&) noexcept = default;
 
       LANGULUS_API(FLOW) Temporal& operator = (Temporal&&) noexcept = default;
@@ -102,7 +102,7 @@ namespace Langulus::Flow
       bool IsValid() const;
 
       LANGULUS_API(FLOW) void Merge(const Temporal&);
-      LANGULUS_API(FLOW) bool Push(Any);
+      LANGULUS_API(FLOW) bool Push(Many);
 
       LANGULUS_API(FLOW) void Reset();
       LANGULUS_API(FLOW) bool Update(Time);

@@ -30,7 +30,7 @@ namespace Langulus::Flow
    
    /// Default constructor, add the initial missing future point              
    ///   @param environment - the initial flow environment                    
-   /*Temporal::Temporal(const Any& environment) {
+   /*Temporal::Temporal(const Many& environment) {
       mEnvironment = environment;
       mPriorityStack << Inner::MissingFuture {};
    }*/
@@ -90,14 +90,14 @@ namespace Langulus::Flow
          auto collapsed = Collapse(mPriorityStack);
 
          // Now execute the collapsed priority stack                    
-         Any output;
+         Many output;
          if (not Execute(collapsed, mEnvironment, output))
             LANGULUS_THROW(Flow, "Update failed");
 
          // Then, set the priority stack to the output, by wrapping it  
          // in a hight-priority Do verb with future attachment          
          // This guarantees, that a Push is possible after the Update   
-         Any future; future.MakeFuture();
+         Many future; future.MakeFuture();
          mPriorityStack = Verbs::Do {future}
             .SetSource(Abandon(output))
             .SetPriority(8);
@@ -213,7 +213,7 @@ namespace Langulus::Flow
    ///   @attention assumes argument is a valid scope                         
    ///   @param scope - the scope to analyze and push                         
    ///   @return true if the flow changed                                     
-   bool Temporal::Push(Any scope) {
+   bool Temporal::Push(Many scope) {
       VERBOSE_TEMPORAL_TAB("Pushing: ", scope);
 
       // Compile pushed scope to an intermediate format                 
@@ -230,8 +230,8 @@ namespace Langulus::Flow
    /// scope, so we can execute it conventionally                             
    ///   @param scope - the scope to collapse                                 
    ///   @return the collapsed scope                                          
-   Any Temporal::Collapse(const Block& scope) {
-      Any result;
+   Many Temporal::Collapse(const Block& scope) {
+      Many result;
       if (scope.IsOr())
          result.MakeOr();
 
@@ -306,7 +306,7 @@ namespace Langulus::Flow
    /// scope, so we can execute it conventionally                             
    ///   @param scope - the scope to collapse                                 
    ///   @return the collapsed scope                                          
-   Any Temporal::Collapse(const Neat&) {
+   Many Temporal::Collapse(const Neat&) {
       TODO();
       return {};
    }
@@ -317,8 +317,8 @@ namespace Langulus::Flow
    ///   @param priority - the priority to set for any missing point created  
    ///                     for the provided scope                             
    ///   @return the compiled scope                                           
-   Any Temporal::Compile(const Block& scope, Real priority) {
-      Any result;
+   Many Temporal::Compile(const Block& scope, Real priority) {
+      Many result;
       if (scope.IsOr())
          result.MakeOr();
 
@@ -382,7 +382,7 @@ namespace Langulus::Flow
    ///   @param priority - the priority to set for any missing point created  
    ///                     for the provided scope                             
    ///   @return the compiled scope                                           
-   Any Temporal::Compile(const Neat& neat, Real priority) {
+   Many Temporal::Compile(const Neat& neat, Real priority) {
       Neat result;
       neat.ForEachTrait([&](const Trait& subscope) {
          // Compile traits                                              
@@ -417,7 +417,7 @@ namespace Langulus::Flow
    ///   @param scope - the scope to link                                     
    ///   @param future - [in/out] the future point to place inside            
    ///   @return true if scope was linked successfully                        
-   bool Temporal::Link(const Any& scope, Inner::MissingFuture& future) const {
+   bool Temporal::Link(const Many& scope, Inner::MissingFuture& future) const {
       // Attempt linking to the contents first                          
       if (Link(scope, future.mContent))
          return true;
@@ -436,7 +436,7 @@ namespace Langulus::Flow
    ///   @param scope - the scope to link                                     
    ///   @param stack - [in/out] the stack to link with                       
    ///   @return true if scope was linked successfully                        
-   bool Temporal::Link(const Any& scope, Block& stack) const {
+   bool Temporal::Link(const Many& scope, Block& stack) const {
       bool atLeastOneSuccess = false;
 
       if (stack.IsDeep()) {
@@ -496,7 +496,7 @@ namespace Langulus::Flow
    ///   @param scope - the scope to link                                     
    ///   @param stack - [in/out] the neat stack to link with                  
    ///   @return true if scope was linked successfully                        
-   bool Temporal::Link(const Any& scope, Neat& stack) const {
+   bool Temporal::Link(const Many& scope, Neat& stack) const {
       bool atLeastOneSuccess = false;
       stack.ForEach([&](Block& substack) {
          atLeastOneSuccess |= Link(scope, substack);

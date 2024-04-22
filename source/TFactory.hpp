@@ -64,7 +64,7 @@ namespace Langulus::Flow
       Producer* mFactoryOwner {};
 
       // A hash map for fast retrieval of elements                      
-      TUnorderedMap<Hash, TAny<Cell*>> mHashmap;
+      TUnorderedMap<Hash, TMany<Cell*>> mHashmap;
 
       NOD() T* Produce(const Neat&);
       void CreateInner(Verb&, int, const Neat& = {});

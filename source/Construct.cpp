@@ -28,7 +28,7 @@ namespace Langulus::Anyness
    //or, like, creating an integer in the context of something that will never allow zero
    //there results should also be probably paired with the producer that made them, so that
    //a solver can differentiate between them, and trust ones that are relevant
-   bool Construct::StaticCreation(Any& output) const {
+   bool Construct::StaticCreation(Many& output) const {
       if (mType->mProducerRetriever)
          return false;
 

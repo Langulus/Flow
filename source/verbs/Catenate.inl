@@ -169,13 +169,13 @@ namespace Langulus::Verbs
       }
 
       if (not verb) {
-         verb << Any {context};
+         verb << Many {context};
          return true;
       }
 
       //TODO split
-      TAny<Any> shallow;
-      shallow << Any {context};
+      TMany<Many> shallow;
+      shallow << Many {context};
       shallow << verb.GetArgument();
       verb << Abandon(shallow);
       return true;
@@ -192,14 +192,14 @@ namespace Langulus::Verbs
       }
 
       if (not verb) {
-         verb << Any {context};
+         verb << Many {context};
          return true;
       }
 
       //TODO split
-      reinterpret_cast<Any&>(context).SmartPush(IndexBack,
+      reinterpret_cast<Many&>(context).SmartPush(IndexBack,
          Langulus::Move(verb.GetArgument()));
-      verb << Any {context};
+      verb << Many {context};
       return true;
    }
 

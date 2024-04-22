@@ -54,7 +54,7 @@ namespace Langulus::Flow
    /// Parse code                                                             
    ///   @param optimize - whether or not to precompile                       
    ///   @returned the parsed flow                                            
-   Any Code::Parse(bool optimize) const {
+   Many Code::Parse(bool optimize) const {
       // Make sure that all default traits are registered before parsing
       (void)MetaOf<Traits::Logger>();
       (void)MetaOf<Traits::Count>();
@@ -87,7 +87,7 @@ namespace Langulus::Flow
       (void)MetaOf<Verbs::Interpret>();
 
       // Parse                                                          
-      Any output;
+      Many output;
       const auto parsed = UnknownParser::Parse(*this, output, 0, optimize);
       if (parsed != GetCount()) {
          Logger::Warning("Some characters were left out at the end, while parsing code:");
@@ -200,8 +200,8 @@ namespace Langulus::Flow
    ///   @param precedence - the last parsed operation precedence             
    ///   @param optimize - whether to attempt executing at compile-time       
    ///   @return number of parsed characters from input                       
-   Offset Code::UnknownParser::Parse(const Code& input, Any& lhs, Real precedence, bool optimize) {
-      Any rhs;
+   Offset Code::UnknownParser::Parse(const Code& input, Many& lhs, Real precedence, bool optimize) {
+      Many rhs;
       Offset progress = 0;
       VERBOSE_TAB("Parsing unknown");
       #if ENABLE_VERBOSE()
@@ -324,7 +324,7 @@ namespace Langulus::Flow
    ///   @param lhs - [in/out] parsed content goes here (lhs)                 
    ///   @param allowCharge - whether to parse charge (internal use)          
    ///   @return number of parsed characters                                  
-   Offset Code::KeywordParser::Parse(const Code& input, Any& lhs, bool allowCharge) {
+   Offset Code::KeywordParser::Parse(const Code& input, Many& lhs, bool allowCharge) {
       // Isolate the keyword                                            
       Offset progress = 0;
       const auto keyword = Isolate(input);
@@ -348,7 +348,7 @@ namespace Langulus::Flow
                // Parse charge for the keyword                          
                Charge charge;
                progress += ChargeParser::Parse(relevant, charge);
-               lhs << Construct {dmeta, Any {}, charge};
+               lhs << Construct {dmeta, Many {}, charge};
             }
             else lhs << dmeta;
          }
@@ -383,7 +383,7 @@ namespace Langulus::Flow
                   // Parse charge for the keyword                       
                   Charge charge;
                   progress += ChargeParser::Parse(relevant, charge);
-                  lhs << Construct {dmeta, Any {}, charge};
+                  lhs << Construct {dmeta, Many {}, charge};
                }
                else lhs << dmeta;
             }
@@ -439,7 +439,7 @@ namespace Langulus::Flow
    ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] parsed content goes here (lhs)                 
    ///   @return number of parsed characters                                  
-   Offset Code::NumberParser::Parse(const Code& input, Any& lhs) {
+   Offset Code::NumberParser::Parse(const Code& input, Many& lhs) {
       Real rhs = 0;
       Offset progress = 0;
       VERBOSE_TAB("Parsing number");
@@ -527,7 +527,7 @@ namespace Langulus::Flow
    ///   @param optimize - the priority of the last parsed element            
    ///   @return number of parsed characters                                  
    Offset Code::OperatorParser::Parse(
-      Operator op, const Code& input, Any& lhs, Real priority, bool optimize
+      Operator op, const Code& input, Many& lhs, Real priority, bool optimize
    ) {
       Offset progress = 0;
       if (op < Operator::NoOperator) {
@@ -623,7 +623,7 @@ namespace Langulus::Flow
    ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] parsed content goes here (lhs)                 
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseContent(const Code& input, Any& lhs, bool optimize) {
+   Offset Code::OperatorParser::ParseContent(const Code& input, Many& lhs, bool optimize) {
       Offset progress = 0;
 
       // Can define contents for one element at a time                  
@@ -631,7 +631,7 @@ namespace Langulus::Flow
          PRETTY_ERROR("Content scope for multiple elements is not allowed: ", lhs);
 
       // We don't know what to expect, so we attempt blind parse        
-      Any rhs;
+      Many rhs;
       progress = UnknownParser::Parse(input, rhs, 0, optimize);
       if (not input.RightOf(progress).StartsWithOperator(Operator::CloseScope))
          PRETTY_ERROR("Missing closing bracket");
@@ -650,7 +650,7 @@ namespace Langulus::Flow
    /// definition will be replaced by the instantiated element                
    ///   @param rhs - the content to insert                                   
    ///   @param lhs - the place where the content will be inserted            
-   void Code::OperatorParser::InsertContent(Any& rhs, Any& lhs) {
+   void Code::OperatorParser::InsertContent(Many& rhs, Many& lhs) {
       if (lhs.IsUntyped() or not lhs) {
          // If output is untyped, we directly push content, regardless  
          // if it's filled with something or not - a scope is a scope   
@@ -678,7 +678,7 @@ namespace Langulus::Flow
             if (not rhs and not meta->mProducerRetriever
             and meta->mDefaultConstructor) {
                // Invoke default-construction                           
-               Any constExpr;
+               Many constExpr;
                constExpr.SetType(meta);
                constExpr.New(1);
                lhs.RemoveIndex(IndexLast);
@@ -687,7 +687,7 @@ namespace Langulus::Flow
             else {
                // Invoke the descriptor-constructor only if we have to  
                Construct outputConstruct {meta, Move(rhs)};
-               Any precompiled;
+               Many precompiled;
                if (outputConstruct.StaticCreation(precompiled)) {
                   // Precompiled successfully, append it to LHS         
                   lhs.RemoveIndex(IndexLast);
@@ -747,7 +747,7 @@ namespace Langulus::Flow
    ///   @param lhs - [in/out] parsed content goes here (lhs)                 
    ///   @return number of parsed characters                                  
    Offset Code::OperatorParser::ParseString(
-      const Code::Operator op, const Code& input, Any& lhs
+      const Code::Operator op, const Code& input, Many& lhs
    ) {
       Offset progress = 0;
       Offset depth = 1;
@@ -817,7 +817,7 @@ namespace Langulus::Flow
    ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] here goes the byte sequence                    
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseBytes(const Code& input, Any& lhs) {
+   Offset Code::OperatorParser::ParseBytes(const Code& input, Many& lhs) {
       Offset progress = 0;
       while (progress < input.GetCount()) {
          const auto c = input[progress];
@@ -866,7 +866,7 @@ namespace Langulus::Flow
    ///   @param op - the phase operator                                       
    ///   @param lhs - [in/out] phased content goes here                       
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParsePhase(const Code::Operator op, Any& lhs) {
+   Offset Code::OperatorParser::ParsePhase(const Code::Operator op, Many& lhs) {
       if (op == Operator::Past)
          lhs.MakePast();
       else
@@ -878,7 +878,7 @@ namespace Langulus::Flow
    ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] constant content goes here                     
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseConst(Any& lhs) {
+   Offset Code::OperatorParser::ParseConst(Many& lhs) {
       lhs.MakeConst();
       return 0;
    }
@@ -890,7 +890,7 @@ namespace Langulus::Flow
    ///   @param optimize - whether or not to attempt executing at compile-time
    ///   @return number of parsed characters                                  
    Offset Code::OperatorParser::ParseReflected(
-      Verb& op, const Code& input, Any& lhs, bool optimize
+      Verb& op, const Code& input, Many& lhs, bool optimize
    ) {
       Offset progress = 0;
       Code relevant = input;
@@ -911,8 +911,8 @@ namespace Langulus::Flow
          VERBOSE_TAB("Attempting compile-time execution... ");
          const auto opStateBackup = op.GetVerbState();
          op.Multicast(false);
-         Any output;
-         Any scope {op};
+         Many output;
+         Many scope {op};
          if (Execute(scope, lhs, output)) {
             // The verb was executed at compile-time, so directly       
             // substitute LHS with the result                           
@@ -1002,7 +1002,7 @@ namespace Langulus::Flow
          }
 
          // For each charge operator encountered - parse a RHS          
-         Any rhs;
+         Many rhs;
          if (KeywordParser::Peek(relevant)) {
             // Charge parameter can be a keyword, like a constant,      
             // but is not allowed to have charge on its own, to         

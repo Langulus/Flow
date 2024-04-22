@@ -63,7 +63,7 @@ namespace Langulus::Flow
       using A::Code::Code;
       using A::Code::operator ==;
 
-      NOD() LANGULUS_API(FLOW) Any Parse(bool optimize = true) const;
+      NOD() LANGULUS_API(FLOW) Many Parse(bool optimize = true) const;
 
       NOD() LANGULUS_API(FLOW) Code RightOf(Offset) const;
       NOD() LANGULUS_API(FLOW) Code LeftOf(Offset) const;
@@ -95,13 +95,13 @@ namespace Langulus::Flow
       /// Parser for unknown expressions                                      
       /// An unknown-expressions will be scanned to figure what it contains   
       struct LANGULUS_API(FLOW) UnknownParser {
-         NOD() static Offset Parse(const Code&, Any&, Real, bool optimize);
+         NOD() static Offset Parse(const Code&, Many&, Real, bool optimize);
       };
 
       /// Parser for keyword expressions                                      
       /// A key-expression is any expression that begins with a letter        
       struct LANGULUS_API(FLOW) KeywordParser {
-         NOD() static Offset Parse(const Code&, Any&, bool allowCharge = true);
+         NOD() static Offset Parse(const Code&, Many&, bool allowCharge = true);
          NOD() static bool Peek(const Code&) noexcept;
          NOD() static Token Isolate(const Code&) noexcept;
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -120,7 +120,7 @@ namespace Langulus::Flow
       /// A num-expression is any that begins with a digit, a minus           
       /// followed by a digit, or a dot followed by a digit                   
       struct LANGULUS_API(FLOW) NumberParser {
-         NOD() static Offset Parse(const Code&, Any&);
+         NOD() static Offset Parse(const Code&, Many&);
          NOD() static bool Peek(const Code&) noexcept;
       };
 
@@ -128,20 +128,20 @@ namespace Langulus::Flow
       /// An op-expression is one matching the built-in ones, or one matching 
       /// one in reflected verb database, where LHS is not DMeta or VMeta     
       struct LANGULUS_API(FLOW) OperatorParser {
-         NOD() static Offset Parse(Operator, const Code&, Any&, Real, bool optimize);
+         NOD() static Offset Parse(Operator, const Code&, Many&, Real, bool optimize);
          NOD() static Operator PeekBuiltin(const Code&) noexcept;
          NOD() static Operator Peek(const Code&) noexcept;
          NOD() static Token Isolate(const Code&) noexcept;
 
       private:
-         NOD() static Offset ParseContent(const Code&, Any&, bool optimize);
-         NOD() static Offset ParseString(Code::Operator, const Code&, Any&);
-         NOD() static Offset ParseBytes(const Code&, Any&);
-         NOD() static Offset ParsePhase(Code::Operator, Any&);
-         NOD() static Offset ParseConst(Any&);
-         NOD() static Offset ParseReflected(Verb&, const Code&, Any&, bool optimize);
+         NOD() static Offset ParseContent(const Code&, Many&, bool optimize);
+         NOD() static Offset ParseString(Code::Operator, const Code&, Many&);
+         NOD() static Offset ParseBytes(const Code&, Many&);
+         NOD() static Offset ParsePhase(Code::Operator, Many&);
+         NOD() static Offset ParseConst(Many&);
+         NOD() static Offset ParseReflected(Verb&, const Code&, Many&, bool optimize);
 
-         static void InsertContent(Any&, Any&);
+         static void InsertContent(Many&, Many&);
       };
 
       /// Parser for chargers                                                 

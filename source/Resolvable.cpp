@@ -62,7 +62,7 @@ namespace Langulus::Flow
    /// Parse and execute a scope in the resolved context                      
    ///   @param code - the code to parse and execute                          
    ///   @return the results of the execution                                 
-   Any Resolvable::Run(const Code& code) {
+   Many Resolvable::Run(const Code& code) {
       if (not code)
          return {};
       return Run(code.Parse());
@@ -71,9 +71,9 @@ namespace Langulus::Flow
    /// Execute a scope in the resolved context                                
    ///   @param scope - the scope to execute                                  
    ///   @return the results of the execution                                 
-   Any Resolvable::Run(const Any& scope) {
-      Any context {GetBlock()};
-      Any output;
+   Many Resolvable::Run(const Many& scope) {
+      Many context {GetBlock()};
+      Many output;
       if (not Execute(scope, context, output)) {
          Logger::Error("Can't execute scope: ", scope);
          return {};
@@ -85,7 +85,7 @@ namespace Langulus::Flow
    /// Execute a temporal in the resolved context                             
    ///   @param scope - the scope to execute                                  
    ///   @return the results of the execution                                 
-   Any Resolvable::Run(const Temporal&) {
+   Many Resolvable::Run(const Temporal&) {
       TODO();
       return {};
    }

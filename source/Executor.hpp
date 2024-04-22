@@ -17,20 +17,20 @@ namespace Langulus::Flow
    /// Tools for executing containers as flows                                
    ///                                                                        
    LANGULUS_API(FLOW)
-   bool Execute(const Any&, Any&);
+   bool Execute(const Many&, Many&);
    LANGULUS_API(FLOW)
-   bool Execute(const Any&, Any&, Any& output);
+   bool Execute(const Many&, Many&, Many& output);
    LANGULUS_API(FLOW)
-   bool Execute(const Any&, Any&, Any& output, bool& skipVerbs);
+   bool Execute(const Many&, Many&, Many& output, bool& skipVerbs);
 
    LANGULUS_API(FLOW)
-   bool ExecuteAND(const Any&, Any&, Any& output, bool& skipVerbs);
+   bool ExecuteAND(const Many&, Many&, Many& output, bool& skipVerbs);
    LANGULUS_API(FLOW)
-   bool ExecuteOR(const Any&, Any&, Any& output, bool& skipVerbs);
+   bool ExecuteOR(const Many&, Many&, Many& output, bool& skipVerbs);
 
    LANGULUS_API(FLOW)
-   bool ExecuteVerb(Any&, Verb&);
+   bool ExecuteVerb(Many&, Verb&);
    LANGULUS_API(FLOW)
-   bool IntegrateVerb(Any&, Verb&);
+   bool IntegrateVerb(Many&, Verb&);
 
 } // namespace Langulus::Flow

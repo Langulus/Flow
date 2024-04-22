@@ -11,7 +11,7 @@
 #include "Create.hpp"
 #include "Do.hpp"
 
-#include <Anyness/Any.hpp>
+#include <Anyness/Many.hpp>
 #include <Anyness/Map.hpp>
 #include <Anyness/Set.hpp>
 #include <Anyness/Pair.hpp>
@@ -73,7 +73,7 @@ namespace Langulus::Verbs
    ///   @return true if execution was a success                              
    inline bool Interpret::ExecuteDefault(const Block& context, Verb& verb) {
       verb.ForEach([&](DMeta to) {
-         auto result = Any::FromMeta(to);
+         auto result = Many::FromMeta(to);
          if (context.Convert(result))
             verb << Abandon(result);
       });
@@ -106,7 +106,7 @@ namespace Langulus::Verbs
       }
       else {
          // Convert elements                                            
-         TAny<TO> converted;
+         TMany<TO> converted;
          if (context.Convert(converted)) {
             verb << Abandon(converted);
             return true;
@@ -138,7 +138,7 @@ namespace Langulus::Verbs
          if constexpr (CT::Block<FROM>)
             (void) from.Serialize(result);
          else
-            (void) TAny<FROM>::From(from).Serialize(result);
+            (void) TMany<FROM>::From(from).Serialize(result);
          return Abandon(result);
       }
       else if constexpr (CT::Convertible<FROM, TO> and not CT::Deep<FROM>) {
@@ -154,7 +154,7 @@ namespace Langulus::Verbs
       }
       else if constexpr (CT::Deep<FROM>) {
          // We're converting a container to something else              
-         Conditional<CT::Deep<TO>, TO, TAny<TO>> result;
+         Conditional<CT::Deep<TO>, TO, TMany<TO>> result;
          (void) from.Convert(result);
          if constexpr (CT::Deep<TO>)
             return Abandon(result);
@@ -267,7 +267,7 @@ namespace fmt
          const auto type = element.GetTrait();
          return fmt::format_to(ctx.out(), "{}({})",
             (type ? type->mToken : RTTI::MetaTrait::DefaultToken),
-            static_cast<const Anyness::Any&>(element)
+            static_cast<const Anyness::Many&>(element)
          );
       }
    };
@@ -367,7 +367,7 @@ namespace Langulus::Anyness
       // If reached, then pointer arithmetic conversion failed, and we  
       // need more advanced runtime conversions                         
       Verbs::Interpret interpreter {MetaOf<T>()};
-      Any context = GetElementResolved(idx);
+      Many context = GetElementResolved(idx);
       if (Flow::DispatchDeep<false>(context, interpreter))
          return interpreter->As<T>();
 

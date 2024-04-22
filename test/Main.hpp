@@ -15,7 +15,7 @@ using namespace Langulus::Flow;
 
 
 /// A mockup of Langulus::Thing, for testing purposes                         
-struct Thing : Resolvable {
+struct Thing : Resolvable, Referenced {
    LANGULUS(ABSTRACT) false;
    LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;

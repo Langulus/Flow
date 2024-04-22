@@ -122,7 +122,7 @@ SCENARIO("Test factories", "[factory]") {
 		}
 
 		WHEN("Two elements produced via descriptors") {
-         TAny<Producer> context;
+         TMany<Producer> context;
          context.New(1);
 
          const auto descriptor = Construct::From<Producible>(

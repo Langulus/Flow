@@ -97,15 +97,15 @@ namespace Langulus::Verbs
       if (verb.IsMissing() or not context or context.IsMissing())
          return false;
 
-      TAny<Index> indices;
+      TMany<Index> indices;
       indices.GatherFrom(verb.GetArgument());
       bool containsOnlyIndices = not indices.IsEmpty();
 
-      TAny<Trait> selectedTraits;
-      TAny<const RTTI::Ability*> selectedAbilities;
+      TMany<Trait> selectedTraits;
+      TMany<const RTTI::Ability*> selectedAbilities;
 
       // Scan verb argument for anything but indices                    
-      verb.ForEachDeep([&](const Any& group) {
+      verb.ForEachDeep([&](const Many& group) {
          // Skip indices - they were gathered before the loop           
          if (group.Is<Index>())
             return;
@@ -157,7 +157,7 @@ namespace Langulus::Verbs
    ///   @param indices - optional indices (i.e. Nth trait of a kind          
    ///   @return true if at least one trait has been pushed to selectedTraits 
    template<bool MUTABLE>
-   bool Select::PerIndex(Block& context, TAny<Trait>& selectedTraits, TMeta resultingTrait, CT::Meta auto meta, const TAny<Index>& indices) {
+   bool Select::PerIndex(Block& context, TMany<Trait>& selectedTraits, TMeta resultingTrait, CT::Meta auto meta, const TMany<Index>& indices) {
       using META = decltype(meta);
       bool done = false;
       static const Index fallbacki = 0;
@@ -199,7 +199,7 @@ namespace Langulus::Verbs
    ///   @param selectedVerbs - [out] found verb go here                      
    ///   @return if at least trait/verb has been pushed to outputs            
    template<bool MUTABLE>
-   inline bool Select::SelectByMeta(const TAny<Index>& indices, DMeta id, Block& context, TAny<Trait>& selectedTraits, TAny<const RTTI::Ability*>& selectedVerbs) {
+   inline bool Select::SelectByMeta(const TMany<Index>& indices, DMeta id, Block& context, TMany<Trait>& selectedTraits, TMany<const RTTI::Ability*>& selectedVerbs) {
       const auto type = context.GetType();
       if (id->Is<VMeta>()) {
          if (not indices or indices == IndexAll) {

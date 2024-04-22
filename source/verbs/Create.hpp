@@ -45,7 +45,7 @@ namespace Langulus::Verbs
       static bool ExecuteStateless(Verb&);
 
    protected:
-      static void SetMembers(Any&, const Any&);
+      static void SetMembers(Many&, const Many&);
    };
 
 } // namespace Langulus::Verbs

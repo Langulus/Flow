@@ -15,8 +15,8 @@ namespace Langulus::Flow::Inner
    constexpr auto NoPriority = Charge::MaxPriority;
    struct MissingPast;
    struct MissingFuture;
-   using Pasts = TAny<MissingPast*>;
-   using Futures = TAny<MissingFuture*>;
+   using Pasts = TMany<MissingPast*>;
+   using Futures = TMany<MissingFuture*>;
 
 
    ///                                                                        
@@ -25,21 +25,21 @@ namespace Langulus::Flow::Inner
    struct Missing {
       LANGULUS_CONVERTS_TO(Text);
 
-      TAny<DMeta> mFilter;
-      Any mContent;
+      TMany<DMeta> mFilter;
+      Many mContent;
       Real mPriority {NoPriority};
 
       Missing() = default;
-      Missing(const TAny<DMeta>&, Real priority);
+      Missing(const TMany<DMeta>&, Real priority);
       Missing(const Block&, Real priority);
 
       NOD() bool Accepts(const Block&) const;
       NOD() bool IsSatisfied() const;
 
-      bool Push(const Any&, const Block& environment);
-      Any Link(const Block&, const Block& environment, bool& consumedPast) const;
-      Any Link(const Neat&, const Block& environment, bool& consumedPast) const;
-      Any Collapse() const;
+      bool Push(const Many&, const Block& environment);
+      Many Link(const Block&, const Block& environment, bool& consumedPast) const;
+      Many Link(const Neat&, const Block& environment, bool& consumedPast) const;
+      Many Collapse() const;
 
       // Needs to be implicit, so that its inherited                    
       operator Text() const;

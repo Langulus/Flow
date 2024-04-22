@@ -16,12 +16,12 @@ SCENARIO("Test resolvables", "[resolvable]") {
 		auto abstractptr = static_cast<void*>(static_cast<Resolvable*>(&resolvable));
 
 		WHEN("Wrapped inside a block as Resolvable pointer") {
-			Any pack = static_cast<Resolvable*>(&resolvable);
+         Many pack = static_cast<Resolvable*>(&resolvable);
 
 			REQUIRE(concreteptr == abstractptr);
 			REQUIRE(pack.IsSparse());
 			REQUIRE(pack.IsExact<Resolvable*>());
-			REQUIRE(pack.GetResolved().IsExact<Any, Thing2>());
+			REQUIRE(pack.GetResolved().IsExact<Many, Thing2>());
 			REQUIRE(pack.GetResolved().Get<Thing2>().mMember == 777);
 			REQUIRE(pack.GetResolved().Get<Thing>().mMember == 666);
 			REQUIRE(pack.GetResolved().As<Resolvable>().CastsTo<Thing>());
@@ -30,12 +30,12 @@ SCENARIO("Test resolvables", "[resolvable]") {
 		}
 
 		WHEN("Wrapped inside a block as an intermediate abstract type") {
-			Any pack = static_cast<Thing*>(&resolvable);
+         Many pack = static_cast<Thing*>(&resolvable);
 
 			REQUIRE(concreteptr == abstractptr);
 			REQUIRE(pack.IsSparse());
 			REQUIRE(pack.IsExact<Thing*>());
-			REQUIRE(pack.GetResolved().IsExact<Any, Thing2>());
+			REQUIRE(pack.GetResolved().IsExact<Many, Thing2>());
 			REQUIRE(pack.GetResolved().Get<Thing2>().mMember == 777);
 			REQUIRE(pack.GetResolved().As<Thing>().mMember == 666);
 			REQUIRE(pack.GetResolved().As<Resolvable>().CastsTo<Thing>());

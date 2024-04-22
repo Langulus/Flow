@@ -29,9 +29,9 @@ namespace Langulus::Flow
             (void) DesemCast(t1).GetVerb();
             new (this) A::Verb {S::Nest(t1).template Forward<A::Verb>()};
          }
-         else Any::operator = (Forward<T1>(t1));
+         else Many::operator = (Forward<T1>(t1));
       }
-      else Any::Insert(IndexBack, Forward<T1>(t1), Forward<TN>(tn)...);
+      else Many::Insert(IndexBack, Forward<T1>(t1), Forward<TN>(tn)...);
    }
 
    /// Generic assignment                                                     
@@ -47,7 +47,7 @@ namespace Langulus::Flow
          (void) DesemCast(rhs).GetVerb();
          A::Verb::operator = (S::Nest(rhs).template Forward<A::Verb>());
       }
-      else Any::operator = (S::Nest(rhs));
+      else Many::operator = (S::Nest(rhs));
       return *this;
    }
 
@@ -161,7 +161,7 @@ namespace Langulus::Flow
    THIS Verb::Fork(auto&&...args) const noexcept {
       if constexpr (CT::Verb<THIS>) {
          return THIS::From(
-            Any {Forward<Deref<decltype(args)>>(args)...},
+            Many {Forward<Deref<decltype(args)>>(args)...},
             GetCharge(),
             mState
          );
@@ -169,7 +169,7 @@ namespace Langulus::Flow
       else {
          return THIS::FromMeta(
             mVerb,
-            Any {Forward<Deref<decltype(args)>>(args)...},
+            Many {Forward<Deref<decltype(args)>>(args)...},
             GetCharge(),
             mState
          );
@@ -334,7 +334,7 @@ namespace Langulus::Flow
    template<CT::VerbBased THIS, CT::Data T1, CT::Data...TN>
    requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    THIS& Verb::SetSource(T1&& t1, TN&&...tn) {
-      mSource = Any {Forward<T1>(t1), Forward<TN>(tn)...};
+      mSource = Many {Forward<T1>(t1), Forward<TN>(tn)...};
       // We guarantee that source is exactly Any, so we unconstrain it  
       // in order to be safely able to overwrite it anytime             
       mSource.MakeTypeConstrained(false);
@@ -347,7 +347,7 @@ namespace Langulus::Flow
    template<CT::VerbBased THIS, CT::Data T1, CT::Data...TN>
    requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    THIS& Verb::SetArgument(T1&& t1, TN&&...tn) {
-      Any::operator = (Any {Forward<T1>(t1), Forward<TN>(tn)...});
+      Many::operator = (Many {Forward<T1>(t1), Forward<TN>(tn)...});
       // We guarantee that argument is exactly Any, so we unconstrain it
       // in order to be safely able to overwrite it anytime             
       MakeTypeConstrained(false);
@@ -360,7 +360,7 @@ namespace Langulus::Flow
    template<CT::VerbBased THIS, CT::Data T1, CT::Data...TN>
    requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    THIS& Verb::SetOutput(T1&& t1, TN&&...tn) {
-      mOutput = Any {Forward<T1>(t1), Forward<TN>(tn)...};
+      mOutput = Many {Forward<T1>(t1), Forward<TN>(tn)...};
       // We guarantee that output is exactly Any, so we unconstrain it  
       // in order to be safely able to overwrite it anytime             
       mOutput.MakeTypeConstrained(false);
@@ -380,7 +380,7 @@ namespace Langulus::Flow
             return false;
          else {
             return mSource == rhs.mSource
-               and Any::operator == (rhs.GetArgument())
+               and Many::operator == (rhs.GetArgument())
                and mOutput == rhs.mOutput
                and mState == rhs.mState;
          }
@@ -500,7 +500,7 @@ namespace Langulus::Flow
    ///   @param output - the output container                                 
    ///   @return the number of successes for the verb                         
    template<bool OR> LANGULUS(INLINED)
-   Count Verb::CompleteDispatch(const Count successes, Abandoned<Any>&& output) {
+   Count Verb::CompleteDispatch(const Count successes, Abandoned<Many>&& output) {
       if (IsShortCircuited()) {
          // If reached, this will result in failure in OR-context, or   
          // success if AND, as long as the verb is short-circuited      
@@ -514,7 +514,7 @@ namespace Langulus::Flow
 
       // Set output                                                     
       if (mSuccesses)
-         mOutput = output.Forward<Any>();
+         mOutput = output.Forward<Many>();
       else
          mOutput.Reset();
       return mSuccesses;
@@ -567,7 +567,7 @@ namespace Langulus::Flow
          if (foundConverter) {
             // Converter was found, prioritize it                       
             // No escape from this scope                                
-            auto result = Any::FromMeta(toMeta);
+            auto result = Many::FromMeta(toMeta);
             result.template Reserve<true>(1);
             foundConverter(context.GetRaw(), result.GetRaw());
             verb << Abandon(result);

@@ -16,8 +16,8 @@ constexpr Count SerialBlock = sizeof(Count) * 2 + sizeof(DataState);
 SCENARIO("Serialization", "[serialization]") {
    static Allocator::State memoryState;
 
-	GIVEN("An empty Any instance") {
-		Any pack;
+	GIVEN("An empty Many instance") {
+      Many pack;
 
 		WHEN("Pack is serialized as binary") {
          const auto serialized = Verbs::Interpret::To<Bytes>(pack);
@@ -26,20 +26,20 @@ SCENARIO("Serialization", "[serialization]") {
 			REQUIRE(serialized.GetCount() == SerialBlock);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-				auto deserialized = Verbs::Interpret::To<Any>(serialized);
+				auto deserialized = Verbs::Interpret::To<Many>(serialized);
 			   REQUIRE(deserialized == pack);
 			#endif
 		}
 	}
 
-	GIVEN("An Any instance containing other Any instances") {
-		Any pack;
-		pack << Any {1} << Any {2} << Any {3};
+	GIVEN("An Many instance containing other Many instances") {
+      Many pack;
+		pack << Many {1} << Many {2} << Many {3};
 
 		WHEN("Pack is serialized as binary") {
          const auto serialized = Verbs::Interpret::To<Bytes>(pack);
          const auto intToken = MetaDataOf<int>()->mToken.size();
-         const auto anyToken = MetaDataOf<Any>()->mToken.size();
+         const auto anyToken = MetaDataOf<Many>()->mToken.size();
          const auto requiredSize = 
               SerialBlock * 4             // 4 blocks
             + sizeof(int) * 3             // + three ints
@@ -47,21 +47,21 @@ SCENARIO("Serialization", "[serialization]") {
          REQUIRE(serialized.GetCount() == requiredSize);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-				auto deserialized = Verbs::Interpret::To<Any>(serialized);
+				auto deserialized = Verbs::Interpret::To<Many>(serialized);
 				REQUIRE(deserialized == pack);
 			#endif
 		}
 	}
 
-	GIVEN("A TAny instance containing other Any instances") {
-		TAny<Any> pack;
-		pack << Any {1} << Any {2} << Any {3};
+	GIVEN("A TMany instance containing other Many instances") {
+		TMany<Many> pack;
+		pack << Many {1} << Many {2} << Many {3};
 
 		WHEN("Pack is serialized as binary") {
 			auto serialized = Verbs::Interpret::To<Bytes>(pack);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-				auto deserialized = Verbs::Interpret::To<Any>(serialized);
+				auto deserialized = Verbs::Interpret::To<Many>(serialized);
 				REQUIRE(deserialized == pack);
 			#endif
 		}
@@ -76,7 +76,7 @@ SCENARIO("Serialization", "[serialization]") {
    const auto traitToken = MetaDataOf<Traits::Name>()->mToken.size();
 
 	GIVEN("An Any instance containing Text") {
-		Any pack;
+      Many pack;
 		pack << texts[0] << texts[1] << texts[2];
 
 		WHEN("Pack is serialized as binary") {
@@ -90,14 +90,14 @@ SCENARIO("Serialization", "[serialization]") {
          REQUIRE(serialized.GetCount() == requiredSize);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-				auto deserialized = Verbs::Interpret::To<Any>(serialized);
+				auto deserialized = Verbs::Interpret::To<Many>(serialized);
 				REQUIRE(deserialized == pack);
 			#endif
 		}
 	}
 
 	GIVEN("An Any instance containing Trait") {
-		Any pack;
+      Many pack;
 		pack  << Traits::Name(texts[0])
 		      << Traits::Name(texts[1])
 		      << Traits::Name(texts[2]);
@@ -113,40 +113,40 @@ SCENARIO("Serialization", "[serialization]") {
          REQUIRE(serialized.GetCount() == requiredSize);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-				auto deserialized = Verbs::Interpret::To<Any>(serialized);
+				auto deserialized = Verbs::Interpret::To<Many>(serialized);
 				REQUIRE(deserialized == pack);
 			#endif
 		}
 	}
 
 	GIVEN("An Any instance containing a verb") {
-		Any pack = Verbs::Do(10).SetSource(5);
+      Many pack = Verbs::Do(10).SetSource(5);
 
 		WHEN("Pack is serialized as binary") {
 			auto serialized = Verbs::Interpret::To<Bytes>(pack);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-				auto deserialized = Verbs::Interpret::To<Any>(serialized);
+				auto deserialized = Verbs::Interpret::To<Many>(serialized);
 				REQUIRE(deserialized == pack);
 			#endif
 		}
 	}
 
 	GIVEN("An Any instance containing various kinds of numbers") {
-		Any pack {10, 5, 20.0f, 40.0};
+      Many pack {10, 5, 20.0f, 40.0};
 
 		WHEN("Pack is serialized as binary") {
 			auto serialized = Verbs::Interpret::To<Bytes>(pack);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-				auto deserialized = Verbs::Interpret::To<Any>(serialized);
+				auto deserialized = Verbs::Interpret::To<Many>(serialized);
 				REQUIRE(deserialized == pack);
 			#endif
 		}
 	}
 
 	GIVEN("A complex pack with various kinds of data") {
-		Any pack {
+      Many pack {
 			"some text"_text,
 			10, 5, 20.0f, 40.0,
 			Verbs::Do(10).SetSource(5),
@@ -158,7 +158,7 @@ SCENARIO("Serialization", "[serialization]") {
 			auto serialized = Verbs::Interpret::To<Bytes>(pack);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-				auto deserialized = Verbs::Interpret::To<Any>(serialized);
+				auto deserialized = Verbs::Interpret::To<Many>(serialized);
 				REQUIRE(deserialized == pack);
 			#endif
 		}

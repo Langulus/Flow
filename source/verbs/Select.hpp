@@ -47,9 +47,9 @@ namespace Langulus::Verbs
       template<bool MUTABLE>
       static bool DefaultSelect(Block&, Verb&);
       template<bool MUTABLE>
-      static bool PerIndex(Block&, TAny<Trait>&, TMeta, CT::Meta auto, const TAny<Index>&);
+      static bool PerIndex(Block&, TMany<Trait>&, TMeta, CT::Meta auto, const TMany<Index>&);
       template<bool MUTABLE>
-      static bool SelectByMeta(const TAny<Index>&, DMeta, Block&, TAny<Trait>&, TAny<const RTTI::Ability*>&);
+      static bool SelectByMeta(const TMany<Index>&, DMeta, Block&, TMany<Trait>&, TMany<const RTTI::Ability*>&);
    };
 
 } // namespace Langulus::Verbs

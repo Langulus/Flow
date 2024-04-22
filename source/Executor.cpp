@@ -25,8 +25,8 @@ namespace Langulus::Flow
    ///   @param flow - the flow to execute                                    
    ///   @param environment - the environment in which flow will be executed  
    ///   @return true of no errors occured                                    
-   bool Execute(const Any& flow, Any& environment) {
-      Any output;
+   bool Execute(const Many& flow, Many& environment) {
+      Many output;
       bool skipVerbs = false;
       return Execute(flow, environment, output, skipVerbs);
    }
@@ -36,7 +36,7 @@ namespace Langulus::Flow
    ///   @param environment - the environment in which scope will be executed 
    ///   @param output - [out] verb result will be pushed here                
    ///   @return true of no errors occured                                    
-   bool Execute(const Any& flow, Any& environment, Any& output) {
+   bool Execute(const Many& flow, Many& environment, Many& output) {
       bool skipVerbs = false;
       return Execute(flow, environment, output, skipVerbs);
    }
@@ -47,8 +47,8 @@ namespace Langulus::Flow
    ///   @param output - [out] verb result will be pushed here                
    ///   @param skipVerbs - [in/out] whether to skip verbs after OR success   
    ///   @return true of no errors occured                                    
-   bool Execute(const Any& flow, Any& environment, Any& output, bool& skipVerbs) {
-      auto results = Any::FromState(flow);
+   bool Execute(const Many& flow, Many& environment, Many& output, bool& skipVerbs) {
+      auto results = Many::FromState(flow);
       if (flow) {
          VERBOSE_TAB("Executing scope: [", flow, ']');
 
@@ -74,12 +74,12 @@ namespace Langulus::Flow
    ///   @param output - [out] verb result will be pushed here                
    ///   @param skipVerbs - [in/out] whether to skip verbs after OR success   
    ///   @return true of no errors occured                                    
-   bool ExecuteAND(const Any& flow, Any& environment, Any& output, bool& skipVerbs) {
+   bool ExecuteAND(const Many& flow, Many& environment, Many& output, bool& skipVerbs) {
       Count executed {};
       if (flow.IsDeep()) {
-         executed = flow.ForEach([&](const Any& block) {
+         executed = flow.ForEach([&](const Many& block) {
             // Nest if deep                                             
-            Any local;
+            Many local;
             if (not Execute(block, environment, local, skipVerbs))
                LANGULUS_OOPS(Flow, "Deep AND failure: ", flow);
 
@@ -96,7 +96,7 @@ namespace Langulus::Flow
                   return;
                }
 
-               Any local;
+               Many local;
                if (not Execute(trait, environment, local, skipVerbs))
                   LANGULUS_OOPS(Flow, "Trait AND failure: ", flow);
 
@@ -197,14 +197,14 @@ namespace Langulus::Flow
    ///   @param output - [out] verb result will be pushed here                
    ///   @param skipVerbs - [out] whether to skip verbs after OR success      
    ///   @return true of no errors occured                                    
-   bool ExecuteOR(const Any& flow, Any& environment, Any& output, bool& skipVerbs) {
+   bool ExecuteOR(const Many& flow, Many& environment, Many& output, bool& skipVerbs) {
       Count executed {};
       bool localSkipVerbs {};
 
       if (flow.IsDeep()) {
-         executed = flow.ForEach([&](const Any& block) {
+         executed = flow.ForEach([&](const Many& block) {
             // Nest if deep                                             
-            Any local;
+            Many local;
             if (Execute(block, environment, local, localSkipVerbs)) {
                executed = true;
                output.SmartPush(IndexBack, Abandon(local));
@@ -221,7 +221,7 @@ namespace Langulus::Flow
                   return;
                }
 
-               Any local;
+               Many local;
                if (Execute(trait, environment, local)) {
                   executed = true;
                   output.SmartPush(IndexBack, Trait::From(trait.GetTrait(), Abandon(local)));
@@ -328,7 +328,7 @@ namespace Langulus::Flow
    ///   @param environment - [in/out] the context for integration            
    ///   @param verb - [in/out] verb to integrate                             
    ///   @return true of no errors occured                                    
-   bool IntegrateVerb(Any& environment, Verb& verb) {
+   bool IntegrateVerb(Many& environment, Verb& verb) {
       if (verb.IsMonocast()) {
          // We're executing on whole argument/source, so be lazy        
          if (verb.GetSource().IsInvalid())
@@ -337,7 +337,7 @@ namespace Langulus::Flow
       }
 
       // Integrate the verb source to environment                       
-      Any localSource;
+      Many localSource;
       if (not Execute(verb.GetSource(), environment, localSource)) {
          // It's considered error only if verb is not monocast          
          FLOW_ERRORS("Error at source of: ", verb);
@@ -348,7 +348,7 @@ namespace Langulus::Flow
          localSource = environment;
 
       // Integrate the verb argument to the source                      
-      Any localArgument;
+      Many localArgument;
       if (not Execute(verb.GetArgument(), localSource, localArgument)) {
          // It's considered error only if verb is not monocast          
          FLOW_ERRORS("Error at argument of: ", verb);
@@ -364,7 +364,7 @@ namespace Langulus::Flow
    ///   @param context - [in/out] the context in which verb will be executed 
    ///   @param verb - [in/out] verb to execute                               
    ///   @return true of no errors occured                                    
-   bool ExecuteVerb(Any& context, Verb& verb) {
+   bool ExecuteVerb(Many& context, Verb& verb) {
       // Integration (and execution of subverbs if any)                 
       // Source and argument will be executed locally if scripts, and   
       // substituted with their results in the verb                     

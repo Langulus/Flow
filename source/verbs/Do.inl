@@ -211,18 +211,18 @@ namespace Langulus::Flow
       }
 
       Count successCount {};
-      auto output = Any::FromState(context);
+      auto output = Many::FromState(context);
 
       // Iterate elements in the current context                        
       for (Count i = 0; i < context.GetCount(); ++i) {
          verb.SetSource(context.GetElement(i));
 
          if constexpr (RESOLVE) {
-            Any resolved = verb.GetSource().GetResolved();
+            Many resolved = verb.GetSource().GetResolved();
             Execute<DISPATCH, DEFAULT, false>(resolved, verb);
          }
          else {
-            Any resolved = verb.GetSource().GetDense();
+            Many resolved = verb.GetSource().GetDense();
             Execute<DISPATCH, DEFAULT, false>(resolved, verb);
          }
 
@@ -302,10 +302,10 @@ namespace Langulus::Flow
          // Traits are considered deep only when executing in them      
          // There is no escape from this scope                          
          Count successCount {};
-         auto output = Any::FromState(context);
+         auto output = Many::FromState(context);
          for (Count i = 0; i < context.GetCount(); ++i) {
             const auto hits = DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(
-               context.template As<Any>(i), verb);
+               context.template As<Many>(i), verb);
             successCount += hits;
 
             if (verb.IsShortCircuited()) {

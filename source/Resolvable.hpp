@@ -21,9 +21,9 @@ namespace Langulus::Flow
    ///                                                                        
  #if LANGULUS_COMPILER(MSVC)
    #pragma warning(suppress: 4275)
-   struct LANGULUS_API(FLOW) Resolvable : virtual Referenced {
+   struct LANGULUS_API(FLOW) Resolvable {
 #else
-   struct LANGULUS_API(FLOW) Resolvable : virtual Referenced {
+   struct LANGULUS_API(FLOW) Resolvable {
 #endif
       LANGULUS(ABSTRACT) true;
       LANGULUS_CONVERTS_TO(Text);
@@ -66,9 +66,9 @@ namespace Langulus::Flow
       template<bool DISPATCH = true, bool DEFAULT = true>
       auto& Run(CT::VerbBased auto&&);
 
-      Any Run(const Code&);
-      Any Run(const Any&);
-      Any Run(const Temporal&);
+      Many Run(const Code&);
+      Many Run(const Many&);
+      Many Run(const Temporal&);
 
       NOD() Block GetMember(TMeta) noexcept;
       NOD() Block GetMember(TMeta) const noexcept;

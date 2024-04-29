@@ -31,7 +31,7 @@ namespace Langulus::Flow::Inner
    /// Initialize a missing point by a filter, will be precompiled            
    /// i.e. all meta data definitions will be gathered                        
    ///   @param filter - the filter to set                                    
-   inline Missing::Missing(const Block& filter, Real priority)
+   inline Missing::Missing(const Block<>& filter, Real priority)
       : mPriority {priority} {
       mFilter.GatherFrom(filter, DataState::Missing);
       mFilter.SetState(filter.GetState());
@@ -41,7 +41,7 @@ namespace Langulus::Flow::Inner
    /// Verbs are always accepted                                              
    ///   @param content - the content to check                                
    ///   @return true if contents are accepted                                
-   inline bool Missing::Accepts(const Block& content) const {
+   inline bool Missing::Accepts(const Block<>& content) const {
       if (not mFilter or content.CastsTo<Verb, true>())
          return true;
 
@@ -60,7 +60,7 @@ namespace Langulus::Flow::Inner
          return false;
 
       bool satisfied = false;
-      mContent.ForEachDeep([&](const Block& b) {
+      mContent.ForEachDeep([&](const Block<>& b) {
          if (Accepts(b))
             satisfied = true;
          return not satisfied;
@@ -75,7 +75,7 @@ namespace Langulus::Flow::Inner
    ///   @param content - the content to push                                 
    ///   @param environment - a fallback past provided by Temporal            
    ///   @return true if mContent changed                                     
-   inline bool Missing::Push(const Many& content, const Block& environment) {
+   inline bool Missing::Push(const Many& content, const Block<>& environment) {
       bool atLeastOneSuccess = false;
 
       if (content.IsDeep()) {
@@ -184,14 +184,14 @@ namespace Langulus::Flow::Inner
    ///   @param consumedPast - [out] set to true if anythingin this point has 
    ///      been used in any scope missing past                               
    ///   @return the linked equivalent to the provided scope                  
-   Many Missing::Link(const Block& scope, const Block& environment, bool& consumedPast) const {
+   Many Missing::Link(const Block<>& scope, const Block<>& environment, bool& consumedPast) const {
       Many result;
       if (scope.IsOr())
          result.MakeOr();
 
       if (scope.IsDeep()) {
          // Nest scopes, linking any past points in subscopes           
-         scope.ForEach([&](const Block& subscope) {
+         scope.ForEach([&](const Block<>& subscope) {
             try {
                result << Link(subscope, environment, consumedPast);
             }
@@ -314,7 +314,7 @@ namespace Langulus::Flow::Inner
    ///   @param consumedPast - [out] set to true if anythingin this point has 
    ///      been used in any scope missing past                               
    ///   @return the linked equivalent to the provided Neat                   
-   Many Missing::Link(const Neat& neat, const Block& environment, bool& consumedPast) const {
+   Many Missing::Link(const Neat& neat, const Block<>& environment, bool& consumedPast) const {
       Neat result;
       neat.ForEachTrait([&](const Trait& trait) {
          try {
@@ -342,7 +342,7 @@ namespace Langulus::Flow::Inner
          }
       });
 
-      neat.ForEachTail([&](const Block& group) {
+      neat.ForEachTail([&](const Block<>& group) {
          // Compile anything else                                       
          result << Link(group, environment, consumedPast);
       });

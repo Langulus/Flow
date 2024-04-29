@@ -29,7 +29,6 @@ namespace Langulus::Flow
    bool Resolvable::CastsTo(DMeta type) const IF_UNSAFE(noexcept) {
       LANGULUS_ASSUME(DevAssumes, mClassType,
          "Bad resolvable type");
-
       return mClassType->CastsTo(type);
    }
 
@@ -55,8 +54,11 @@ namespace Langulus::Flow
    /// The availability of this function is reflected via CT::Resolvable      
    /// You can invoke this function via Block::GetElementResolved()           
    ///   @return the static memory block representing this instance           
-   Block Resolvable::GetBlock() const noexcept {
-      return Block {DataState::Static, mClassType, 1, const_cast<void*>(mClassPointer)};
+   Block<> Resolvable::GetBlock() const noexcept {
+      return {
+         DataState::Static, mClassType, 1,
+         const_cast<void*>(mClassPointer)
+      };
    }
 
    /// Parse and execute a scope in the resolved context                      
@@ -93,7 +95,7 @@ namespace Langulus::Flow
    /// Get the first member matching a runtime trait definition               
    ///   @param trait - the trait to search for                               
    ///   @return the static mutable memory block representing the member      
-   Block Resolvable::GetMember(TMeta trait) noexcept {
+   Block<> Resolvable::GetMember(TMeta trait) noexcept {
       auto member = mClassType->GetMember(trait);
       if (member)
          return GetBlock().GetMember(*member, 0);
@@ -103,7 +105,7 @@ namespace Langulus::Flow
    /// Get the first member matching a runtime trait definition (const)       
    ///   @param trait - the trait to search for                               
    ///   @return the static constant memory block representing the member     
-   Block Resolvable::GetMember(TMeta trait) const noexcept {
+   Block<> Resolvable::GetMember(TMeta trait) const noexcept {
       auto r = const_cast<Resolvable*>(this)->GetMember(trait);
       r.MakeConst();
       return r;
@@ -113,14 +115,14 @@ namespace Langulus::Flow
    /// Get the first member matching a runtime trait token                    
    ///   @param trait - the trait to search for                               
    ///   @return the static mutable memory block representing the member      
-   Block Resolvable::GetMember(const Token& trait) noexcept {
+   Block<> Resolvable::GetMember(const Token& trait) noexcept {
       return GetMember(RTTI::GetMetaTrait(trait));
    }
 
    /// Get the first member matching a runtime trait token (const)            
    ///   @param trait - the trait to search for                               
    ///   @return the static constant memory block representing the member     
-   Block Resolvable::GetMember(const Token& trait) const noexcept {
+   Block<> Resolvable::GetMember(const Token& trait) const noexcept {
       return GetMember(RTTI::GetMetaTrait(trait));
    }
 #endif

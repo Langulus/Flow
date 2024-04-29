@@ -71,13 +71,13 @@ namespace Langulus::Flow
       TUnorderedMap<Time, Temporal*> mFrequencyStack;
 
    protected:
-      LANGULUS_API(FLOW) static Many Collapse(const Block&);
+      LANGULUS_API(FLOW) static Many Collapse(const Block<>&);
       LANGULUS_API(FLOW) static Many Collapse(const Neat&);
 
-      LANGULUS_API(FLOW) static Many Compile(const Block&, Real priority);
+      LANGULUS_API(FLOW) static Many Compile(const Block<>&, Real priority);
       LANGULUS_API(FLOW) static Many Compile(const Neat&, Real priority);
 
-      LANGULUS_API(FLOW) bool Link(const Many&, Block&) const;
+      LANGULUS_API(FLOW) bool Link(const Many&, Block<>&) const;
       LANGULUS_API(FLOW) bool Link(const Many&, Neat&) const;
       LANGULUS_API(FLOW) bool Link(const Many&, Inner::MissingFuture&) const;
 

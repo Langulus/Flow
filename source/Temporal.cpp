@@ -230,14 +230,14 @@ namespace Langulus::Flow
    /// scope, so we can execute it conventionally                             
    ///   @param scope - the scope to collapse                                 
    ///   @return the collapsed scope                                          
-   Many Temporal::Collapse(const Block& scope) {
+   Many Temporal::Collapse(const Block<>& scope) {
       Many result;
       if (scope.IsOr())
          result.MakeOr();
 
       if (scope.IsDeep()) {
          // Nest deep scopes                                            
-         scope.ForEach([&](const Block& subscope) {
+         scope.ForEach([&](const Block<>& subscope) {
             auto collapsed = Collapse(subscope);
             if (collapsed)
                result << Abandon(collapsed);
@@ -317,7 +317,7 @@ namespace Langulus::Flow
    ///   @param priority - the priority to set for any missing point created  
    ///                     for the provided scope                             
    ///   @return the compiled scope                                           
-   Many Temporal::Compile(const Block& scope, Real priority) {
+   Many Temporal::Compile(const Block<>& scope, Real priority) {
       Many result;
       if (scope.IsOr())
          result.MakeOr();
@@ -334,7 +334,7 @@ namespace Langulus::Flow
       }
       else if (scope.IsDeep()) {
          // Nest deep scopes                                            
-         scope.ForEach([&](const Block& subscope) {
+         scope.ForEach([&](const Block<>& subscope) {
             result << Compile(subscope, priority);
          });
          return Abandon(result);
@@ -401,7 +401,7 @@ namespace Langulus::Flow
          };
       });
 
-      neat.ForEachTail([&](const Block& group) {
+      neat.ForEachTail([&](const Block<>& group) {
          // Compile anything else                                       
          result << Compile(group, priority);
       });
@@ -436,12 +436,12 @@ namespace Langulus::Flow
    ///   @param scope - the scope to link                                     
    ///   @param stack - [in/out] the stack to link with                       
    ///   @return true if scope was linked successfully                        
-   bool Temporal::Link(const Many& scope, Block& stack) const {
+   bool Temporal::Link(const Many& scope, Block<>& stack) const {
       bool atLeastOneSuccess = false;
 
       if (stack.IsDeep()) {
          // Nest deep stack                                             
-         stack.ForEachRev([&](Block& substack) {
+         stack.ForEachRev([&](Block<>& substack) {
             atLeastOneSuccess |= Link(scope, substack);
             // Continue linking only if the stack is branched           
             return not (stack.IsOr() and atLeastOneSuccess);
@@ -498,7 +498,7 @@ namespace Langulus::Flow
    ///   @return true if scope was linked successfully                        
    bool Temporal::Link(const Many& scope, Neat& stack) const {
       bool atLeastOneSuccess = false;
-      stack.ForEach([&](Block& substack) {
+      stack.ForEach([&](Block<>& substack) {
          atLeastOneSuccess |= Link(scope, substack);
       });
 

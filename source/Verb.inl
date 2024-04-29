@@ -407,7 +407,7 @@ namespace Langulus::Flow
 
       if constexpr (not CT::Nullptr<T>) {
          if constexpr (CT::PointerRelated<T>) {
-            // Push a pointer, but check if valid first                 
+            // Push a pointer only if valid                             
             if (not DesemCast(rhs))
                return *reinterpret_cast<THIS*>(this);
          }
@@ -430,7 +430,7 @@ namespace Langulus::Flow
 
       if constexpr (not CT::Nullptr<T>) {
          if constexpr (CT::PointerRelated<T>) {
-            // Push a pointer, but check if valid first                 
+            // Push a pointer only if valid                             
             if (not DesemCast(rhs))
                return *reinterpret_cast<THIS*>(this);
          }

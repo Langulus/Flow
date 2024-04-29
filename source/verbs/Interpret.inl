@@ -138,7 +138,7 @@ namespace Langulus::Verbs
          if constexpr (CT::Block<FROM>)
             (void) from.Serialize(result);
          else
-            (void) TMany<FROM>::From(from).Serialize(result);
+            (void) MakeBlock<TMany<FROM>>(from).Serialize(result);
          return Abandon(result);
       }
       else if constexpr (CT::Convertible<FROM, TO> and not CT::Deep<FROM>) {
@@ -343,8 +343,8 @@ namespace Langulus::Anyness
    ///   @tparam FATAL_FAILURE - true to throw on failure, otherwise          
    ///                           return a default-initialized T on fail       
    ///   @return the first element, converted to T                            
-   template<CT::Data T, bool FATAL_FAILURE, CT::Block THIS>
-   T Block::AsCast(const CT::Index auto index) const {
+   template<class TYPE> template<CT::Data T, bool FATAL_FAILURE>
+   T Block<TYPE>::AsCast(const CT::Index auto index) const {
       if (IsEmpty()) {
          if constexpr (FATAL_FAILURE)
             LANGULUS_THROW(Convert, "Unable to AsCast, container is empty");
@@ -358,7 +358,7 @@ namespace Langulus::Anyness
       }
 
       // Simplify the index as early as possible                        
-      const auto idx = SimplifyIndex<THIS>(index);
+      const auto idx = SimplifyIndex(index);
 
       // Attempt pointer arithmetic conversion first                    
       try { return As<T>(idx); }

@@ -19,7 +19,7 @@ namespace Langulus::Flow
    ///                                                                        
    /// Holds a reflected class type and context state                         
    ///                                                                        
- #if LANGULUS_COMPILER(MSVC)
+#if LANGULUS_COMPILER(MSVC)
    #pragma warning(suppress: 4275)
    struct LANGULUS_API(FLOW) Resolvable {
 #else
@@ -61,7 +61,7 @@ namespace Langulus::Flow
 
       NOD() Token GetToken() const IF_UNSAFE(noexcept);
       NOD() DMeta GetType()  const noexcept;
-      NOD() Block GetBlock() const noexcept;
+      NOD() Block<> GetBlock() const noexcept;
 
       template<bool DISPATCH = true, bool DEFAULT = true>
       auto& Run(CT::VerbBased auto&&);
@@ -70,18 +70,18 @@ namespace Langulus::Flow
       Many Run(const Many&);
       Many Run(const Temporal&);
 
-      NOD() Block GetMember(TMeta) noexcept;
-      NOD() Block GetMember(TMeta) const noexcept;
+      NOD() Block<> GetMember(TMeta) noexcept;
+      NOD() Block<> GetMember(TMeta) const noexcept;
 
-      NOD() Block GetMember(TMeta, CT::Index auto) noexcept;
-      NOD() Block GetMember(TMeta, CT::Index auto) const noexcept;
+      NOD() Block<> GetMember(TMeta, CT::Index auto) noexcept;
+      NOD() Block<> GetMember(TMeta, CT::Index auto) const noexcept;
 
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         NOD() Block GetMember(const Token&) noexcept;
-         NOD() Block GetMember(const Token&) const noexcept;
+         NOD() Block<> GetMember(const Token&) noexcept;
+         NOD() Block<> GetMember(const Token&) const noexcept;
 
-         NOD() Block GetMember(const Token&, CT::Index auto) noexcept;
-         NOD() Block GetMember(const Token&, CT::Index auto) const noexcept;
+         NOD() Block<> GetMember(const Token&, CT::Index auto) noexcept;
+         NOD() Block<> GetMember(const Token&, CT::Index auto) const noexcept;
       #endif
 
       template<CT::Trait>

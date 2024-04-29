@@ -58,7 +58,7 @@ SCENARIO("Serialization", "[serialization]") {
 		pack << Many {1} << Many {2} << Many {3};
 
 		WHEN("Pack is serialized as binary") {
-			auto serialized = Verbs::Interpret::To<Bytes>(pack);
+         Bytes serialized = Verbs::Interpret::To<Bytes>(pack);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
 				auto deserialized = Verbs::Interpret::To<Many>(serialized);

@@ -197,8 +197,7 @@ namespace Langulus::Flow
       if constexpr (DIRECT) {
          auto member = mClassType->GetMember(MetaOf<T>());
          if (member)
-            return GetBlock().GetMember(*member, 0)
-               .Copy(Block::From(data)) > 0;
+            return GetBlock().GetMember(*member, 0).Copy(MakeBlock(data)) > 0;
          else return false;
       }
       else {
@@ -221,8 +220,7 @@ namespace Langulus::Flow
       if constexpr (DIRECT) {
          auto member = mClassType->GetMember({}, MetaDataOf<D>());
          if (member)
-            return GetBlock().GetMember(*member, 0)
-               .Copy(Block::From(data)) > 0;
+            return GetBlock().GetMember(*member, 0).Copy(MakeBlock(data)) > 0;
          else return false;
       }
       else {

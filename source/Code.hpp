@@ -65,8 +65,8 @@ namespace Langulus::Flow
 
       NOD() LANGULUS_API(FLOW) Many Parse(bool optimize = true) const;
 
-      NOD() LANGULUS_API(FLOW) Code RightOf(Offset) const;
-      NOD() LANGULUS_API(FLOW) Code LeftOf(Offset) const;
+      NOD() LANGULUS_API(FLOW) Code RightOf(Offset) const IF_UNSAFE(noexcept);
+      NOD() LANGULUS_API(FLOW) Code LeftOf(Offset) const IF_UNSAFE(noexcept);
       NOD() LANGULUS_API(FLOW) bool StartsWithSpecial() const noexcept;
       NOD() LANGULUS_API(FLOW) bool StartsWithSkippable() const noexcept;
       NOD() LANGULUS_API(FLOW) bool EndsWithSkippable() const noexcept;

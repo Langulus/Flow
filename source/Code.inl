@@ -17,7 +17,7 @@ namespace Langulus::Flow
    ///   @param offset - the number of elements to discard from the front     
    ///   @return a shallow-copied container with the correct offset           
    LANGULUS(INLINED)
-   Code Code::RightOf(Offset offset) const {
+   Code Code::RightOf(Offset offset) const IF_UNSAFE(noexcept) {
       return offset < mCount ? Text::Crop(offset) : Code {};
    }
 
@@ -25,7 +25,7 @@ namespace Langulus::Flow
    ///   @param offset - the number of elements to remain in container        
    ///   @return a shallow-copied container with the correct offset           
    LANGULUS(INLINED)
-   Code Code::LeftOf(Offset offset) const {
+   Code Code::LeftOf(Offset offset) const IF_UNSAFE(noexcept) {
       return offset > 0 ? Text::Crop(0, offset) : Code {};
    }
 

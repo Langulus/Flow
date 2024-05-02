@@ -31,9 +31,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    (void) MetaOf<Index>();
 
    GIVEN("The script with line comments") {
-      const auto code = "//some comment\n`plural` associate many //same line comment with no new line"_code;
+      const auto code = "//some comment\n`plural` associate index::many //same line comment with no new line"_code;
       const Many required = Verbs::Associate {IndexMany}
-         .SetSource("plural"_text);
+         .SetSource("plural");
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -43,9 +43,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    }
    
    GIVEN("The script with /**/ comments") {
-      const auto code = "/*some comment*/`plural` /*inbetween*/ associate many /*bad comment at the end"_code;
+      const auto code = "/*some comment*/`plural` /*inbetween*/ associate index::many /*bad comment at the end"_code;
       const Many required = Verbs::Associate {IndexMany}
-         .SetSource("plural"_text);
+         .SetSource("plural");
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -54,10 +54,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       }
    }
    
-   GIVEN("The script: `plural` associate many") {
-      const auto code = "`plural` associate many"_code;
+   GIVEN("The script: `plural` associate index::many") {
+      const auto code = "`plural` associate index::many"_code;
       const Many required = Verbs::Associate {IndexMany}
-         .SetSource("plural"_text);
+         .SetSource("plural");
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -66,10 +66,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       }
    }
 
-   GIVEN("The script: `plural` associate(many)") {
-      const auto code = "`plural` associate(many)"_code;
+   GIVEN("The script: `plural` associate(index::many)") {
+      const auto code = "`plural` associate(index::many)"_code;
       const Many required = Verbs::Associate {IndexMany}
-         .SetSource("plural"_text);
+         .SetSource("plural");
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -78,10 +78,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       }
    }
 
-   GIVEN("The script: (`plural`) associate (many)") {
-      const auto code = "(`plural`) associate (many)"_code;
+   GIVEN("The script: (`plural`) associate (index::many)") {
+      const auto code = "(`plural`) associate (index::many)"_code;
       const Many required = Verbs::Associate {IndexMany}
-         .SetSource("plural"_text);
+         .SetSource("plural");
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -90,10 +90,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       }
    }
 
-   GIVEN("The script: (`plural`) associate (many)") {
-      const auto code = "(`plural`) associate many"_code;
+   GIVEN("The script: (`plural`) associate (index::many)") {
+      const auto code = "(`plural`) associate index::many"_code;
       const Many required = Verbs::Associate {IndexMany}
-         .SetSource("plural"_text);
+         .SetSource("plural");
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -102,10 +102,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       }
    }
 
-   GIVEN("The script: `plural` = many") {
-      const auto code = "`plural` = many"_code;
+   GIVEN("The script: `plural` = index::many") {
+      const auto code = "`plural` = index::many"_code;
       const Many required = Verbs::Associate {IndexMany}
-         .SetSource("plural"_text);
+         .SetSource("plural");
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -114,10 +114,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       }
    }
 
-   GIVEN("The script: `plural` = (many)") {
-      const auto code = "`plural` = (many)"_code;
+   GIVEN("The script: `plural` = (index::many)") {
+      const auto code = "`plural` = (index::many)"_code;
       const Many required = Verbs::Associate {IndexMany}
-         .SetSource("plural"_text);
+         .SetSource("plural");
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -126,10 +126,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       }
    }
 
-   GIVEN("The script: (`plural`) = (many)") {
-      const auto code = "(`plural`) = (many)"_code;
+   GIVEN("The script: (`plural`) = (index::many)") {
+      const auto code = "(`plural`) = (index::many)"_code;
       const Many required = Verbs::Associate {IndexMany}
-         .SetSource("plural"_text);
+         .SetSource("plural");
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -138,10 +138,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       }
    }
 
-   GIVEN("The script: (`plural`) = many") {
-      const auto code = "(`plural`) = many"_code;
+   GIVEN("The script: (`plural`) = index::many") {
+      const auto code = "(`plural`) = index::many"_code;
       const Many required = Verbs::Associate {IndexMany}
-         .SetSource("plural"_text);
+         .SetSource("plural");
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -153,7 +153,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    GIVEN("The script: `thing` associate [Entity(past?, future?)]") {
       const auto code = "`thing` associate [Entity(past?, future?)]"_code;
       const Many required = Verbs::Associate {"Entity(past?, future?)"_code}
-         .SetSource("thing"_text);
+         .SetSource("thing");
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -164,8 +164,8 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: `things` associate(\"thing\", `plural`)") {
       const auto code = "`things` associate(\"thing\", `plural`)"_code;
-      const Many required = Verbs::Associate {"thing"_text, "plural"_text}
-         .SetSource("things"_text);
+      const Many required = Verbs::Associate {"thing", "plural"}
+         .SetSource("things");
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -176,8 +176,8 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: `things` = (\"thing\", `plural`)") {
       const auto code = "`things` = (\"thing\", `plural`)"_code;
-      const Many required = Verbs::Associate {"thing"_text, "plural"_text}
-         .SetSource("things"_text);
+      const Many required = Verbs::Associate {"thing", "plural"}
+         .SetSource("things");
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -191,7 +191,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       Many argument {
          "number? >< number??"_code, 
          IndexSingle, 
-         "and"_text
+         "and"
       };
       argument.MakeOr();
       const Many required = Verbs::Associate {argument}

@@ -359,7 +359,7 @@ namespace Langulus::Flow
          lhs << tmeta;
       }
       else if (not dmeta and not tmeta and cmeta) {
-         const Block constant {
+         const Block<> constant {
             {}, cmeta->mValueType, 1, cmeta->mPtrToValue, nullptr
          };
          lhs.SmartPush(IndexBack, Clone(constant));
@@ -394,7 +394,7 @@ namespace Langulus::Flow
             lhs << tmeta;
 
          if (cmeta) {
-            const Block constant {{}, cmeta};
+            const Block<> constant {{}, cmeta};
             lhs.SmartPush(IndexBack, Clone(constant));
          }
       }

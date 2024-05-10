@@ -18,7 +18,7 @@ namespace Langulus::Flow
    ///   @return a shallow-copied container with the correct offset           
    LANGULUS(INLINED)
    Code Code::RightOf(Offset offset) const IF_UNSAFE(noexcept) {
-      return offset < mCount ? Text::Crop(offset) : Code {};
+      return offset < mCount ? Text::Select(offset) : Code {};
    }
 
    /// Remove elements from the right side of Code code                       
@@ -26,7 +26,7 @@ namespace Langulus::Flow
    ///   @return a shallow-copied container with the correct offset           
    LANGULUS(INLINED)
    Code Code::LeftOf(Offset offset) const IF_UNSAFE(noexcept) {
-      return offset > 0 ? Text::Crop(0, offset) : Code {};
+      return offset > 0 ? Text::Select(0, offset) : Code {};
    }
 
    /// Check if the Code container begins with special elements, such as      

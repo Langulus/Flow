@@ -11,9 +11,10 @@
 #include "verbs/Do.inl"
 #include "verbs/Interpret.inl"
 #include "verbs/Create.inl"
+#include "inner/Missing.hpp"
 
-#define VERBOSE(...)      //Logger::Verbose(__VA_ARGS__)
-#define VERBOSE_TAB(...)  //const auto tab = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
+#define VERBOSE(...)      Logger::Verbose(__VA_ARGS__)
+#define VERBOSE_TAB(...)  const auto tab = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
 #define FLOW_ERRORS(...)  Logger::Error(__VA_ARGS__)
 
 
@@ -75,7 +76,7 @@ namespace Langulus::Flow
    ///   @param skipVerbs - [in/out] whether to skip verbs after OR success   
    ///   @return true of no errors occured                                    
    bool ExecuteAND(const Many& flow, Many& environment, Many& output, bool& skipVerbs) {
-      Count executed {};
+      Count executed = 0;
       if (flow.IsDeep()) {
          executed = flow.ForEach([&](const Many& block) {
             // Nest if deep                                             
@@ -84,10 +85,18 @@ namespace Langulus::Flow
                LANGULUS_OOPS(Flow, "Deep AND failure: ", flow);
 
             output.SmartPush(IndexBack, Abandon(local));
-         });
+            });
       }
       else {
          executed = flow.ForEach(
+            [&](const Inner::Missing& missing) {
+               // Nest if missing points                                
+               Many local;
+               if (not Execute(missing.mContent, environment, local, skipVerbs))
+                  LANGULUS_OOPS(Flow, "Missing point failure: ", flow);
+
+               output.SmartPush(IndexBack, Abandon(local));
+            },
             [&](const Trait& trait) {
                // Nest if traits, but retain each trait                 
                if (trait.IsMissing()) {
@@ -132,7 +141,7 @@ namespace Langulus::Flow
 
                   if (not ExecuteVerb(environment, verb))
                      LANGULUS_OOPS(Flow, "Construct AND failure: ", flow);
-               });
+                  });
 
                if (constructIsMissing) {
                   // Just propagate, if missing                         
@@ -154,10 +163,16 @@ namespace Langulus::Flow
                if (skipVerbs)
                   return Loop::Break;
 
-               if (constVerb.GetCharge().IsFlowDependent()) {
+               /*if (constVerb.GetCharge().IsFlowDependent()) {
                   // The verb hasn't been integrated into a flow, just  
                   // forward it                                         
                   output.SmartPush(IndexBack, constVerb);
+                  return Loop::Continue;
+               }*/
+
+               if (constVerb.IsDone()) {
+                  // Verb has already been executed                     
+                  // Don't do anything                                  
                   return Loop::Continue;
                }
 
@@ -198,8 +213,8 @@ namespace Langulus::Flow
    ///   @param skipVerbs - [out] whether to skip verbs after OR success      
    ///   @return true of no errors occured                                    
    bool ExecuteOR(const Many& flow, Many& environment, Many& output, bool& skipVerbs) {
-      Count executed {};
-      bool localSkipVerbs {};
+      Count executed = 0;
+      bool localSkipVerbs = false;
 
       if (flow.IsDeep()) {
          executed = flow.ForEach([&](const Many& block) {
@@ -209,7 +224,7 @@ namespace Langulus::Flow
                executed = true;
                output.SmartPush(IndexBack, Abandon(local));
             }
-         });
+            });
       }
       else {
          executed = flow.ForEach(
@@ -257,7 +272,7 @@ namespace Langulus::Flow
 
                   if (ExecuteVerb(environment, verb))
                      executed = true;
-               });
+                  });
 
                if (constructIsMissing) {
                   // Just propagate, if missing                         

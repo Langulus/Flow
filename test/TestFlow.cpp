@@ -21,12 +21,6 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    static_assert(CT::Complete<Temporal>);
 
-   Many pastMissing;
-   pastMissing.MakePast();
-
-   Many futureMissing;
-   futureMissing.MakeFuture();
-
    // Required for constants, such as single, many, etc.                
    (void) MetaOf<Index>();
 
@@ -206,7 +200,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: Create!-1(Verb(?, ??))") {
       const Code code = "Create!-1(Verb(?, ??))";
-      TMany<Many> package {pastMissing, futureMissing};
+      TMany<Many> package {Many::Past(), Many::Future()};
       const Many required = Verbs::Create {Many {Verb {package}}}
          .SetPriority(-1);
 
@@ -219,9 +213,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: number    ?       ><       number ?? ") {
       const Code code = "number    ?       ><     number ?? ";
-      Many source {pastMissing};
+      Many source = Many::Past();
       source << MetaOf<A::Number>();
-      Many argument {futureMissing};
+      Many argument = Many::Future();
       argument << MetaOf<A::Number>();
       const Many required = Verbs::Catenate {argument}
          .SetSource(source);
@@ -235,8 +229,8 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: `is` = (? = ??)") {
       const Code code = "`is` = (? = ??)";
-      const Many package = Verbs::Associate {futureMissing}
-         .SetSource(pastMissing);
+      const Many package = Verbs::Associate {Many::Future()}
+         .SetSource(Many::Past());
       const Many required = Verbs::Associate {package}
          .SetSource("is"_text);
 
@@ -249,7 +243,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: .Context = .Verb.??") {
       const Code code = ".Context = .Verb.??";
-      const Many package = Verbs::Select {futureMissing}
+      const Many package = Verbs::Select {Many::Future()}
          .SetSource(Verbs::Select {MetaOf<Verb>()});
       const Many required = Verbs::Associate {package}
          .SetSource(Verbs::Select {MetaOf<Traits::Context>()});
@@ -262,12 +256,12 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    }
 
    GIVEN("The script: Create!-1(Verb(?(Number,DMeta,Construct), ??(Number,DMeta,Construct)))") {
-      Many a1 {pastMissing};
+      Many a1 = Many::Past();
       a1 << MetaOf<A::Number>()
          << MetaOf<DMeta>()
          << MetaOf<Construct>();
 
-      Many a2 {futureMissing};
+      Many a2 = Many::Future();
       a2 << MetaOf<A::Number>()
          << MetaOf<DMeta>()
          << MetaOf<Construct>();
@@ -288,7 +282,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create Thing(User)";
       const Many required = Verbs::Create {
          Construct::From<Thing>(MetaOf<User>())
-      }.SetSource(pastMissing);
+      }.SetSource(Many::Past());
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -299,16 +293,16 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: (number? >< number??) or (? Conjunct!4 ??)") {
       const Code code = "(number? >< number??) or (? Conjunct!4 ??)";
-      Many pastNumber {pastMissing};
+      Many pastNumber = Many::Past();
       pastNumber << MetaOf<A::Number>();
-      Many futrNumber {futureMissing};
+      Many futrNumber = Many::Future();
       futrNumber << MetaOf<A::Number>();
 
       Verbs::Catenate catenate {futrNumber};
       catenate.SetSource(pastNumber);
 
-      Verbs::Conjunct conjunct {futureMissing};
-      conjunct.SetSource(pastMissing);
+      Verbs::Conjunct conjunct {Many::Future()};
+      conjunct.SetSource(Many::Past());
       conjunct.SetPriority(4);
 
       Many required = Many::Wrap<Verb>(catenate, conjunct);
@@ -323,11 +317,11 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ?.Thing(User).??") {
       const Code code = "?.Thing(User).??";
-      const Many required = Verbs::Select {futureMissing}
+      const Many required = Verbs::Select {Many::Future()}
          .SetSource(
             Verbs::Select {
                Construct::From<Thing>(MetaOf<User>())
-            }.SetSource(pastMissing)
+            }.SetSource(Many::Past())
          );
 
       WHEN("Parsed") {
@@ -350,8 +344,8 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ? = ??") {
       const Code code = "? = ??";
-      const Many required = Verbs::Associate {futureMissing}
-         .SetSource(pastMissing);
+      const Many required = Verbs::Associate {Many::Future()}
+         .SetSource(Many::Past());
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -366,14 +360,14 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       Many sessionOrUser {MetaOf<Session>(), MetaOf<User>()};
       sessionOrUser.MakeOr();
 
-      Verbs::Associate first {futureMissing};
-      first.SetSource(pastMissing);
+      Verbs::Associate first {Many::Future()};
+      first.SetSource(Many::Past());
 
       Verbs::Select second {Construct::From<Thing>(sessionOrUser)};
-      second.SetSource(pastMissing);
+      second.SetSource(Many::Past());
 
-      Verbs::Select third {futureMissing};
-      third.SetSource(pastMissing);
+      Verbs::Select third {Many::Future()};
+      third.SetSource(Many::Past());
 
       Many required = Many::Wrap<Verb>(first, second, third);
       required.MakeOr();
@@ -387,8 +381,8 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ? create ??") {
       const Code code = "? create ??";
-      const Many required = Verbs::Create {futureMissing}
-         .SetSource(pastMissing);
+      const Many required = Verbs::Create {Many::Future()}
+         .SetSource(Many::Past());
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -425,10 +419,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ? create Name(A::Text??)") {
       const Code code = "? create Name(A::Text??)";
-      Many missingFutureText {futureMissing};
+      Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
       const Many required = Verbs::Create {Traits::Name {missingFutureText}}
-         .SetSource(pastMissing);
+         .SetSource(Many::Past());
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -439,10 +433,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ? create @ 1 ! 2 ^ 3 * 5 Name(A::Text??)") {
       const Code code = "? create @ 1 ! 2 ^ 3 * 5 Name(A::Text??)";
-      Many missingFutureText {futureMissing};
+      Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
       const Many required = Verbs::Create {Traits::Name {missingFutureText}}
-         .SetSource(pastMissing)
+         .SetSource(Many::Past())
          .SetTime(1_real).SetPriority(2_real).SetRate(3_real).SetMass(5_real);
 
       WHEN("Parsed") {
@@ -454,10 +448,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ? create @ 1.66 ! 2.11 ^ 3.22 * 5.33 Name(A::Text??)") {
       const Code code = "? create @ 1.66 ! 2.11 ^ 3.22 * 5.33 Name(A::Text??)";
-      Many missingFutureText {futureMissing};
+      Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
       const Many required = Verbs::Create {Traits::Name {missingFutureText}}
-         .SetSource(pastMissing)
+         .SetSource(Many::Past())
          .SetTime(1.66_real).SetPriority(2.11_real).SetRate(3.22_real).SetMass(5.33_real);
 
       WHEN("Parsed") {
@@ -469,10 +463,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ? create@0.2!0.1^0.3*0.4 Name(A::Text??)") {
       const Code code = "? create@0.2!0.1^0.3*0.4 Name(A::Text??)";
-      Many missingFutureText {futureMissing};
+      Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
       const Many required = Verbs::Create {Traits::Name {missingFutureText}}
-         .SetSource(pastMissing)
+         .SetSource(Many::Past())
          .SetTime(0.2_real).SetPriority(0.1_real).SetRate(0.3_real).SetMass(0.4_real);
 
       WHEN("Parsed") {
@@ -484,10 +478,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ? create@1!2^3*4 Name(A::Text??)") {
       const Code code = "? create@1!2^3*4 Name(A::Text??)";
-      Many missingFutureText {futureMissing};
+      Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
       const Many required = Verbs::Create {Traits::Name {missingFutureText}}
-         .SetSource(pastMissing)
+         .SetSource(Many::Past())
          .SetTime(1_real).SetPriority(2_real).SetRate(3_real).SetMass(4_real);
 
       WHEN("Parsed") {
@@ -499,10 +493,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ? create@1.66!2.22^0.04*0.05 Name(A::Text??)") {
       const Code code = "? create@1.66!2.22^0.04*0.05 Name(A::Text??)";
-      Many missingFutureText {futureMissing};
+      Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
       const Many required = Verbs::Create {Traits::Name {missingFutureText}}
-         .SetSource(pastMissing)
+         .SetSource(Many::Past())
          .SetTime(1.66_real).SetPriority(2.22_real).SetRate(0.04_real).SetMass(0.05_real);
 
       WHEN("Parsed") {
@@ -514,10 +508,10 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ? create@0.2!0.3^0.4*0.5 Name(A::Text??)") {
       const Code code = "? create@0.2!0.3^0.4*0.5 Name(A::Text??)";
-      Many missingFutureText {futureMissing};
+      Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
       const Many required = Verbs::Create {Traits::Name {missingFutureText}}
-         .SetSource(pastMissing)
+         .SetSource(Many::Past())
          .SetTime(0.2_real).SetPriority(0.3_real).SetRate(0.4_real).SetMass(0.5_real);
 
       WHEN("Parsed") {

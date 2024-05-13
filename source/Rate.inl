@@ -15,7 +15,7 @@ namespace Langulus::Flow
 
    /// Manual rate constructor from a dense number                            
    ///   @param value - the number to interpret as symbolical rate            
-   constexpr RefreshRate::RefreshRate(const CT::DenseNumber auto& value) noexcept
+   constexpr RefreshRate::RefreshRate(const CT::Number auto& value) noexcept
       : mMode {static_cast<Type>(value)} {}
 
    /// Manual rate constructor from internal enumerator                       

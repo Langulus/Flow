@@ -107,7 +107,7 @@ namespace Langulus::Flow
 
    public:
       constexpr RefreshRate() noexcept = default;
-      constexpr RefreshRate(const CT::DenseNumber auto&) noexcept;
+      constexpr RefreshRate(const CT::Number auto&) noexcept;
       constexpr RefreshRate(const Enum&) noexcept;
 
       NOD() constexpr bool IsUniform() const noexcept;

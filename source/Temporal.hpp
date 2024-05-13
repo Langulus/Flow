@@ -104,6 +104,11 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) void Merge(const Temporal&);
       LANGULUS_API(FLOW) bool Push(Many);
 
+      template<CT::Data T1, CT::Data...TN> requires (sizeof...(TN) >= 1)
+      bool Push(T1&& t1, TN&&...tn) {
+         return Push(Forward<T1>(t1)) and (Push(Forward<TN>(tn)) and ...);
+      }
+
       LANGULUS_API(FLOW) void Reset();
       LANGULUS_API(FLOW) bool Update(Time);
 
@@ -111,4 +116,3 @@ namespace Langulus::Flow
    };
 
 } // namespace Langulus::Flow
-

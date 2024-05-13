@@ -9,6 +9,7 @@
 #pragma once
 #include "../Verb.hpp"
 
+
 namespace Langulus::Flow::Inner
 {
 

@@ -9,7 +9,7 @@
 #include "Time.inl"
 #include "Code.inl"
 #include "Resolvable.inl"
-#include "inner/Missing.inl"
+#include "inner/Missing.hpp"
 #include "inner/Fork.hpp"
 #include "Temporal.hpp"
 
@@ -18,491 +18,493 @@
 #define VERBOSE_TEMPORAL_TAB(...) \
    const auto tab = Logger::Verbose(*this, ": ", __VA_ARGS__, Logger::Tabs{})
 
+using namespace Langulus::Flow;
 
-namespace Langulus::Flow
-{
 
-   /// Default constructor, add the initial missing future point              
-   ///   @param environment - the initial flow environment                    
-   Temporal::Temporal() {
-      mPriorityStack << Inner::MissingFuture {};
-   }
+/// Default constructor, add the initial missing future point                 
+///   @param environment - the initial flow environment                       
+Temporal::Temporal() {
+   mPriorityStack << Inner::MissingFuture {};
+}
    
-   /// Default constructor, add the initial missing future point              
-   ///   @param environment - the initial flow environment                    
-   /*Temporal::Temporal(const Many& environment) {
-      mEnvironment = environment;
-      mPriorityStack << Inner::MissingFuture {};
-   }*/
+/// Default constructor, add the initial missing future point                 
+///   @param environment - the initial flow environment                       
+/*Temporal::Temporal(const Many& environment) {
+   mEnvironment = environment;
+   mPriorityStack << Inner::MissingFuture {};
+}*/
 
-   /// Construct as a sub-flow                                                
-   ///   @attention assumes parent is a valid pointer                         
-   ///   @param parent - the parent flow                                      
-   ///   @param state - the flow state                                        
-   Temporal::Temporal(Temporal* parent, const State& state)
-      : mParent {parent}
-      , mState {state} { }
+/// Construct as a sub-flow                                                   
+///   @attention assumes parent is a valid pointer                            
+///   @param parent - the parent flow                                         
+///   @param state - the flow state                                           
+Temporal::Temporal(Temporal* parent, const State& state)
+   : mParent {parent}
+   , mState {state} { }
 
-   /// Serialize temporal as Code                                             
-   Temporal::operator Code() const {
-      return IdentityOf(this);
-   }
+/// Serialize temporal as Code                                                
+Temporal::operator Code() const {
+   return IdentityOf(this);
+}
 
-   /// Serialize temporal as debug string                                     
-   Temporal::operator Text() const {
-      return IdentityOf(this);
-   }
+/// Serialize temporal as debug string                                        
+Temporal::operator Text() const {
+   return IdentityOf(this);
+}
 
-   /// Reset progress for the priority stack                                  
-   void Temporal::Reset() {
-      mPreviousTime = mCurrentTime = {};
-      VERBOSE_TEMPORAL("Reset");
-   }
+/// Reset progress for the priority stack                                     
+void Temporal::Reset() {
+   mPreviousTime = mCurrentTime = {};
+   VERBOSE_TEMPORAL("Reset");
+}
    
-   /// Compare two flows                                                      
-   ///   @param other - the flow to compare with                              
-   ///   @return true if both flows are the same                              
-   bool Temporal::operator == (const Temporal& other) const {
-      return mFrequencyStack == other.mFrequencyStack
-         and mTimeStack == other.mTimeStack
-         and mPriorityStack == other.mPriorityStack;
+/// Compare two flows                                                         
+///   @param other - the flow to compare with                                 
+///   @return true if both flows are the same                                 
+bool Temporal::operator == (const Temporal& other) const {
+   return mFrequencyStack == other.mFrequencyStack
+      and mTimeStack == other.mTimeStack
+      and mPriorityStack == other.mPriorityStack;
+}
+
+/// Check if flow contains anything executable                                
+///   @return true if flow contains at least one verb                         
+bool Temporal::IsValid() const {
+   return mFrequencyStack or mTimeStack or not mPriorityStack.IsEmpty();
+}
+
+/// Dump the contents of the flow to the log                                  
+void Temporal::Dump() const {
+   Logger::Verbose(mPriorityStack);
+   Logger::Verbose(mTimeStack);
+   Logger::Verbose(mFrequencyStack);
+}
+
+/// Advance the flow - moves time forward, executes stacks                    
+///   @param dt - delta time                                                  
+///   @return true if no exit was requested                                   
+bool Temporal::Update(Time dt) {
+   if (not mCurrentTime) {
+      // If we're at the beginning of time - prepare for execution      
+      /*auto collapsed = Collapse(mPriorityStack);
+      VERBOSE_TEMPORAL(Logger::Purple,
+         "Flow after collapse ", collapsed);*/
+
+      // Now execute the collapsed priority stack                       
+      VERBOSE_TEMPORAL(Logger::Purple,
+         "Flow before execution: ", mPriorityStack);
+
+      Many output;
+      if (not Execute(mPriorityStack, mEnvironment, output))
+         LANGULUS_THROW(Flow, "Update failed");
+
+      // Then, set the priority stack to the output, by wrapping it     
+      // in a hight-priority Do verb with future attachment             
+      // This guarantees, that a Push is possible after the Update      
+      /*Many future; future.MakeFuture();
+      mPriorityStack = Verbs::Do {future}
+         .SetSource(Abandon(output))
+         .SetPriority(8);*/
+
+      VERBOSE_TEMPORAL(Logger::Purple,
+         "Flow after execution: ", mPriorityStack);
    }
 
-   /// Check if flow contains anything executable                             
-   ///   @return true if flow contains at least one verb                      
-   bool Temporal::IsValid() const {
-      return mFrequencyStack or mTimeStack or not mPriorityStack.IsEmpty();
-   }
-
-   /// Dump the contents of the flow to the log                               
-   void Temporal::Dump() const {
-      Logger::Verbose(mPriorityStack);
-      Logger::Verbose(mTimeStack);
-      Logger::Verbose(mFrequencyStack);
-   }
-
-   /// Advance the flow - moves time forward, executes stacks                 
-   ///   @param dt - delta time                                               
-   ///   @return true if no exit was requested                                
-   bool Temporal::Update(Time dt) {
-      if (not mCurrentTime) {
-         // If we're at the beginning of time - prepare for execution   
-         auto collapsed = Collapse(mPriorityStack);
-
-         // Now execute the collapsed priority stack                    
-         Many output;
-         if (not Execute(collapsed, mEnvironment, output))
-            LANGULUS_THROW(Flow, "Update failed");
-
-         // Then, set the priority stack to the output, by wrapping it  
-         // in a hight-priority Do verb with future attachment          
-         // This guarantees, that a Push is possible after the Update   
-         Many future; future.MakeFuture();
-         mPriorityStack = Verbs::Do {future}
-            .SetSource(Abandon(output))
-            .SetPriority(8);
-
-         VERBOSE_TEMPORAL(Logger::Purple,
-            "Flow after execution ", mPriorityStack);
-      }
-
-      if (not dt) {
-         // Avoid updating anything else, if no time had passed         
-         return true;
-      }
-
-      // Advance the global cycler for the flow                         
-      mPreviousTime = mCurrentTime;
-      mCurrentTime += dt;
-
-      // Execute flows that occur periodically                          
-      for (auto pair : mFrequencyStack) {
-         pair.mValue->mDuration += dt;
-         if (pair.mValue->mDuration >= pair.mKey) {
-            // Time to execute the periodic flow                        
-            pair.mValue->mPreviousTime = mPreviousTime;
-            pair.mValue->mCurrentTime = mCurrentTime;
-            pair.mValue->mDuration -= pair.mKey;
-
-            // Update the flow                                          
-            // It might have periodic flows inside                      
-            pair.mValue->Update(pair.mKey);
-         }
-      }
-
-      // Execute flows that occur after a given point in time           
-      for (auto pair : mTimeStack) {
-         if (mCurrentTime < mState.mStart + pair.mKey) {
-            // The time stack is sorted, so no point in continuing      
-            break;
-         }
-
-         // Update the time flow                                        
-         // It might have periodic flows inside                         
-         pair.mValue->Update(dt);
-      }
-
+   if (not dt) {
+      // Avoid updating anything else, if no time had passed            
       return true;
    }
 
-   /// Merge a flow                                                           
-   ///   @param other - the flow to merge with this one                       
-   void Temporal::Merge(const Temporal& other) {
-      // Concatenate priority stacks                                    
-      mPriorityStack += other.mPriorityStack;
+   // Advance the global cycler for the flow                            
+   mPreviousTime = mCurrentTime;
+   mCurrentTime += dt;
 
-      // Merge time stacks                                              
-      for (auto pair : other.mTimeStack) {
-         const auto found = mTimeStack.Find(pair.mKey);
-         if (not found) {
-            const State state {
-               TimePoint {mState.mStart + pair.mKey},
-               Time {mState.mTime + pair.mKey},
-               mState.mPeriod
-            };
+   // Execute flows that occur periodically                             
+   for (auto pair : mFrequencyStack) {
+      pair.mValue->mDuration += dt;
+      if (pair.mValue->mDuration >= pair.mKey) {
+         // Time to execute the periodic flow                           
+         pair.mValue->mPreviousTime = mPreviousTime;
+         pair.mValue->mCurrentTime = mCurrentTime;
+         pair.mValue->mDuration -= pair.mKey;
 
-            //TODO make this more elegant
-            Ref<Temporal> newt;
-            newt.New(this, state);
-            mTimeStack.Insert(pair.mKey, newt.Get());
-         }
-
-         mTimeStack[pair.mKey]->Merge(*pair.mValue);
-      };
-
-      // Merge periodic stacks                                          
-      for (auto pair : other.mFrequencyStack) {
-         const auto found = mFrequencyStack.Find(pair.mKey);
-         if (not found) {
-            const State state {
-               mState.mStart,
-               mState.mTime,
-               pair.mKey
-            };
-
-            Ref<Temporal> newt;
-            newt.New(this, state);
-            mFrequencyStack.Insert(pair.mKey, newt.Get());
-         }
-
-         mFrequencyStack[pair.mKey]->Merge(*pair.mValue);
-      };
+         // Update the flow                                             
+         // It might have periodic flows inside                         
+         pair.mValue->Update(pair.mKey);
+      }
    }
 
-   /// Push a scope of verbs and data to the flow                             
-   /// The following rules are used to place the data:                        
-   ///   1. Data is always inserted at future missing points (??) - there is  
-   ///      always at least one such point in any flow (at the back of the    
-   ///      main scope)                                                       
-   ///   2. If inserted data has a past missing point (?), that point will be 
-   ///      filled with whatever data is already available at the place of    
-   ///      insertion                                                         
-   ///   3. Future and past points might have a filter, which decides what    
-   ///      kind of data can be inserted at that point                        
-   ///   4. Future and past points might have priority, which decides what    
-   ///      kind of verbs are allowed inside. Priorities are set when a       
-   ///      verb is inserted. A verb of higher-or-equal priority can never be 
-   ///      inserted in a point of lower priority. A verb of higher-or-equal  
-   ///      priority can only wrap lower-or-equal priority scopes in itself.  
-   ///   5. Future and past points might have branches, which forces shallow  
-   ///      duplication of missing future/past content when linking           
-   ///   6. Verbs with different frequency and time charge go to the          
-   ///      corresponding stacks, and are stripped from such properties;      
-   ///      from there on, they're handled conventionally, by the             
-   ///      aforementioned rules in the context of that stack                 
-   ///   @attention assumes argument is a valid scope                         
-   ///   @param scope - the scope to analyze and push                         
-   ///   @return true if the flow changed                                     
-   bool Temporal::Push(Many scope) {
-      VERBOSE_TEMPORAL_TAB("Pushing: ", scope);
-
-      // Compile pushed scope to an intermediate format                 
-      auto compiled = Compile(scope, Inner::NoPriority);
-      VERBOSE_TEMPORAL("Compiled to: ", compiled);
-
-      // Link new scope with the available stacks                       
-      const bool done = Link(compiled, mPriorityStack);
-      VERBOSE_TEMPORAL(Logger::Purple, "Flow state: ", mPriorityStack);
-      return done;
-   }
-
-   /// This will omit any compile-time junk that remains in the provided      
-   /// scope, so we can execute it conventionally                             
-   ///   @param scope - the scope to collapse                                 
-   ///   @return the collapsed scope                                          
-   Many Temporal::Collapse(const Block<>& scope) {
-      Many result;
-      if (scope.IsOr())
-         result.MakeOr();
-
-      if (scope.IsDeep()) {
-         // Nest deep scopes                                            
-         scope.ForEach([&](const Block<>& subscope) {
-            auto collapsed = Collapse(subscope);
-            if (collapsed)
-               result << Abandon(collapsed);
-         });
-
-         if (result.GetCount() < 2)
-            result.MakeAnd();
-         return Abandon(result);
+   // Execute flows that occur after a given point in time              
+   for (auto pair : mTimeStack) {
+      if (mCurrentTime < mState.mStart + pair.mKey) {
+         // The time stack is sorted, so no point in continuing         
+         break;
       }
 
-      const auto done = scope.ForEach(
-         [&](const Trait& subscope) {
-            // Collapse traits                                          
-            auto collapsed = Collapse(subscope);
-            if (collapsed) {
-               result << Trait::From(
-                  subscope.GetTrait(), 
-                  Abandon(collapsed)
-               );
-            }
-         },
-         [&](const Construct& subscope) {
-            // Collapse constructs                                      
-            auto collapsed = Collapse(subscope.GetDescriptor());
-            if (collapsed) {
-               result << Construct {
-                  subscope.GetType(),
-                  Abandon(collapsed),
-                  subscope.GetCharge()
-               };
-            }
-         },
-         [&](const Verb& subscope) {
-            // Collapse verbs                                           
-            auto collapsedArgument = Collapse(subscope.GetArgument());
-            if (collapsedArgument) {
-               auto v = Verb::FromMeta(
-                  subscope.GetVerb(),
-                  Abandon(collapsedArgument),
-                  subscope.GetCharge(),
-                  subscope.GetVerbState()
-               ).SetSource(Collapse(subscope.GetSource()));
-               result << Abandon(v);
-            }
-         },
-         [&](const Inner::MissingPast& subscope) {
-            // Collapse missing pasts                                   
-            if (subscope.IsSatisfied())
-               result << subscope.mContent;
-         },
-         [&](const Inner::MissingFuture& subscope) {
-            // Collapse missing futures                                 
-            if (subscope.IsSatisfied())
-               result << subscope.mContent;
-         }
-      );
+      // Update the time flow                                           
+      // It might have periodic flows inside                            
+      pair.mValue->Update(dt);
+   }
 
-      if (not done and scope)
-         result = scope;
+   return true;
+}
+
+/// Merge a flow                                                              
+///   @param other - the flow to merge with this one                          
+void Temporal::Merge(const Temporal& other) {
+   // Concatenate priority stacks                                       
+   mPriorityStack += other.mPriorityStack;
+
+   // Merge time stacks                                                 
+   for (auto pair : other.mTimeStack) {
+      const auto found = mTimeStack.Find(pair.mKey);
+      if (not found) {
+         const State state {
+            TimePoint {mState.mStart + pair.mKey},
+            Time {mState.mTime + pair.mKey},
+            mState.mPeriod
+         };
+
+         //TODO make this more elegant
+         Ref<Temporal> newt;
+         newt.New(this, state);
+         mTimeStack.Insert(pair.mKey, newt.Get());
+      }
+
+      mTimeStack[pair.mKey]->Merge(*pair.mValue);
+   };
+
+   // Merge periodic stacks                                             
+   for (auto pair : other.mFrequencyStack) {
+      const auto found = mFrequencyStack.Find(pair.mKey);
+      if (not found) {
+         const State state {
+            mState.mStart,
+            mState.mTime,
+            pair.mKey
+         };
+
+         Ref<Temporal> newt;
+         newt.New(this, state);
+         mFrequencyStack.Insert(pair.mKey, newt.Get());
+      }
+
+      mFrequencyStack[pair.mKey]->Merge(*pair.mValue);
+   };
+}
+
+/// Push a scope of verbs and data to the flow                                
+/// The following rules are used to place the data:                           
+///   1. Data is always inserted at future missing points (??) - there is     
+///      always at least one such point in any flow (at the back of the       
+///      main scope)                                                          
+///   2. If inserted data has a past missing point (?), that point will be    
+///      filled with whatever data is already available at the place of       
+///      insertion                                                            
+///   3. Future and past points might have a filter, which decides what       
+///      kind of data can be inserted at that point                           
+///   4. Future and past points might have priority, which decides what       
+///      kind of verbs are allowed inside. Priorities are set when a          
+///      verb is inserted. A verb of higher-or-equal priority can never be    
+///      inserted in a point of lower priority. A verb of higher-or-equal     
+///      priority can only wrap lower-or-equal priority scopes in itself.     
+///   5. Future and past points might have branches, which forces shallow     
+///      duplication of missing future/past content when linking              
+///   6. Verbs with different frequency and time charge go to the             
+///      corresponding stacks, and are stripped from such properties;         
+///      from there on, they're handled conventionally, by the                
+///      aforementioned rules in the context of that stack                    
+///   @attention assumes argument is a valid scope                            
+///   @param scope - the scope to analyze and push                            
+///   @return true if the flow changed                                        
+bool Temporal::Push(Many scope) {
+   VERBOSE_TEMPORAL_TAB("Pushing: ", scope);
+
+   // Compile pushed scope to an intermediate format                    
+   auto compiled = Compile(scope, Inner::NoPriority);
+   VERBOSE_TEMPORAL("Compiled to: ", compiled);
+
+   // Link new scope with the available stacks                          
+   const bool done = Link(compiled, mPriorityStack);
+   VERBOSE_TEMPORAL(Logger::Purple, "Flow state: ", mPriorityStack);
+   return done;
+}
+
+/// This will omit any compile-time junk that remains in the provided         
+/// scope, so we can execute it conventionally                                
+///   @param scope - the scope to collapse                                    
+///   @return the collapsed scope                                             
+Many Temporal::Collapse(const Block<>& scope) {
+   Many result;
+   if (scope.IsOr())
+      result.MakeOr();
+
+   if (scope.IsDeep()) {
+      // Nest deep scopes                                               
+      scope.ForEach([&](const Block<>& subscope) {
+         auto collapsed = Collapse(subscope);
+         if (collapsed)
+            result << Abandon(collapsed);
+      });
+
       if (result.GetCount() < 2)
          result.MakeAnd();
       return Abandon(result);
    }
 
-   /// This will omit any compile-time junk that remains in the provided      
-   /// scope, so we can execute it conventionally                             
-   ///   @param scope - the scope to collapse                                 
-   ///   @return the collapsed scope                                          
-   Many Temporal::Collapse(const Neat&) {
-      TODO();
-      return {};
-   }
-
-   /// Compiles a scope into an intermediate form, used by the flow           
-   ///   @attention assumes argument is a valid scope                         
-   ///   @param scope - the scope to compile                                  
-   ///   @param priority - the priority to set for any missing point created  
-   ///                     for the provided scope                             
-   ///   @return the compiled scope                                           
-   Many Temporal::Compile(const Block<>& scope, Real priority) {
-      Many result;
-      if (scope.IsOr())
-         result.MakeOr();
-
-      if (scope.IsPast()) {
-         // Convert the scope to a MissingPast intermediate format      
-         result = Inner::MissingPast {scope, priority};
-         return Abandon(result);
-      }
-      else if (scope.IsFuture()) {
-         // Convert the scope to a MissingFuture intermediate format    
-         result = Inner::MissingFuture {scope, priority};
-         return Abandon(result);
-      }
-      else if (scope.IsDeep()) {
-         // Nest deep scopes                                            
-         scope.ForEach([&](const Block<>& subscope) {
-            result << Compile(subscope, priority);
-         });
-         return Abandon(result);
-      }
-
-      const auto done = scope.ForEach(
-         [&](const Trait& subscope) {
-            // Compile traits                                           
+   const auto done = scope.ForEach(
+      [&](const Trait& subscope) {
+         // Collapse traits                                             
+         auto collapsed = Collapse(subscope);
+         if (collapsed) {
             result << Trait::From(
                subscope.GetTrait(), 
-               Compile(subscope, priority)
+               Abandon(collapsed)
             );
-         },
-         [&](const Construct& subscope) {
-            // Compile constructs                                       
+         }
+      },
+      [&](const Construct& subscope) {
+         // Collapse constructs                                         
+         auto collapsed = Collapse(subscope.GetDescriptor());
+         if (collapsed) {
             result << Construct {
                subscope.GetType(),
-               Compile(subscope.GetDescriptor(), priority),
+               Abandon(collapsed),
                subscope.GetCharge()
             };
-         },
-         [&](const Verb& subscope) {
-            // Compile verbs                                            
+         }
+      },
+      [&](const Verb& subscope) {
+         // Collapse verbs                                              
+         auto collapsedArgument = Collapse(subscope.GetArgument());
+         if (collapsedArgument) {
             auto v = Verb::FromMeta(
                subscope.GetVerb(),
-               Compile(subscope.GetArgument(), subscope.GetPriority()),
+               Abandon(collapsedArgument),
                subscope.GetCharge(),
                subscope.GetVerbState()
-            ).SetSource(Compile(subscope.GetSource(), subscope.GetPriority()));
+            ).SetSource(Collapse(subscope.GetSource()));
             result << Abandon(v);
          }
-      );
-
-      if (not done) {
-         // Just propagate content                                      
-         result = scope;
+      },
+      [&](const Inner::MissingPast& subscope) {
+         // Collapse missing pasts                                      
+         if (subscope.IsSatisfied())
+            result << subscope.mContent;
+      },
+      [&](const Inner::MissingFuture& subscope) {
+         // Collapse missing futures                                    
+         if (subscope.IsSatisfied())
+            result << subscope.mContent;
       }
+   );
 
+   if (not done and scope)
+      result = scope;
+   if (result.GetCount() < 2)
+      result.MakeAnd();
+   return Abandon(result);
+}
+
+/// This will omit any compile-time junk that remains in the provided         
+/// scope, so we can execute it conventionally                                
+///   @param scope - the scope to collapse                                    
+///   @return the collapsed scope                                             
+Many Temporal::Collapse(const Neat&) {
+   TODO();
+   return {};
+}
+
+/// Compiles a scope into an intermediate form, used by the flow              
+///   @attention assumes argument is a valid scope                            
+///   @param scope - the scope to compile                                     
+///   @param priority - the priority to set for any missing point created     
+///                     for the provided scope                                
+///   @return the compiled scope                                              
+Many Temporal::Compile(const Block<>& scope, Real priority) {
+   Many result;
+   if (scope.IsOr())
+      result.MakeOr();
+
+   if (scope.IsPast()) {
+      // Convert the scope to a MissingPast intermediate format         
+      result = Inner::MissingPast {scope, priority};
+      return Abandon(result);
+   }
+   else if (scope.IsFuture()) {
+      // Convert the scope to a MissingFuture intermediate format       
+      result = Inner::MissingFuture {scope, priority};
+      return Abandon(result);
+   }
+   else if (scope.IsDeep()) {
+      // Nest deep scopes                                               
+      scope.ForEach([&](const Block<>& subscope) {
+         result << Compile(subscope, priority);
+      });
       return Abandon(result);
    }
 
-   /// Compiles a neat descriptor into an intermediate form, used by the flow 
-   ///   @attention assumes argument is a valid scope                         
-   ///   @param neat - the Neat to compile                                    
-   ///   @param priority - the priority to set for any missing point created  
-   ///                     for the provided scope                             
-   ///   @return the compiled scope                                           
-   Many Temporal::Compile(const Neat& neat, Real priority) {
-      Neat result;
-      neat.ForEachTrait([&](const Trait& subscope) {
+   const auto done = scope.ForEach(
+      [&](const Trait& subscope) {
          // Compile traits                                              
          result << Trait::From(
-            subscope.GetTrait(),
+            subscope.GetTrait(), 
             Compile(subscope, priority)
          );
-      });
-
-      neat.ForEachConstruct([&](const Construct& subscope) {
+      },
+      [&](const Construct& subscope) {
          // Compile constructs                                          
          result << Construct {
             subscope.GetType(),
             Compile(subscope.GetDescriptor(), priority),
             subscope.GetCharge()
          };
-      });
-
-      neat.ForEachTail([&](const Block<>& group) {
-         // Compile anything else                                       
-         result << Compile(group, priority);
-      });
-
-      return Abandon(result);
-   }
-
-   /// Links the missing past points of the provided scope, with the missing  
-   /// future point (or any nested future points inside).                     
-   /// Anything could be pushed to provided future point as a fallback,       
-   /// as long as state and filters allows it!                                
-   ///   @attention assumes argument is a valid scope                         
-   ///   @param scope - the scope to link                                     
-   ///   @param future - [in/out] the future point to place inside            
-   ///   @return true if scope was linked successfully                        
-   bool Temporal::Link(const Many& scope, Inner::MissingFuture& future) const {
-      // Attempt linking to the contents first                          
-      if (Link(scope, future.mContent))
-         return true;
-
-      //                                                                
-      // If reached, then future point is flat and boring, fallback by  
-      // directly linking against it                                    
-      VERBOSE_TEMPORAL_TAB("Linking to: ", future);
-      return future.Push(scope, mEnvironment);
-   }
-
-   /// Links the missing past points of the provided scope, with the missing  
-   /// future points of the provided stack. But anything new could go into    
-   /// old future points, as long as state and filters allows it!             
-   ///   @attention assumes argument is a valid scope                         
-   ///   @param scope - the scope to link                                     
-   ///   @param stack - [in/out] the stack to link with                       
-   ///   @return true if scope was linked successfully                        
-   bool Temporal::Link(const Many& scope, Block<>& stack) const {
-      bool atLeastOneSuccess = false;
-
-      if (stack.IsDeep()) {
-         // Nest deep stack                                             
-         stack.ForEachRev([&](Block<>& substack) {
-            atLeastOneSuccess |= Link(scope, substack);
-            // Continue linking only if the stack is branched           
-            return not (stack.IsOr() and atLeastOneSuccess);
-         });
-
-         return atLeastOneSuccess;
+      },
+      [&](const Verb& subscope) {
+         // Compile verbs                                               
+         auto v = Verb::FromMeta(
+            subscope.GetVerb(),
+            Compile(subscope.GetArgument(), subscope.GetPriority()),
+            subscope.GetCharge(),
+            subscope.GetVerbState()
+         ).SetSource(Compile(subscope.GetSource(), subscope.GetPriority()));
+         result << Abandon(v);
       }
+   );
 
-      // Iterate backwards - the last future points are always most     
-      // relevant for linking. Lets start, by scanning all future       
-      // points in the available stack. Scope will be duplicated for    
-      // each encountered branch                                        
-      stack.ForEachRev(
-         [&](Trait& substack) {
-            atLeastOneSuccess |= Link(scope, substack);
-            // Continue linking only if the stack is branched           
-            return not (stack.IsOr() and atLeastOneSuccess);
-         },
-         [&](Construct& substack) {
-            atLeastOneSuccess |= Link(scope, substack.GetDescriptor());
-            // Continue linking only if the stack is branched           
-            return not (stack.IsOr() and atLeastOneSuccess);
-         },
-         [&](Verb& substack) -> LoopControl {
-            if (Link(scope, substack.GetArgument())) {
-               atLeastOneSuccess = true;
-               // Continue linking only if the stack is branched        
-               return not stack.IsOr();
-            }
-            if (Link(scope, substack.GetSource())) {
-               atLeastOneSuccess = true;
-               // Continue linking only if the stack is branched        
-               return not stack.IsOr();
-            }
-
-            return Loop::Continue;
-         },
-         [&](Inner::MissingFuture& future) {
-            atLeastOneSuccess |= Link(scope, future);
-            // Continue linking only if the stack is branched           
-            return not (stack.IsOr() and atLeastOneSuccess);
-         }
-      );
-
-      return atLeastOneSuccess;
+   if (not done) {
+      // Just propagate content                                         
+      result = scope;
    }
-   
-   /// Links the missing past points of the provided scope, with the missing  
-   /// future points of the provided Neat. But anything new could go into     
-   /// old future points, as long as state and filters allows it!             
-   ///   @attention assumes argument is a valid scope                         
-   ///   @param scope - the scope to link                                     
-   ///   @param stack - [in/out] the neat stack to link with                  
-   ///   @return true if scope was linked successfully                        
-   bool Temporal::Link(const Many& scope, Neat& stack) const {
-      bool atLeastOneSuccess = false;
-      stack.ForEach([&](Block<>& substack) {
+
+   return Abandon(result);
+}
+
+/// Compiles a neat descriptor into an intermediate form, used by the flow    
+///   @attention assumes argument is a valid scope                            
+///   @param neat - the Neat to compile                                       
+///   @param priority - the priority to set for any missing point created     
+///                     for the provided scope                                
+///   @return the compiled scope                                              
+Many Temporal::Compile(const Neat& neat, Real priority) {
+   Neat result;
+   neat.ForEachTrait([&](const Trait& subscope) {
+      // Compile traits                                                 
+      result << Trait::From(
+         subscope.GetTrait(),
+         Compile(subscope, priority)
+      );
+   });
+
+   neat.ForEachConstruct([&](const Construct& subscope) {
+      // Compile constructs                                             
+      result << Construct {
+         subscope.GetType(),
+         Compile(subscope.GetDescriptor(), priority),
+         subscope.GetCharge()
+      };
+   });
+
+   neat.ForEachTail([&](const Block<>& group) {
+      // Compile anything else                                          
+      result << Compile(group, priority);
+   });
+
+   return Abandon(result);
+}
+
+/// Links the missing past points of the provided scope, with the missing     
+/// future point (or any nested future points inside).                        
+/// Anything could be pushed to provided future point as a fallback,          
+/// as long as state and filters allows it!                                   
+///   @attention assumes argument is a valid scope                            
+///   @param scope - the scope to link                                        
+///   @param future - [in/out] the future point to place inside               
+///   @return true if scope was linked successfully                           
+bool Temporal::Link(const Many& scope, Inner::MissingFuture& future) const {
+   // Attempt linking to the contents first                             
+   if (Link(scope, future.mContent))
+      return true;
+
+   //                                                                   
+   // If reached, then future point is flat and boring, fallback by     
+   // directly linking against it                                       
+   VERBOSE_TEMPORAL_TAB("Linking to: ", future);
+   return future.Push(scope, mEnvironment);
+}
+
+/// Links the missing past points of the provided scope, with the missing     
+/// future points of the provided stack. But anything new could go into       
+/// old future points, as long as state and filters allows it!                
+///   @attention assumes argument is a valid scope                            
+///   @param scope - the scope to link                                        
+///   @param stack - [in/out] the stack to link with                          
+///   @return true if scope was linked successfully                           
+bool Temporal::Link(const Many& scope, Block<>& stack) const {
+   bool atLeastOneSuccess = false;
+
+   if (stack.IsDeep()) {
+      // Nest deep stack                                                
+      stack.ForEachRev([&](Block<>& substack) {
          atLeastOneSuccess |= Link(scope, substack);
+         // Continue linking only if the stack is branched              
+         return not (stack.IsOr() and atLeastOneSuccess);
       });
 
       return atLeastOneSuccess;
    }
 
-} // namespace Langulus::Flow
+   // Iterate backwards - the last future points are always most        
+   // relevant for linking. Lets start, by scanning all future          
+   // points in the available stack. Scope will be duplicated for       
+   // each encountered branch                                           
+   stack.ForEachRev(
+      [&](Trait& substack) {
+         atLeastOneSuccess |= Link(scope, substack);
+         // Continue linking only if the stack is branched              
+         return not (stack.IsOr() and atLeastOneSuccess);
+      },
+      [&](Construct& substack) {
+         atLeastOneSuccess |= Link(scope, substack.GetDescriptor());
+         // Continue linking only if the stack is branched              
+         return not (stack.IsOr() and atLeastOneSuccess);
+      },
+      [&](Verb& substack) -> LoopControl {
+         if (Link(scope, substack.GetArgument())) {
+            atLeastOneSuccess = true;
+            // Continue linking only if the stack is branched           
+            return not stack.IsOr();
+         }
+         if (Link(scope, substack.GetSource())) {
+            atLeastOneSuccess = true;
+            // Continue linking only if the stack is branched           
+            return not stack.IsOr();
+         }
+
+         return Loop::Continue;
+      },
+      [&](Inner::MissingFuture& future) {
+         atLeastOneSuccess |= Link(scope, future);
+         // Continue linking only if the stack is branched              
+         return not (stack.IsOr() and atLeastOneSuccess);
+      }
+   );
+
+   return atLeastOneSuccess;
+}
+   
+/// Links the missing past points of the provided scope, with the missing     
+/// future points of the provided Neat. But anything new could go into        
+/// old future points, as long as state and filters allows it!                
+///   @attention assumes argument is a valid scope                            
+///   @param scope - the scope to link                                        
+///   @param stack - [in/out] the neat stack to link with                     
+///   @return true if scope was linked successfully                           
+bool Temporal::Link(const Many& scope, Neat& stack) const {
+   bool atLeastOneSuccess = false;
+   stack.ForEach([&](Block<>& substack) {
+      atLeastOneSuccess |= Link(scope, substack);
+   });
+
+   return atLeastOneSuccess;
+}

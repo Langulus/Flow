@@ -149,15 +149,33 @@ namespace Langulus::Flow
          // Execute verb inside the context directly                    
          if constexpr (FALLBACK)
             Verb::GenericExecuteDefault(context, verb);
-         else
+         else {
+            // Context might have a dispatcher still                    
+            if constexpr (CT::Deep<T> and DISPATCH) {
+               auto meta = context.GetType();
+               if constexpr (CT::Constant<T>) {
+                  if (meta->mDispatcherConstant)
+                     meta->mDispatcherConstant(context.GetRaw(), verb);
+               }
+               else if (meta->mDispatcherConstant)
+                  meta->mDispatcherConstant(context.GetRaw(), verb);
+               else if (meta->mDispatcherMutable)
+                  meta->mDispatcherMutable(context.GetRaw(), verb);
+
+               if (verb.IsDone())
+                  return verb.GetSuccesses();
+            }
+
+            // If reached, try executing in the proper reflected verbs  
             Verb::GenericExecuteIn(context, verb);
+         }
 
          // If that fails, attempt in all reflected bases               
          if constexpr (requires { typename T::CTTI_Bases; }) {
             if (not verb.IsDone()) {
                // Context has no abilities, or they failed, so try      
                // with all bases' abilities                             
-               ExecuteInBases<true, false, FALLBACK>(
+               ExecuteInBases<DISPATCH, false, FALLBACK>(
                   context, verb, typename T::CTTI_Bases {});
             }
          }

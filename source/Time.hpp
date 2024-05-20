@@ -61,7 +61,6 @@ namespace Langulus
 
       using Base = duration;
       using Base::duration;
-      using Base::operator +;
 
       constexpr Time() noexcept
          : duration {zero()} {
@@ -77,6 +76,16 @@ namespace Langulus
 
       template<CT::BuiltinNumber T = Real>
       NOD() T Seconds() const noexcept;
+
+      Time operator + (auto&& rhs) const {
+         return ::std::chrono::duration_cast<Base>(
+            static_cast<const duration&>(*this) + rhs);
+      }
+
+      Time operator * (auto&& rhs) const {
+         return ::std::chrono::duration_cast<Base>(
+            static_cast<const duration&>(*this) * rhs);
+      }
    };
 
 

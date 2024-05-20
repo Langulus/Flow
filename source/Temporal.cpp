@@ -13,10 +13,8 @@
 #include "inner/Fork.hpp"
 #include "Temporal.hpp"
 
-#define VERBOSE_TEMPORAL(...) \
-   Logger::Verbose(*this, ": ", __VA_ARGS__)
-#define VERBOSE_TEMPORAL_TAB(...) \
-   const auto tab = Logger::Verbose(*this, ": ", __VA_ARGS__, Logger::Tabs{})
+#define VERBOSE_TEMPORAL(...)       //Logger::Verbose(*this, ": ", __VA_ARGS__)
+#define VERBOSE_TEMPORAL_TAB(...)   //const auto tab = Logger::Verbose(*this, ": ", __VA_ARGS__, Logger::Tabs{})
 
 using namespace Langulus::Flow;
 
@@ -26,21 +24,14 @@ using namespace Langulus::Flow;
 Temporal::Temporal() {
    mPriorityStack << Inner::MissingFuture {};
 }
-   
-/// Default constructor, add the initial missing future point                 
-///   @param environment - the initial flow environment                       
-/*Temporal::Temporal(const Many& environment) {
-   mEnvironment = environment;
-   mPriorityStack << Inner::MissingFuture {};
-}*/
 
 /// Construct as a sub-flow                                                   
 ///   @attention assumes parent is a valid pointer                            
 ///   @param parent - the parent flow                                         
-///   @param state - the flow state                                           
-Temporal::Temporal(Temporal* parent, const State& state)
-   : mParent {parent}
-   , mState {state} { }
+Temporal::Temporal(Temporal* parent)
+   : mParent {parent} {
+   mPriorityStack << Inner::MissingFuture {};
+}
 
 /// Serialize temporal as Code                                                
 Temporal::operator Code() const {
@@ -54,7 +45,8 @@ Temporal::operator Text() const {
 
 /// Reset progress for the priority stack                                     
 void Temporal::Reset() {
-   mPreviousTime = mCurrentTime = {};
+   mStart = mNow = {};
+   //TODO reset stack verb done statuses
    VERBOSE_TEMPORAL("Reset");
 }
    
@@ -70,7 +62,7 @@ bool Temporal::operator == (const Temporal& other) const {
 /// Check if flow contains anything executable                                
 ///   @return true if flow contains at least one verb                         
 bool Temporal::IsValid() const {
-   return mFrequencyStack or mTimeStack or not mPriorityStack.IsEmpty();
+   return mPriorityStack or mTimeStack or mFrequencyStack;
 }
 
 /// Dump the contents of the flow to the log                                  
@@ -80,70 +72,62 @@ void Temporal::Dump() const {
    Logger::Verbose(mFrequencyStack);
 }
 
+/// Get the accumulated running time across all Updates                       
+///   @return the time                                                        
+Langulus::Time Temporal::GetUptime() const {
+   return mNow - mStart;
+}
+
 /// Advance the flow - moves time forward, executes stacks                    
 ///   @param dt - delta time                                                  
 ///   @return true if no exit was requested                                   
 bool Temporal::Update(Time dt) {
-   if (not mCurrentTime) {
-      // If we're at the beginning of time - prepare for execution      
-      /*auto collapsed = Collapse(mPriorityStack);
-      VERBOSE_TEMPORAL(Logger::Purple,
-         "Flow after collapse ", collapsed);*/
-
-      // Now execute the collapsed priority stack                       
+   if (mStart == mNow) {
+      // We're at the beginning of time - execute the priority stack    
       VERBOSE_TEMPORAL(Logger::Purple,
          "Flow before execution: ", mPriorityStack);
 
-      Many output;
-      if (not Execute(mPriorityStack, mEnvironment, output))
-         LANGULUS_THROW(Flow, "Update failed");
-
-      // Then, set the priority stack to the output, by wrapping it     
-      // in a hight-priority Do verb with future attachment             
-      // This guarantees, that a Push is possible after the Update      
-      /*Many future; future.MakeFuture();
-      mPriorityStack = Verbs::Do {future}
-         .SetSource(Abandon(output))
-         .SetPriority(8);*/
+      Many unused;
+      Execute(mPriorityStack, unused);
 
       VERBOSE_TEMPORAL(Logger::Purple,
          "Flow after execution: ", mPriorityStack);
    }
 
-   if (not dt) {
-      // Avoid updating anything else, if no time had passed            
+   // Avoid updating anything else, if no time had passed               
+   if (not dt)
       return true;
-   }
 
    // Advance the global cycler for the flow                            
-   mPreviousTime = mCurrentTime;
-   mCurrentTime += dt;
+   mNow += dt;
 
    // Execute flows that occur periodically                             
    for (auto pair : mFrequencyStack) {
-      pair.mValue->mDuration += dt;
-      if (pair.mValue->mDuration >= pair.mKey) {
-         // Time to execute the periodic flow                           
-         pair.mValue->mPreviousTime = mPreviousTime;
-         pair.mValue->mCurrentTime = mCurrentTime;
-         pair.mValue->mDuration -= pair.mKey;
+      pair.mValue.mNow += dt;
+      auto ticks = pair.mValue.GetUptime().Seconds() / mPeriod.Seconds();
 
-         // Update the flow                                             
-         // It might have periodic flows inside                         
-         pair.mValue->Update(pair.mKey);
+      while (ticks >= pair.mKey) {
+         // Time to execute the periodic flow                           
+         pair.mValue.Reset();
+         pair.mValue.Update();
+         ticks -= pair.mKey;
       }
+
+      // Make sure any leftover time is returned to the periodic flow   
+      pair.mValue.mNow = pair.mValue.mStart + mPeriod * ticks;
    }
 
    // Execute flows that occur after a given point in time              
+   const auto ticks = GetUptime().Seconds() / mPeriod.Seconds();
    for (auto pair : mTimeStack) {
-      if (mCurrentTime < mState.mStart + pair.mKey) {
+      if (pair.mKey > ticks) {
          // The time stack is sorted, so no point in continuing         
          break;
       }
 
-      // Update the time flow                                           
-      // It might have periodic flows inside                            
-      pair.mValue->Update(dt);
+      // Always update all time points before the tick count            
+      // They might have periodic flows inside                          
+      pair.mValue.Update(dt);
    }
 
    return true;
@@ -151,7 +135,7 @@ bool Temporal::Update(Time dt) {
 
 /// Merge a flow                                                              
 ///   @param other - the flow to merge with this one                          
-void Temporal::Merge(const Temporal& other) {
+/*void Temporal::Merge(const Temporal& other) {
    // Concatenate priority stacks                                       
    mPriorityStack += other.mPriorityStack;
 
@@ -191,7 +175,7 @@ void Temporal::Merge(const Temporal& other) {
 
       mFrequencyStack[pair.mKey]->Merge(*pair.mValue);
    };
-}
+}*/
 
 /// Push a scope of verbs and data to the flow                                
 /// The following rules are used to place the data:                           
@@ -225,16 +209,28 @@ bool Temporal::Push(Many scope) {
    VERBOSE_TEMPORAL("Compiled to: ", compiled);
 
    // Link new scope with the available stacks                          
-   const bool done = Link(compiled, mPriorityStack);
-   VERBOSE_TEMPORAL(Logger::Purple, "Flow state: ", mPriorityStack);
-   return done;
+   try { Link(compiled); }
+   catch (...) {
+      return false;
+   }
+
+   if (mPriorityStack) {
+      VERBOSE_TEMPORAL(Logger::Purple, "Priority flow: ", mPriorityStack);
+   }
+   if (mTimeStack) {
+      VERBOSE_TEMPORAL(Logger::Purple, "Time flow: ", mTimeStack);
+   }
+   if (mFrequencyStack) {
+      VERBOSE_TEMPORAL(Logger::Purple, "Frequency flow: ", mFrequencyStack);
+   }
+   return true;
 }
 
 /// This will omit any compile-time junk that remains in the provided         
 /// scope, so we can execute it conventionally                                
 ///   @param scope - the scope to collapse                                    
 ///   @return the collapsed scope                                             
-Many Temporal::Collapse(const Block<>& scope) {
+/*Many Temporal::Collapse(const Block<>& scope) {
    Many result;
    if (scope.IsOr())
       result.MakeOr();
@@ -313,13 +309,13 @@ Many Temporal::Collapse(const Block<>& scope) {
 Many Temporal::Collapse(const Neat&) {
    TODO();
    return {};
-}
+}*/
 
 /// Compiles a scope into an intermediate form, used by the flow              
 ///   @attention assumes argument is a valid scope                            
 ///   @param scope - the scope to compile                                     
 ///   @param priority - the priority to set for any missing point created     
-///                     for the provided scope                                
+///      for the provided scope.                                              
 ///   @return the compiled scope                                              
 Many Temporal::Compile(const Block<>& scope, Real priority) {
    Many result;
@@ -384,7 +380,7 @@ Many Temporal::Compile(const Block<>& scope, Real priority) {
 ///   @attention assumes argument is a valid scope                            
 ///   @param neat - the Neat to compile                                       
 ///   @param priority - the priority to set for any missing point created     
-///                     for the provided scope                                
+///      for the provided scope.                                              
 ///   @return the compiled scope                                              
 Many Temporal::Compile(const Neat& neat, Real priority) {
    Neat result;
@@ -414,24 +410,24 @@ Many Temporal::Compile(const Neat& neat, Real priority) {
 }
 
 /// Links the missing past points of the provided scope, with the missing     
-/// future point (or any nested future points inside).                        
-/// Anything could be pushed to provided future point as a fallback,          
-/// as long as state and filters allows it!                                   
+/// future point (or any nested future points inside). Anything could be      
+/// pushed to provided future point as a fallback, as long as state and       
+/// filters allows it!                                                        
 ///   @attention assumes argument is a valid scope                            
 ///   @param scope - the scope to link                                        
 ///   @param future - [in/out] the future point to place inside               
 ///   @return true if scope was linked successfully                           
-bool Temporal::Link(const Many& scope, Inner::MissingFuture& future) const {
+/*bool Temporal::PushFutures(const Many& scope, Inner::MissingFuture& future) {
    // Attempt linking to the contents first                             
-   if (Link(scope, future.mContent))
+   if (PushFutures(scope, future.mContent))
       return true;
 
    //                                                                   
    // If reached, then future point is flat and boring, fallback by     
    // directly linking against it                                       
    VERBOSE_TEMPORAL_TAB("Linking to: ", future);
-   return future.Push(scope, mEnvironment);
-}
+   return future.Push(scope);
+}*/
 
 /// Links the missing past points of the provided scope, with the missing     
 /// future points of the provided stack. But anything new could go into       
@@ -440,13 +436,13 @@ bool Temporal::Link(const Many& scope, Inner::MissingFuture& future) const {
 ///   @param scope - the scope to link                                        
 ///   @param stack - [in/out] the stack to link with                          
 ///   @return true if scope was linked successfully                           
-bool Temporal::Link(const Many& scope, Block<>& stack) const {
+bool Temporal::PushFutures(const Many& scope, Block<>& stack) {
    bool atLeastOneSuccess = false;
 
    if (stack.IsDeep()) {
       // Nest deep stack                                                
       stack.ForEachRev([&](Block<>& substack) {
-         atLeastOneSuccess |= Link(scope, substack);
+         atLeastOneSuccess |= PushFutures(scope, substack);
          // Continue linking only if the stack is branched              
          return not (stack.IsOr() and atLeastOneSuccess);
       });
@@ -460,22 +456,23 @@ bool Temporal::Link(const Many& scope, Block<>& stack) const {
    // each encountered branch                                           
    stack.ForEachRev(
       [&](Trait& substack) {
-         atLeastOneSuccess |= Link(scope, substack);
+         atLeastOneSuccess |= PushFutures(scope, substack);
          // Continue linking only if the stack is branched              
          return not (stack.IsOr() and atLeastOneSuccess);
       },
       [&](Construct& substack) {
-         atLeastOneSuccess |= Link(scope, substack.GetDescriptor());
+         atLeastOneSuccess |= PushFutures(scope, substack.GetDescriptor());
          // Continue linking only if the stack is branched              
          return not (stack.IsOr() and atLeastOneSuccess);
       },
       [&](Verb& substack) -> LoopControl {
-         if (Link(scope, substack.GetArgument())) {
+         if (PushFutures(scope, substack.GetArgument())) {
             atLeastOneSuccess = true;
             // Continue linking only if the stack is branched           
             return not stack.IsOr();
          }
-         if (Link(scope, substack.GetSource())) {
+
+         if (PushFutures(scope, substack.GetSource())) {
             atLeastOneSuccess = true;
             // Continue linking only if the stack is branched           
             return not stack.IsOr();
@@ -484,7 +481,7 @@ bool Temporal::Link(const Many& scope, Block<>& stack) const {
          return Loop::Continue;
       },
       [&](Inner::MissingFuture& future) {
-         atLeastOneSuccess |= Link(scope, future);
+         atLeastOneSuccess |= future.Push(scope);
          // Continue linking only if the stack is branched              
          return not (stack.IsOr() and atLeastOneSuccess);
       }
@@ -492,7 +489,7 @@ bool Temporal::Link(const Many& scope, Block<>& stack) const {
 
    return atLeastOneSuccess;
 }
-   
+ 
 /// Links the missing past points of the provided scope, with the missing     
 /// future points of the provided Neat. But anything new could go into        
 /// old future points, as long as state and filters allows it!                
@@ -500,11 +497,247 @@ bool Temporal::Link(const Many& scope, Block<>& stack) const {
 ///   @param scope - the scope to link                                        
 ///   @param stack - [in/out] the neat stack to link with                     
 ///   @return true if scope was linked successfully                           
-bool Temporal::Link(const Many& scope, Neat& stack) const {
+bool Temporal::PushFutures(const Many& scope, Neat& stack) {
    bool atLeastOneSuccess = false;
    stack.ForEach([&](Block<>& substack) {
-      atLeastOneSuccess |= Link(scope, substack);
+      atLeastOneSuccess |= PushFutures(scope, substack);
    });
-
    return atLeastOneSuccess;
+}
+
+/// Experimental                                                              
+/// Experimental                                                              
+/// Experimental                                                              
+void Temporal::Link(const Many& scope) {
+   if (scope.IsOr())
+      TODO();
+
+   if (scope.IsDeep()) {
+      // Nest deep scope                                                
+      scope.ForEach([&](const Block<>& sub) {
+         Link(sub);
+      });
+   }
+   else {
+      // Handle shallow scope                                           
+      scope.ForEach(
+         [&](const Trait& t) {
+            // Forward to all future points in the priority stack       
+            TMany<Trait> local = t;
+            LANGULUS_ASSERT(
+               PushFutures(local, mPriorityStack),
+               Flow, "Couldn't push to future"
+            );
+         },
+         [&](const Construct& c) {
+            // Forward to all future points in the priority stack       
+            TMany<Construct> local = c;
+            LANGULUS_ASSERT(
+               PushFutures(local, mPriorityStack),
+               Flow, "Couldn't push to future"
+            );
+         },
+         [&](const Verb& v) {
+            if (v.IsVerb<Verbs::Do>()) {
+               // "Do" verbs act as context/mass/rate/time setters      
+               // Don't push them, but use them to set environment for  
+               // any sub-verbs                                         
+               LinkRelative(v.GetArgument(), v);
+            }
+            else if (v.GetTime()) {
+               // Verb is timed, forward it to the time stack           
+               TMany<Verb> local = v;
+               local[0].SetTime(0);
+
+               auto found = mTimeStack.FindIt(v.GetTime());
+               if (not found) {
+                  mTimeStack.Insert(v.GetTime(), this);
+                  found = mTimeStack.FindIt(v.GetTime());
+               }
+
+               found.mValue->LinkRelative(local, v);
+            }
+            else if (v.GetRate()) {
+               // Verb is rated, forward it to the frequency stack      
+               TMany<Verb> local = v;
+               local[0].SetRate(0);
+
+               auto found = mFrequencyStack.FindIt(v.GetRate());
+               if (not found) {
+                  mFrequencyStack.Insert(v.GetRate(), this);
+                  found = mFrequencyStack.FindIt(v.GetRate());
+               }
+
+               LANGULUS_ASSERT(
+                  found.mValue->PushFutures(local, found.mValue->mPriorityStack),
+                  Flow, "Couldn't push to future"
+               );
+            }
+            else {
+               // Forward it to the priority stack                      
+               TMany<Verb> local = v;
+               LANGULUS_ASSERT(
+                  PushFutures(local, mPriorityStack),
+                  Flow, "Couldn't push to future"
+               );
+            }
+         }
+      );
+   }
+}
+
+/// Experimental                                                              
+/// Experimental                                                              
+/// Experimental                                                              
+void Temporal::LinkRelative(const Many& scope, const Verb& override) {
+   if (scope.IsOr())
+      TODO();
+
+   if (scope.IsDeep()) {
+      // Nest deep scope                                                
+      scope.ForEach([&](const Block<>& sub) {
+         LinkRelative(sub, override);
+      });
+   }
+   else {
+      // Handle shallow scope                                           
+      scope.ForEach(
+         [&](const Trait& t) {
+            TMany<Trait> local = t;
+
+            // Forward to future point in appropriate stack,            
+            // according to the override verb                           
+            if (override.GetTime()) {
+               // Trait is timed, forward it to the time stack          
+               auto found = mTimeStack.FindIt(override.GetTime());
+               if (not found) {
+                  mTimeStack.Insert(override.GetTime(), this);
+                  found = mTimeStack.FindIt(override.GetTime());
+               }
+
+               LANGULUS_ASSERT(
+                  found.mValue->PushFutures(local, found.mValue->mPriorityStack),
+                  Flow, "Couldn't push to future"
+               );
+            }
+            else if (override.GetRate()) {
+               // Verb is rated, forward it to the frequency stack      
+               auto found = mFrequencyStack.FindIt(override.GetRate());
+               if (not found) {
+                  mFrequencyStack.Insert(override.GetRate(), this);
+                  found = mFrequencyStack.FindIt(override.GetRate());
+               }
+
+               LANGULUS_ASSERT(
+                  found.mValue->PushFutures(local, found.mValue->mPriorityStack),
+                  Flow, "Couldn't push to future"
+               );
+            }
+            else {
+               // Forward it to the priority stack                      
+               LANGULUS_ASSERT(
+                  PushFutures(local, mPriorityStack),
+                  Flow, "Couldn't push to future"
+               );
+            }
+         },
+         [&](const Construct& c) {
+            TMany<Construct> local = c;
+
+            // Forward to future point in appropriate stack,            
+            // according to the override verb                           
+            if (override.GetTime()) {
+               // Trait is timed, forward it to the time stack          
+               auto found = mTimeStack.FindIt(override.GetTime());
+               if (not found) {
+                  mTimeStack.Insert(override.GetTime(), this);
+                  found = mTimeStack.FindIt(override.GetTime());
+               }
+
+               LANGULUS_ASSERT(
+                  found.mValue->PushFutures(local, found.mValue->mPriorityStack),
+                  Flow, "Couldn't push to future"
+               );
+            }
+            else if (override.GetRate()) {
+               // Verb is rated, forward it to the frequency stack      
+               auto found = mFrequencyStack.FindIt(override.GetRate());
+               if (not found) {
+                  mFrequencyStack.Insert(override.GetRate(), this);
+                  found = mFrequencyStack.FindIt(override.GetRate());
+               }
+
+               LANGULUS_ASSERT(
+                  found.mValue->PushFutures(local, found.mValue->mPriorityStack),
+                  Flow, "Couldn't push to future"
+               );
+            }
+            else {
+               // Forward it to the priority stack                      
+               LANGULUS_ASSERT(
+                  PushFutures(local, mPriorityStack),
+                  Flow, "Couldn't push to future"
+               );
+            }
+         },
+         [&](const Verb& v) {
+            // Multiply verb energy and merge contexts                  
+            const Verb localOverride = v * override;
+
+            if (v.IsVerb<Verbs::Do>()) {
+               // "Do" verbs act as context/mass/rate/time setters      
+               // Don't push them, but use them to set environment for  
+               // any sub-verbs                                         
+               LinkRelative(v.GetArgument(), localOverride);
+            }
+            else if (localOverride.GetTime()) {
+               // Verb is timed, forward it to the time stack           
+               const auto time = localOverride.GetTime();
+               TMany<Verb> local = v;
+               local[0].SetTime(0);
+
+               auto found = mTimeStack.FindIt(time);
+               if (not found) {
+                  mTimeStack.Insert(time, this);
+                  found = mTimeStack.FindIt(time);
+               }
+
+               found.mValue->LinkRelative(local, localOverride);
+            }
+            else if (localOverride.GetRate()) {
+               // Verb is rated, forward it to the frequency stack      
+               const auto rate = localOverride.GetRate();
+               TMany<Verb> local = v;
+               local[0].SetRate(0);
+               if (not local[0].GetSource())
+                  local[0].SetSource(localOverride.GetSource());
+
+               auto found = mFrequencyStack.FindIt(rate);
+               if (not found) {
+                  mFrequencyStack.Insert(rate, this);
+                  found = mFrequencyStack.FindIt(rate);
+               }
+
+               LANGULUS_ASSERT(
+                  found.mValue->PushFutures(local, found.mValue->mPriorityStack),
+                  Flow, "Couldn't push to future"
+               );
+            }
+            else {
+               // Forward it to the priority stack                      
+               // Collapse all verb charges at this point               
+               TMany<Verb> local = v;
+               local[0].SetMass(localOverride.GetMass());
+               local[0].SetPriority(localOverride.GetPriority());
+               if (not local[0].GetSource())
+                  local[0].SetSource(localOverride.GetSource());
+
+               LANGULUS_ASSERT(
+                  PushFutures(local, mPriorityStack),
+                  Flow, "Couldn't push to future"
+               );
+            }
+         }
+      );
+   }
 }

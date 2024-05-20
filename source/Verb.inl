@@ -116,6 +116,27 @@ namespace Langulus::Flow
       return A::Verb::GetHash();
    }
 
+   /// Multiply verb charges, merge sources                                   
+   ///   @param rhs - the mass to multiply by                                 
+   ///   @return a new verb, with the modified mass                           
+   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   THIS Verb::operator * (const Verb& rhs) const {
+      auto shallowCopy = *reinterpret_cast<const THIS*>(this);
+      shallowCopy.mMass *= rhs.mMass;
+      shallowCopy.mTime += rhs.mTime;
+
+      if (not shallowCopy.mRate and rhs.mRate)
+         shallowCopy.mRate = rhs.mRate;
+      else if (shallowCopy.mRate and rhs.mRate)
+         shallowCopy.mRate *= rhs.mRate;
+
+      if (not shallowCopy.mSource and rhs.mSource)
+         shallowCopy.mSource = rhs.mSource;
+      else if (shallowCopy.mSource and rhs.mSource)
+         shallowCopy.mSource << rhs.mSource;
+      return shallowCopy;
+   }
+
    /// Multiply verb mass                                                     
    ///   @param rhs - the mass to multiply by                                 
    ///   @return a new verb, with the modified mass                           

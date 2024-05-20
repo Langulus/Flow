@@ -73,9 +73,8 @@ bool Missing::IsSatisfied() const {
 ///   @attention assumes content is a valid container                         
 ///   @attention assumes content has been Temporal::Compiled previously       
 ///   @param content - the content to push                                    
-///   @param environment - a fallback past provided by Temporal               
 ///   @return true if mContent changed                                        
-bool Missing::Push(const Many& content, const Block<>& environment) {
+bool Missing::Push(const Many& content) {
    bool atLeastOneSuccess = false;
 
    if (content.IsDeep()) {
@@ -88,7 +87,7 @@ bool Missing::Push(const Many& content, const Block<>& environment) {
          fork.mContent.MakeOr();
             
          content.ForEach([&](const Many& subcontent) {
-            atLeastOneSuccess |= fork.Push(subcontent, environment);
+            atLeastOneSuccess |= fork.Push(subcontent);
          });
 
          mContent.SmartPush(IndexBack, Abandon(fork.mContent));
@@ -96,7 +95,7 @@ bool Missing::Push(const Many& content, const Block<>& environment) {
       else {
          // Just nest                                                   
          content.ForEach([&](const Many& subcontent) {
-            atLeastOneSuccess |= Push(subcontent, environment);
+            atLeastOneSuccess |= Push(subcontent);
          });
       }
 
@@ -118,7 +117,7 @@ bool Missing::Push(const Many& content, const Block<>& environment) {
             // Compile and push it                                      
             const auto compiled = Temporal::Compile(
                interpreter.GetOutput(), NoPriority);
-            return Push(compiled, environment);
+            return Push(compiled);
          }
       }
 
@@ -126,7 +125,7 @@ bool Missing::Push(const Many& content, const Block<>& environment) {
       bool pastHasBeenConsumed = false;
       Many linked;
       try {
-         linked = Link(content, environment, pastHasBeenConsumed);
+         linked = Link(content, {}, pastHasBeenConsumed);
       }
       catch (const Except::Link&) {
          return false;
@@ -167,7 +166,7 @@ bool Missing::Push(const Many& content, const Block<>& environment) {
       const auto compiled = Temporal::Compile(
          interpreter.GetOutput(), NoPriority);
       VERBOSE_MISSING_POINT(Logger::Green, "Interpreted as: ", compiled);
-      return Push(compiled, environment);
+      return Push(compiled);
    }
 
    // Nothing pushed to this point                                      
@@ -279,13 +278,13 @@ Many Missing::Link(const Block<>& scope, const Block<>& environment, bool& consu
             VERBOSE_MISSING_POINT(
                "(empty future point, so falling back to environment: ", environment, ')');
 
-            if (not pastShallowCopy.Push(environment, {})) {
+            if (not pastShallowCopy.Push(environment)) {
                if (not scope.IsOr())
                   LANGULUS_THROW(Link, "Scope not likable");
             }
          }
          else {
-            if (not pastShallowCopy.Push(mContent, {})) {
+            if (not pastShallowCopy.Push(mContent)) {
                if (not scope.IsOr())
                   LANGULUS_THROW(Link, "Scope not linkable");
             }

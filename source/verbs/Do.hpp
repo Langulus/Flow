@@ -37,6 +37,8 @@ namespace Langulus::Verbs
       static bool ExecuteDefault(const Block&, Verb&);
       static bool ExecuteDefault(Block&, Verb&);
       static bool ExecuteStateless(Verb&);
+
+      static Do In(auto&&, auto&&);
    };
 
 } // namespace Langulus::Verbs

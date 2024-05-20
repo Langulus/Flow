@@ -81,6 +81,18 @@ namespace Langulus::Verbs
       return true;
    }
 
+   /// Wrap anything in a Do verb, executing stuff in a specific context      
+   ///   @param context - the context to execute in                           
+   ///   @param verb - the verb/flow to execute                               
+   ///   @return the Do verb                                                  
+   inline Do Do::In(auto&& context, auto&& verb) {
+      using CS = SemanticOf<decltype(context)>;
+      using VS = SemanticOf<decltype(verb)>;
+      Do v = VS::Nest(verb);
+      v.SetSource(CS::Nest(context));
+      return Abandon(v);
+   }
+
 } // namespace Langulus::Verbs
 
 

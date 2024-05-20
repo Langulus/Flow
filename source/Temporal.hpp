@@ -46,48 +46,44 @@ namespace Langulus::Flow
       friend struct Inner::Missing;
 
    private:
-      struct State {
-         TimePoint mStart;
-         Time mTime;
-         Time mPeriod;
-      };
-      
-      // A default execution context                                    
-      Many mEnvironment;
-      // A parent flow                                                  
+      // Parent flow                                                    
       Temporal* mParent {};
-      // Background charge                                              
-      State mState;
-      // Increments on each call to Update()                            
-      TimePoint mPreviousTime;
-      TimePoint mCurrentTime;
-      // Accumulated flow duration                                      
-      Time mDuration;
-      // Priority stack, i.e. the order of things that happen NOW       
+      // The time at which this flow started                            
+      Time mStart;
+      // The time at which current flow execution happens               
+      Time mNow;
+      // Period that corresponds to a unit of Charge::mTime/mRate       
+      Time mPeriod = 1s;
+
+      // Priority stack, i.e. the order of things that happen once      
       Many mPriorityStack;
       // Verb temporal stack, i.e. things that happen at specific time  
-      TOrderedMap<Time, Temporal*> mTimeStack;
+      // Each unit of time is equal to one mState.mPeriod               
+      TOrderedMap<Real, Temporal> mTimeStack;
       // Verb frequency stack, i.e. things that happen periodically     
-      TUnorderedMap<Time, Temporal*> mFrequencyStack;
+      // Each unit of time is equal to one mState.mPeriod               
+      TUnorderedMap<Real, Temporal> mFrequencyStack;
 
    protected:
-      LANGULUS_API(FLOW) static Many Collapse(const Block<>&);
-      LANGULUS_API(FLOW) static Many Collapse(const Neat&);
+      /*LANGULUS_API(FLOW) static Many Collapse(const Block<>&);
+      LANGULUS_API(FLOW) static Many Collapse(const Neat&);*/
 
       LANGULUS_API(FLOW) static Many Compile(const Block<>&, Real priority);
       LANGULUS_API(FLOW) static Many Compile(const Neat&, Real priority);
 
-      LANGULUS_API(FLOW) bool Link(const Many&, Block<>&) const;
-      LANGULUS_API(FLOW) bool Link(const Many&, Neat&) const;
-      LANGULUS_API(FLOW) bool Link(const Many&, Inner::MissingFuture&) const;
+      LANGULUS_API(FLOW) bool PushFutures(const Many&, Block<>&);
+      LANGULUS_API(FLOW) bool PushFutures(const Many&, Neat&);
+      //LANGULUS_API(FLOW) bool PushFutures(const Many&, Inner::MissingFuture&);
+
+      LANGULUS_API(FLOW) void Link(const Many&);
+      LANGULUS_API(FLOW) void LinkRelative(const Many&, const Verb&);
 
    public:
       Temporal(const Temporal&) = delete;
       Temporal& operator = (const Temporal&) = delete;
 
       LANGULUS_API(FLOW) Temporal();
-      LANGULUS_API(FLOW) Temporal(Temporal*, const State&);
-      //LANGULUS_API(FLOW) Temporal(const Many& environment = {});
+      LANGULUS_API(FLOW) Temporal(Temporal*);
       LANGULUS_API(FLOW) Temporal(Temporal&&) noexcept = default;
 
       LANGULUS_API(FLOW) Temporal& operator = (Temporal&&) noexcept = default;
@@ -101,7 +97,10 @@ namespace Langulus::Flow
       NOD() LANGULUS_API(FLOW)
       bool IsValid() const;
 
-      LANGULUS_API(FLOW) void Merge(const Temporal&);
+      NOD() LANGULUS_API(FLOW)
+      Time GetUptime() const;
+
+      //LANGULUS_API(FLOW) void Merge(const Temporal&);
       LANGULUS_API(FLOW) bool Push(Many);
 
       template<CT::Data T1, CT::Data...TN> requires (sizeof...(TN) >= 1)
@@ -110,7 +109,7 @@ namespace Langulus::Flow
       }
 
       LANGULUS_API(FLOW) void Reset();
-      LANGULUS_API(FLOW) bool Update(Time);
+      LANGULUS_API(FLOW) bool Update(Time = {});
 
       LANGULUS_API(FLOW) void Dump() const;
    };

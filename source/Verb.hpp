@@ -68,6 +68,8 @@ namespace Langulus::Flow
       ///   Charge arithmetics                                                
       ///                                                                     
       template<CT::VerbBased THIS = Verb>
+      THIS operator * (const Verb&) const;
+      template<CT::VerbBased THIS = Verb>
       THIS operator * (Real) const;
       template<CT::VerbBased THIS = Verb>
       THIS operator ^ (Real) const;

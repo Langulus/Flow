@@ -51,7 +51,7 @@ namespace Langulus::Flow
 
       LANGULUS(TYPED) T;
       using Base = Anyness::THive<T>;
-      using Producer = CT::ProducerOf<T>;
+      using Producer = ProducerOf<T>;
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
 
    protected: IF_LANGULUS_TESTING(public:)

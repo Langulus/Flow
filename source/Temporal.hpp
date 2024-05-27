@@ -79,14 +79,16 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) void LinkRelative(const Many&, const Verb&);
 
    public:
-      Temporal(const Temporal&) = delete;
-      Temporal& operator = (const Temporal&) = delete;
+      //Temporal(const Temporal&) = delete;
+      //Temporal& operator = (const Temporal&) = delete;
 
       LANGULUS_API(FLOW) Temporal();
       LANGULUS_API(FLOW) Temporal(Temporal*);
       LANGULUS_API(FLOW) Temporal(Temporal&&) noexcept = default;
+      LANGULUS_API(FLOW) Temporal(const Temporal&) noexcept = default;
 
       LANGULUS_API(FLOW) Temporal& operator = (Temporal&&) noexcept = default;
+      LANGULUS_API(FLOW) Temporal& operator = (const Temporal&) noexcept = default;
 
       NOD() LANGULUS_API(FLOW) operator Code() const;
       NOD() LANGULUS_API(FLOW) operator Text() const;

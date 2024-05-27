@@ -102,7 +102,7 @@ namespace Langulus::Flow
       NOD() LANGULUS_API(FLOW)
       Time GetUptime() const;
 
-      //LANGULUS_API(FLOW) void Merge(const Temporal&);
+      LANGULUS_API(FLOW) void Merge(const Temporal&);
       LANGULUS_API(FLOW) bool Push(Many);
 
       template<CT::Data T1, CT::Data...TN> requires (sizeof...(TN) >= 1)

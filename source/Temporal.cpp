@@ -135,47 +135,34 @@ bool Temporal::Update(Time dt) {
 
 /// Merge a flow                                                              
 ///   @param other - the flow to merge with this one                          
-/*void Temporal::Merge(const Temporal& other) {
+void Temporal::Merge(const Temporal& other) {
    // Concatenate priority stacks                                       
    mPriorityStack += other.mPriorityStack;
 
    // Merge time stacks                                                 
    for (auto pair : other.mTimeStack) {
-      const auto found = mTimeStack.Find(pair.mKey);
+      auto found = mTimeStack.FindIt(pair.mKey);
       if (not found) {
-         const State state {
-            TimePoint {mState.mStart + pair.mKey},
-            Time {mState.mTime + pair.mKey},
-            mState.mPeriod
-         };
-
-         //TODO make this more elegant
-         Ref<Temporal> newt;
-         newt.New(this, state);
-         mTimeStack.Insert(pair.mKey, newt.Get());
+         // New time point required                                     
+         mTimeStack.Insert(pair.mKey, this);
+         found = mTimeStack.FindIt(pair.mKey);
       }
 
-      mTimeStack[pair.mKey]->Merge(*pair.mValue);
+      found.mValue->Merge(pair.mValue);
    };
 
-   // Merge periodic stacks                                             
+   // Merge frequency stacks                                            
    for (auto pair : other.mFrequencyStack) {
-      const auto found = mFrequencyStack.Find(pair.mKey);
+      auto found = mFrequencyStack.FindIt(pair.mKey);
       if (not found) {
-         const State state {
-            mState.mStart,
-            mState.mTime,
-            pair.mKey
-         };
-
-         Ref<Temporal> newt;
-         newt.New(this, state);
-         mFrequencyStack.Insert(pair.mKey, newt.Get());
+         // New time point required                                     
+         mFrequencyStack.Insert(pair.mKey, this);
+         found = mFrequencyStack.FindIt(pair.mKey);
       }
 
-      mFrequencyStack[pair.mKey]->Merge(*pair.mValue);
+      found.mValue->Merge(pair.mValue);
    };
-}*/
+}
 
 /// Push a scope of verbs and data to the flow                                
 /// The following rules are used to place the data:                           

@@ -9,7 +9,11 @@
 #include "Compare.hpp"
 #include "../TVerb.inl"
 
-#define VERBOSE_COMPARE(...) //Logger::Verbose(__VA_ARGS__)
+#if 0
+   #define VERBOSE_COMPARE(...) Logger::Verbose(__VA_ARGS__)
+#else
+   #define VERBOSE_COMPARE(...) LANGULUS(NOOP)
+#endif
 
 
 namespace Langulus::Verbs

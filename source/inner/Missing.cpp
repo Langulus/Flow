@@ -11,11 +11,15 @@
 #include "../verbs/Do.inl"
 #include "../verbs/Interpret.inl"
 
-#define VERBOSE_MISSING_POINT(...) \
-   Logger::Verbose(__VA_ARGS__)
-#define VERBOSE_MISSING_POINT_TAB(...) \
-   const auto tabs = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
-#define VERBOSE_FUTURE(...) 
+#if 0
+   #define VERBOSE_MISSING_POINT(...)     Logger::Verbose(__VA_ARGS__)
+   #define VERBOSE_MISSING_POINT_TAB(...) const auto tabs = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
+   #define VERBOSE_FUTURE(...)            Logger::Verbose(__VA_ARGS__)
+#else
+   #define VERBOSE_MISSING_POINT(...)     LANGULUS(NOOP)
+   #define VERBOSE_MISSING_POINT_TAB(...) LANGULUS(NOOP)
+   #define VERBOSE_FUTURE(...)            LANGULUS(NOOP)
+#endif
 
 using namespace Langulus::Anyness;
 using namespace Langulus::Flow::Inner;

@@ -9,8 +9,8 @@
 #include "TVerb.hpp"
 #include "Verb.inl"
 
-#define TEMPLATE() template<class VERB>
-#define TME() TVerb<VERB>
+#define TEMPLATE()   template<class VERB>
+#define TME()        TVerb<VERB>
 
 
 namespace Langulus::Flow

@@ -13,8 +13,13 @@
 #include "Interpret.inl"
 #include <Anyness/TMap.hpp>
 
-#define VERBOSE_CREATION(...) //Logger::Verbose(__VA_ARGS__)
-#define ERROR_CREATION(...)   //Logger::Error(__VA_ARGS__)
+#if 0
+   #define VERBOSE_CREATION(...) Logger::Verbose(__VA_ARGS__)
+   #define ERROR_CREATION(...)   Logger::Error(__VA_ARGS__)
+#else
+   #define VERBOSE_CREATION(...) LANGULUS(NOOP)
+   #define ERROR_CREATION(...)   LANGULUS(NOOP)
+#endif
 
 
 namespace Langulus::Verbs

@@ -9,7 +9,11 @@
 #include "Interact.hpp"
 #include "../TVerb.inl"
 
-#define VERBOSE_INTERACT(...) //Logger::Verbose(__VA_ARGS__)
+#if 0
+   #define VERBOSE_INTERACT(...) Logger::Verbose(__VA_ARGS__)
+#else
+   #define VERBOSE_INTERACT(...) LANGULUS(NOOP)
+#endif
 
 
 namespace Langulus::Verbs

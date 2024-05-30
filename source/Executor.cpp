@@ -12,8 +12,14 @@
 #include "verbs/Create.inl"
 #include "inner/Missing.hpp"
 
-#define VERBOSE(...)      //Logger::Verbose(__VA_ARGS__)
-#define VERBOSE_TAB(...)  //const auto tab = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
+#if 0
+   #define VERBOSE(...)      Logger::Verbose(__VA_ARGS__)
+   #define VERBOSE_TAB(...)  const auto tab = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
+#else
+   #define VERBOSE(...)      LANGULUS(NOOP)
+   #define VERBOSE_TAB(...)  LANGULUS(NOOP)
+#endif
+
 #define FLOW_ERRORS(...)  Logger::Error(__VA_ARGS__)
 
 

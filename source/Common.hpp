@@ -20,6 +20,10 @@
 LANGULUS_EXCEPTION(Flow);
 LANGULUS_EXCEPTION(Link);
 
+/// Make the rest of the code aware, that Langulus::Flow has been included    
+#define LANGULUS_LIBRARY_FLOW() 1
+
+
 namespace Langulus::Flow
 {
 
@@ -57,5 +61,3 @@ namespace Langulus::Flow
 
 } // namespace Langulus::Flow
 
-/// Make the rest of the code aware, that Langulus::Flow has been included    
-#define LANGULUS_LIBRARY_FLOW() 1

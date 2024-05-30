@@ -9,7 +9,11 @@
 #include "Select.hpp"
 #include "../TVerb.inl"
 
-#define VERBOSE_SELECT(...) //Logger::Verbose(__VA_ARGS__)
+#if 0
+   #define VERBOSE_SELECT(...) Logger::Verbose(__VA_ARGS__)
+#else
+   #define VERBOSE_SELECT(...) LANGULUS(NOOP)
+#endif
 
 
 namespace Langulus::Verbs

@@ -18,7 +18,11 @@
 #include <Anyness/Ref.hpp>
 #include <Anyness/Neat.hpp>
 
-#define VERBOSE_CONVERSION(...) // Logger::Verbose(__VA_ARGS__)
+#if 0
+   #define VERBOSE_CONVERSION(...) Logger::Verbose(__VA_ARGS__)
+#else
+   #define VERBOSE_CONVERSION(...) LANGULUS(NOOP)
+#endif
 
 
 namespace Langulus::Verbs

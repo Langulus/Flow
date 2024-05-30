@@ -11,7 +11,11 @@
 #include "verbs/Select.inl"
 #include <Anyness/Construct.hpp>
 
-#define VERBOSE_CONSTRUCT(...) //Logger::Verbose(__VA_ARGS__)
+#if 0
+   #define VERBOSE_CONSTRUCT(...) Logger::Verbose(__VA_ARGS__)
+#else
+   #define VERBOSE_CONSTRUCT(...) LANGULUS(NOOP)
+#endif
 
 
 namespace Langulus::Anyness

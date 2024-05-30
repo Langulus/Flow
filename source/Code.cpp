@@ -37,13 +37,13 @@ LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
    }
 
 #if ENABLE_VERBOSE()
-   #define VERBOSE(...)      VERBOSE_INNER(__VA_ARGS__)
-   #define VERBOSE_TAB(...)  auto tab = VERBOSE_INNER(__VA_ARGS__) << Logger::Tabs{}
-   #define VERBOSE_ALT(...)  Logger::Verbose(__VA_ARGS__)
+   #define VERBOSE(...)       VERBOSE_INNER(__VA_ARGS__)
+   #define VERBOSE_TAB(...)   auto tab = VERBOSE_INNER(__VA_ARGS__) << Logger::Tabs{}
+   #define VERBOSE_ALT(...)   Logger::Verbose(__VA_ARGS__)
 #else
-   #define VERBOSE(...)      
-   #define VERBOSE_TAB(...)  
-   #define VERBOSE_ALT(...)  
+   #define VERBOSE(...)       LANGULUS(NOOP)
+   #define VERBOSE_TAB(...)   LANGULUS(NOOP)
+   #define VERBOSE_ALT(...)   LANGULUS(NOOP)
 #endif
 
 

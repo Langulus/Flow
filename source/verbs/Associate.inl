@@ -9,7 +9,11 @@
 #include "Associate.hpp"
 #include "../TVerb.inl"
 
-#define VERBOSE_ASSOCIATE(...) //Logger::Verbose(__VA_ARGS__)
+#if 0
+   #define VERBOSE_ASSOCIATE(...) Logger::Verbose(__VA_ARGS__)
+#else
+   #define VERBOSE_ASSOCIATE(...) LANGULUS(NOOP)
+#endif
 
 
 namespace Langulus::Verbs

@@ -53,7 +53,7 @@ namespace Langulus::Flow
       using Producer = ProducerOf<T>;
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
 
-   protected: IF_LANGULUS_TESTING(public:)
+   protected:
       using typename Base::Cell;
 
       // Each factory is bound to a producer instance                   

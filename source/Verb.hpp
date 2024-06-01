@@ -7,12 +7,14 @@
 ///                                                                           
 #pragma once
 #include "Common.hpp"
-#include "Code.hpp"
 #include <Anyness/Verb.hpp>
 
 
 namespace Langulus::Flow
 {
+
+   struct Code;
+
 
    ///                                                                        
    ///   A type-erased verb                                                   

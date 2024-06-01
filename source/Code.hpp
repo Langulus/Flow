@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Executor.hpp"
+#include <Anyness/Text.hpp>
 
 
 namespace Langulus::Flow

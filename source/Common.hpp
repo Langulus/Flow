@@ -6,10 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include <Anyness/Trait.hpp>
-#include <Anyness/Text.hpp>
-#include <Anyness/Bytes.hpp>
-#include <Anyness/Construct.hpp>
+#include <RTTI/Meta.hpp>
 
 #if defined(LANGULUS_EXPORT_ALL) || defined(LANGULUS_EXPORT_FLOW)
    #define LANGULUS_API_FLOW() LANGULUS_EXPORT()

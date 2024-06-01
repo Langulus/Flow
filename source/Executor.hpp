@@ -9,6 +9,13 @@
 #include "Common.hpp"
 
 
+namespace Langulus::Anyness
+{
+
+   class Many;
+
+} // namespace Langulus::Anyness
+
 namespace Langulus::Flow
 {
 

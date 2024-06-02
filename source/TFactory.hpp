@@ -91,6 +91,11 @@ namespace Langulus::Flow
       void Select(Verb&);
 
       IF_SAFE(void Dump() const);
+
+   #if LANGULUS(TESTING)
+      auto  GetOwner() const noexcept { return mFactoryOwner; }
+      auto& GetHashmap() const { return mHashmap; }
+   #endif
    };
 
    template<class T>

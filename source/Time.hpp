@@ -31,11 +31,12 @@ namespace Langulus
 
    } // namespace Langulus::A
 
+   using StdClock = ::std::chrono::steady_clock;
 
    ///                                                                        
    ///   A time point                                                         
    ///                                                                        
-   struct TimePoint : A::Time, ::std::chrono::steady_clock::time_point {
+   struct TimePoint : A::Time, StdClock::time_point {
       LANGULUS(ABSTRACT) false;
       LANGULUS(POD) true;
       LANGULUS_BASES(A::Time);
@@ -53,7 +54,7 @@ namespace Langulus
    ///                                                                        
    ///   A time duration (difference between two time points)                 
    ///                                                                        
-   struct Time : A::Time, ::std::chrono::steady_clock::duration {
+   struct Time : A::Time, StdClock::duration {
       LANGULUS(ABSTRACT) false;
       LANGULUS(POD) true;
       LANGULUS_BASES(A::Time);
@@ -91,7 +92,7 @@ namespace Langulus
    ///                                                                        
    ///   A steady clock used to aquire TimePoint(s)                           
    ///                                                                        
-   class SteadyClock : public A::Clock, private ::std::chrono::steady_clock {
+   class SteadyClock : public A::Clock, private StdClock {
       LANGULUS_BASES(A::Clock);
       NOD() static TimePoint Now() noexcept;
    };
@@ -103,6 +104,57 @@ namespace Langulus
       concept Time = SameAsOneOf<T, ::Langulus::TimePoint, ::Langulus::Time>;
 
    } // namespace Langulus::CT
+
+
+   ///                                                                        
+   /// Manages the framerate by measuring delta-time and sleeping             
+   ///                                                                        
+   template<int FRAMES_PER_SECOND = 60>
+   struct Framerate {
+      static constexpr int FramesPerSecond = FRAMES_PER_SECOND;
+
+   protected:
+      using dsec    = ::std::chrono::duration<double>;
+      using seconds = ::std::chrono::seconds;
+
+      const Time mInvFpsLimit;
+      TimePoint mBegin;
+      TimePoint mEnd;
+      TimePoint mPrevTime;
+      Time      mDeltaTime;
+
+   public:
+      Framerate()
+         : mInvFpsLimit {::std::chrono::round<StdClock::duration>(dsec {1. / FramesPerSecond})}
+         , mBegin       {SteadyClock::Now()}
+         , mEnd         {mBegin + mInvFpsLimit}
+         , mPrevTime    {mBegin} {}
+
+      /// Get the time between ticks                                          
+      ///   @return the time period between ticks                             
+      Time GetDeltaTime() {
+         return mDeltaTime;
+      }
+
+      /// Call this from your main loop                                       
+      ///   @attention this may make the current thread sleep!                
+      void Tick() {
+         const auto now = SteadyClock::Now();
+         if (now <= mPrevTime)
+            return;
+
+         mDeltaTime = now - mPrevTime;
+         mPrevTime = now;
+
+         if (now < mEnd) {
+            // We've finished early - sleep for the rest of the time    
+            ::std::this_thread::sleep_until(mEnd);
+         }
+
+         mBegin = mEnd;
+         mEnd = mBegin + mInvFpsLimit;
+      }
+   };
 
 } // namespace Langulus
 

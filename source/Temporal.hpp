@@ -51,16 +51,16 @@ namespace Langulus::Flow
       Time mStart;
       // The time at which current flow execution happens               
       Time mNow;
-      // Period that corresponds to a unit of Charge::mTime/mRate       
+      // Period that corresponds to a unit of Charge::mTime             
       Time mPeriod = 1s;
 
       // Priority stack, i.e. the order of things that happen once      
       Many mPriorityStack;
       // Verb temporal stack, i.e. things that happen at specific time  
-      // Each unit of time is equal to one mState.mPeriod               
+      // Each unit of time is equal to one mPeriod                      
       TOrderedMap<Real, Temporal> mTimeStack;
       // Verb frequency stack, i.e. things that happen periodically     
-      // Each unit of time is equal to one mState.mPeriod               
+      // Each unit of time is equal to one mPeriod                      
       TUnorderedMap<Real, Temporal> mFrequencyStack;
 
    protected:

@@ -50,10 +50,31 @@ Temporal::operator Text() const {
 /// Reset progress for the priority stack                                     
 void Temporal::Reset() {
    mStart = mNow = {};
-   //TODO reset stack verb done statuses
-   VERBOSE_TEMPORAL("Reset");
+   ResetInner(mPriorityStack);
 }
-   
+
+/// Reset progress for all verbs inside a scope                               
+void Temporal::ResetInner(Many& scope) {
+   scope.ForEachDeep(
+      [&](Inner::Missing& missing) {
+         ResetInner(missing.mContent);
+      },
+      [&](Trait& trait) {
+         ResetInner(static_cast<Many&>(trait));
+      },
+      [&](Construct& construct) {
+         auto verbs = construct.GetDescriptor().GetData<Verb>();
+         if (verbs) {
+            for (auto& group : *verbs)
+               ResetInner(group);
+         }
+      },
+      [&](Verb& constVerb) {
+         constVerb.Undo();
+      }
+   );
+}
+
 /// Compare two flows                                                         
 ///   @param other - the flow to compare with                                 
 ///   @return true if both flows are the same                                 

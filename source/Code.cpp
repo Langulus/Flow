@@ -21,7 +21,7 @@ LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
 #define ENABLE_VERBOSE() 0
 
 #define VERBOSE_INNER(...) \
-      Logger::Verbose("Flow::Code: ", Logger::Push, Logger::Cyan, __VA_ARGS__ \
+      Logger::Flow("Flow::Code: ", Logger::Push, Logger::Cyan, __VA_ARGS__ \
          , Logger::Pop, " at ", progress, ": " \
          , Logger::NewLine, "+-[", Logger::Push, Logger::Green, Logger::Underline \
          , input. LeftOf(progress).Replace('\n', "\\n"), Logger::Pop, Logger::Push, Logger::White \
@@ -39,7 +39,7 @@ LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
 #if ENABLE_VERBOSE()
    #define VERBOSE(...)       VERBOSE_INNER(__VA_ARGS__)
    #define VERBOSE_TAB(...)   auto tab = VERBOSE_INNER(__VA_ARGS__) << Logger::Tabs{}
-   #define VERBOSE_ALT(...)   Logger::Verbose(__VA_ARGS__)
+   #define VERBOSE_ALT(...)   Logger::Flow(__VA_ARGS__)
 #else
    #define VERBOSE(...)       LANGULUS(NOOP)
    #define VERBOSE_TAB(...)   LANGULUS(NOOP)
@@ -915,6 +915,7 @@ namespace Langulus::Flow
          if (Execute(scope, lhs, output)) {
             // The verb was executed at compile-time, so directly       
             // substitute LHS with the result                           
+            VERBOSE("Verb was executed at compile time: ", output);
             lhs = Abandon(output);
             return progress;
          }

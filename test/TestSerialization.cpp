@@ -5,9 +5,9 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
+#include "Common.hpp"
 #include <Anyness/Serial.hpp>
 #include <Flow/Verbs/Interpret.hpp>
-#include "Common.hpp"
 
 constexpr Count SerialBlock = sizeof(Count) * 2 + sizeof(DataState);
 

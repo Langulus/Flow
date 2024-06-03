@@ -5,8 +5,8 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include <Flow/Verbs/Select.hpp>
 #include "Common.hpp"
+#include <Flow/Verbs/Select.hpp>
 
 
 SCENARIO("Text capsulation in verbs", "[verbs]") {

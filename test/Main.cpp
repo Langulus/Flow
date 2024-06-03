@@ -5,10 +5,8 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "Main.hpp"
-#include <Flow/Verbs/Interpret.hpp>
 #define CATCH_CONFIG_RUNNER
-#include <catch2/catch.hpp>
+#include "Common.hpp"
 
 LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
 

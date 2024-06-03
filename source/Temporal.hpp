@@ -111,8 +111,10 @@ namespace Langulus::Flow
 
       LANGULUS_API(FLOW) void Reset();
       LANGULUS_API(FLOW) bool Update(Time = {});
-
       LANGULUS_API(FLOW) void Dump() const;
+
+   protected:
+      void ResetInner(Many&);
    };
 
 } // namespace Langulus::Flow

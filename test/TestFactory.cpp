@@ -5,10 +5,10 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
+#include "Common.hpp"
 #include <Flow/Verbs/Create.hpp>
 #include <Flow/Verbs/Interpret.hpp>
 #include <Flow/Factory.hpp>
-#include "Common.hpp"
 
 
 SCENARIO("Test factories", "[factory]") {

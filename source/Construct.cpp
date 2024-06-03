@@ -40,7 +40,7 @@ namespace Langulus::Anyness
       Verbs::Create creator {this};
       if (Verbs::Create::ExecuteStateless(creator)) {
          VERBOSE_CONSTRUCT("Constructed from initializer-list: ", Logger::Cyan, creator.GetOutput());
-         output << Move(creator.GetOutput());
+         output.SmartPush(IndexBack, Move(creator.GetOutput()));
          return true;
       }
 

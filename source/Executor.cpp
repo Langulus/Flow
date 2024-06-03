@@ -193,8 +193,11 @@ namespace Langulus::Flow
 
                // Execute the verb                                      
                if (not ExecuteVerb(environment, verb))
-                  LANGULUS_OOPS(Flow, "Verb AND failure: ", flow);
+                  LANGULUS_OOPS(Flow, "Verb AND failure: ", verb);
 
+               // Make sure the original verb has been marked done, so  
+               // that it isn't executed every time.                    
+               const_cast<Verb&>(constVerb).Done();
                output.SmartPush(IndexBack, Abandon(verb.GetOutput()));
                return Loop::Continue;
             }

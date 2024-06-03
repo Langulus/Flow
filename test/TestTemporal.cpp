@@ -5,8 +5,8 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include <Flow/Temporal.hpp>
 #include "Common.hpp"
+#include <Flow/Temporal.hpp>
 
 
 SCENARIO("Temporal flow", "[temporal]") {

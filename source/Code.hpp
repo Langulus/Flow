@@ -20,14 +20,23 @@ namespace Langulus::CT
    namespace Inner
    {
    
+      /// Workaround, because of MSVC ICEs introduced in 19.40.33811.0        
+      /// Hopefully it will be resolved by them one day                       
+      template<class T>
+      consteval bool CodifiableByOperator_AvoidMSVC_ICE() {
+         return std::is_object_v<T> and requires (const T& a) {
+            a.operator ::Langulus::Flow::Code();
+         };
+      }
+
       /// Do types have an explicit or implicit cast operator to Code         
       template<class...T>
-      concept CodifiableByOperator = requires (T&...a) {
-         ((a.operator ::Langulus::Flow::Code()), ...); };
+      concept CodifiableByOperator = 
+         (CodifiableByOperator_AvoidMSVC_ICE<T>() and ...);
 
       /// Does Code has an explicit/implicit constructor that accepts T       
       template<class...T>
-      concept CodifiableByConstructor = requires (T&...a) {
+      concept CodifiableByConstructor = requires (const T&...a) {
          ((::Langulus::Flow::Code {a}), ...); };
 
    } // namespace Langulus::CT::Inner

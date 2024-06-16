@@ -146,14 +146,19 @@ namespace Langulus::Verbs
       }
       else if constexpr (CT::Convertible<FROM, TO> and not CT::Deep<FROM>) {
          // Just regular conversion with source not being a container   
-         if constexpr (requires { TO {from}; })
-            return TO {from};
-         else if constexpr (requires { TO {from.operator TO()}; })
-            return TO {from.operator TO()};
-         else if constexpr (requires { static_cast<TO>(from); })
-            return static_cast<TO>(from);
-         else
-            LANGULUS_ERROR("Unhandled conversion route for non-deep");
+         if constexpr (requires { TO (static_cast<TO>(from)); })
+            return TO (static_cast<TO>(from));
+         else if constexpr (requires { TO (from); })
+            return TO (from);
+         else if constexpr (requires (TO& r) { r = static_cast<TO>(from); }) {
+            TO result;
+            return (result = static_cast<TO>(from));
+         }
+         else if constexpr (requires (TO& r) { r = from; }) {
+            TO result;
+            return (result = from);
+         }
+         else LANGULUS_ERROR("Unhandled conversion route for non-deep");
       }
       else if constexpr (CT::Deep<FROM>) {
          // We're converting a container to something else              

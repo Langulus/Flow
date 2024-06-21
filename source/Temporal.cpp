@@ -54,6 +54,7 @@ void Temporal::Reset() {
 }
 
 /// Reset progress for all verbs inside a scope                               
+///   @param scope - scope to reset                                           
 void Temporal::ResetInner(Many& scope) {
    scope.ForEachDeep(
       [&](Inner::Missing& missing) {
@@ -84,17 +85,21 @@ bool Temporal::operator == (const Temporal& other) const {
       and mPriorityStack == other.mPriorityStack;
 }
 
-/// Check if flow contains anything executable                                
-///   @return true if flow contains at least one verb                         
+/// Check if flow contains anything                                           
+///   @return true if flow contains something                                 
 bool Temporal::IsValid() const {
    return mPriorityStack or mTimeStack or mFrequencyStack;
 }
 
-/// Dump the contents of the flow to the log                                  
+/// Dump the contents of the flow to the log in a pretty, colorized and       
+/// easily readable way                                                       
 void Temporal::Dump() const {
-   Logger::Verbose(mPriorityStack);
-   Logger::Verbose(mTimeStack);
-   Logger::Verbose(mFrequencyStack);
+   if (mPriorityStack)
+      Logger::Verbose(mPriorityStack);
+   if (mTimeStack)
+      Logger::Verbose(mTimeStack);
+   if (mFrequencyStack)
+      Logger::Verbose(mFrequencyStack);
 }
 
 /// Get the accumulated running time across all Updates                       
@@ -129,7 +134,7 @@ bool Temporal::Update(Time dt) {
    // Execute flows that occur periodically                             
    for (auto pair : mFrequencyStack) {
       pair.mValue.mNow += dt;
-      auto ticks = pair.mValue.GetUptime().Seconds() / mPeriod.Seconds();
+      auto ticks = pair.mValue.GetUptime().Seconds() / mRatePeriod.Seconds();
 
       while (ticks >= pair.mKey) {
          // Time to execute the periodic flow                           
@@ -139,11 +144,11 @@ bool Temporal::Update(Time dt) {
       }
 
       // Make sure any leftover time is returned to the periodic flow   
-      pair.mValue.mNow = pair.mValue.mStart + mPeriod * ticks;
+      pair.mValue.mNow = pair.mValue.mStart + mRatePeriod * ticks;
    }
 
    // Execute flows that occur after a given point in time              
-   const auto ticks = GetUptime().Seconds() / mPeriod.Seconds();
+   const auto ticks = GetUptime().Seconds() / mTimePeriod.Seconds();
    for (auto pair : mTimeStack) {
       if (pair.mKey > ticks) {
          // The time stack is sorted, so no point in continuing         
@@ -222,19 +227,17 @@ bool Temporal::Push(Many scope) {
 
    // Link new scope with the available stacks                          
    try { Link(compiled); }
-   catch (...) {
-      return false;
-   }
+   catch (...) { return false; }
 
-   if (mPriorityStack) {
+   if (mPriorityStack)
       VERBOSE_TEMPORAL(Logger::Purple, "Priority flow: ", mPriorityStack);
-   }
-   if (mTimeStack) {
+
+   if (mTimeStack)
       VERBOSE_TEMPORAL(Logger::Purple, "Time flow: ", mTimeStack);
-   }
-   if (mFrequencyStack) {
+
+   if (mFrequencyStack)
       VERBOSE_TEMPORAL(Logger::Purple, "Frequency flow: ", mFrequencyStack);
-   }
+
    return true;
 }
 
@@ -345,10 +348,24 @@ Many Temporal::Compile(const Block<>& scope, Real priority) {
       return Abandon(result);
    }
    else if (scope.IsDeep()) {
-      // Nest deep scopes                                               
-      scope.ForEach([&](const Block<>& subscope) {
-         result << Compile(subscope, priority);
-      });
+      if (scope.IsSparse()) {
+         // Sparse scopes are always inserted, even if empty. They act  
+         // as handles, that can change context externally. They are    
+         // never compiled, because that would require fiddling with    
+         // the contents of the handle.                                 
+         // @attention any sparse element inside a flow will cause that 
+         //    flow to become impure, as in, it can be affected by      
+         //    external factors, and is no longer purely functional.    
+         scope.ForEach([&](const Block<>& subscope) {
+            result << &subscope;
+         });
+      }
+      else {
+         // Nest dense deep scopes                                      
+         scope.ForEach([&](const Block<>& subscope) {
+            result << Compile(subscope, priority);
+         });
+      }
       return Abandon(result);
    }
 
@@ -368,14 +385,16 @@ Many Temporal::Compile(const Block<>& scope, Real priority) {
             subscope.GetCharge()
          };
       },
-      [&](const Verb& subscope) {
+      [&](const A::Verb& subscope) {
          // Compile verbs                                               
          auto v = Verb::FromMeta(
             subscope.GetVerb(),
             Compile(subscope.GetArgument(), subscope.GetPriority()),
             subscope.GetCharge(),
             subscope.GetVerbState()
-         ).SetSource(Compile(subscope.GetSource(), subscope.GetPriority()));
+         ).SetSource(
+            Compile(subscope.GetSource(), subscope.GetPriority())
+         );
          result << Abandon(v);
       }
    );
@@ -451,8 +470,8 @@ Many Temporal::Compile(const Neat& neat, Real priority) {
 bool Temporal::PushFutures(const Many& scope, Block<>& stack) {
    bool atLeastOneSuccess = false;
 
-   if (stack.IsDeep()) {
-      // Nest deep stack                                                
+   if (stack.IsDeep() and stack.IsDense()) {
+      // Nest deep stack, if dense                                      
       stack.ForEachRev([&](Block<>& substack) {
          atLeastOneSuccess |= PushFutures(scope, substack);
          // Continue linking only if the stack is branched              
@@ -463,9 +482,9 @@ bool Temporal::PushFutures(const Many& scope, Block<>& stack) {
    }
 
    // Iterate backwards - the last future points are always most        
-   // relevant for linking. Lets start, by scanning all future          
-   // points in the available stack. Scope will be duplicated for       
-   // each encountered branch                                           
+   // relevant for linking. Lets start, by scanning all future points   
+   // in the available stack. Scope will be cloned for each encountered 
+   // branch                                                            
    stack.ForEachRev(
       [&](Trait& substack) {
          atLeastOneSuccess |= PushFutures(scope, substack);
@@ -525,10 +544,25 @@ void Temporal::Link(const Many& scope) {
       TODO();
 
    if (scope.IsDeep()) {
-      // Nest deep scope                                                
-      scope.ForEach([&](const Block<>& sub) {
-         Link(sub);
-      });
+      if (scope.IsSparse()) {
+         // Sparse blocks are always pushed directly without linking    
+         // anything, because that would require changing data behind   
+         // the handle. This allows for specifying contexts externally, 
+         // but also makes the flow impure, because it allows it to be  
+         // affacted by external influence.                             
+         scope.ForEach([&](const Block<>& sub) {
+            LANGULUS_ASSERT(
+               PushFutures(&sub, mPriorityStack),
+               Flow, "Couldn't push to future"
+            );
+         });
+      }
+      else {
+         // Nest-link dense deep scope                                  
+         scope.ForEach([&](const Block<>& sub) {
+            Link(sub);
+         });
+      }
    }
    else {
       // Handle shallow scope                                           

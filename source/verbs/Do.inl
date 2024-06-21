@@ -104,8 +104,9 @@ namespace Langulus::Flow
       LANGULUS(INLINED)
       Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb) {
          using T = Deref<decltype(context)>;
-
-         if constexpr (CT::Constant<T>) {
+         if constexpr (CT::Same<BASE, A::Block>)
+            return 0;
+         else if constexpr (CT::Constant<T>) {
             return Execute<DISPATCH, DEFAULT, FALLBACK>(
                static_cast<const BASE&>(context), verb);
          }

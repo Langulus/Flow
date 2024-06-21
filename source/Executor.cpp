@@ -82,7 +82,7 @@ namespace Langulus::Flow
    ///   @return true of no errors occured                                    
    bool ExecuteAND(const Many& flow, Many& environment, Many& output, bool& skipVerbs) {
       Count executed = 0;
-      if (flow.IsDeep()) {
+      if (flow.IsDeep() and flow.IsDense()) {
          executed = flow.ForEach([&](const Many& block) {
             // Nest if deep                                             
             Many local;
@@ -90,9 +90,9 @@ namespace Langulus::Flow
                LANGULUS_OOPS(Flow, "Deep AND failure: ", flow);
 
             output.SmartPush(IndexBack, Abandon(local));
-            });
+         });
       }
-      else {
+      else if (flow.IsDense()) {
          executed = flow.ForEach(
             [&](const Inner::Missing& missing) {
                // Nest if missing points                                
@@ -224,7 +224,7 @@ namespace Langulus::Flow
       Count executed = 0;
       bool localSkipVerbs = false;
 
-      if (flow.IsDeep()) {
+      if (flow.IsDeep() and flow.IsDense()) {
          executed = flow.ForEach([&](const Many& block) {
             // Nest if deep                                             
             Many local;
@@ -232,9 +232,9 @@ namespace Langulus::Flow
                executed = true;
                output.SmartPush(IndexBack, Abandon(local));
             }
-            });
+         });
       }
-      else {
+      else if (flow.IsDense()) {
          executed = flow.ForEach(
             [&](const Trait& trait) {
                // Nest if traits, but retain each trait                 

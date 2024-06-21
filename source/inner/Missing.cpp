@@ -83,7 +83,7 @@ bool Missing::Push(const Many& content) {
    if (content.IsDeep()) {
       // Always nest deep contents, we must filter each part and        
       // make sure branches are correctly inserted in forks             
-      if (content.IsOr()) {
+      if (content.IsOr() and content.IsDense()) {
          // We're building a fork, we should take special care to       
          // preserve the hierarchy of the branches                      
          Missing fork {mFilter, mPriority};
@@ -95,10 +95,20 @@ bool Missing::Push(const Many& content) {
 
          mContent.SmartPush(IndexBack, Abandon(fork.mContent));
       }
-      else {
-         // Just nest                                                   
+      else if (content.IsDense()) {
+         // Just nest-push                                              
          content.ForEach([&](const Many& subcontent) {
             atLeastOneSuccess |= Push(subcontent);
+         });
+      }
+      else {
+         // Sparse blocks are always inserted as-is                     
+         // They are never linked, so not to affect contents outside    
+         // this flow. This makes the flow impure, because it can be    
+         // affected from the outside.                                  
+         content.ForEach([&](const Many& subcontent) {
+            mContent << &subcontent;
+            atLeastOneSuccess = true;
          });
       }
 
@@ -127,12 +137,8 @@ bool Missing::Push(const Many& content) {
       // Scope is either verbs or something else, just push             
       bool pastHasBeenConsumed = false;
       Many linked;
-      try {
-         linked = Link(content, {}, pastHasBeenConsumed);
-      }
-      catch (const Except::Link&) {
-         return false;
-      }
+      try { linked = Link(content, {}, pastHasBeenConsumed); }
+      catch (const Except::Link&) { return false; }
 
       if (linked) {
          if (pastHasBeenConsumed) {

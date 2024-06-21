@@ -69,12 +69,6 @@ namespace Langulus::Flow
          "Bad resolvable type");
       LANGULUS_ASSUME(DevAssumes, mClassType->mOrigin,
          "Resolvable type is incomplete");
-
-      // Precalculate offset, no need to do it at runtime               
-      /*RTTI::Base base;
-      UNUSED() bool found = type->template GetBase<Resolvable>(0, base);
-      LANGULUS_ASSUME(DevAssumes, found, "Unrelated type provided to Resolvable");
-      const_cast<Offset&>(mClassOffset) = base.mOffset;*/
       mClassPointer = type;
    }
 

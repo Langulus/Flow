@@ -9,10 +9,12 @@
 #include "Select.hpp"
 #include "../TVerb.inl"
 
-#if 0
-   #define VERBOSE_SELECT(...) Logger::Verbose(__VA_ARGS__)
+#if 1
+   #define VERBOSE_SELECT(...)      Logger::Verbose(__VA_ARGS__)
+   #define VERBOSE_SELECT_TAB(...)  const auto tab = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
 #else
-   #define VERBOSE_SELECT(...) LANGULUS(NOOP)
+   #define VERBOSE_SELECT(...)      LANGULUS(NOOP)
+   #define VERBOSE_SELECT_TAB(...)  LANGULUS(NOOP)
 #endif
 
 
@@ -68,7 +70,6 @@ namespace Langulus::Verbs
          if (t->Is<Traits::Logger>())
             verb << &Logger::Instance;
       });
-
       return verb.IsDone();
    }
 
@@ -97,8 +98,15 @@ namespace Langulus::Verbs
    ///   @return true if execution was a success                              
    template<bool MUTABLE>
    bool Select::DefaultSelect(Block& context, Verb& verb) {
-      if (verb.IsMissing() or not context or context.IsMissing())
+      VERBOSE_SELECT_TAB("Default select: ", verb);
+      if (verb.IsMissing() or context.IsMissing()) {
+         VERBOSE_SELECT("Can't select using missing argument/context");
          return false;
+      }
+      else if (not context) {
+         VERBOSE_SELECT("Can't select in empty context");
+         return false;
+      }
 
       TMany<Index> indices;
       indices.GatherFrom(verb.GetArgument());
@@ -115,12 +123,14 @@ namespace Langulus::Verbs
 
          group.ForEach(
             [&](const Construct& construct) {
+               VERBOSE_SELECT("Selecting construct: ", construct.GetDescriptor());
                containsOnlyIndices = false;
                auto nested = verb.Fork(construct.GetDescriptor());
                ExecuteDefault(context, nested);
                verb << Abandon(nested.GetOutput());
             },
             [&](const Trait& trait) {
+               VERBOSE_SELECT("Selecting trait: ", trait);
                containsOnlyIndices = false;
                auto tmeta = trait.GetTrait();
                if (tmeta)
@@ -129,10 +139,12 @@ namespace Langulus::Verbs
                   PerIndex<MUTABLE>(context, selectedTraits, tmeta, trait.GetType(), indices);
             },
             [&](TMeta tmeta) {
+               VERBOSE_SELECT("Selecting trait: ", tmeta);
                containsOnlyIndices = false;
                PerIndex<MUTABLE>(context, selectedTraits, tmeta, tmeta, indices);
             },
             [&](DMeta dmeta) {
+               VERBOSE_SELECT("Selecting data: ", dmeta);
                containsOnlyIndices = false;
                SelectByMeta<MUTABLE>(indices, dmeta, context, selectedTraits, selectedAbilities);
             }
@@ -142,12 +154,20 @@ namespace Langulus::Verbs
       if (containsOnlyIndices) {
          // Try selecting via indices only                              
          // This is allowed only if no metas were found in the argument 
+         VERBOSE_SELECT("Selecting via indices only: ", indices);
          PerIndex<MUTABLE>(context, selectedTraits, TMeta {}, DMeta {}, indices);
       }
 
       // Output results if any, satisfying the verb                     
-      verb << selectedTraits;
+      for (auto& trait : selectedTraits)
+         verb << static_cast<Many&>(trait);
+
       verb << selectedAbilities;
+
+      if (verb.IsDone())
+         VERBOSE_SELECT(Logger::Green, "Selected: ", verb.GetOutput());
+      else
+         VERBOSE_SELECT(Logger::Red, "Nothing was selected");
       return verb.IsDone();
    }
 

@@ -97,7 +97,7 @@ namespace Langulus::Verbs
 
 namespace Langulus::Flow
 {
-   namespace Inner
+   /*namespace Inner
    {
       /// Helper function that checks if statically reflected base is valid   
       template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class BASE>
@@ -126,7 +126,7 @@ namespace Langulus::Flow
          return 0;
       else
          return (Inner::ExecuteInBases<DISPATCH, DEFAULT, FALLBACK, BASES>(context, verb) or ...);
-   }
+   }*/
 
    /// Invoke a single verb on a single context                               
    ///   @attention assumes that if T is deep, then it contains exactly one   
@@ -183,14 +183,14 @@ namespace Langulus::Flow
          }
 
          // If that fails, attempt in all reflected bases               
-         if constexpr (requires { typename T::CTTI_Bases; }) {
+         /*if constexpr (requires { typename T::CTTI_Bases; }) {
             if (not verb.IsDone()) {
                // Context has no abilities, or they failed, so try      
                // with all bases' abilities                             
                ExecuteInBases<DISPATCH, false, FALLBACK>(
                   context, verb, typename T::CTTI_Bases {});
             }
-         }
+         }*/
 
          // If that fails, attempt executing the default verb           
          if constexpr (DEFAULT and not FALLBACK) {
@@ -240,7 +240,7 @@ namespace Langulus::Flow
          }
       }
 
-      Count successCount {};
+      Count successCount = 0;
       auto output = Many::FromState(context);
 
       // Iterate elements in the current context                        
@@ -256,7 +256,7 @@ namespace Langulus::Flow
             Execute<DISPATCH, DEFAULT, false>(resolved, verb);
          }
 
-         if (verb.IsShortCircuited()) {
+         /*if (verb.IsShortCircuited()) {
             // Short-circuit if enabled for verb                        
             if (verb.IsDone() == context.IsOr()) {
                // Time to early-exit                                    
@@ -275,20 +275,23 @@ namespace Langulus::Flow
 
                return verb.GetSuccesses();
             }
-         }
+         }*/
          
-         if (verb.IsDone() and verb.GetOutput()) {
-            // Cache output, conserving the context hierarchy           
-            output.SmartPush(IndexBack, Langulus::Move(verb.GetOutput()));
-         }
+         if (verb.IsDone()) {
+            if (verb.GetOutput()) {
+               // Cache output, conserving the context hierarchy        
+               output.SmartPush(IndexBack, Langulus::Move(verb.GetOutput()));
+            }
 
-         if (verb.IsDone())
             ++successCount;
+            verb.Undo();
+         }
       }
       
       if (context.IsOr())
-         return verb.template CompleteDispatch<true>(successCount, Abandon(output));
-      return verb.template CompleteDispatch<false>(successCount, Abandon(output));
+         return verb.template CompleteDispatch<true >(successCount, Abandon(output));
+      else
+         return verb.template CompleteDispatch<false>(successCount, Abandon(output));
    }
 
    /// Invoke a verb on a container, that is either deep or flat, either      
@@ -331,14 +334,13 @@ namespace Langulus::Flow
          // Nest if context is deep, or a trait                         
          // Traits are considered deep only when executing in them      
          // There is no escape from this scope                          
-         Count successCount {};
+         Count successCount = 0;
          auto output = Many::FromState(context);
          for (Count i = 0; i < context.GetCount(); ++i) {
-            const auto hits = DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(
+            DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(
                context.template As<Many>(i), verb);
-            successCount += hits;
 
-            if (verb.IsShortCircuited()) {
+            /*if (verb.IsShortCircuited()) {
                // Short-circuit if enabled for verb                     
                if (context.IsOr() == (successCount > 0)) {
                   // It is time for an early return                     
@@ -357,15 +359,21 @@ namespace Langulus::Flow
 
                   return verb.GetSuccesses();
                }
-            }
+            }*/
 
-            // Cache each output, conserving the context hierarchy      
-            if (hits and verb.GetOutput())
-               output << Langulus::Move(verb.GetOutput());
+            if (verb.IsDone()) {
+               if (verb.GetOutput()) {
+                  // Cache output, conserving the context hierarchy     
+                  output.SmartPush(IndexBack, Langulus::Move(verb.GetOutput()));
+               }
+
+               ++successCount;
+               verb.Undo();
+            }
          }
 
          if (context.IsOr())
-            return verb.template CompleteDispatch<true>(successCount, Abandon(output));
+            return verb.template CompleteDispatch<true >(successCount, Abandon(output));
          else
             return verb.template CompleteDispatch<false>(successCount, Abandon(output));
       }

@@ -12,7 +12,7 @@
 #include "inner/Fork.hpp"
 #include "Temporal.hpp"
 
-#if 0
+#if 1
    #define VERBOSE_TEMPORAL(...)       Logger::Verbose(*this, ": ", __VA_ARGS__)
    #define VERBOSE_TEMPORAL_TAB(...)   const auto tab = Logger::Verbose(*this, ": ", __VA_ARGS__, Logger::Tabs{})
 #else
@@ -56,21 +56,35 @@ void Temporal::Reset() {
 /// Reset progress for all verbs inside a scope                               
 ///   @param scope - scope to reset                                           
 void Temporal::ResetInner(Many& scope) {
-   scope.ForEachDeep(
+   scope.ForEach(
+      [&](Many& m) {
+         if (m.IsDense())
+            ResetInner(m);
+      },
       [&](Inner::Missing& missing) {
-         ResetInner(missing.mContent);
+         if (missing.mContent.IsDense())
+            ResetInner(missing.mContent);
       },
       [&](Trait& trait) {
-         ResetInner(static_cast<Many&>(trait));
+         if (trait.IsDense())
+            ResetInner(static_cast<Many&>(trait));
       },
       [&](Construct& construct) {
-         auto verbs = construct.GetDescriptor().GetData<Verb>();
-         if (verbs) {
-            for (auto& group : *verbs)
-               ResetInner(group);
-         }
+         auto& d = construct.GetDescriptor();
+         d.ForEachTrait([this](Trait& trait) {
+            ResetInner(static_cast<Many&>(trait));
+         });
+         d.ForEachConstruct([this](Construct& con) {
+            Many wrapper {con};
+            ResetInner(wrapper);
+         });
+         d.ForEachTail([this](Many& stuff) {
+            ResetInner(stuff);
+         });
       },
-      [&](Verb& constVerb) {
+      [&](A::Verb& constVerb) {
+         ResetInner(constVerb.GetSource());
+         ResetInner(constVerb.GetArgument());
          constVerb.Undo();
       }
    );

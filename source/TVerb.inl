@@ -16,19 +16,32 @@
 namespace Langulus::Flow
 {
 
+   /// Refer-constructor                                                      
    TEMPLATE() LANGULUS(INLINED)
    TME()::TVerb(const TVerb& other)
       : Verb {Refer(other)} {}
 
+   /// Move-constructor                                                       
    TEMPLATE() LANGULUS(INLINED)
    TME()::TVerb(TVerb&& other)
       : Verb {Move(other)} {}
 
+   /// Generic constructor                                                    
+   ///   @param other - the verb/argument and semantic to construct with      
+   TEMPLATE() template<CT::Data T1, CT::Data...TN>
+   requires CT::VerbMakable<T1, TN...> LANGULUS(INLINED)
+   TME()::TVerb(T1&& t1, TN&&...tn)
+      : Verb {Forward<T1>(t1), Forward<TN>(tn)...} {
+      (void) GetVerb();
+   }
+
+   /// Create a verb from charge and state                                    
    TEMPLATE() LANGULUS(INLINED)
    VERB TME()::From(const Charge& charge, VerbState state) {
       return Verb::From<VERB>(charge, state);
    }
 
+   /// Create a verb from contents, charge and state                          
    TEMPLATE() LANGULUS(INLINED)
    VERB TME()::From(CT::UnfoldInsertable auto&& contents, const Charge& charge, VerbState state) {
       using T = Deref<decltype(contents)>;

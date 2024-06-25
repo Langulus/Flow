@@ -521,7 +521,7 @@ namespace Langulus::Flow
    ///   @return the number of successes for the verb                         
    template<bool OR> LANGULUS(INLINED)
    Count Verb::CompleteDispatch(const Count successes, Abandoned<Many>&& output) {
-      if (IsShortCircuited()) {
+      /*if (IsShortCircuited()) {
          // If reached, this will result in failure in OR-context, or   
          // success if AND, as long as the verb is short-circuited      
          mSuccesses = OR ? 0 : successes;
@@ -530,9 +530,10 @@ namespace Langulus::Flow
          // If verb is not short-circuited, then a single success       
          // is always enough                                            
          mSuccesses = successes;
-      }
+      }*/
 
       // Set output                                                     
+      mSuccesses = successes;
       if (mSuccesses)
          mOutput = output.Forward<Many>();
       else

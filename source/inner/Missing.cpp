@@ -11,7 +11,7 @@
 #include "../verbs/Do.inl"
 #include "../verbs/Interpret.inl"
 
-#if 0
+#if 1
    #define VERBOSE_MISSING_POINT(...)     Logger::Verbose(__VA_ARGS__)
    #define VERBOSE_MISSING_POINT_TAB(...) const auto tabs = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
    #define VERBOSE_FUTURE(...)            Logger::Verbose(__VA_ARGS__)
@@ -135,24 +135,12 @@ bool Missing::Push(const Many& content) {
       }
 
       // Scope is either verbs or something else, just push             
-      bool pastHasBeenConsumed = false;
       Many linked;
-      try { linked = Link(content, {}, pastHasBeenConsumed); }
+      try { linked = Link(content, mContent); }
       catch (const Except::Link&) { return false; }
 
       if (linked) {
-         if (pastHasBeenConsumed) {
-            // There were missing points in content, and this           
-            // mContent   has been consumed to fill them, so we         
-            // directly overwrite                                       
-            mContent = Abandon(linked);
-         }
-         else {
-            // There were no missing points in content, so just         
-            // push it to this future point as it was provided          
-            mContent << Abandon(linked);
-         }
-
+         mContent << Abandon(linked);
          VERBOSE_MISSING_POINT("Resulting contents: ", mContent);
          return true;
       }
@@ -188,11 +176,9 @@ bool Missing::Push(const Many& content) {
 /// the past, and returns a viable overwrite for mContent                     
 ///   @attention assumes argument is a valid scope                            
 ///   @param scope - the scope to link                                        
-///   @param environment - a fallback past provided by Temporal               
-///   @param consumedPast - [out] set to true if anythingin this point has    
-///      been used in any scope missing past                                  
+///   @param context - a fallback past provided by Temporal                   
 ///   @return the linked equivalent to the provided scope                     
-Many Missing::Link(const Block<>& scope, const Block<>& environment, bool& consumedPast) const {
+Many Missing::Link(const Block<>& scope, const Block<>& context) const {
    Many result;
    if (scope.IsOr())
       result.MakeOr();
@@ -200,9 +186,7 @@ Many Missing::Link(const Block<>& scope, const Block<>& environment, bool& consu
    if (scope.IsDeep()) {
       // Nest scopes, linking any past points in subscopes              
       scope.ForEach([&](const Block<>& subscope) {
-         try {
-            result << Link(subscope, environment, consumedPast);
-         }
+         try { result << Link(subscope, context); }
          catch (const Except::Link&) {
             if (not scope.IsOr())
                throw;
@@ -216,17 +200,13 @@ Many Missing::Link(const Block<>& scope, const Block<>& environment, bool& consu
       return Abandon(result);
    }
 
-   // Iterate backwards - the last future points are always most        
-   // relevant for linking                                              
-   // Lets start, by scanning all future points in the available        
-   // stack. Scope will be shallow-copied for each encountered          
-   // branch, and then cloned if changes occur.                         
+   // Link all missing points in the provided scope, using context      
    const auto found = scope.ForEach(
       [&](const Trait& trait) {
+         // Link a trait                                                
          try {
             result << Trait::From(
-               trait.GetTrait(), 
-               Link(trait, environment, consumedPast)
+               trait.GetTrait(), Link(trait, context)
             );
          }
          catch (const Except::Link&) {
@@ -237,10 +217,10 @@ Many Missing::Link(const Block<>& scope, const Block<>& environment, bool& consu
          }
       },
       [&](const Construct& construct) {
+         // Link a construct                                            
          try {
             result << Construct {
-               construct.GetType(), 
-               Link(construct.GetDescriptor(), environment, consumedPast)
+               construct.GetType(), Link(construct.GetDescriptor(), context)
             };
          }
          catch (const Except::Link&) {
@@ -250,16 +230,15 @@ Many Missing::Link(const Block<>& scope, const Block<>& environment, bool& consu
                "Skipped branch: ", construct);
          }
       },
-      [&](const Verb& verb) {
+      [&](const A::Verb& verb) {
+         // Link a verb                                                 
          try {
             result << Verb::FromMeta(
                verb.GetVerb(), 
-               Link(verb.GetArgument(), environment, consumedPast),
+               Link(verb.GetArgument(), context),
                verb.GetCharge(), 
                verb.GetVerbState()
-            ).SetSource(
-               Link(verb.GetSource(), environment, consumedPast)
-            );
+            ).SetSource(Link(verb.GetSource(), context));
          }
          catch (const Except::Link&) {
             if (not scope.IsOr())
@@ -269,6 +248,7 @@ Many Missing::Link(const Block<>& scope, const Block<>& environment, bool& consu
          }
       },
       [&](const Inner::MissingPast& past) {
+         // Replace a missing past point with provided context          
          VERBOSE_MISSING_POINT_TAB(
             "Linking future point ", *this, " to past point ", past);
 
@@ -280,26 +260,10 @@ Many Missing::Link(const Block<>& scope, const Block<>& environment, bool& consu
 
          Inner::MissingPast pastShallowCopy;
          pastShallowCopy.mFilter = past.mFilter;
-         if (not mContent) {
-            if (not environment)
-               LANGULUS_THROW(Link, "No environment provided for temporal flow");
-
-            VERBOSE_MISSING_POINT(
-               "(empty future point, so falling back to environment: ", environment, ')');
-
-            if (not pastShallowCopy.Push(environment)) {
-               if (not scope.IsOr())
-                  LANGULUS_THROW(Link, "Scope not likable");
-            }
+         if (not pastShallowCopy.Push(context)) {
+            if (not scope.IsOr())
+               LANGULUS_THROW(Link, "Scope not likable");
          }
-         else {
-            if (not pastShallowCopy.Push(mContent)) {
-               if (not scope.IsOr())
-                  LANGULUS_THROW(Link, "Scope not linkable");
-            }
-            else consumedPast = true;
-         }
-
          result << Abandon(pastShallowCopy.mContent);
       }
    );
@@ -311,6 +275,8 @@ Many Missing::Link(const Block<>& scope, const Block<>& environment, bool& consu
 
    if (result.GetCount() < 2)
       result.MakeAnd();
+
+   VERBOSE_MISSING_POINT("Link result: ", result);
    return Abandon(result);
 }
 
@@ -322,13 +288,14 @@ Many Missing::Link(const Block<>& scope, const Block<>& environment, bool& consu
 ///   @param consumedPast - [out] set to true if anythingin this point has    
 ///      been used in any scope missing past                                  
 ///   @return the linked equivalent to the provided Neat                      
-Many Missing::Link(const Neat& neat, const Block<>& environment, bool& consumedPast) const {
+Many Missing::Link(const Neat& neat, const Block<>& context) const {
    Neat result;
    neat.ForEachTrait([&](const Trait& trait) {
+      // Link a trait inside the neat scope                             
       try {
          result << Trait::From(
             trait.GetTrait(),
-            Link(trait, environment, consumedPast)
+            Link(trait, context)
          );
       }
       catch (const Except::Link&) {
@@ -338,10 +305,11 @@ Many Missing::Link(const Neat& neat, const Block<>& environment, bool& consumedP
    });
 
    neat.ForEachConstruct([&](const Construct& construct) {
+      // Link a construct inside the neat scope                         
       try {
          result << Construct {
             construct.GetType(),
-            Link(construct.GetDescriptor(), environment, consumedPast)
+            Link(construct.GetDescriptor(), context)
          };
       }
       catch (const Except::Link&) {
@@ -351,8 +319,8 @@ Many Missing::Link(const Neat& neat, const Block<>& environment, bool& consumedP
    });
 
    neat.ForEachTail([&](const Block<>& group) {
-      // Compile anything else                                          
-      result << Link(group, environment, consumedPast);
+      // Link anything else                                             
+      result << Link(group, context);
    });
 
    return Abandon(result);

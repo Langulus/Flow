@@ -103,6 +103,7 @@ namespace Langulus::Verbs
                   VERBOSE_CREATION(Logger::Yellow,
                      "Delegating: ", arguments, " to ", element);
                   Verbs::Create creator {arguments};
+
                   if (ExecuteVerb(element, creator)) {
                      VERBOSE_CREATION(Logger::Yellow <<
                         "Sideproduct: " << creator.GetOutput());

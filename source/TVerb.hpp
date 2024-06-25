@@ -23,9 +23,12 @@ namespace Langulus::Flow
       ///                                                                     
       ///   Construction                                                      
       ///                                                                     
-      using Verb::Verb;
+      constexpr TVerb() noexcept = default;
       TVerb(const TVerb&);
       TVerb(TVerb&&);
+
+      template<CT::Data T1, CT::Data...TN> requires CT::VerbMakable<T1, TN...>
+      TVerb(T1&&, TN&&...);
 
       NOD() static VERB From(const Charge& = {}, VerbState = {});
       NOD() static VERB From(CT::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});

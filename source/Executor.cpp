@@ -12,7 +12,7 @@
 #include "verbs/Create.inl"
 #include "inner/Missing.hpp"
 
-#if 0
+#if 1
    #define VERBOSE(...)      Logger::Verbose(__VA_ARGS__)
    #define VERBOSE_TAB(...)  const auto tab = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
 #else
@@ -29,40 +29,40 @@ namespace Langulus::Flow
    /// Nested AND/OR scope execution (discarding outputs)                     
    /// TODO optimize for unneeded outputs                                     
    ///   @param flow - the flow to execute                                    
-   ///   @param environment - the environment in which flow will be executed  
+   ///   @param context - the environment in which flow will be executed      
    ///   @return true of no errors occured                                    
-   bool Execute(const Many& flow, Many& environment) {
+   bool Execute(const Many& flow, Many& context) {
       Many output;
       bool skipVerbs = false;
-      return Execute(flow, environment, output, skipVerbs);
+      return Execute(flow, context, output, skipVerbs);
    }
 
    /// Nested AND/OR scope execution with output                              
    ///   @param flow - the flow to execute                                    
-   ///   @param environment - the environment in which scope will be executed 
+   ///   @param context - the environment in which scope will be executed     
    ///   @param output - [out] verb result will be pushed here                
    ///   @return true of no errors occured                                    
-   bool Execute(const Many& flow, Many& environment, Many& output) {
+   bool Execute(const Many& flow, Many& context, Many& output) {
       bool skipVerbs = false;
-      return Execute(flow, environment, output, skipVerbs);
+      return Execute(flow, context, output, skipVerbs);
    }
 
    /// Nested AND/OR scope execution with output                              
    ///   @param flow - the flow to execute                                    
-   ///   @param environment - the environment in which scope will be executed 
+   ///   @param context - the environment in which scope will be executed     
    ///   @param output - [out] verb result will be pushed here                
    ///   @param skipVerbs - [in/out] whether to skip verbs after OR success   
    ///   @return true of no errors occured                                    
-   bool Execute(const Many& flow, Many& environment, Many& output, bool& skipVerbs) {
+   bool Execute(const Many& flow, Many& context, Many& output, bool& skipVerbs) {
       auto results = Many::FromState(flow);
       if (flow) {
          VERBOSE_TAB("Executing scope: [", flow, ']');
 
          try {
-            if (flow.IsOr() and flow.GetCount() > 1)
-               ExecuteOR(flow, environment, results, skipVerbs);
+            if (flow.IsOr())
+               ExecuteOR(flow, context, results, skipVerbs);
             else
-               ExecuteAND(flow, environment, results, skipVerbs);
+               ExecuteAND(flow, context, results, skipVerbs);
          }
          catch (const Except::Flow&) {
             // Execution failed                                         
@@ -76,17 +76,17 @@ namespace Langulus::Flow
 
    /// Nested AND scope execution                                             
    ///   @param flow - the flow to execute                                    
-   ///   @param environment - the environment in which scope will be executed 
+   ///   @param context - the environment in which scope will be executed     
    ///   @param output - [out] verb result will be pushed here                
    ///   @param skipVerbs - [in/out] whether to skip verbs after OR success   
    ///   @return true of no errors occured                                    
-   bool ExecuteAND(const Many& flow, Many& environment, Many& output, bool& skipVerbs) {
+   bool ExecuteAND(const Many& flow, Many& context, Many& output, bool& skipVerbs) {
       Count executed = 0;
       if (flow.IsDeep() and flow.IsDense()) {
          executed = flow.ForEach([&](const Many& block) {
             // Nest if deep                                             
             Many local;
-            if (not Execute(block, environment, local, skipVerbs))
+            if (not Execute(block, context, local, skipVerbs))
                LANGULUS_OOPS(Flow, "Deep AND failure: ", flow);
 
             output.SmartPush(IndexBack, Abandon(local));
@@ -97,7 +97,7 @@ namespace Langulus::Flow
             [&](const Inner::Missing& missing) {
                // Nest if missing points                                
                Many local;
-               if (not Execute(missing.mContent, environment, local, skipVerbs))
+               if (not Execute(missing.mContent, context, local, skipVerbs))
                   LANGULUS_OOPS(Flow, "Missing point failure: ", flow);
 
                output.SmartPush(IndexBack, Abandon(local));
@@ -111,7 +111,7 @@ namespace Langulus::Flow
                }
 
                Many local;
-               if (not Execute(trait, environment, local, skipVerbs))
+               if (not Execute(trait, context, local, skipVerbs))
                   LANGULUS_OOPS(Flow, "Trait AND failure: ", flow);
 
                output.SmartPush(IndexBack, Trait::From(trait.GetTrait(), Abandon(local)));
@@ -122,32 +122,39 @@ namespace Langulus::Flow
                // verbs from it. Some of them might get reinserted, if  
                // missing, but generally they will be substituted with  
                // the corresponding results                             
+               VERBOSE("Executing construct: ", construct);
                Construct local = construct;
-               local.GetDescriptor().template RemoveData<Verb>();
+               local.GetDescriptor().template RemoveData<A::Verb>();
+               VERBOSE("Executing construct (verbs stripped): ", local);
                bool constructIsMissing = false;
 
-               construct.GetDescriptor().ForEach([&](const Verb& constVerb) noexcept {
-                  if (constVerb.IsMissing()) {
-                     // Never touch missing stuff, only propagate it    
-                     local << constVerb;
-                     constructIsMissing = true;
-                     return;
+               construct.GetDescriptor().ForEach(
+                  [&](const A::Verb& constVerb) noexcept {
+                     if (constVerb.IsMissing()) {
+                        // Never touch missing stuff, only propagate it 
+                        local << constVerb;
+                        constructIsMissing = true;
+                        return;
+                     }
+
+                     // Execute all verbs, push their outputs to the    
+                     // local shallow-copied construct                  
+                     auto verb = Verb::FromMeta(
+                        constVerb.GetVerb(),
+                        constVerb.GetArgument(),
+                        constVerb,
+                        constVerb.GetVerbState()
+                     );
+                     verb.SetSource(constVerb.GetSource());
+
+                     if (not ExecuteVerb(context, verb))
+                        LANGULUS_OOPS(Flow, "Construct AND failure: ", flow);
+                     else if (verb.GetOutput())
+                        local << Abandon(verb.GetOutput());
                   }
+               );
 
-                  // Execute all verbs, push their outputs to the local 
-                  // shallow-copied construct                           
-                  auto verb = Verb::FromMeta(
-                     constVerb.GetVerb(),
-                     constVerb.GetArgument(),
-                     constVerb,
-                     constVerb.GetVerbState()
-                  );
-                  verb.SetSource(constVerb.GetSource());
-
-                  if (not ExecuteVerb(environment, verb))
-                     LANGULUS_OOPS(Flow, "Construct AND failure: ", flow);
-                  });
-
+               VERBOSE("Executing construct (verbs executed): ", local);
                if (constructIsMissing) {
                   // Just propagate, if missing                         
                   output.SmartPush(IndexBack, Abandon(local));
@@ -158,22 +165,15 @@ namespace Langulus::Flow
                // Try creating it in the current environment, it should 
                // produce everything possible, including stateless ones 
                Verbs::Create creator {&local};
-               if (DispatchDeep<true, true, false>(environment, creator))
+               if (DispatchDeep<true, true, false>(context, creator))
                   output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
                else
                   LANGULUS_OOPS(Flow, "Construct creation failure: ", flow);
             },
-            [&](const Verb& constVerb) {
+            [&](const A::Verb& constVerb) {
                // Execute verbs                                         
                if (skipVerbs)
                   return Loop::Break;
-
-               /*if (constVerb.GetCharge().IsFlowDependent()) {
-                  // The verb hasn't been integrated into a flow, just  
-                  // forward it                                         
-                  output.SmartPush(IndexBack, constVerb);
-                  return Loop::Continue;
-               }*/
 
                if (constVerb.IsDone()) {
                   // Verb has already been executed                     
@@ -192,12 +192,12 @@ namespace Langulus::Flow
                verb.SetSource(constVerb.GetSource());
 
                // Execute the verb                                      
-               if (not ExecuteVerb(environment, verb))
+               if (not ExecuteVerb(context, verb))
                   LANGULUS_OOPS(Flow, "Verb AND failure: ", verb);
 
                // Make sure the original verb has been marked done, so  
                // that it isn't executed every time.                    
-               const_cast<Verb&>(constVerb).Done();
+               const_cast<A::Verb&>(constVerb).Done();
                output.SmartPush(IndexBack, Abandon(verb.GetOutput()));
                return Loop::Continue;
             }
@@ -216,11 +216,11 @@ namespace Langulus::Flow
 
    /// Nested OR execution                                                    
    ///   @param flow - the flow to execute                                    
-   ///   @param environment - the context in which scope will be executed     
+   ///   @param context - the context in which scope will be executed         
    ///   @param output - [out] verb result will be pushed here                
    ///   @param skipVerbs - [out] whether to skip verbs after OR success      
    ///   @return true of no errors occured                                    
-   bool ExecuteOR(const Many& flow, Many& environment, Many& output, bool& skipVerbs) {
+   bool ExecuteOR(const Many& flow, Many& context, Many& output, bool& skipVerbs) {
       Count executed = 0;
       bool localSkipVerbs = false;
 
@@ -228,7 +228,7 @@ namespace Langulus::Flow
          executed = flow.ForEach([&](const Many& block) {
             // Nest if deep                                             
             Many local;
-            if (Execute(block, environment, local, localSkipVerbs)) {
+            if (Execute(block, context, local, localSkipVerbs)) {
                executed = true;
                output.SmartPush(IndexBack, Abandon(local));
             }
@@ -245,7 +245,7 @@ namespace Langulus::Flow
                }
 
                Many local;
-               if (Execute(trait, environment, local)) {
+               if (Execute(trait, context, local)) {
                   executed = true;
                   output.SmartPush(IndexBack, Trait::From(trait.GetTrait(), Abandon(local)));
                }
@@ -257,30 +257,32 @@ namespace Langulus::Flow
                // missing, but generally they will be substituted with  
                // the corresponding results                             
                Construct local = construct;
-               local.GetDescriptor().template RemoveData<Verb>();
+               local.GetDescriptor().template RemoveData<A::Verb>();
                bool constructIsMissing = false;
 
-               construct.GetDescriptor().ForEach([&](const Verb& constVerb) noexcept {
-                  if (constVerb.IsMissing()) {
-                     // Never touch missing stuff, only propagate it    
-                     local << constVerb;
-                     constructIsMissing = true;
-                     return;
+               construct.GetDescriptor().ForEach(
+                  [&](const A::Verb& constVerb) noexcept {
+                     if (constVerb.IsMissing()) {
+                        // Never touch missing stuff, only propagate it 
+                        local << constVerb;
+                        constructIsMissing = true;
+                        return;
+                     }
+
+                     // Execute all verbs, push their outputs to the    
+                     // local shallow-copied construct                  
+                     auto verb = Verb::FromMeta(
+                        constVerb.GetVerb(),
+                        constVerb.GetArgument(),
+                        constVerb,
+                        constVerb.GetVerbState()
+                     );
+                     verb.SetSource(constVerb.GetSource());
+
+                     if (ExecuteVerb(context, verb))
+                        executed = true;
                   }
-
-                  // Execute all verbs, push their outputs to the local 
-                  // shallow-copied construct                           
-                  auto verb = Verb::FromMeta(
-                     constVerb.GetVerb(),
-                     constVerb.GetArgument(),
-                     constVerb,
-                     constVerb.GetVerbState()
-                  );
-                  verb.SetSource(constVerb.GetSource());
-
-                  if (ExecuteVerb(environment, verb))
-                     executed = true;
-                  });
+               );
 
                if (constructIsMissing) {
                   // Just propagate, if missing                         
@@ -292,7 +294,7 @@ namespace Langulus::Flow
                // Try creating it in the current environment, it should 
                // produce everything possible, including stateless ones 
                Verbs::Create creator {&local};
-               if (DispatchDeep<true, true, false>(environment, creator))
+               if (DispatchDeep<true, true, false>(context, creator))
                   output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
                else
                   LANGULUS_OOPS(Flow, "Construct creation failure: ", flow);
@@ -301,13 +303,6 @@ namespace Langulus::Flow
                // Execute verbs                                         
                if (localSkipVerbs)
                   return Loop::Break;
-
-               if (constVerb.GetCharge().IsFlowDependent()) {
-                  // The verb hasn't been integrated into a flow, just  
-                  // forward it                                         
-                  output.SmartPush(IndexBack, constVerb);
-                  return Loop::Continue;
-               }
 
                // Shallow-copy the verb to make it mutable              
                // Also resets its output                                
@@ -318,7 +313,7 @@ namespace Langulus::Flow
                   constVerb.GetVerbState()
                );
 
-               if (not ExecuteVerb(environment, verb))
+               if (not ExecuteVerb(context, verb))
                   return Loop::Continue;
 
                executed = true;
@@ -337,38 +332,33 @@ namespace Langulus::Flow
          ++executed;
       }
 
-      if (executed) {
-         VERBOSE(Logger::Green, "OR scope done: ", flow);
-      }
-      else {
-         VERBOSE(Logger::Red, "OR scope failed: ", flow);
-      }
-
+      if (executed) VERBOSE(Logger::Green, "OR scope done: ", flow);
+      else          VERBOSE(Logger::Red, "OR scope failed: ", flow);
       return executed;
    }
 
    /// Integrate all parts of a verb inside this environment                  
-   ///   @param environment - [in/out] the context for integration            
+   ///   @param context - [in/out] the context for integration                
    ///   @param verb - [in/out] verb to integrate                             
    ///   @return true of no errors occured                                    
-   bool IntegrateVerb(Many& environment, Verb& verb) {
+   bool IntegrateVerb(Many& context, Verb& verb) {
       if (verb.IsMonocast()) {
          // We're executing on whole argument/source, so be lazy        
          if (verb.GetSource().IsInvalid())
-            verb.SetSource(environment);
+            verb.SetSource(context);
          return true;
       }
 
       // Integrate the verb source to environment                       
       Many localSource;
-      if (not Execute(verb.GetSource(), environment, localSource)) {
+      if (not Execute(verb.GetSource(), context, localSource)) {
          // It's considered error only if verb is not monocast          
          FLOW_ERRORS("Error at source of: ", verb);
          return false;
       }
 
       if (localSource.IsInvalid())
-         localSource = environment;
+         localSource = context;
 
       // Integrate the verb argument to the source                      
       Many localArgument;
@@ -415,7 +405,8 @@ namespace Langulus::Flow
 
       // Dispatch the verb to the context, executing it                 
       // Any results should be inside verb.mOutput afterwards           
-      if (not DispatchDeep(verb.GetSource(), verb)) {
+      Many contextCopy = verb.GetSource();
+      if (not DispatchDeep(contextCopy, verb)) {
          FLOW_ERRORS("Error executing verb: ", verb, " (", verb.GetVerb(), ')');
          return false;
       }

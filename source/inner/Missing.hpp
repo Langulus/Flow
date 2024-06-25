@@ -31,14 +31,14 @@ namespace Langulus::Flow::Inner
 
       Missing() = default;
       Missing(const TMany<DMeta>&, Real priority);
-      Missing(const Block<>&, Real priority);
+      Missing(const Block<>&,      Real priority);
 
       NOD() bool Accepts(const Block<>&) const;
       NOD() bool IsSatisfied() const;
 
-      bool Push(const Many&/*, const Block<>& environment*/);
-      Many Link(const Block<>&, const Block<>& environment, bool& consumedPast) const;
-      Many Link(const Neat&, const Block<>& environment, bool& consumedPast) const;
+      bool Push(const Many&);
+      Many Link(const Block<>&, const Block<>& context) const;
+      Many Link(const Neat&,    const Block<>& context) const;
       Many Collapse() const;
 
       // Needs to be implicit, so that its inherited                    

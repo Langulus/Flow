@@ -32,6 +32,8 @@ namespace Langulus::Flow
       ///   Construction                                                      
       ///                                                                     
       using A::Verb::Verb;
+      Verb(const Verb&) = default;
+      Verb(Verb&&) = default;
 
       template<CT::Data T1, CT::Data...TN> requires CT::VerbMakable<T1, TN...>
       Verb(T1&&, TN&&...);

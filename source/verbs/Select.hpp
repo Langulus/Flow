@@ -39,17 +39,17 @@ namespace Langulus::Verbs
 
       static bool ExecuteIn(CT::Dense auto&, Verb&);
 
-      static bool ExecuteDefault(const Block&, Verb&);
-      static bool ExecuteDefault(Block&, Verb&);
+      static bool ExecuteDefault(const Many&, Verb&);
+      static bool ExecuteDefault(Many&, Verb&);
       static bool ExecuteStateless(Verb&);
 
    protected:
       template<bool MUTABLE>
-      static bool DefaultSelect(Block&, Verb&);
+      static bool DefaultSelect(Many&, Verb&);
       template<bool MUTABLE>
-      static bool PerIndex(Block&, TMany<Trait>&, TMeta, CT::Meta auto, const TMany<Index>&);
+      static bool PerIndex(Many&, TMany<Trait>&, TMeta, CT::Meta auto, const TMany<Index>&);
       template<bool MUTABLE>
-      static bool SelectByMeta(const TMany<Index>&, DMeta, Block&, TMany<Trait>&, TMany<const RTTI::Ability*>&);
+      static bool SelectByMeta(const TMany<Index>&, DMeta, Many&, TMany<Trait>&, TMany<const RTTI::Ability*>&);
    };
 
 } // namespace Langulus::Verbs

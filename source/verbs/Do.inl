@@ -56,7 +56,7 @@ namespace Langulus::Verbs
    /// Default do/undo in an immutable context                                
    ///   @param context - the block to execute in                             
    ///   @param verb - do/undo verb                                           
-   inline bool Do::ExecuteDefault(const Block&, Verb&) {
+   inline bool Do::ExecuteDefault(const Many&, Verb&) {
       //TODO
       return true;
    }
@@ -64,7 +64,7 @@ namespace Langulus::Verbs
    /// Default do/undo in a mutable context                                   
    ///   @param context - the block to execute in                             
    ///   @param verb - do/undo verb                                           
-   inline bool Do::ExecuteDefault(Block&, Verb&) {
+   inline bool Do::ExecuteDefault(Many&, Verb&) {
       //TODO
       return true;
    }

@@ -40,7 +40,7 @@ namespace Langulus::Verbs
 
       static bool ExecuteIn(CT::Dense auto&, Verb&);
 
-      static bool ExecuteDefault(Block&, Verb&);
+      static bool ExecuteDefault(Many&, Verb&);
       static bool ExecuteStateless(Verb&);
 
    protected:

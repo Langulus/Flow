@@ -33,8 +33,8 @@ namespace Langulus::Verbs
       static constexpr auto Of() noexcept;
 
       static bool ExecuteIn(CT::Dense auto&, Verb&);
-      static bool ExecuteDefault(const Block&, Verb&);
-      static bool ExecuteDefault(Block&, Verb&);
+      static bool ExecuteDefault(Many const&, Verb&);
+      static bool ExecuteDefault(Many&, Verb&);
       static bool ExecuteStateless(Verb&);
 
       static Do In(auto&&, auto&&);

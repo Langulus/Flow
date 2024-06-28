@@ -161,20 +161,20 @@ namespace Langulus::Verbs
    /// Produces a shallow copy of the catenated context and arguments         
    ///   @param context - the block to execute in                             
    ///   @param verb - catenation/splitting verb                              
-   inline bool Catenate::ExecuteDefault(const Block& context, Verb& verb) {
+   inline bool Catenate::ExecuteDefault(const Many& context, Verb& verb) {
       if (verb.IsMissing()) {
          // Don't catenate immediately missing elements                 
          return false;
       }
 
       if (not verb) {
-         verb << Many {context};
+         verb << context;
          return true;
       }
 
       //TODO split
       TMany<Many> shallow;
-      shallow << Many {context};
+      shallow << context;
       shallow << verb.GetArgument();
       verb << Abandon(shallow);
       return true;
@@ -184,21 +184,20 @@ namespace Langulus::Verbs
    /// Reuses the context, by catenating/splitting inside it if possible      
    ///   @param context - the block to execute in                             
    ///   @param verb - catenation/splitting verb                              
-   inline bool Catenate::ExecuteDefault(Block& context, Verb& verb) {
+   inline bool Catenate::ExecuteDefault(Many& context, Verb& verb) {
       if (verb.IsMissing()) {
          // Don't catenate immediately missing elements                 
          return false;
       }
 
       if (not verb) {
-         verb << Many {context};
+         verb << context;
          return true;
       }
 
       //TODO split
-      reinterpret_cast<Many&>(context).SmartPush(IndexBack,
-         Langulus::Move(verb.GetArgument()));
-      verb << Many {context};
+      context.SmartPush(IndexBack, Langulus::Move(verb.GetArgument()));
+      verb << context;
       return true;
    }
 

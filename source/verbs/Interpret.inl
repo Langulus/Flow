@@ -74,7 +74,7 @@ namespace Langulus::Verbs
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
-   inline bool Interpret::ExecuteDefault(const Block& context, Verb& verb) {
+   inline bool Interpret::ExecuteDefault(const Many& context, Verb& verb) {
       verb.ForEach([&](DMeta to) {
          auto result = Many::FromMeta(to);
          if (context.Convert(result))
@@ -98,7 +98,7 @@ namespace Langulus::Verbs
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
    template<CT::Data TO>
-   bool InterpretAs<TO>::ExecuteDefault(const Block& context, Verb& verb) {
+   bool InterpretAs<TO>::ExecuteDefault(const Many& context, Verb& verb) {
       if constexpr (CT::Serial<TO>) {
          // Serialze                                                    
          TO serialized;

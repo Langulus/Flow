@@ -65,8 +65,8 @@ namespace Langulus::Verbs
    ///   @param lhs - the context to execute in                               
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
-   inline bool Associate::ExecuteDefault(Block& lhs, Verb& verb) {
-      const Block& rhs = verb.GetArgument();
+   inline bool Associate::ExecuteDefault(Many& lhs, Verb& verb) {
+      const auto& rhs = verb.GetArgument();
 
       if (lhs.IsConstant() or lhs.GetCount() != rhs.GetCount())
          // Can't overwrite a constant context                          
@@ -89,7 +89,7 @@ namespace Langulus::Verbs
 
       // At this point, context has a copy of verb's argument           
       // Just make sure it goes to output                               
-      verb << Many {lhs};
+      verb << lhs;
       return true;
    }
 

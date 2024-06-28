@@ -129,7 +129,7 @@ namespace Langulus::Flow
                bool constructIsMissing = false;
 
                construct.GetDescriptor().ForEach(
-                  [&](const A::Verb& constVerb) noexcept {
+                  [&](const A::Verb& constVerb) {
                      if (constVerb.IsMissing()) {
                         // Never touch missing stuff, only propagate it 
                         local << constVerb;

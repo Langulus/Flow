@@ -34,7 +34,7 @@ Missing::Missing(const TMany<DMeta>& filter, Real priority)
 /// Initialize a missing point by a filter, will be precompiled               
 /// i.e. all meta data definitions will be gathered                           
 ///   @param filter - the filter to set                                       
-Missing::Missing(const Block<>& filter, Real priority)
+Missing::Missing(const Many& filter, Real priority)
    : mPriority {priority} {
    mFilter.GatherFrom(filter, DataState::Missing);
    mFilter.SetState(filter.GetState());
@@ -44,7 +44,7 @@ Missing::Missing(const Block<>& filter, Real priority)
 /// Verbs are always accepted                                                 
 ///   @param content - the content to check                                   
 ///   @return true if contents are accepted                                   
-bool Missing::Accepts(const Block<>& content) const {
+bool Missing::Accepts(const Many& content) const {
    if (not mFilter or content.CastsTo<Verb, true>())
       return true;
 
@@ -63,7 +63,7 @@ bool Missing::IsSatisfied() const {
       return false;
 
    bool satisfied = false;
-   mContent.ForEachDeep([&](const Block<>& b) {
+   mContent.ForEachDeep([&](const Many& b) {
       if (Accepts(b))
          satisfied = true;
       return not satisfied;
@@ -178,14 +178,14 @@ bool Missing::Push(const Many& content) {
 ///   @param scope - the scope to link                                        
 ///   @param context - a fallback past provided by Temporal                   
 ///   @return the linked equivalent to the provided scope                     
-Many Missing::Link(const Block<>& scope, const Block<>& context) const {
+Many Missing::Link(const Many& scope, const Many& context) const {
    Many result;
    if (scope.IsOr())
       result.MakeOr();
 
    if (scope.IsDeep()) {
       // Nest scopes, linking any past points in subscopes              
-      scope.ForEach([&](const Block<>& subscope) {
+      scope.ForEach([&](const Many& subscope) {
          try { result << Link(subscope, context); }
          catch (const Except::Link&) {
             if (not scope.IsOr())
@@ -270,7 +270,7 @@ Many Missing::Link(const Block<>& scope, const Block<>& context) const {
 
    if (not found) {
       // Anything else just gets propagated                             
-      result = Many {scope};
+      result = scope;
    }
 
    if (result.GetCount() < 2)
@@ -288,7 +288,7 @@ Many Missing::Link(const Block<>& scope, const Block<>& context) const {
 ///   @param consumedPast - [out] set to true if anythingin this point has    
 ///      been used in any scope missing past                                  
 ///   @return the linked equivalent to the provided Neat                      
-Many Missing::Link(const Neat& neat, const Block<>& context) const {
+Many Missing::Link(const Neat& neat, const Many& context) const {
    Neat result;
    neat.ForEachTrait([&](const Trait& trait) {
       // Link a trait inside the neat scope                             
@@ -318,7 +318,7 @@ Many Missing::Link(const Neat& neat, const Block<>& context) const {
       }
    });
 
-   neat.ForEachTail([&](const Block<>& group) {
+   neat.ForEachTail([&](const Many& group) {
       // Link anything else                                             
       result << Link(group, context);
    });

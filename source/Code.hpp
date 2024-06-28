@@ -70,6 +70,10 @@ namespace Langulus::Flow
       using Operator = SerializationRules::Operator;
 
       using A::Code::Code;
+
+      template<CT::BuiltinNumber T> requires (not CT::Character<T>)
+      explicit Code(const T&);
+
       using A::Code::operator ==;
 
       NOD() LANGULUS_API(FLOW) Many Parse(bool optimize = true) const;

@@ -152,8 +152,8 @@ namespace Langulus::Flow
       template<CT::Dense>
       bool GenericAvailableFor() const noexcept;
       static bool GenericExecuteIn(CT::Dense auto&, CT::VerbBased auto&);
-      static bool GenericExecuteDefault(const Block&, CT::VerbBased auto&);
-      static bool GenericExecuteDefault(      Block&, CT::VerbBased auto&);
+      static bool GenericExecuteDefault(Many const&, CT::VerbBased auto&);
+      static bool GenericExecuteDefault(Many&, CT::VerbBased auto&);
       static bool GenericExecuteStateless(CT::VerbBased auto&);
 
       NOD() explicit operator Code() const;

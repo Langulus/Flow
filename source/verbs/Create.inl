@@ -70,7 +70,7 @@ namespace Langulus::Verbs
    ///   @param context - the producer                                        
    ///   @param verb - the creation/destruction verb                          
    ///   @return true if verb was satisfied                                   
-   inline bool Create::ExecuteDefault(Anyness::Block<>&, Verb& verb) {
+   inline bool Create::ExecuteDefault(Many&, Verb& verb) {
       // Attempt creating/destroying constructs                         
       verb.ForEachDeep([&](const Construct& construct) {
          if (construct.GetProducer()) {
@@ -190,7 +190,7 @@ namespace Langulus::Verbs
       };
 
       // Scan the request                                               
-      verb.ForEachDeep([&](const Block& group) {
+      verb.ForEachDeep([&](const Many& group) {
          if (group.IsMissing()) {
             // Creation of missing stuff is not allowed                 
             return;
@@ -221,7 +221,7 @@ namespace Langulus::Verbs
       TUnorderedMap<TMeta, Count> satisfiedTraits;
       TUnorderedMap<DMeta, Count> satisfiedData;
 
-      data.ForEachDeep([&](const Block& group) {
+      data.ForEachDeep([&](const Many& group) {
          VERBOSE_CREATION("Manually initializing ", context, " with ", Logger::Cyan, group);
 
          // Search for similar data in the current context              

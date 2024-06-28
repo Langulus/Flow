@@ -255,98 +255,13 @@ bool Temporal::Push(Many scope) {
    return true;
 }
 
-/// This will omit any compile-time junk that remains in the provided         
-/// scope, so we can execute it conventionally                                
-///   @param scope - the scope to collapse                                    
-///   @return the collapsed scope                                             
-/*Many Temporal::Collapse(const Block<>& scope) {
-   Many result;
-   if (scope.IsOr())
-      result.MakeOr();
-
-   if (scope.IsDeep()) {
-      // Nest deep scopes                                               
-      scope.ForEach([&](const Block<>& subscope) {
-         auto collapsed = Collapse(subscope);
-         if (collapsed)
-            result << Abandon(collapsed);
-      });
-
-      if (result.GetCount() < 2)
-         result.MakeAnd();
-      return Abandon(result);
-   }
-
-   const auto done = scope.ForEach(
-      [&](const Trait& subscope) {
-         // Collapse traits                                             
-         auto collapsed = Collapse(subscope);
-         if (collapsed) {
-            result << Trait::From(
-               subscope.GetTrait(), 
-               Abandon(collapsed)
-            );
-         }
-      },
-      [&](const Construct& subscope) {
-         // Collapse constructs                                         
-         auto collapsed = Collapse(subscope.GetDescriptor());
-         if (collapsed) {
-            result << Construct {
-               subscope.GetType(),
-               Abandon(collapsed),
-               subscope.GetCharge()
-            };
-         }
-      },
-      [&](const Verb& subscope) {
-         // Collapse verbs                                              
-         auto collapsedArgument = Collapse(subscope.GetArgument());
-         if (collapsedArgument) {
-            auto v = Verb::FromMeta(
-               subscope.GetVerb(),
-               Abandon(collapsedArgument),
-               subscope.GetCharge(),
-               subscope.GetVerbState()
-            ).SetSource(Collapse(subscope.GetSource()));
-            result << Abandon(v);
-         }
-      },
-      [&](const Inner::MissingPast& subscope) {
-         // Collapse missing pasts                                      
-         if (subscope.IsSatisfied())
-            result << subscope.mContent;
-      },
-      [&](const Inner::MissingFuture& subscope) {
-         // Collapse missing futures                                    
-         if (subscope.IsSatisfied())
-            result << subscope.mContent;
-      }
-   );
-
-   if (not done and scope)
-      result = scope;
-   if (result.GetCount() < 2)
-      result.MakeAnd();
-   return Abandon(result);
-}
-
-/// This will omit any compile-time junk that remains in the provided         
-/// scope, so we can execute it conventionally                                
-///   @param scope - the scope to collapse                                    
-///   @return the collapsed scope                                             
-Many Temporal::Collapse(const Neat&) {
-   TODO();
-   return {};
-}*/
-
 /// Compiles a scope into an intermediate form, used by the flow              
 ///   @attention assumes argument is a valid scope                            
 ///   @param scope - the scope to compile                                     
 ///   @param priority - the priority to set for any missing point created     
 ///      for the provided scope.                                              
 ///   @return the compiled scope                                              
-Many Temporal::Compile(const Block<>& scope, Real priority) {
+Many Temporal::Compile(const Many& scope, Real priority) {
    Many result;
    if (scope.IsOr())
       result.MakeOr();
@@ -370,13 +285,13 @@ Many Temporal::Compile(const Block<>& scope, Real priority) {
          // @attention any sparse element inside a flow will cause that 
          //    flow to become impure, as in, it can be affected by      
          //    external factors, and is no longer purely functional.    
-         scope.ForEach([&](const Block<>& subscope) {
+         scope.ForEach([&](const Many& subscope) {
             result << &subscope;
          });
       }
       else {
          // Nest dense deep scopes                                      
-         scope.ForEach([&](const Block<>& subscope) {
+         scope.ForEach([&](const Many& subscope) {
             result << Compile(subscope, priority);
          });
       }
@@ -446,7 +361,7 @@ Many Temporal::Compile(const Neat& neat, Real priority) {
       };
    });
 
-   neat.ForEachTail([&](const Block<>& group) {
+   neat.ForEachTail([&](const Many& group) {
       // Compile anything else                                          
       result << Compile(group, priority);
    });
@@ -481,12 +396,12 @@ Many Temporal::Compile(const Neat& neat, Real priority) {
 ///   @param scope - the scope to link                                        
 ///   @param stack - [in/out] the stack to link with                          
 ///   @return true if scope was linked successfully                           
-bool Temporal::PushFutures(const Many& scope, Block<>& stack) {
+bool Temporal::PushFutures(const Many& scope, Many& stack) {
    bool atLeastOneSuccess = false;
 
    if (stack.IsDeep() and stack.IsDense()) {
       // Nest deep stack, if dense                                      
-      stack.ForEachRev([&](Block<>& substack) {
+      stack.ForEachRev([&](Many& substack) {
          atLeastOneSuccess |= PushFutures(scope, substack);
          // Continue linking only if the stack is branched              
          return not (stack.IsOr() and atLeastOneSuccess);
@@ -544,7 +459,7 @@ bool Temporal::PushFutures(const Many& scope, Block<>& stack) {
 ///   @return true if scope was linked successfully                           
 bool Temporal::PushFutures(const Many& scope, Neat& stack) {
    bool atLeastOneSuccess = false;
-   stack.ForEach([&](Block<>& substack) {
+   stack.ForEach([&](Many& substack) {
       atLeastOneSuccess |= PushFutures(scope, substack);
    });
    return atLeastOneSuccess;
@@ -564,7 +479,7 @@ void Temporal::Link(const Many& scope) {
          // the handle. This allows for specifying contexts externally, 
          // but also makes the flow impure, because it allows it to be  
          // affacted by external influence.                             
-         scope.ForEach([&](const Block<>& sub) {
+         scope.ForEach([&](const Many& sub) {
             LANGULUS_ASSERT(
                PushFutures(&sub, mPriorityStack),
                Flow, "Couldn't push to future"
@@ -573,7 +488,7 @@ void Temporal::Link(const Many& scope) {
       }
       else {
          // Nest-link dense deep scope                                  
-         scope.ForEach([&](const Block<>& sub) {
+         scope.ForEach([&](const Many& sub) {
             Link(sub);
          });
       }
@@ -655,7 +570,7 @@ void Temporal::LinkRelative(const Many& scope, const Verb& override) {
 
    if (scope.IsDeep()) {
       // Nest deep scope                                                
-      scope.ForEach([&](const Block<>& sub) {
+      scope.ForEach([&](const Many& sub) {
          LinkRelative(sub, override);
       });
    }

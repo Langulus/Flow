@@ -12,6 +12,13 @@
 namespace Langulus::Flow
 {
 
+   /// Convert a number type to text                                          
+   /// Notice that this constructor explicitly avoids character types         
+   ///   @param number - the number to stringify                              
+   template<CT::BuiltinNumber T> requires (not CT::Character<T>)
+   LANGULUS(INLINED) Code::Code(const T& number)
+      : Code {Text::FromNumber(number)} {}
+
    /// Remove elements from the left side of Code code                        
    ///   @param offset - the number of elements to discard from the front     
    ///   @return a shallow-copied container with the correct offset           

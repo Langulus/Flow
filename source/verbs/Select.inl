@@ -78,8 +78,8 @@ namespace Langulus::Verbs
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
-   inline bool Select::ExecuteDefault(const Block& context, Verb& verb) {
-      return DefaultSelect<false>(const_cast<Block&>(context), verb);
+   inline bool Select::ExecuteDefault(const Many& context, Verb& verb) {
+      return DefaultSelect<false>(const_cast<Many&>(context), verb);
    }
 
    /// Execute the default verb in a mutable context                          
@@ -87,7 +87,7 @@ namespace Langulus::Verbs
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
-   inline bool Select::ExecuteDefault(Block& context, Verb& verb) {
+   inline bool Select::ExecuteDefault(Many& context, Verb& verb) {
       return DefaultSelect<true>(context, verb);
    }
 
@@ -97,7 +97,7 @@ namespace Langulus::Verbs
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
    template<bool MUTABLE>
-   bool Select::DefaultSelect(Block& context, Verb& verb) {
+   bool Select::DefaultSelect(Many& context, Verb& verb) {
       VERBOSE_SELECT_TAB("Default select: ", verb);
       if (verb.IsMissing() or context.IsMissing()) {
          VERBOSE_SELECT("Can't select using missing argument/context");
@@ -180,7 +180,13 @@ namespace Langulus::Verbs
    ///   @param indices - optional indices (i.e. Nth trait of a kind          
    ///   @return true if at least one trait has been pushed to selectedTraits 
    template<bool MUTABLE>
-   bool Select::PerIndex(Block& context, TMany<Trait>& selectedTraits, TMeta resultingTrait, CT::Meta auto meta, const TMany<Index>& indices) {
+   bool Select::PerIndex(
+      Many& context,
+      TMany<Trait>& selectedTraits,
+      TMeta resultingTrait,
+      CT::Meta auto meta,
+      const TMany<Index>& indices
+   ) {
       using META = decltype(meta);
       bool done = false;
       static const Index fallbacki = 0;
@@ -197,7 +203,13 @@ namespace Langulus::Verbs
             LANGULUS_ERROR("Meta not supported for selecting members");
 
          if (member) {
+            VERBOSE_SELECT(
+               "Found member of type ", member->mTypeRetriever(),
+               " at index ", i->GetOffset(),
+               " while searching in type ", context.GetType()
+            );
             auto variable = context.GetMember(*member, 0);
+
             if constexpr (not MUTABLE)
                variable.MakeConst();
 
@@ -209,7 +221,8 @@ namespace Langulus::Verbs
 
          if (indices)
             ++i;
-      } while (i != indices.GetRawEnd() and i != &fallbacki);
+      }
+      while (i != indices.GetRawEnd() and i != &fallbacki);
 
       return done;
    }
@@ -222,7 +235,13 @@ namespace Langulus::Verbs
    ///   @param selectedVerbs - [out] found verb go here                      
    ///   @return if at least trait/verb has been pushed to outputs            
    template<bool MUTABLE>
-   inline bool Select::SelectByMeta(const TMany<Index>& indices, DMeta id, Block& context, TMany<Trait>& selectedTraits, TMany<const RTTI::Ability*>& selectedVerbs) {
+   inline bool Select::SelectByMeta(
+      const TMany<Index>& indices,
+      DMeta id,
+      Many& context,
+      TMany<Trait>& selectedTraits,
+      TMany<const RTTI::Ability*>& selectedVerbs
+   ) {
       const auto type = context.GetType();
       if (id->Is<VMeta>()) {
          if (not indices or indices == IndexAll) {

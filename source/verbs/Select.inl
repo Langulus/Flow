@@ -9,7 +9,7 @@
 #include "Select.hpp"
 #include "../TVerb.inl"
 
-#if 1
+#if 0
    #define VERBOSE_SELECT(...)      Logger::Verbose(__VA_ARGS__)
    #define VERBOSE_SELECT_TAB(...)  const auto tab = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
 #else
@@ -208,8 +208,8 @@ namespace Langulus::Verbs
                " at index ", i->GetOffset(),
                " while searching in type ", context.GetType()
             );
-            auto variable = context.GetMember(*member, 0);
 
+            Many variable = context.GetMember(*member, 0);
             if constexpr (not MUTABLE)
                variable.MakeConst();
 

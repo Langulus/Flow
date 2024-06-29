@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include "../TVerb.inl"
 #include "Interpret.hpp"
 #include "Create.hpp"
 #include "Do.hpp"

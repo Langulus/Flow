@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "Executor.hpp"
-#include "Verb.hpp"
 #include "verbs/Do.inl"
 #include "verbs/Interpret.inl"
 #include "verbs/Create.inl"

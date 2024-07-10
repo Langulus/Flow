@@ -56,10 +56,9 @@ namespace Langulus::Flow
    /// Dump the factory to the log                                            
    TEMPLATE()
    void FACTORY()::Dump() const {
-      const auto scope = Logger::Special("--------- FACTORY DUMP FOR ", 
+      const auto scope = Logger::SpecialTab("--------- FACTORY DUMP FOR ", 
          MetaDataOf<TFactory>(), " (", Base::mCount, " of ", Base::mReserved,
-         " cells used in ", Base::mFrames.GetCount(), " frames): ",
-         Logger::Tabs {}
+         " cells used in ", Base::mFrames.GetCount(), " frames): "
       );
 
       Count counter = 0;

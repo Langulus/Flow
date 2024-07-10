@@ -14,7 +14,7 @@
 
 #if 1
    #define VERBOSE_TEMPORAL(...)       Logger::Verbose(*this, ": ", __VA_ARGS__)
-   #define VERBOSE_TEMPORAL_TAB(...)   const auto tab = Logger::Verbose(*this, ": ", __VA_ARGS__, Logger::Tabs{})
+   #define VERBOSE_TEMPORAL_TAB(...)   const auto tab = Logger::VerboseTab(*this, ": ", __VA_ARGS__)
 #else
    #define VERBOSE_TEMPORAL(...)       LANGULUS(NOOP)
    #define VERBOSE_TEMPORAL_TAB(...)   LANGULUS(NOOP)

@@ -13,7 +13,7 @@
 
 #if 1
    #define VERBOSE_MISSING_POINT(...)     Logger::Verbose(__VA_ARGS__)
-   #define VERBOSE_MISSING_POINT_TAB(...) const auto tabs = Logger::Verbose(__VA_ARGS__, Logger::Tabs{})
+   #define VERBOSE_MISSING_POINT_TAB(...) const auto tabs = Logger::VerboseTab(__VA_ARGS__)
    #define VERBOSE_FUTURE(...)            Logger::Verbose(__VA_ARGS__)
 #else
    #define VERBOSE_MISSING_POINT(...)     LANGULUS(NOOP)

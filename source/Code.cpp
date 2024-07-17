@@ -21,16 +21,16 @@ LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
 #define ENABLE_VERBOSE() 0
 
 #define VERBOSE_INNER(...) \
-      Logger::Flow("Flow::Code: ", Logger::Push, Logger::Cyan, __VA_ARGS__ \
+      Logger::Flow("Flow::Code: ", Logger::PushCyan, __VA_ARGS__ \
          , Logger::Pop, " at ", progress, ": " \
-         , Logger::NewLine, "+-[", Logger::Push, Logger::Green, Logger::Underline \
-         , input. LeftOf(progress).Replace('\n', "\\n"), Logger::Pop, Logger::Push, Logger::White \
+         , Logger::NewLine, "+-[", Logger::PushGreen, Logger::Underline \
+         , input. LeftOf(progress).Replace('\n', "\\n"), Logger::PopAndPushWhite \
          , input.RightOf(progress).Replace('\n', "\\n"), Logger::Pop, ']')
 
 #define PRETTY_ERROR(...) { \
-      Logger::Error("Flow::Code: ", Logger::Push, Logger::DarkYellow, __VA_ARGS__ \
+      Logger::Error("Flow::Code: ", Logger::PushDarkYellow, __VA_ARGS__ \
          , Logger::Pop, " at ", progress, ": " \
-         , Logger::NewLine, "+-[", Logger::Push, Logger::DarkYellow, Logger::Underline \
+         , Logger::NewLine, "+-[", Logger::PushDarkYellow, Logger::Underline \
          , input. LeftOf(progress).Replace('\n', "\\n"), Logger::Pop \
          , input.RightOf(progress).Replace('\n', "\\n"), ']'); \
       LANGULUS_THROW(Flow, "Parse error"); \

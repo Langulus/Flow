@@ -85,8 +85,8 @@ namespace Langulus::Verbs
    ///   @param verb - the verb/flow to execute                               
    ///   @return the Do verb                                                  
    inline Do Do::In(auto&& context, auto&& verb) {
-      using CS = SemanticOf<decltype(context)>;
-      using VS = SemanticOf<decltype(verb)>;
+      using CS = IntentOf<decltype(context)>;
+      using VS = IntentOf<decltype(verb)>;
       Do v = VS::Nest(verb);
       v.SetSource(CS::Nest(context));
       return Abandon(v);

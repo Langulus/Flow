@@ -15,17 +15,17 @@ namespace Langulus::Flow
 {
 
    /// Generic constructor                                                    
-   ///   @param other - the verb/argument and semantic to construct with      
+   ///   @param other - the verb/argument and intent to construct with        
    template<CT::Data T1, CT::Data...TN>
    requires CT::VerbMakable<T1, TN...> LANGULUS(INLINED)
    Verb::Verb(T1&& t1, TN&&...tn) {
       if constexpr (sizeof...(TN) == 0 and not CT::Array<T1>) {
-         using S = SemanticOf<decltype(t1)>;
+         using S = IntentOf<decltype(t1)>;
          using T = TypeOf<S>;
 
          if constexpr (CT::VerbBased<T>) {
             // Make sure the VMeta is initialized                       
-            (void) DesemCast(t1).GetVerb();
+            (void) DeintCast(t1).GetVerb();
             new (this) A::Verb {S::Nest(t1).template Forward<A::Verb>()};
          }
          else Many::operator = (Forward<T1>(t1));
@@ -34,16 +34,16 @@ namespace Langulus::Flow
    }
 
    /// Generic assignment                                                     
-   ///   @param rhs - the verb/argument and semantic to assign by             
+   ///   @param rhs - the verb/argument and intent to assign by               
    ///   @return a reference to this verb                                     
    LANGULUS(INLINED)
    Verb& Verb::operator = (CT::VerbAssignable auto&& rhs) {
-      using S = SemanticOf<decltype(rhs)>;
+      using S = IntentOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
       if constexpr (CT::VerbBased<T>) {
          // Make sure the VMeta is initialized                          
-         (void) DesemCast(rhs).GetVerb();
+         (void) DeintCast(rhs).GetVerb();
          A::Verb::operator = (S::Nest(rhs).template Forward<A::Verb>());
       }
       else Many::operator = (S::Nest(rhs));
@@ -71,7 +71,7 @@ namespace Langulus::Flow
       CT::UnfoldInsertable auto&& a,
       const Charge& charge, VerbState state
    ) {
-      using S = SemanticOf<decltype(a)>;
+      using S = IntentOf<decltype(a)>;
       return FromMeta(MetaVerbOf<V>(), S::Nest(a), charge, state);
    }
 
@@ -86,7 +86,7 @@ namespace Langulus::Flow
       VMeta verb, CT::UnfoldInsertable auto&& a,
       const Charge& charge, VerbState state
    ) {
-      using S = SemanticOf<decltype(a)>;
+      using S = IntentOf<decltype(a)>;
       auto result = FromMeta(verb, charge, state);
       result.SetArgument(S::Nest(a));
       return result;
@@ -418,17 +418,17 @@ namespace Langulus::Flow
 
    /// Push anything to end of the outputs, satisfying the verb               
    ///   @attention nullptrs are never pushed and don't satisfy verb          
-   ///   @param rhs - the data (and semantic) to push                         
+   ///   @param rhs - the data and intent to push                             
    ///   @return a reference to this verb for chaining                        
    template<CT::VerbBased THIS> LANGULUS(INLINED)
    THIS& Verb::operator << (CT::UnfoldInsertable auto&& rhs) {
-      using S = SemanticOf<decltype(rhs)>;
+      using S = IntentOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
       if constexpr (not CT::Nullptr<T>) {
          if constexpr (CT::PointerRelated<T>) {
             // Push a pointer only if valid                             
-            if (not DesemCast(rhs))
+            if (not DeintCast(rhs))
                return *reinterpret_cast<THIS*>(this);
          }
 
@@ -441,17 +441,17 @@ namespace Langulus::Flow
 
    /// Push anything to the front of the outputs, satisfying the verb         
    ///   @attention nullptrs are never pushed and don't satisfy verb          
-   ///   @param rhs - the data (and semantic) to push                         
+   ///   @param rhs - the data and intent to push                             
    ///   @return a reference to this verb for chaining                        
    template<CT::VerbBased THIS> LANGULUS(INLINED)
    THIS& Verb::operator >> (CT::UnfoldInsertable auto&& rhs) {
-      using S = SemanticOf<decltype(rhs)>;
+      using S = IntentOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
       if constexpr (not CT::Nullptr<T>) {
          if constexpr (CT::PointerRelated<T>) {
             // Push a pointer only if valid                             
-            if (not DesemCast(rhs))
+            if (not DeintCast(rhs))
                return *reinterpret_cast<THIS*>(this);
          }
 
@@ -462,22 +462,22 @@ namespace Langulus::Flow
       return *reinterpret_cast<THIS*>(this);
    }
 
-   /// Merge anything to output's back by a semantic                          
-   ///   @param rhs - the data (and semantic) to merge                        
+   /// Merge anything to output's back, with or without an intent             
+   ///   @param rhs - the data and intent to merge                            
    ///   @return a reference to this verb for chaining                        
    template<CT::VerbBased THIS> LANGULUS(INLINED)
    THIS& Verb::operator <<= (CT::UnfoldInsertable auto&& rhs) {
-      using S = SemanticOf<decltype(rhs)>;
+      using S = IntentOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
       if constexpr (not CT::Nullptr<T>) {
          if constexpr (CT::PointerRelated<TypeOf<S>>) {
             // Push a pointer, but check if valid first                 
-            if (not DesemCast(rhs))
+            if (not DeintCast(rhs))
                return *reinterpret_cast<THIS*>(this);
          }
 
-         auto ptr = PointerDecay(DesemCast(rhs));
+         auto ptr = PointerDecay(DeintCast(rhs));
          if (mOutput.Find(ptr))
             return *reinterpret_cast<THIS*>(this);
 
@@ -488,22 +488,22 @@ namespace Langulus::Flow
       return *reinterpret_cast<THIS*>(this);
    }
 
-   /// Merge anything to output's front by a semantic                         
-   ///   @param rhs - the data (and semantic) to merge                        
+   /// Merge anything to output's front, with or without an intent            
+   ///   @param rhs - the data and intent to merge                            
    ///   @return a reference to this verb for chaining                        
    template<CT::VerbBased THIS> LANGULUS(INLINED)
    THIS& Verb::operator >>= (CT::UnfoldInsertable auto&& rhs) {
-      using S = SemanticOf<decltype(rhs)>;
+      using S = IntentOf<decltype(rhs)>;
       using T = TypeOf<S>;
 
       if constexpr (not CT::Nullptr<T>) {
          if constexpr (CT::PointerRelated<TypeOf<S>>) {
             // Push a pointer, but check if valid first                 
-            if (not DesemCast(rhs))
+            if (not DeintCast(rhs))
                return *reinterpret_cast<THIS*>(this);
          }
 
-         auto ptr = PointerDecay(DesemCast(rhs));
+         auto ptr = PointerDecay(DeintCast(rhs));
          if (mOutput.Find(ptr))
             return *reinterpret_cast<THIS*>(this);
 

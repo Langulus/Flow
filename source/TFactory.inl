@@ -250,10 +250,10 @@ namespace Langulus::Flow
    ProducedFrom<T>::ProducedFrom(ProducedFrom&& other)
       : ProducedFrom {Move(other)} {}
 
-   /// Semantic construction                                                  
-   ///   @param other - semantic and element to initialize with               
+   /// Generic construction                                                   
+   ///   @param other - intent and element to initialize with                 
    template<class T> template<template<class> class S>
-   requires CT::Semantic<S<Neat>> LANGULUS(INLINED)
+   requires CT::Intent<S<Neat>> LANGULUS(INLINED)
    ProducedFrom<T>::ProducedFrom(S<ProducedFrom<T>>&& other)
       // mProducer intentionally not overwritten                        
       : mDescriptor {S<Neat> {other->mDescriptor}} {}

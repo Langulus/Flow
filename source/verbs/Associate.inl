@@ -84,7 +84,7 @@ namespace Langulus::Verbs
       // Attempt directly refering, if possible                         
       // This will happen only if types are exactly the same            
       // This is a default (fallback) routine, let's keep things simple 
-      try { lhs.AssignSemantic(Refer(rhs)); }
+      try { lhs.AssignWithIntent(Refer(rhs)); }
       catch (...) { return false; }
 
       // At this point, context has a copy of verb's argument           

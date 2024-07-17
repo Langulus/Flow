@@ -125,8 +125,7 @@ namespace Langulus::Flow
       ProducedFrom(ProducedFrom&&);
       ProducedFrom(T* = nullptr, const Neat& = {});
 
-      template<template<class> class S>
-      requires CT::Semantic<S<Neat>>
+      template<template<class> class S> requires CT::Intent<S<Neat>>
       ProducedFrom(S<ProducedFrom>&&);
 
       void Detach();

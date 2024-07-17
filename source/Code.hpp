@@ -92,10 +92,10 @@ namespace Langulus::Flow
       ///                                                                     
       ///   Concatenation                                                     
       ///                                                                     
-      template<class T> requires CT::Codifiable<Desem<T>>
+      template<class T> requires CT::Codifiable<Deint<T>>
       NOD() Code operator + (T&&) const;
 
-      template<class T> requires CT::Codifiable<Desem<T>>
+      template<class T> requires CT::Codifiable<Deint<T>>
       Code& operator += (T&&);
 
       template<class T>

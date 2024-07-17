@@ -100,7 +100,7 @@ namespace Langulus::Flow
    /// Concatenate two text containers                                        
    ///   @param rhs - right hand side                                         
    ///   @return the concatenated text container                              
-   template<class T> requires CT::Codifiable<Desem<T>> LANGULUS(INLINED)
+   template<class T> requires CT::Codifiable<Deint<T>> LANGULUS(INLINED)
    Code Code::operator + (T&& rhs) const {
       return Text::ConcatInner<Code>(Forward<T>(rhs));
    }
@@ -108,7 +108,7 @@ namespace Langulus::Flow
    /// Concatenate (destructively) text containers                            
    ///   @param rhs - right hand side                                         
    ///   @return a reference to this container                                
-   template<class T> requires CT::Codifiable<Desem<T>> LANGULUS(INLINED)
+   template<class T> requires CT::Codifiable<Deint<T>> LANGULUS(INLINED)
    Code& Code::operator += (T&& rhs) {
       return Text::ConcatRelativeInner<Code>(Forward<T>(rhs));
    }

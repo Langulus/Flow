@@ -27,7 +27,7 @@ namespace Langulus::Flow
       : Verb {Move(other)} {}
 
    /// Generic constructor                                                    
-   ///   @param other - the verb/argument and semantic to construct with      
+   ///   @param other - the verb/argument and intent to construct with        
    TEMPLATE() template<CT::Data T1, CT::Data...TN>
    requires CT::VerbMakable<T1, TN...> LANGULUS(INLINED)
    TME()::TVerb(T1&& t1, TN&&...tn)
@@ -205,7 +205,7 @@ namespace Langulus::Flow
 
    /// Push anything to end of the outputs, satisfying the verb               
    ///   @attention nullptrs are never pushed and don't satisfy verb          
-   ///   @param rhs - the data (and semantic) to push                         
+   ///   @param rhs - the data and intent to push                             
    ///   @return a reference to this verb for chaining                        
    TEMPLATE() LANGULUS(INLINED)
    VERB& TME()::operator << (CT::UnfoldInsertable auto&& rhs) {
@@ -215,7 +215,7 @@ namespace Langulus::Flow
 
    /// Push anything to the front of the outputs, satisfying the verb         
    ///   @attention nullptrs are never pushed and don't satisfy verb          
-   ///   @param rhs - the data (and semantic) to push                         
+   ///   @param rhs - the data and intent to push                             
    ///   @return a reference to this verb for chaining                        
    TEMPLATE() LANGULUS(INLINED)
    VERB& TME()::operator >> (CT::UnfoldInsertable auto&& rhs) {
@@ -223,8 +223,8 @@ namespace Langulus::Flow
       return Verb::operator >> <VERB>(Forward<T>(rhs));
    }
 
-   /// Merge anything to output's back by a semantic                          
-   ///   @param rhs - the data (and semantic) to merge                        
+   /// Merge anything to output's back, with or without an intent             
+   ///   @param rhs - the data and intent to merge                            
    ///   @return a reference to this verb for chaining                        
    TEMPLATE() LANGULUS(INLINED)
    VERB& TME()::operator <<= (CT::UnfoldInsertable auto&& rhs) {
@@ -232,8 +232,8 @@ namespace Langulus::Flow
       return Verb::operator <<= <VERB>(Forward<T>(rhs));
    }
 
-   /// Merge anything to output's front by a semantic                         
-   ///   @param rhs - the data (and semantic) to merge                        
+   /// Merge anything to output's front, with or without an intent            
+   ///   @param rhs - the data and intent to merge                            
    ///   @return a reference to this verb for chaining                        
    TEMPLATE() LANGULUS(INLINED)
    VERB& TME()::operator >>= (CT::UnfoldInsertable auto&& rhs) {

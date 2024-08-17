@@ -11,7 +11,7 @@
 #include "../verbs/Do.inl"
 #include "../verbs/Interpret.inl"
 
-#if 1
+#if 0
    #define VERBOSE_MISSING_POINT(...)     Logger::Verbose(__VA_ARGS__)
    #define VERBOSE_MISSING_POINT_TAB(...) const auto tabs = Logger::VerboseTab(__VA_ARGS__)
    #define VERBOSE_FUTURE(...)            Logger::Verbose(__VA_ARGS__)

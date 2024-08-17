@@ -571,32 +571,36 @@ namespace Langulus::Flow
       }
       else {
          // Search for the ability via RTTI                             
-         const DMeta fromMeta = context.GetType();
-         DMeta toMeta;
+         const DMeta meta = context.GetType();
 
-         if constexpr (CT::DerivedFrom<V, Verbs::Interpret>
-         and requires { typename V::Type; }) {
-            // Scan for a reflected converter as statically as possible 
-            toMeta = MetaDataOf<typename V::Type>();
-         }
-         else if (verb.template IsVerb<Verbs::Interpret>()) {
-            // Scan for a reflected converter by scanning argument      
-            toMeta = verb.template As<DMeta>();
-         }
+         if (CT::DerivedFrom<V, Verbs::Interpret>
+         or verb.template IsVerb<Verbs::Interpret>()) {
+            // Handle conversion a bit separately                       
+            DMeta toMeta;
+            if constexpr (CT::DerivedFrom<V, Verbs::Interpret>
+               and requires { typename V::Type; }) {
+               // Scan for a reflected converter statically             
+               toMeta = MetaDataOf<typename V::Type>();
+            }
+            else {
+               // Scan for a reflected converter by scanning argument   
+               toMeta = verb.template As<DMeta>();
+            }
 
-         const auto foundConverter = fromMeta->GetConverter(toMeta);
-         if (foundConverter) {
-            // Converter was found, prioritize it                       
-            // No escape from this scope                                
-            auto result = Many::FromMeta(toMeta);
-            result.template Reserve<true>(1);
-            foundConverter(context.GetRaw(), result.GetRaw());
-            verb << Abandon(result);
-            return verb.IsDone();
+            const auto foundConverter = meta->GetConverter(toMeta);
+            if (foundConverter) {
+               // Converter was found, prioritize it                    
+               // No escape from this scope                             
+               auto result = Many::FromMeta(toMeta);
+               result.template Reserve<true>(1);
+               foundConverter(context.GetRaw(), result.GetRaw());
+               verb << Abandon(result);
+               return verb.IsDone();
+            }
          }
 
          // Scan for any other runtime ability                          
-         const auto foundAbility = fromMeta->template
+         const auto foundAbility = meta->template
             GetAbility<CT::Mutable<T>>(verb.GetVerb(), verb.GetType());
          if (not foundAbility)
             return false;

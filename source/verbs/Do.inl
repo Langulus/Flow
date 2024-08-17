@@ -129,8 +129,6 @@ namespace Langulus::Flow
    }*/
 
    /// Invoke a single verb on a single context                               
-   ///   @attention assumes that if T is deep, then it contains exactly one   
-   ///      element                                                           
    ///   @tparam DISPATCH - whether or not to use context's dispatcher, if    
    ///      any is statically available or reflected                          
    ///   @tparam DEFAULT - whether or not to attempt default verb execution   
@@ -154,43 +152,39 @@ namespace Langulus::Flow
          // Keep in mind, that once you declare a custom Do for your    
          // type, you no longer rely on reflected bases' verbs or       
          // default verbs. You must invoke those by yourself in your    
-         // dispatcher - the custom dispatcher provides full control    
+         // dispatcher - the custom dispatcher provides full control!   
          context.Do(verb);
       }
       else {
-         // Execute verb inside the context directly                    
-         if constexpr (FALLBACK)
+         if constexpr (FALLBACK) {
+            // Execute the default verb                                 
             Verb::GenericExecuteDefault(context, verb);
-         else {
-            // Context might have a dispatcher still                    
-            if constexpr (CT::Deep<T> and DISPATCH) {
+         }
+         else if constexpr (DISPATCH) {
+            // Context might have a dispatcher                          
+            // If that is the case, then it is the context's            
+            // responsibility to dispatch the verb!                     
+            if constexpr (CT::Deep<T>) {
                auto meta = context.GetType();
                if constexpr (CT::Constant<T>) {
                   if (meta->mDispatcherConstant)
                      meta->mDispatcherConstant(context.GetRaw(), verb);
+                  else
+                     Verb::GenericExecuteIn(context, verb);
                }
                else if (meta->mDispatcherConstant)
                   meta->mDispatcherConstant(context.GetRaw(), verb);
                else if (meta->mDispatcherMutable)
                   meta->mDispatcherMutable(context.GetRaw(), verb);
-
-               if (verb.IsDone())
-                  return verb.GetSuccesses();
+               else
+                  Verb::GenericExecuteIn(context, verb);
             }
-
-            // If reached, try executing in the proper reflected verbs  
-            Verb::GenericExecuteIn(context, verb);
+            else Verb::GenericExecuteIn(context, verb);
          }
+         else Verb::GenericExecuteIn(context, verb);
 
-         // If that fails, attempt in all reflected bases               
-         /*if constexpr (requires { typename T::CTTI_Bases; }) {
-            if (not verb.IsDone()) {
-               // Context has no abilities, or they failed, so try      
-               // with all bases' abilities                             
-               ExecuteInBases<DISPATCH, false, FALLBACK>(
-                  context, verb, typename T::CTTI_Bases {});
-            }
-         }*/
+         if (verb.IsDone())
+            return verb.GetSuccesses();
 
          // If that fails, attempt executing the default verb           
          if constexpr (DEFAULT and not FALLBACK) {
@@ -234,7 +228,7 @@ namespace Langulus::Flow
             // Context is empty, but has relevant states, so directly   
             // forward it as context. Alternatively, the verb is not a  
             // multicast verb, and we're operating on context as one    
-            verb.SetSource(context);
+            //verb.SetSource(context);
             Execute<DISPATCH, DEFAULT, true>(context, verb);
             return verb.GetSuccesses();
          }
@@ -245,16 +239,19 @@ namespace Langulus::Flow
 
       // Iterate elements in the current context                        
       for (Count i = 0; i < context.GetCount(); ++i) {
-         verb.SetSource(context.GetElement(i));
+         //verb.SetSource(context.GetElement(i));
+         Many ith = context.GetElement(i);
+         if constexpr (RESOLVE)
+            ith = ith.GetResolved();
+         else
+            ith = ith.GetDense();
 
-         if constexpr (RESOLVE) {
-            Many resolved = verb.GetSource().GetResolved();
-            Execute<DISPATCH, DEFAULT, false>(resolved, verb);
+         if (not verb.GetSource()) {
+            // Make sure we save the source where execution happens     
+            verb.SetSource(ith);
          }
-         else {
-            Many resolved = verb.GetSource().GetDense();
-            Execute<DISPATCH, DEFAULT, false>(resolved, verb);
-         }
+
+         Execute<DISPATCH, DEFAULT, false>(ith, verb);
 
          /*if (verb.IsShortCircuited()) {
             // Short-circuit if enabled for verb                        

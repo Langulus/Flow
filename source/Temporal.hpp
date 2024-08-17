@@ -76,6 +76,8 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) void Link(const Many&);
       LANGULUS_API(FLOW) void LinkRelative(const Many&, const Verb&);
 
+      LANGULUS_API(FLOW) Many PushInner(Many);
+
    public:
       LANGULUS_API(FLOW) Temporal();
       LANGULUS_API(FLOW) Temporal(Temporal*);
@@ -98,15 +100,16 @@ namespace Langulus::Flow
       Time GetUptime() const;
 
       LANGULUS_API(FLOW) void Merge(const Temporal&);
-      LANGULUS_API(FLOW) bool Push(Many);
 
-      template<CT::Data T1, CT::Data...TN> requires (sizeof...(TN) >= 1)
-      bool Push(T1&& t1, TN&&...tn) {
-         return Push(Forward<T1>(t1)) and (Push(Forward<TN>(tn)) and ...);
+      template<CT::Data...TN> requires (sizeof...(TN) >= 1)
+      Many Push(TN&&...tn) {
+         Many result;
+         (result.SmartPush(IndexBack, PushInner(Forward<TN>(tn))), ...);
+         return result;
       }
 
       LANGULUS_API(FLOW) void Reset();
-      LANGULUS_API(FLOW) bool Update(Time = {});
+      LANGULUS_API(FLOW) bool Update(Time, Many&);
       LANGULUS_API(FLOW) void Dump() const;
 
    protected:

@@ -124,15 +124,16 @@ Langulus::Time Temporal::GetUptime() const {
 
 /// Advance the flow - moves time forward, executes stacks                    
 ///   @param dt - delta time                                                  
+///   @param sideffects - any side effects produced by executing              
 ///   @return true if no exit was requested                                   
-bool Temporal::Update(Time dt) {
+bool Temporal::Update(Time dt, Many& sideffects) {
    if (mStart == mNow) {
       // We're at the beginning of time - execute the priority stack    
       VERBOSE_TEMPORAL(Logger::Purple,
          "Flow before execution: ", mPriorityStack);
 
-      Many unused;
-      Execute(mPriorityStack, unused);
+      Many unusedContext;
+      Execute(mPriorityStack, unusedContext, sideffects);
 
       VERBOSE_TEMPORAL(Logger::Purple,
          "Flow after execution: ", mPriorityStack);
@@ -153,7 +154,7 @@ bool Temporal::Update(Time dt) {
       while (ticks >= pair.mKey) {
          // Time to execute the periodic flow                           
          pair.mValue.Reset();
-         pair.mValue.Update();
+         pair.mValue.Update({}, sideffects);
          ticks -= pair.mKey;
       }
 
@@ -171,7 +172,7 @@ bool Temporal::Update(Time dt) {
 
       // Always update all time points before the tick count            
       // They might have periodic flows inside                          
-      pair.mValue.Update(dt);
+      pair.mValue.Update(dt, sideffects);
    }
 
    return true;
@@ -232,7 +233,7 @@ void Temporal::Merge(const Temporal& other) {
 ///   @attention assumes argument is a valid scope                            
 ///   @param scope - the scope to analyze and push                            
 ///   @return true if the flow changed                                        
-bool Temporal::Push(Many scope) {
+Many Temporal::PushInner(Many scope) {
    VERBOSE_TEMPORAL_TAB("Pushing: ", scope);
 
    // Compile pushed scope to an intermediate format                    
@@ -241,18 +242,19 @@ bool Temporal::Push(Many scope) {
 
    // Link new scope with the available stacks                          
    try { Link(compiled); }
-   catch (...) { return false; }
+   catch (...) { return {}; }
 
    if (mPriorityStack)
       VERBOSE_TEMPORAL(Logger::Purple, "Priority flow: ", mPriorityStack);
-
    if (mTimeStack)
       VERBOSE_TEMPORAL(Logger::Purple, "Time flow: ", mTimeStack);
-
    if (mFrequencyStack)
       VERBOSE_TEMPORAL(Logger::Purple, "Frequency flow: ", mFrequencyStack);
 
-   return true;
+   // Execute the new scope and return any side effects                 
+   Many sideffects;
+   Update({}, sideffects);
+   return Abandon(sideffects);
 }
 
 /// Compiles a scope into an intermediate form, used by the flow              

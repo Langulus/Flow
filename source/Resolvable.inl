@@ -49,7 +49,9 @@ namespace Langulus
    ///   @return text containing the generated identity                       
    LANGULUS(INLINED)
    Anyness::Text IdentityOf(const auto& instance) {
-      return IdentityOf(NameOf<Decay<decltype(instance)>>(), instance);
+      auto token = MetaOf<Decay<decltype(instance)>>()
+         ->GetShortestUnambiguousToken();
+      return IdentityOf(token, instance);
    }
 
 } // namespace Langulus

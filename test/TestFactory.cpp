@@ -17,11 +17,11 @@ SCENARIO("Test factories", "[factory]") {
 	Producer producer;
 
 	GIVEN("A factory with default usage") {
-		TFactory<Producible> factory {&producer};
+      TFactory<Producible> factory; // { &producer };
 
 		WHEN("Default-constructed") {
 			REQUIRE(factory.IsUnique == false);
-			REQUIRE(factory.GetOwner() == &producer);
+			//REQUIRE(factory.GetOwner() == &producer);
 			REQUIRE(factory.GetReusable() == nullptr);
 			REQUIRE(not factory.GetHashmap());
 			REQUIRE(factory.IsEmpty());
@@ -35,7 +35,7 @@ SCENARIO("Test factories", "[factory]") {
          const Neat normalized {};
          const auto hash = normalized.GetHash();
 
-			factory.Create(creator);
+			factory.Create(&producer, creator);
 			auto out1 = creator.GetOutput();
 			REQUIRE(creator.IsDone());
          REQUIRE(out1.GetCount() == 1);
@@ -45,7 +45,7 @@ SCENARIO("Test factories", "[factory]") {
 
 			creator.Undo();
 
-			factory.Create(creator);
+			factory.Create(&producer, creator);
 			REQUIRE(creator.IsDone());
 			auto out2 = creator.GetOutput();
 			REQUIRE(out2.GetCount() == 1);
@@ -74,11 +74,11 @@ SCENARIO("Test factories", "[factory]") {
 	}
 
 	GIVEN("A factory with unique usage") {
-		TFactoryUnique<Producible> factory {&producer};
+      TFactoryUnique<Producible> factory;// { &producer };
 
 		WHEN("Default-constructed") {
 			REQUIRE(factory.IsUnique == true);
-			REQUIRE(factory.GetOwner() == &producer);
+			//REQUIRE(factory.GetOwner() == &producer);
 			REQUIRE(factory.GetReusable() == nullptr);
 			REQUIRE(not factory.GetHashmap());
          REQUIRE(factory.IsEmpty());
@@ -90,10 +90,10 @@ SCENARIO("Test factories", "[factory]") {
 			Verbs::Create creator {descriptor};
          const Producible prototype {&producer, descriptor.GetDescriptor()};
 
-			factory.Create(creator);
+			factory.Create(&producer, creator);
 			auto out1 = creator.GetOutput();
 			creator.Undo();
-			factory.Create(creator);
+			factory.Create(&producer, creator);
 			auto out2 = creator.GetOutput();
 
 			const Neat normalized {};
@@ -129,12 +129,12 @@ SCENARIO("Test factories", "[factory]") {
 			Verbs::Create creator {&descriptor};
          const Producible prototype {&producer, descriptor.GetDescriptor()};
 
-			factory.Create(creator);
+			factory.Create(&producer, creator);
 			auto out1 = creator.GetOutput();
          REQUIRE(out1.As<Producible*>()->Reference(0) == 2);
 
 			creator.Undo();
-			factory.Create(creator);
+			factory.Create(&producer, creator);
 			auto out2 = creator.GetOutput();
          REQUIRE(out2.As<Producible*>()->Reference(0) == 3);
 

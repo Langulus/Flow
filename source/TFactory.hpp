@@ -46,11 +46,9 @@ namespace Langulus::Flow
    template<class T, FactoryUsage USAGE = FactoryUsage::Default>
    class TFactory : public Anyness::THive<T> {
    public:
-      static_assert(CT::Producible<T>, "T must have a producer");
-
       LANGULUS(TYPED) T;
       using Base = Anyness::THive<T>;
-      using Producer = ProducerOf<T>;
+      //using Producer = ProducerOf<T>;
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
 
    protected:
@@ -60,13 +58,13 @@ namespace Langulus::Flow
       // Every produced T will also be bound to that instance           
       // If factory moved, all contents will be remapped to the new     
       // instance                                                       
-      Producer* mFactoryOwner {};
+      //Producer* mFactoryOwner {};
 
       // A hash map for fast retrieval of elements                      
       TUnorderedMap<Hash, TMany<Cell*>> mHashmap;
 
-      NOD() T* Produce(const Neat&);
-      void CreateInner(Verb&, int, const Neat& = {});
+      NOD() T* Produce(auto*, const Neat&);
+      void CreateInner(auto*, Verb&, int, const Neat& = {});
       void Destroy(Cell*);
       NOD() Cell* Find(const Neat&) const;
 
@@ -76,24 +74,25 @@ namespace Langulus::Flow
       /// allowed only via assignment, on a previously initialized factory    
       /// This is needed, because elements must be remapped to a new valid    
       /// owner upon move                                                     
-      TFactory() = delete;
+      TFactory() = default;
       TFactory(const TFactory&) = delete;
       TFactory(TFactory&&) = delete;
 
-      TFactory(Producer*);
+      //TFactory() = default;
+      //TFactory(Producer*);
       TFactory& operator = (TFactory&&) noexcept;
       ~TFactory();
 
    public:
       void Reset();
 
-      void Create(Verb&);
+      void Create(auto*, Verb&);
       void Select(Verb&);
 
       IF_SAFE(void Dump() const);
 
    #if LANGULUS(TESTING)
-      auto  GetOwner() const noexcept { return mFactoryOwner; }
+      //auto  GetOwner() const noexcept { return mFactoryOwner; }
       auto& GetHashmap() const { return mHashmap; }
    #endif
    };

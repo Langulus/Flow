@@ -23,15 +23,16 @@ namespace Langulus::Flow
 
    /// Construction of a factory                                              
    ///   @param owner - the factory owner                                     
-   TEMPLATE() LANGULUS(INLINED)
-   FACTORY()::TFactory(Producer* owner)
-      : mFactoryOwner {owner} {}
+   //TEMPLATE() LANGULUS(INLINED)
+   //FACTORY()::TFactory(Producer* owner)
+   //   : mFactoryOwner {owner} {}
 
    /// Factory destructor                                                     
    /// Checks if all elements are referenced exactly once before destruction  
    /// if safe mode is enabled                                                
    TEMPLATE() LANGULUS(INLINED)
    FACTORY()::~TFactory() {
+      static_assert(CT::Producible<T>, "T must have a producer");
       Reset();
    }
 
@@ -89,9 +90,13 @@ namespace Langulus::Flow
    }
 
    /// Create/Destroy element(s) inside the factory                           
+   ///   @param producer - the producer                                       
    ///   @param verb - the creation verb                                      
    TEMPLATE()
-   void FACTORY()::Create(Verb& verb) {
+   void FACTORY()::Create(auto* producer, Verb& verb) {
+      static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
+         "Producer isn't related to the reflected one");
+
       verb.ForEachDeep(
          [&](const Construct& construct) {
             // For each construct...                                    
@@ -102,7 +107,7 @@ namespace Langulus::Flow
                ::std::floor(construct.GetCharge().mMass * verb.GetMass())
             );
 
-            CreateInner(verb, count, construct.GetDescriptor());
+            CreateInner(producer, verb, count, construct.GetDescriptor());
          },
          [&](const DMeta& type) {
             // For each type...                                         
@@ -113,17 +118,21 @@ namespace Langulus::Flow
                ::std::floor(verb.GetMass())
             );
 
-            CreateInner(verb, count);
+            CreateInner(producer, verb, count);
          }
       );
    }
 
    /// Inner creation/destruction verb                                        
+   ///   @param producer - the producer                                       
    ///   @param verb - [in/out] the creation/destruction verb                 
    ///   @param count - the number of items to create (or destroy if negative)
    ///   @param neat - element descriptor                                     
    TEMPLATE()
-   void FACTORY()::CreateInner(Verb& verb, int count, const Neat& neat) {
+   void FACTORY()::CreateInner(auto* producer, Verb& verb, int count, const Neat& neat) {
+      static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
+         "Producer isn't related to the reflected one");
+
       if (count > 0) {
          // Produce amount of compatible constructs                     
          if constexpr (IsUnique) {
@@ -141,12 +150,12 @@ namespace Langulus::Flow
             // Produce exactly one element with this descriptor         
             // Mass will be ignored, it makes no sense to create        
             // multiple instances if unique                             
-            verb << Produce(neat);
+            verb << Produce(producer, neat);
          }
          else {
             // Satisfy the required count                               
             while (count >= 1) {
-               auto produced = Produce(neat);
+               auto produced = Produce(producer, neat);
                verb << produced;
                --count;
             }
@@ -205,13 +214,17 @@ namespace Langulus::Flow
    }
 
    /// Produce a single T with the given descriptor                           
+   ///   @param producer - the producer                                       
    ///   @param neat - element descriptor                                     
    ///   @return the produced instance                                        
    TEMPLATE()
-   T* FACTORY()::Produce(const Neat& neat) {
+   T* FACTORY()::Produce(auto* producer, const Neat& neat) {
+      static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
+         "Producer isn't related to the reflected one");
+
       // Register entry in the hashmap, for fast search by descriptor   
       VERBOSE_FACTORY(NameOf<FACTORY()>(), " producing: ", neat);
-      auto result = Base::NewInner(mFactoryOwner, neat);
+      auto result = Base::NewInner(producer, neat);
       if (not result)
          return nullptr;
 
@@ -264,7 +277,7 @@ namespace Langulus::Flow
    template<class T> LANGULUS(INLINED)
    ProducedFrom<T>::ProducedFrom(T* producer, const Neat& neat)
       : mDescriptor {neat}
-      , mProducer {producer} {}
+      , mProducer   {producer} {}
 
    /// Reset the descriptor to remove circular dependencies                   
    template<class T> LANGULUS(INLINED)

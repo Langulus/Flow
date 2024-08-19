@@ -11,7 +11,7 @@
 #include "../verbs/Do.inl"
 #include "../verbs/Interpret.inl"
 
-#if 0
+#if 1
    #define VERBOSE_MISSING_POINT(...)     Logger::Verbose(__VA_ARGS__)
    #define VERBOSE_MISSING_POINT_TAB(...) const auto tabs = Logger::VerboseTab(__VA_ARGS__)
    #define VERBOSE_FUTURE(...)            Logger::Verbose(__VA_ARGS__)
@@ -186,7 +186,10 @@ Many Missing::Link(const Many& scope, const Many& context) const {
    if (scope.IsDeep()) {
       // Nest scopes, linking any past points in subscopes              
       scope.ForEach([&](const Many& subscope) {
-         try { result << Link(subscope, context); }
+         try {
+            VERBOSE_MISSING_POINT_TAB("Linking subscope: ", subscope);
+            result << Link(subscope, context);
+         }
          catch (const Except::Link&) {
             if (not scope.IsOr())
                throw;
@@ -205,6 +208,7 @@ Many Missing::Link(const Many& scope, const Many& context) const {
       [&](const Trait& trait) {
          // Link a trait                                                
          try {
+            VERBOSE_MISSING_POINT_TAB("Linking trait: ", trait);
             result << Trait::From(
                trait.GetTrait(), Link(trait, context)
             );
@@ -219,6 +223,7 @@ Many Missing::Link(const Many& scope, const Many& context) const {
       [&](const Construct& construct) {
          // Link a construct                                            
          try {
+            VERBOSE_MISSING_POINT_TAB("Linking construct: ", construct);
             result << Construct {
                construct.GetType(), Link(construct.GetDescriptor(), context)
             };
@@ -233,6 +238,7 @@ Many Missing::Link(const Many& scope, const Many& context) const {
       [&](const A::Verb& verb) {
          // Link a verb                                                 
          try {
+            VERBOSE_MISSING_POINT_TAB("Linking verb: ", verb);
             result << Verb::FromMeta(
                verb.GetVerb(), 
                Link(verb.GetArgument(), context),
@@ -249,9 +255,7 @@ Many Missing::Link(const Many& scope, const Many& context) const {
       },
       [&](const Inner::MissingPast& past) {
          // Replace a missing past point with provided context          
-         VERBOSE_MISSING_POINT_TAB(
-            "Linking future point ", *this, " to past point ", past);
-
+         VERBOSE_MISSING_POINT_TAB("Linking past point: ", past);
          if (mPriority != NoPriority and mPriority <= past.mPriority) {
             VERBOSE_MISSING_POINT(Logger::DarkYellow,
                "Skipped past point with higher priority: ", past);
@@ -329,18 +333,22 @@ Many Missing::Link(const Neat& neat, const Many& context) const {
 /// Log the missing point                                                     
 Missing::operator Text() const {
    Text result;
-   result += '(';
-   mFilter.Serialize(result);
 
-   if (mPriority != NoPriority)
-      result += Text {" !", mPriority};
+   if ((mPriority and mPriority != NoPriority) or mContent) {
+      result += '(';
+      mFilter.Serialize(result);
 
-   if (mContent) {
-      result += ", ";
-      mContent.Serialize(result);
+      if (mPriority and mPriority != NoPriority)
+         result += Text {" !", mPriority};
+
+      if (mContent) {
+         result += ", ";
+         mContent.Serialize(result);
+      }
+
+      result += ')';
    }
-
-   result += ')';
+   else mFilter.Serialize(result);
    return result;
 }
 

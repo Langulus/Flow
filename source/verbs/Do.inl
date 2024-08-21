@@ -246,10 +246,10 @@ namespace Langulus::Flow
          else
             ith = ith.GetDense();
 
-         if (not verb.GetSource()) {
+         //if (not verb.GetSource()) {
             // Make sure we save the source where execution happens     
-            verb.SetSource(ith);
-         }
+         verb.SetSource(ith);
+         //}
 
          Execute<DISPATCH, DEFAULT, false>(ith, verb);
 

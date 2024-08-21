@@ -21,12 +21,6 @@
 namespace Langulus::Flow
 {
 
-   /// Construction of a factory                                              
-   ///   @param owner - the factory owner                                     
-   //TEMPLATE() LANGULUS(INLINED)
-   //FACTORY()::TFactory(Producer* owner)
-   //   : mFactoryOwner {owner} {}
-
    /// Factory destructor                                                     
    /// Checks if all elements are referenced exactly once before destruction  
    /// if safe mode is enabled                                                

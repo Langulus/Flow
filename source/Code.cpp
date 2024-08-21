@@ -7,6 +7,8 @@
 ///                                                                           
 #include "Code.inl"
 #include "Verb.hpp"
+#include "Temporal.hpp"
+#include "Time.hpp"
 
 #include "verbs/Do.inl"
 #include "verbs/Select.inl"
@@ -75,6 +77,9 @@ namespace Langulus::Flow
 
       // Make sure that all default types are registered before parsing 
       (void)MetaOf<Index>();
+      (void)MetaOf<Temporal>();
+      //(void)MetaOf<Time>(); //TODO causes conflict with the trait that isn't detected due to too lax constraints!
+      (void)MetaOf<Code>();
 
       // Make sure that all default verbs are registered before parsing 
       (void)MetaOf<Verbs::Do>();

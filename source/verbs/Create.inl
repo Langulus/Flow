@@ -135,8 +135,9 @@ namespace Langulus::Verbs
          return false;
 
       const auto createInner = [&](const Construct& descriptor) {
-         if (descriptor.GetDescriptor().IsMissingDeep()) {
-            // Creation of missing stuff is not allowed                 
+         if (descriptor.GetType()->mProducerRetriever
+         or  descriptor.GetDescriptor().IsMissingDeep()) {
+            // Creation of missing/runtime stuff is not allowed         
             return;
          }
 
@@ -198,14 +199,16 @@ namespace Langulus::Verbs
 
          group.ForEach(
             [&](const Construct& construct) {
-               if (construct.GetCharge().mMass > 0) {
+               if (construct.GetType() and construct.GetCharge().mMass > 0) {
                   VERBOSE_CREATION("Creating: ", Logger::Yellow, construct);
                   createInner(construct);
                }
             },
             [&](const DMeta& type) {
-               VERBOSE_CREATION("Creating: ", Logger::Yellow, type->mToken);
-               createInner(Construct {type});
+               if (type) {
+                  VERBOSE_CREATION("Creating: ", Logger::Yellow, type->mToken);
+                  createInner(Construct {type});
+               }
             }
          );
       });

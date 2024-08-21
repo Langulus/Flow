@@ -17,11 +17,10 @@ SCENARIO("Test factories", "[factory]") {
 	Producer producer;
 
 	GIVEN("A factory with default usage") {
-      TFactory<Producible> factory; // { &producer };
+      TFactory<Producible> factory;
 
 		WHEN("Default-constructed") {
 			REQUIRE(factory.IsUnique == false);
-			//REQUIRE(factory.GetOwner() == &producer);
 			REQUIRE(factory.GetReusable() == nullptr);
 			REQUIRE(not factory.GetHashmap());
 			REQUIRE(factory.IsEmpty());
@@ -74,11 +73,10 @@ SCENARIO("Test factories", "[factory]") {
 	}
 
 	GIVEN("A factory with unique usage") {
-      TFactoryUnique<Producible> factory;// { &producer };
+      TFactoryUnique<Producible> factory;
 
 		WHEN("Default-constructed") {
 			REQUIRE(factory.IsUnique == true);
-			//REQUIRE(factory.GetOwner() == &producer);
 			REQUIRE(factory.GetReusable() == nullptr);
 			REQUIRE(not factory.GetHashmap());
          REQUIRE(factory.IsEmpty());

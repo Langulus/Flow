@@ -25,49 +25,55 @@
 namespace Langulus::Flow
 {
 
-   /// Nested AND/OR scope execution (discarding outputs)                     
-   /// TODO optimize for unneeded outputs                                     
-   ///   @param flow - the flow to execute                                    
-   ///   @param context - the environment in which flow will be executed      
-   ///   @param silent - whether or not to silence logging, in case we're     
-   ///      executing at compile-time, for example                            
-   ///   @return true of no errors occured                                    
-   /*bool Execute(const Many& flow, Many& context, const bool silent) {
-      Many output;
-      bool skipVerbs = false;
-      return Execute(flow, context, output, skipVerbs, silent);
-   }*/
-
    /// Nested AND/OR scope execution with output                              
    ///   @param flow - the flow to execute                                    
    ///   @param context - the environment in which scope will be executed     
    ///   @param output - [out] verb result will be pushed here                
+   ///   @param integrate - execution happens in two styles:                  
+   ///      1. integration - everything not executed will still be pushed to  
+   ///         output, preserving the hierarchy. useful when integrating verbs
+   ///      2. not integration - only unexecuted verbs will push to output,   
+   ///         useful for collecting side-effects when updating               
    ///   @param silent - whether or not to silence logging, in case we're     
    ///      executing at compile-time, for example                            
    ///   @return true of no errors occured                                    
-   bool Execute(const Many& flow, Many& context, Many& output, const bool silent) {
+   bool Execute(
+      const Many& flow, Many& context, Many& output,
+      const bool integrate, const bool silent
+   ) {
       bool skipVerbs = false;
-      return Execute(flow, context, output, skipVerbs, silent);
+      return Execute(flow, context, output, integrate, skipVerbs, silent);
    }
 
    /// Nested AND/OR scope execution with output                              
    ///   @param flow - the flow to execute                                    
    ///   @param context - the environment in which scope will be executed     
    ///   @param output - [out] verb result will be pushed here                
+   ///   @param integrate - execution happens in two styles:                  
+   ///      1. integration - everything not executed will still be pushed to  
+   ///         output, preserving the hierarchy. useful when integrating verbs
+   ///      2. not integration - only unexecuted verbs will push to output,   
+   ///         useful for collecting side-effects when updating               
    ///   @param skipVerbs - [in/out] whether to skip verbs after OR success   
    ///   @param silent - whether or not to silence logging, in case we're     
    ///      executing at compile-time, for example                            
    ///   @return true of no errors occured                                    
-   bool Execute(const Many& flow, Many& context, Many& output, bool& skipVerbs, const bool silent) {
+   bool Execute(
+      const Many& flow, Many& context, Many& output,
+      const bool integrate, bool& skipVerbs, const bool silent
+   ) {
       auto results = Many::FromState(flow);
       if (flow) {
-         VERBOSE_TAB("Executing scope: [", flow, ']');
+         if (integrate)
+            VERBOSE_TAB("Executing scope (integrating): [", flow, ']');
+         else
+            VERBOSE_TAB("Executing scope: [", flow, ']');
 
          try {
             if (flow.IsOr())
-               ExecuteOR(flow, context, results, skipVerbs, silent);
+               ExecuteOR(flow, context, results, integrate, skipVerbs, silent);
             else
-               ExecuteAND(flow, context, results, skipVerbs, silent);
+               ExecuteAND(flow, context, results, integrate, skipVerbs, silent);
          }
          catch (const Except::Flow&) {
             // Execution failed                                         
@@ -83,17 +89,25 @@ namespace Langulus::Flow
    ///   @param flow - the flow to execute                                    
    ///   @param context - the environment in which scope will be executed     
    ///   @param output - [out] verb result will be pushed here                
+   ///   @param integrate - execution happens in two styles:                  
+   ///      1. integration - everything not executed will still be pushed to  
+   ///         output, preserving the hierarchy. useful when integrating verbs
+   ///      2. not integration - only unexecuted verbs will push to output,   
+   ///         useful for collecting side-effects when updating               
    ///   @param skipVerbs - [in/out] whether to skip verbs after OR success   
    ///   @param silent - whether or not to silence logging, in case we're     
    ///      executing at compile-time, for example                            
    ///   @return true of no errors occured                                    
-   bool ExecuteAND(const Many& flow, Many& context, Many& output, bool& skipVerbs, const bool silent) {
+   bool ExecuteAND(
+      const Many& flow, Many& context, Many& output,
+      const bool integrate, bool& skipVerbs, const bool silent
+   ) {
       Count executed = 0;
       if (flow.IsDeep() and flow.IsDense()) {
          executed = flow.ForEach([&](const Many& block) {
             // Nest if deep                                             
             Many local;
-            if (not Execute(block, context, local, skipVerbs, silent)) {
+            if (not Execute(block, context, local, integrate, skipVerbs, silent)) {
                if (silent)
                   LANGULUS_THROW(Flow, "Deep AND failure");
                else
@@ -108,7 +122,7 @@ namespace Langulus::Flow
             [&](const Inner::Missing& missing) {
                // Nest if missing points                                
                Many local;
-               if (not Execute(missing.mContent, context, local, skipVerbs, silent)) {
+               if (not Execute(missing.mContent, context, local, integrate, skipVerbs, silent)) {
                   if (silent)
                      LANGULUS_THROW(Flow, "Missing point failure");
                   else
@@ -126,7 +140,7 @@ namespace Langulus::Flow
                }
 
                Many local;
-               if (not Execute(trait, context, local, skipVerbs, silent)) {
+               if (not Execute(trait, context, local, integrate, skipVerbs, silent)) {
                   if (silent)
                      LANGULUS_THROW(Flow, "Trait AND failure");
                   else
@@ -178,16 +192,18 @@ namespace Langulus::Flow
                );
 
                VERBOSE("Executing construct (verbs executed): ", local);
-               //if (constructIsMissing) {
-                  // Just propagate, if missing                         
+               if (constructIsMissing
+               or construct.GetType()->mProducerRetriever
+               or not construct.GetType()->mDescriptorConstructor) {
+                  // Just propagate if missing or not instantiatable at 
+                  // compile-time                                       
                   output.SmartPush(IndexBack, Abandon(local));
-                  //return;
-               //}
+                  return;
+               }
 
-               // A construct always means an implicit Verbs::Create    
-               // Try creating it in the current environment, it should 
-               // produce everything possible, including stateless ones 
-               /*Verbs::Create creator {&local};
+               // We can attempt an implicit Verbs::Create to make      
+               // the data at compile-time                              
+               Verbs::Create creator {&local};
                if (DispatchDeep<true, true, false>(context, creator))
                   output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
                else {
@@ -195,7 +211,7 @@ namespace Langulus::Flow
                      LANGULUS_THROW(Flow, "Construct creation failure");
                   else
                      LANGULUS_OOPS(Flow, "Construct creation failure: ", flow);
-               }*/
+               }
             },
             [&](const A::Verb& constVerb) {
                // Execute verbs                                         
@@ -235,7 +251,7 @@ namespace Langulus::Flow
          );
       }
 
-      if (not executed) {
+      if (not executed and integrate) {
          // If this is reached, then we had non-verb content            
          // Just propagate its contents                                 
          output.SmartPush(IndexBack, flow);
@@ -249,11 +265,19 @@ namespace Langulus::Flow
    ///   @param flow - the flow to execute                                    
    ///   @param context - the context in which scope will be executed         
    ///   @param output - [out] verb result will be pushed here                
+   ///   @param integrate - execution happens in two styles:                  
+   ///      1. integration - everything not executed will still be pushed to  
+   ///         output, preserving the hierarchy. useful when integrating verbs
+   ///      2. not integration - only unexecuted verbs will push to output,   
+   ///         useful for collecting side-effects when updating               
    ///   @param skipVerbs - [out] whether to skip verbs after OR success      
    ///   @param silent - whether or not to silence logging, in case we're     
    ///      executing at compile-time, for example                            
    ///   @return true of no errors occured                                    
-   bool ExecuteOR(const Many& flow, Many& context, Many& output, bool& skipVerbs, const bool silent) {
+   bool ExecuteOR(
+      const Many& flow, Many& context, Many& output,
+      const bool integrate, bool& skipVerbs, const bool silent
+   ) {
       Count executed = 0;
       bool localSkipVerbs = false;
 
@@ -261,7 +285,7 @@ namespace Langulus::Flow
          executed = flow.ForEach([&](const Many& block) {
             // Nest if deep                                             
             Many local;
-            if (Execute(block, context, local, localSkipVerbs, silent)) {
+            if (Execute(block, context, local, integrate, localSkipVerbs, silent)) {
                executed = true;
                output.SmartPush(IndexBack, Abandon(local));
             }
@@ -278,7 +302,7 @@ namespace Langulus::Flow
                }
 
                Many local;
-               if (Execute(trait, context, local, silent)) {
+               if (Execute(trait, context, local, integrate, silent)) {
                   executed = true;
                   output.SmartPush(IndexBack, Trait::From(trait.GetTrait(), Abandon(local)));
                }
@@ -317,16 +341,18 @@ namespace Langulus::Flow
                   }
                );
 
-               //if (constructIsMissing) {
-                  // Just propagate, if missing                         
+               if (constructIsMissing
+               or construct.GetType()->mProducerRetriever
+               or not construct.GetType()->mDescriptorConstructor) {
+                  // Just propagate if missing or not instantiatable at 
+                  // compile-time                                       
                   output.SmartPush(IndexBack, Abandon(local));
-                  //return;
-               //}
+                  return;
+               }
 
-               // A construct always means an implicit Verbs::Create    
-               // Try creating it in the current environment, it should 
-               // produce everything possible, including stateless ones 
-               /*Verbs::Create creator {&local};
+               // We can attempt an implicit Verbs::Create to make      
+               // the data at compile-time                              
+               Verbs::Create creator {&local};
                if (DispatchDeep<true, true, false>(context, creator))
                   output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
                else {
@@ -334,7 +360,7 @@ namespace Langulus::Flow
                      LANGULUS_THROW(Flow, "Construct creation failure");
                   else
                      LANGULUS_OOPS(Flow, "Construct creation failure: ", flow);
-               }*/
+               }
             },
             [&](const Verb& constVerb) {
                // Execute verbs                                         
@@ -362,7 +388,7 @@ namespace Langulus::Flow
 
       skipVerbs |= localSkipVerbs;
 
-      if (not executed) {
+      if (not executed and integrate) {
          // If this is reached, then we have non-verb flat content      
          // Just propagate it                                           
          output.SmartPush(IndexBack, flow);
@@ -390,7 +416,7 @@ namespace Langulus::Flow
 
       // Integrate the verb source to environment                       
       Many localSource;
-      if (not Execute(verb.GetSource(), context, localSource, silent)) {
+      if (not Execute(verb.GetSource(), context, localSource, true, silent)) {
          // It's considered error only if verb is not monocast          
          if (not silent)
             FLOW_ERRORS("Error at source of: ", verb);
@@ -402,7 +428,7 @@ namespace Langulus::Flow
 
       // Integrate the verb argument to the source                      
       Many localArgument;
-      if (not Execute(verb.GetArgument(), localSource, localArgument, silent)) {
+      if (not Execute(verb.GetArgument(), localSource, localArgument, true, silent)) {
          // It's considered error only if verb is not monocast          
          if (not silent)
             FLOW_ERRORS("Error at argument of: ", verb);

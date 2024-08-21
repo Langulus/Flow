@@ -12,7 +12,7 @@
 #include "inner/Fork.hpp"
 #include "Temporal.hpp"
 
-#if 1
+#if 0
    #define VERBOSE_TEMPORAL(...)       Logger::Verbose(*this, ": ", __VA_ARGS__)
    #define VERBOSE_TEMPORAL_TAB(...)   const auto tab = Logger::VerboseTab(*this, ": ", __VA_ARGS__)
 #else
@@ -133,7 +133,7 @@ bool Temporal::Update(Time dt, Many& sideffects) {
          "Flow before execution: ", mPriorityStack);
 
       Many unusedContext;
-      Execute(mPriorityStack, unusedContext, sideffects);
+      Execute(mPriorityStack, unusedContext, sideffects, false);
 
       VERBOSE_TEMPORAL(Logger::Purple,
          "Flow after execution: ", mPriorityStack);
@@ -443,6 +443,7 @@ bool Temporal::PushFutures(const Many& scope, Many& stack) {
          return Loop::Continue;
       },
       [&](Inner::MissingFuture& future) {
+         VERBOSE_TEMPORAL_TAB("Pushing ", scope, " to ", future);
          atLeastOneSuccess |= future.Push(scope);
          // Continue linking only if the stack is branched              
          return not (stack.IsOr() and atLeastOneSuccess);
@@ -482,6 +483,7 @@ void Temporal::Link(const Many& scope) {
          // but also makes the flow impure, because it allows it to be  
          // affacted by external influence.                             
          scope.ForEach([&](const Many& sub) {
+            VERBOSE_TEMPORAL_TAB("Pushing sparse block ", sub, " to ", mPriorityStack);
             LANGULUS_ASSERT(
                PushFutures(&sub, mPriorityStack),
                Flow, "Couldn't push to future"

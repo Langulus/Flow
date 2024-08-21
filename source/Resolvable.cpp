@@ -75,7 +75,7 @@ namespace Langulus::Flow
    Many Resolvable::Run(const Many& scope) {
       Many context {GetBlock()};
       Many output;
-      if (not Execute(scope, context, output)) {
+      if (not Execute(scope, context, output, false)) {
          Logger::Error("Can't execute scope: ", scope);
          return {};
       }

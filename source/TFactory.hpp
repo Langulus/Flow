@@ -48,17 +48,10 @@ namespace Langulus::Flow
    public:
       LANGULUS(TYPED) T;
       using Base = Anyness::THive<T>;
-      //using Producer = ProducerOf<T>;
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
 
    protected:
       using typename Base::Cell;
-
-      // Each factory is bound to a producer instance                   
-      // Every produced T will also be bound to that instance           
-      // If factory moved, all contents will be remapped to the new     
-      // instance                                                       
-      //Producer* mFactoryOwner {};
 
       // A hash map for fast retrieval of elements                      
       TUnorderedMap<Hash, TMany<Cell*>> mHashmap;
@@ -78,8 +71,6 @@ namespace Langulus::Flow
       TFactory(const TFactory&) = delete;
       TFactory(TFactory&&) = delete;
 
-      //TFactory() = default;
-      //TFactory(Producer*);
       TFactory& operator = (TFactory&&) noexcept;
       ~TFactory();
 
@@ -91,10 +82,9 @@ namespace Langulus::Flow
 
       IF_SAFE(void Dump() const);
 
-   #if LANGULUS(TESTING)
-      //auto  GetOwner() const noexcept { return mFactoryOwner; }
-      auto& GetHashmap() const { return mHashmap; }
-   #endif
+      #if LANGULUS(TESTING)
+         auto& GetHashmap() const { return mHashmap; }
+      #endif
    };
 
    template<class T>

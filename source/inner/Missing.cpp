@@ -107,8 +107,20 @@ bool Missing::Push(const Many& content) {
          // this flow. This makes the flow impure, because it can be    
          // affected from the outside.                                  
          content.ForEach([&](const Many& subcontent) {
-            mContent << &subcontent;
-            atLeastOneSuccess = true;
+            if (not mFilter) {
+               mContent << &subcontent;
+               atLeastOneSuccess = true;
+            }
+            else if (subcontent.GetType()) {
+               for (const auto& type : mFilter) {
+                  if (not subcontent.GetType()->CastsTo<false>(type))
+                     continue;
+
+                  mContent << &subcontent;
+                  atLeastOneSuccess = true;
+                  break;
+               }
+            }
          });
       }
 

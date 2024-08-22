@@ -509,9 +509,9 @@ namespace Langulus::Flow
       while (progress < input.GetCount()) {
          const auto relevant = input.RightOf(progress);
          if (KeywordParser::Peek(relevant)
-            or NumberParser::Peek(relevant)
-            or SkippedParser::Peek(relevant)
-            or PeekBuiltin(relevant) != Operator::NoOperator)
+         or NumberParser::Peek(relevant)
+         or SkippedParser::Peek(relevant)
+         or PeekBuiltin(relevant) != Operator::NoOperator)
             break;
          ++progress;
       }
@@ -523,7 +523,7 @@ namespace Langulus::Flow
    }
 
    /// Parse op-expression, operate on current output (lhs) and content (rhs) 
-   /// Beware, that charge-expressions are not handled here                   
+   ///   @attention charge-expressions are not handled here!                  
    ///   @param op - the built-in operator if any, or Reflected               
    ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] the operator expression will go here           
@@ -552,9 +552,14 @@ namespace Langulus::Flow
          switch (op) {
             // Handle built-in operators first                          
          case Operator::OpenScope:
-            return progress + ParseContent(relevant, lhs, optimize);
+         case Operator::OpenScopeAlt:
+            return progress + ParseContent(op, relevant, lhs, optimize);
          case Operator::CloseScope:
+         case Operator::CloseScopeAlt:
             return 0;
+         case Operator::OpenComment:
+         case Operator::LineComment:
+            return progress + ParseComment(op, relevant);
          case Operator::OpenString:
          case Operator::OpenStringAlt:
          case Operator::OpenCode:
@@ -565,69 +570,76 @@ namespace Langulus::Flow
          case Operator::Past:
          case Operator::Future:
             return progress + ParsePhase(op, lhs);
-         case Operator::Constant:
-            return progress + ParseConst(lhs);
+         case Operator::Null:
+            return progress + 4;
+         case Operator::SelectThing:
+         case Operator::SelectIdea:
+            return progress + ParseKeyword(op, relevant, lhs);
          default:
             PRETTY_ERROR("Unhandled built-in operator");
          }
       }
       else if (op == Operator::ReflectedOperator) {
-      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         // Handle a reflected operator                                 
-         const auto word = Isolate(input);
-         const auto found = RTTI::GetOperator(word);
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            // Handle a reflected operator                              
+            const auto word = Isolate(input);
+            const auto found = RTTI::GetOperator(word);
 
-         if (found->mPrecedence and priority >= found->mPrecedence) {
-            VERBOSE(Logger::Yellow,
-               "Delaying reflected operator [", found,
-               "] due to a prioritized operation");
-            return 0;
-         }
+            if (found->mPrecedence and priority >= found->mPrecedence) {
+               VERBOSE(Logger::Yellow,
+                  "Delaying reflected operator [", found,
+                  "] due to a prioritized operation");
+               return 0;
+            }
 
-         VERBOSE_TAB("Parsing reflected operator: [", word, "] (", found, ")");
-         progress += word.size();
-         const Code relevant = input.RightOf(progress);
-         auto operation = Verb::FromMeta(found);
-         if (CompareOperators(word, found->mOperatorReverse))
-            operation.SetMass(-1);
+            VERBOSE_TAB("Parsing reflected operator: [", word, "] (", found, ")");
+            progress += word.size();
+            const Code relevant = input.RightOf(progress);
+            auto operation = Verb::FromMeta(found);
+            if (CompareOperators(word, found->mOperatorReverse))
+               operation.SetMass(-1);
 
-         return progress + ParseReflected(operation, relevant, lhs, optimize);
-      #else    //LANGULUS_FEATURE(MANAGED_REFLECTION)
-         PRETTY_ERROR("Can't parse reflected operator, managed reflection feature is disabled");
-      #endif   //LANGULUS_FEATURE(MANAGED_REFLECTION)
+            return progress + ParseReflected(operation, relevant, lhs, optimize);
+         #else    //LANGULUS_FEATURE(MANAGED_REFLECTION)
+            PRETTY_ERROR("Can't parse reflected operator, managed reflection feature is disabled");
+         #endif   //LANGULUS_FEATURE(MANAGED_REFLECTION)
       }
       else {
-      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         // Handle a reflected verb                                     
-         const auto word = Isolate(input);
-         const auto found = RTTI::GetMetaVerb(word);
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            // Handle a reflected verb                                  
+            const auto word = Isolate(input);
+            const auto found = RTTI::GetMetaVerb(word);
 
-         if (found->mPrecedence and priority >= found->mPrecedence) {
-            VERBOSE(Logger::Yellow,
-               "Delaying reflected operator [", found, 
-               "] due to a prioritized operation");
-            return 0;
-         }
+            if (found->mPrecedence and priority >= found->mPrecedence) {
+               VERBOSE(Logger::Yellow,
+                  "Delaying reflected operator [", found, 
+                  "] due to a prioritized operation");
+               return 0;
+            }
 
-         progress += word.size();
-         VERBOSE_TAB("Parsing reflected verb: [", word, "] (", found, ")");
-         const Code relevant = input.RightOf(progress);
-         auto operation = Verb::FromMeta(found);
-         if (CompareOperators(word, found->mTokenReverse))
-            operation.SetMass(-1);
+            progress += word.size();
+            VERBOSE_TAB("Parsing reflected verb: [", word, "] (", found, ")");
+            const Code relevant = input.RightOf(progress);
+            auto operation = Verb::FromMeta(found);
+            if (CompareOperators(word, found->mTokenReverse))
+               operation.SetMass(-1);
 
-         return progress + ParseReflected(operation, relevant, lhs, optimize);
-      #else    //LANGULUS_FEATURE(MANAGED_REFLECTION)
-         PRETTY_ERROR("Can't parse reflected verb, managed reflection feature is disabled");
-      #endif   //LANGULUS_FEATURE(MANAGED_REFLECTION)
+            return progress + ParseReflected(operation, relevant, lhs, optimize);
+         #else    //LANGULUS_FEATURE(MANAGED_REFLECTION)
+            PRETTY_ERROR("Can't parse reflected verb, managed reflection feature is disabled");
+         #endif   //LANGULUS_FEATURE(MANAGED_REFLECTION)
       }
    }
 
    /// Parse a content scope                                                  
+   ///   @param op - the content opening operator (used for ranges)           
    ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] parsed content goes here (lhs)                 
+   ///   @param optimize - attempt compile-time execution                     
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseContent(const Code& input, Many& lhs, bool optimize) {
+   Offset Code::OperatorParser::ParseContent(
+      Code::Operator op, const Code& input, Many& lhs, bool optimize
+   ) {
       Offset progress = 0;
 
       // Can define contents for one element at a time                  
@@ -637,14 +649,20 @@ namespace Langulus::Flow
       // We don't know what to expect, so we attempt blind parse        
       Many rhs;
       progress = UnknownParser::Parse(input, rhs, 0, optimize);
-      if (not input.RightOf(progress).StartsWithOperator(Operator::CloseScope))
-         PRETTY_ERROR("Missing closing bracket");
 
       // Account for the closing content scope                          
-      progress += SerializationRules::Operators[Operator::CloseScope].mToken.size();
+      const auto remaining = input.RightOf(progress);
+      if (remaining.StartsWithOperator(Operator::CloseScope))
+         progress += SerializationRules::Operators[Operator::CloseScope].mToken.size();
+      else if (remaining.StartsWithOperator(Operator::CloseScopeAlt))
+         progress += SerializationRules::Operators[Operator::CloseScopeAlt].mToken.size();
+      else
+         PRETTY_ERROR("Missing closing bracket");
 
       // Insert to new content in rhs to the already available lhs      
       InsertContent(rhs, lhs);
+
+      //TODO open/closed ranges depending on op, push markers to lhs depending on op and endop
       return progress;
    }
 
@@ -743,6 +761,17 @@ namespace Langulus::Flow
          Logger::Error("Content to insert is: ", rhs, " (", rhs.GetToken(), ')');
          LANGULUS_THROW(Flow, "Syntax error - bad scope");
       }
+   }
+
+   /// Comment scope (or line) skipper                                        
+   ///   @param op - the starting operator                                    
+   ///   @param input - the code to parse                                     
+   ///   @return number of parsed characters                                  
+   Offset Code::OperatorParser::ParseComment(
+      const Code::Operator op, const Code& input
+   ) {
+      TODO();
+      return 0;
    }
 
    /// String/character/code scope                                            
@@ -877,13 +906,18 @@ namespace Langulus::Flow
          lhs.MakeFuture();
       return 0;
    }
-
-   /// Const contents                                                         
+   
+   /// Keyword parser (for after # or ## operators)                           
+   ///   @param op - the operator                                             
    ///   @param input - the code to parse                                     
-   ///   @param lhs - [in/out] constant content goes here                     
+   ///   @param lhs - [in/out] phased content goes here                       
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseConst(Many& lhs) {
-      lhs.MakeConst();
+   Offset Code::OperatorParser::ParseKeyword(
+      const Code::Operator op, const Code& input, Many& lhs
+   ) {
+      //TODO if # parse keyword as string or scoped content, then do ?.content
+      //TODO if ## parse keyword as string or scoped content, then do ? create Idea(content), it will reuse the idea if already created
+      TODO();
       return 0;
    }
 

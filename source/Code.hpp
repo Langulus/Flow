@@ -147,11 +147,12 @@ namespace Langulus::Flow
          NOD() static Token Isolate(const Code&) noexcept;
 
       private:
-         NOD() static Offset ParseContent(const Code&, Many&, bool optimize);
+         NOD() static Offset ParseContent(Code::Operator, const Code&, Many&, bool optimize);
+         NOD() static Offset ParseComment(Code::Operator, const Code&);
          NOD() static Offset ParseString(Code::Operator, const Code&, Many&);
          NOD() static Offset ParseBytes(const Code&, Many&);
+         NOD() static Offset ParseKeyword(Code::Operator, const Code&, Many&);
          NOD() static Offset ParsePhase(Code::Operator, Many&);
-         NOD() static Offset ParseConst(Many&);
          NOD() static Offset ParseReflected(Verb&, const Code&, Many&, bool optimize);
 
          static void InsertContent(Many&, Many&);

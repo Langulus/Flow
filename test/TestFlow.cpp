@@ -143,9 +143,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       }
    }
 
-   GIVEN("The script: `thing` associate [Entity(past?, future?)]") {
-      const auto code = "`thing` associate [Entity(past?, future?)]"_code;
-      const Many required = Verbs::Associate {"Entity(past?, future?)"_code}
+   GIVEN("The script: `thing` associate { Entity(past?, future?) }") {
+      const auto code = "`thing` associate { Entity(past?, future?) }"_code;
+      const Many required = Verbs::Associate {" Entity(past?, future?) "_code}
          .SetSource("thing");
 
       WHEN("Parsed") {
@@ -179,8 +179,8 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       }
    }
 
-   GIVEN("The script: ',' = ([number? >< number??] or single or \"and\")") {
-      const Code code = "',' = ([number? >< number??] or single or \"and\")";
+   GIVEN("The script: ',' = ({number? >< number??} or single or \"and\")") {
+      const Code code = "',' = ({number? >< number??} or single or \"and\")";
       Many argument {
          "number? >< number??"_code, 
          IndexSingle, 

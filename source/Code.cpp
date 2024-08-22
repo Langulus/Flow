@@ -917,7 +917,7 @@ namespace Langulus::Flow
          op.Multicast(false);
          Many output;
          Many scope {op};
-         if (Execute(scope, lhs, output, true)) {
+         if (Execute(scope, lhs, output, false, true)) {
             // The verb was executed at compile-time, so directly       
             // substitute LHS with the result                           
             VERBOSE("Verb was executed at compile time: ", output);

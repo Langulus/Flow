@@ -523,6 +523,7 @@ namespace Langulus::Flow
    }
 
    /// Parse op-expression, operate on current output (lhs) and content (rhs) 
+   ///   @attention skippable expressions are not handled here!               
    ///   @attention charge-expressions are not handled here!                  
    ///   @param op - the built-in operator if any, or Reflected               
    ///   @param input - the code to parse                                     
@@ -557,9 +558,6 @@ namespace Langulus::Flow
          case Operator::CloseScope:
          case Operator::CloseScopeAlt:
             return 0;
-         case Operator::OpenComment:
-         case Operator::LineComment:
-            return progress + ParseComment(op, relevant);
          case Operator::OpenString:
          case Operator::OpenStringAlt:
          case Operator::OpenCode:
@@ -763,17 +761,6 @@ namespace Langulus::Flow
       }
    }
 
-   /// Comment scope (or line) skipper                                        
-   ///   @param op - the starting operator                                    
-   ///   @param input - the code to parse                                     
-   ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseComment(
-      const Code::Operator op, const Code& input
-   ) {
-      TODO();
-      return 0;
-   }
-
    /// String/character/code scope                                            
    ///   @param op - the starting operator                                    
    ///   @param input - the code to parse                                     
@@ -819,7 +806,7 @@ namespace Langulus::Flow
             break;
          }
          case Operator::OpenCode: {
-            // Finish up a [code]                                       
+            // Finish up a {code}                                       
             // Nested code scopes are handled gracefully                
             if (relevant.StartsWithOperator(Operator::OpenCode))
                ++depth;
@@ -910,15 +897,57 @@ namespace Langulus::Flow
    /// Keyword parser (for after # or ## operators)                           
    ///   @param op - the operator                                             
    ///   @param input - the code to parse                                     
-   ///   @param lhs - [in/out] phased content goes here                       
+   ///   @param lhs - [in/out] selected idea goes here                        
    ///   @return number of parsed characters                                  
    Offset Code::OperatorParser::ParseKeyword(
       const Code::Operator op, const Code& input, Many& lhs
    ) {
-      //TODO if # parse keyword as string or scoped content, then do ?.content
-      //TODO if ## parse keyword as string or scoped content, then do ? create Idea(content), it will reuse the idea if already created
-      TODO();
-      return 0;
+      Offset progress = 0;
+      if (SkippedParser::Peek(input)) {
+         PRETTY_ERROR(
+            "Syntax error - # and ## should be followed "
+            "by either a keyword, or a scope"
+         );
+      }
+
+      // Try parsing a keyword                                          
+      Many content;
+      const auto keyword = KeywordParser::Isolate(input);
+      if (keyword.empty()) {
+         // Try parsing a scope?                                        
+         const auto next_op = OperatorParser::Peek(input);
+         if (next_op != Operator::OpenScope and next_op != Operator::OpenScopeAlt) {
+            PRETTY_ERROR(
+               "Syntax error - # and ## should be followed by "
+               "either a keyword, or a scope"
+            );
+         }
+
+         // Scoped data was found                                       
+         progress += OperatorParser::Parse(next_op, input, content, 0, true);
+      }
+      else {
+         // If reached, then a keyword was found                        
+         progress += keyword.size();
+         content << Text {keyword};
+      }
+
+      if (op == Operator::SelectIdea) {
+         // Implicitly create/select an idea                            
+         Verbs::Create verb {Construct::FromToken("Idea", Abandon(content))};
+         lhs.SmartPush(IndexBack, Abandon(verb));
+      }
+      else if (op == Operator::SelectThing) {
+         // Implicitly select an object by name                         
+         Verbs::Select verb {Construct::FromToken("Thing", Abandon(content))};
+         lhs.SmartPush(IndexBack, Abandon(verb));
+      }
+      else {
+         PRETTY_ERROR("Not a supported keyword operator: ",
+            SerializationRules::Operators[op].mToken);
+      }
+
+      return progress;
    }
 
    /// Execute a reflected verb operator                                      

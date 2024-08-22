@@ -148,7 +148,6 @@ namespace Langulus::Flow
 
       private:
          NOD() static Offset ParseContent(Code::Operator, const Code&, Many&, bool optimize);
-         NOD() static Offset ParseComment(Code::Operator, const Code&);
          NOD() static Offset ParseString(Code::Operator, const Code&, Many&);
          NOD() static Offset ParseBytes(const Code&, Many&);
          NOD() static Offset ParseKeyword(Code::Operator, const Code&, Many&);

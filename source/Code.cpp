@@ -17,6 +17,7 @@
 #include "verbs/Catenate.inl"
 #include "verbs/Conjunct.inl"
 #include "verbs/Interpret.inl"
+#include "verbs/Compare.inl"
 
 LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
 
@@ -89,6 +90,7 @@ namespace Langulus::Flow
       (void)MetaOf<Verbs::Catenate>();
       (void)MetaOf<Verbs::Conjunct>();
       (void)MetaOf<Verbs::Interpret>();
+      (void)MetaOf<Verbs::Compare>();
 
       // Parse                                                          
       Many output;

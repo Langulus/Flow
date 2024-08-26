@@ -11,7 +11,7 @@
 #define TEMPLATE()   template<class T, FactoryUsage USAGE>
 #define FACTORY()    TFactory<T, USAGE>
 
-#if 0
+#if 1
    #define VERBOSE_FACTORY(...) Logger::Verbose(__VA_ARGS__)
 #else
    #define VERBOSE_FACTORY(...) LANGULUS(NOOP)
@@ -73,7 +73,7 @@ namespace Langulus::Flow
       const auto hash = descriptor.GetHash();
       const auto found = mHashmap.FindIt(hash);
       if (found) {
-         for (auto cell : *found.mValue) {
+         for (auto cell : found.GetValue()) {
             if (cell->mData.GetNeat() != descriptor)
                continue;
             return cell;
@@ -225,7 +225,7 @@ namespace Langulus::Flow
       const auto hash = result->mData.GetHash();
       const auto found = mHashmap.FindIt(hash);
       if (found)
-         *found.mValue << result;
+         found.GetValue() << result;
       else
          mHashmap.Insert(hash, result);
       return &result->mData;

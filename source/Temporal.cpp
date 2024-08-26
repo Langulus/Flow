@@ -193,7 +193,7 @@ void Temporal::Merge(const Temporal& other) {
          found = mTimeStack.FindIt(pair.mKey);
       }
 
-      found.mValue->Merge(pair.mValue);
+      found.GetValue().Merge(pair.mValue);
    };
 
    // Merge frequency stacks                                            
@@ -205,7 +205,7 @@ void Temporal::Merge(const Temporal& other) {
          found = mFrequencyStack.FindIt(pair.mKey);
       }
 
-      found.mValue->Merge(pair.mValue);
+      found.GetValue().Merge(pair.mValue);
    };
 }
 
@@ -534,7 +534,7 @@ void Temporal::Link(const Many& scope) {
                   found = mTimeStack.FindIt(v.GetTime());
                }
 
-               found.mValue->LinkRelative(local, v);
+               found.GetValue().LinkRelative(local, v);
             }
             else if (v.GetRate()) {
                // Verb is rated, forward it to the frequency stack      
@@ -548,7 +548,7 @@ void Temporal::Link(const Many& scope) {
                }
 
                LANGULUS_ASSERT(
-                  found.mValue->PushFutures(local, found.mValue->mPriorityStack),
+                  found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
                   Flow, "Couldn't push to future"
                );
             }
@@ -595,7 +595,7 @@ void Temporal::LinkRelative(const Many& scope, const Verb& override) {
                }
 
                LANGULUS_ASSERT(
-                  found.mValue->PushFutures(local, found.mValue->mPriorityStack),
+                  found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
                   Flow, "Couldn't push to future"
                );
             }
@@ -608,7 +608,7 @@ void Temporal::LinkRelative(const Many& scope, const Verb& override) {
                }
 
                LANGULUS_ASSERT(
-                  found.mValue->PushFutures(local, found.mValue->mPriorityStack),
+                  found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
                   Flow, "Couldn't push to future"
                );
             }
@@ -634,7 +634,7 @@ void Temporal::LinkRelative(const Many& scope, const Verb& override) {
                }
 
                LANGULUS_ASSERT(
-                  found.mValue->PushFutures(local, found.mValue->mPriorityStack),
+                  found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
                   Flow, "Couldn't push to future"
                );
             }
@@ -647,7 +647,7 @@ void Temporal::LinkRelative(const Many& scope, const Verb& override) {
                }
 
                LANGULUS_ASSERT(
-                  found.mValue->PushFutures(local, found.mValue->mPriorityStack),
+                  found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
                   Flow, "Couldn't push to future"
                );
             }
@@ -681,7 +681,7 @@ void Temporal::LinkRelative(const Many& scope, const Verb& override) {
                   found = mTimeStack.FindIt(time);
                }
 
-               found.mValue->LinkRelative(local, localOverride);
+               found.GetValue().LinkRelative(local, localOverride);
             }
             else if (localOverride.GetRate()) {
                // Verb is rated, forward it to the frequency stack      
@@ -698,7 +698,7 @@ void Temporal::LinkRelative(const Many& scope, const Verb& override) {
                }
 
                LANGULUS_ASSERT(
-                  found.mValue->PushFutures(local, found.mValue->mPriorityStack),
+                  found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
                   Flow, "Couldn't push to future"
                );
             }

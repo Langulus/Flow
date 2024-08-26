@@ -132,7 +132,7 @@ bool Missing::Push(const Many& content) {
    // Let's check if there's a filter                                   
    if (not mFilter) {
       // No filter, just push                                           
-      if (not content.template CastsTo<Verb, true>()) {
+      /*if (not content.template CastsTo<Verb, true>()) {
          // Always try interpreting scope as verbs                      
          Verbs::InterpretAs<Verb> interpreter;
          interpreter.ShortCircuit(false);
@@ -144,7 +144,7 @@ bool Missing::Push(const Many& content) {
                interpreter.GetOutput(), NoPriority);
             return Push(compiled);
          }
-      }
+      }*/
 
       // Scope is either verbs or something else, just push             
       Many linked;

@@ -240,7 +240,7 @@ namespace Langulus::Flow
       // Iterate elements in the current context                        
       for (Count i = 0; i < context.GetCount(); ++i) {
          //verb.SetSource(context.GetElement(i));
-         Many ith = context.GetElement(i);
+         auto ith = context.GetElement(i);
          if constexpr (RESOLVE)
             ith = ith.GetResolved();
          else

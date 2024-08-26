@@ -19,13 +19,11 @@ SCENARIO("Test factories", "[factory]") {
 	GIVEN("A factory with default usage") {
       TFactory<Producible> factory;
 
-		WHEN("Default-constructed") {
-			REQUIRE(factory.IsUnique == false);
-			REQUIRE(factory.GetReusable() == nullptr);
-			REQUIRE(not factory.GetHashmap());
-			REQUIRE(factory.IsEmpty());
-			REQUIRE(factory.GetType() == MetaOf<Producible>());
-		}
+		REQUIRE(factory.IsUnique == false);
+		REQUIRE(factory.GetReusable() == nullptr);
+		REQUIRE(not factory.GetHashmap());
+		REQUIRE(factory.IsEmpty());
+		REQUIRE(factory.GetType() == MetaOf<Producible>());
 
 		WHEN("Two default elements produced") {
          const auto descriptor = Construct::From<Producible>();
@@ -39,7 +37,7 @@ SCENARIO("Test factories", "[factory]") {
 			REQUIRE(creator.IsDone());
          REQUIRE(out1.GetCount() == 1);
          REQUIRE(out1.IsExact<Producible*>());
-         REQUIRE(out1.As<Producible*>()->Reference(0) == 2);
+         REQUIRE(out1.As<Producible*>()->Reference(0) == 3);
          REQUIRE(out1.IsSparse());
 
 			creator.Undo();
@@ -49,7 +47,7 @@ SCENARIO("Test factories", "[factory]") {
 			auto out2 = creator.GetOutput();
 			REQUIRE(out2.GetCount() == 1);
 			REQUIRE(out2.IsExact<Producible*>());
-         REQUIRE(out2.As<Producible*>()->Reference(0) == 2);
+         REQUIRE(out2.As<Producible*>()->Reference(0) == 3);
          REQUIRE(out2.IsSparse());
 
          REQUIRE(factory.GetReusable() == factory.GetFrames()[0].GetRaw() + 2);
@@ -75,13 +73,11 @@ SCENARIO("Test factories", "[factory]") {
 	GIVEN("A factory with unique usage") {
       TFactoryUnique<Producible> factory;
 
-		WHEN("Default-constructed") {
-			REQUIRE(factory.IsUnique == true);
-			REQUIRE(factory.GetReusable() == nullptr);
-			REQUIRE(not factory.GetHashmap());
-         REQUIRE(factory.IsEmpty());
-         REQUIRE(factory.GetType() == MetaOf<Producible>());
-		}
+		REQUIRE(factory.IsUnique == true);
+		REQUIRE(factory.GetReusable() == nullptr);
+		REQUIRE(not factory.GetHashmap());
+      REQUIRE(factory.IsEmpty());
+      REQUIRE(factory.GetType() == MetaOf<Producible>());
 
 		WHEN("Two default elements produced") {
          const auto descriptor = Construct::From<Producible>();
@@ -100,7 +96,7 @@ SCENARIO("Test factories", "[factory]") {
 			REQUIRE(creator.IsDone());
 			REQUIRE(out1.GetCount() == 1);
 			REQUIRE(out1.IsExact<Producible*>());
-         REQUIRE(out1.As<Producible*>()->Reference(0) == 3);
+         REQUIRE(out1.As<Producible*>()->Reference(0) == 4);
          REQUIRE(out1.IsSparse());
          REQUIRE(out1 == out2);
 
@@ -117,24 +113,26 @@ SCENARIO("Test factories", "[factory]") {
 
          prototype.Reference(-1);
 		}
-
+      
 		WHEN("Two elements produced via descriptors") {
          TMany<Producer> context;
          context.New(1);
 
          const auto descriptor = Construct::From<Producible>(
-            Traits::Parent(&context[0]));
+            Traits::Parent(&context[0]),
+            "test"_text
+         );
 			Verbs::Create creator {&descriptor};
          const Producible prototype {&producer, descriptor.GetDescriptor()};
 
 			factory.Create(&producer, creator);
 			auto out1 = creator.GetOutput();
-         REQUIRE(out1.As<Producible*>()->Reference(0) == 2);
+         REQUIRE(out1.As<Producible*>()->Reference(0) == 3);
 
 			creator.Undo();
 			factory.Create(&producer, creator);
 			auto out2 = creator.GetOutput();
-         REQUIRE(out2.As<Producible*>()->Reference(0) == 3);
+         REQUIRE(out2.As<Producible*>()->Reference(0) == 4);
 
          // Parent traits shouldn't participate in hashing              
 			const auto hash = descriptor.GetDescriptor().GetHash();
@@ -144,7 +142,7 @@ SCENARIO("Test factories", "[factory]") {
 			REQUIRE(creator.IsDone());
 			REQUIRE(out1.GetCount() == 1);
 			REQUIRE(out1.IsExact<Producible*>());
-         REQUIRE(out1.As<Producible*>()->Reference(0) == 3);
+         REQUIRE(out1.As<Producible*>()->Reference(0) == 4);
          REQUIRE(out1.IsSparse());
          REQUIRE(out1 == out2);
 

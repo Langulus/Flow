@@ -55,7 +55,7 @@ namespace Langulus::Flow
    ///   @return the static memory block representing this instance           
    Block<> Resolvable::GetBlock() const noexcept {
       return {
-         DataState::Static, mClassType, 1,
+         DataState::Default, mClassType, 1,
          const_cast<void*>(mClassPointer)
       };
    }

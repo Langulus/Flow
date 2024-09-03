@@ -914,12 +914,16 @@ namespace Langulus::Flow
 
       // Try parsing a keyword                                          
       Many content;
-      content.AddState(DataState::Tracked);
       const auto keyword = KeywordParser::Isolate(input);
       if (keyword.empty()) {
          // Try parsing a scope?                                        
          const auto next_op = OperatorParser::Peek(input);
-         if (next_op != Operator::OpenScope and next_op != Operator::OpenScopeAlt) {
+         switch (next_op) {
+         case Operator::OpenScope:     case Operator::OpenScopeAlt:
+         case Operator::OpenString:    case Operator::OpenStringAlt:
+         case Operator::OpenCharacter: case Operator::OpenCode:
+            break;
+         default:
             PRETTY_ERROR(
                "Syntax error - # and ## should be followed by "
                "either a keyword, or a scope"

@@ -708,8 +708,22 @@ void Temporal::LinkRelative(const Many& scope, const Verb& override) {
                TMany<Verb> local = v;
                local[0].SetMass(localOverride.GetMass());
                local[0].SetPriority(localOverride.GetPriority());
-               if (not local[0].GetSource())
+
+               // Always push any valid source to the future, so that   
+               // missing past can get satisfied by it                  
+               if (override.GetSource()) {
+                  LANGULUS_ASSERT(
+                     PushFutures(override.GetSource(), mPriorityStack),
+                     Flow, "Couldn't push to future"
+                  );
+               }
+
+               /*
+               if (not local[0].GetSource()) {
+                  // Directly substitute missing sources                
+                  //TODO fill missing only to allow for explicit stateless execution?
                   local[0].SetSource(localOverride.GetSource());
+               }*/
 
                LANGULUS_ASSERT(
                   PushFutures(local, mPriorityStack),

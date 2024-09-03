@@ -11,7 +11,7 @@
 #include "../verbs/Do.inl"
 #include "../verbs/Interpret.inl"
 
-#if 0
+#if 1
    #define VERBOSE_MISSING_POINT(...)     Logger::Verbose(__VA_ARGS__)
    #define VERBOSE_MISSING_POINT_TAB(...) const auto tabs = Logger::VerboseTab(__VA_ARGS__)
    #define VERBOSE_FUTURE(...)            Logger::Verbose(__VA_ARGS__)
@@ -102,13 +102,13 @@ bool Missing::Push(const Many& content) {
          });
       }
       else {
-         // Sparse blocks are always inserted as-is                     
+         // Sparse blocks are always inserted as-is, and never repeated 
          // They are never linked, so not to affect contents outside    
          // this flow. This makes the flow impure, because it can be    
          // affected from the outside.                                  
          content.ForEach([&](const Many& subcontent) {
             if (not mFilter) {
-               mContent << &subcontent;
+               mContent <<= &subcontent;
                atLeastOneSuccess = true;
             }
             else if (subcontent.GetType()) {
@@ -116,7 +116,7 @@ bool Missing::Push(const Many& content) {
                   if (not subcontent.GetType()->CastsTo<false>(type))
                      continue;
 
-                  mContent << &subcontent;
+                  mContent <<= &subcontent;
                   atLeastOneSuccess = true;
                   break;
                }
@@ -126,33 +126,39 @@ bool Missing::Push(const Many& content) {
 
       return atLeastOneSuccess;
    }
+   else if (mFilter.IsPast() and content.template CastsTo<A::Verb>()) {
+      //TODO orness
+      
+      // Verbs are allowed to be pushed to past points only if points   
+      // are greater precedence. Otherwise, it is their outputs (if any)
+      // that get inserted.                                             
+      content.ForEach([&](const Verb& v) {
+         if (mPriority != NoPriority and v.GetPriority() < mPriority) {
+            // Allowed to be pushed                                     
+            atLeastOneSuccess |= Push(v);
+         }
+         else if (v.IsDone() and v.GetOutput()) {
+            // Push results instead                                     
+            atLeastOneSuccess |= Push(v.GetOutput());
+         }
+      });
+
+      return atLeastOneSuccess;
+   }
 
    //                                                                   
    // If reached, we're pushing flat data                               
    // Let's check if there's a filter                                   
    if (not mFilter) {
-      // No filter, just push                                           
-      /*if (not content.template CastsTo<Verb, true>()) {
-         // Always try interpreting scope as verbs                      
-         Verbs::InterpretAs<Verb> interpreter;
-         interpreter.ShortCircuit(false);
-
-         if (DispatchDeep(content, interpreter)) {
-            // Something was interpreted to verbs                       
-            // Compile and push it                                      
-            const auto compiled = Temporal::Compile(
-               interpreter.GetOutput(), NoPriority);
-            return Push(compiled);
-         }
-      }*/
-
-      // Scope is either verbs or something else, just push             
+      // Fill any missing points with whatever is available             
       Many linked;
       try { linked = Link(content, mContent); }
       catch (const Except::Link&) { return false; }
 
       if (linked) {
-         mContent << Abandon(linked);
+         // Avoid duplications if new content is sparse                 
+         if (linked.IsSparse()) mContent <<= Abandon(linked);
+         else                   mContent <<  Abandon(linked);
          VERBOSE_MISSING_POINT("Resulting contents: ", mContent);
          return true;
       }
@@ -161,21 +167,16 @@ bool Missing::Push(const Many& content) {
 
    //                                                                   
    // Filters are available, interpret source as requested              
-   //TODO Always add an interpretation to verbs? deprecated?
    VERBOSE_MISSING_POINT_TAB("Satisfying filter ", mFilter,
       " by interpreting ", content);
 
    Verbs::Interpret interpreter {mFilter};
-   interpreter.ShortCircuit(false);
-
    if (DispatchDeep(content, interpreter)) {
-      // If results in verb skip insertion                              
-      // Instead delay push to an unfiltered location later on          
-      //TODO is this really required? removed for now
-      const auto compiled = Temporal::Compile(
-         interpreter.GetOutput(), NoPriority);
-      VERBOSE_MISSING_POINT(Logger::Green, "Interpreted as: ", compiled);
-      return Push(compiled);
+      auto& output = interpreter.GetOutput();
+      VERBOSE_MISSING_POINT(Logger::Green, "Interpreted as: ", output);
+      if (output.IsSparse()) mContent <<= Abandon(output);
+      else                   mContent <<  Abandon(output);
+      return true;
    }
 
    // Nothing pushed to this point                                      
@@ -188,7 +189,7 @@ bool Missing::Push(const Many& content) {
 /// the past, and returns a viable overwrite for mContent                     
 ///   @attention assumes argument is a valid scope                            
 ///   @param scope - the scope to link                                        
-///   @param context - a fallback past provided by Temporal                   
+///   @param context - the data used for linking                              
 ///   @return the linked equivalent to the provided scope                     
 Many Missing::Link(const Many& scope, const Many& context) const {
    Many result;

@@ -115,7 +115,7 @@ namespace Langulus::Flow
       return A::Verb::GetHash();
    }
 
-   /// Multiply verb charges, merge sources                                   
+   /// Multiply verb charges                                                  
    ///   @param rhs - the mass to multiply by                                 
    ///   @return a new verb, with the modified mass                           
    template<CT::VerbBased THIS> LANGULUS(INLINED)
@@ -129,10 +129,10 @@ namespace Langulus::Flow
       else if (shallowCopy.mRate and rhs.mRate)
          shallowCopy.mRate *= rhs.mRate;
 
-      if (not shallowCopy.mSource and rhs.mSource)
+      /*if (not shallowCopy.mSource and rhs.mSource)
          shallowCopy.mSource = rhs.mSource;
       else if (shallowCopy.mSource and rhs.mSource)
-         shallowCopy.mSource << rhs.mSource;
+         shallowCopy.mSource << rhs.mSource;*/
       return shallowCopy;
    }
 

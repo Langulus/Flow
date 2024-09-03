@@ -600,9 +600,9 @@ namespace Langulus::Flow
                operation.SetMass(-1);
 
             return progress + ParseReflected(operation, relevant, lhs, optimize);
-         #else    //LANGULUS_FEATURE(MANAGED_REFLECTION)
+         #else
             PRETTY_ERROR("Can't parse reflected operator, managed reflection feature is disabled");
-         #endif   //LANGULUS_FEATURE(MANAGED_REFLECTION)
+         #endif
       }
       else {
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -625,9 +625,9 @@ namespace Langulus::Flow
                operation.SetMass(-1);
 
             return progress + ParseReflected(operation, relevant, lhs, optimize);
-         #else    //LANGULUS_FEATURE(MANAGED_REFLECTION)
+         #else
             PRETTY_ERROR("Can't parse reflected verb, managed reflection feature is disabled");
-         #endif   //LANGULUS_FEATURE(MANAGED_REFLECTION)
+         #endif
       }
    }
 
@@ -942,11 +942,13 @@ namespace Langulus::Flow
       if (op == Operator::SelectIdea) {
          // Implicitly create/select an idea                            
          Verbs::Create verb {Construct::FromToken("Idea", Abandon(content))};
+         verb.SetSource(Many::Past());
          lhs.SmartPush(IndexBack, Abandon(verb));
       }
       else if (op == Operator::SelectThing) {
          // Implicitly select an object by name                         
          Verbs::Select verb {Construct::FromToken("Thing", Abandon(content))};
+         verb.SetSource(Many::Past());
          lhs.SmartPush(IndexBack, Abandon(verb));
       }
       else {

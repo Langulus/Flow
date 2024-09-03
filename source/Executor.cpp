@@ -11,7 +11,7 @@
 #include "verbs/Create.inl"
 #include "inner/Missing.hpp"
 
-#if 0
+#if 1
    #define VERBOSE(...)      Logger::Verbose(__VA_ARGS__)
    #define VERBOSE_TAB(...)  const auto tab = Logger::VerboseTab(__VA_ARGS__)
 #else
@@ -458,7 +458,7 @@ namespace Langulus::Flow
          return false;
       }
 
-      if (verb.Is<Verbs::Do>()) {
+      if (verb.IsVerb<Verbs::Do>()) {
          // A Do verb is done at this point, because the subverbs       
          // inside (if any) should be done in the integration phase     
          // Just making sure that the integrated argument & source are  

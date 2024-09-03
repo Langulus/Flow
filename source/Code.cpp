@@ -789,7 +789,7 @@ namespace Langulus::Flow
             if (relevant.StartsWithOperator(closer)) {
                const auto tokenSize = SerializationRules::Operators
                   [closer].mToken.size();
-               lhs << Text {input.LeftOf(progress)};
+               lhs << Text {Clone(input.LeftOf(progress))};
                VERBOSE("String parsed: ", lhs);
                return tokenSize + progress;
             }
@@ -818,7 +818,7 @@ namespace Langulus::Flow
                if (0 == depth) {
                   const auto tokenSize = SerializationRules::Operators
                      [Operator::CloseCode].mToken.size();
-                  lhs << input.LeftOf(progress);
+                  lhs << Clone(input.LeftOf(progress));
                   VERBOSE("Code parsed: ", lhs);
                   return tokenSize + progress;
                }
@@ -914,6 +914,7 @@ namespace Langulus::Flow
 
       // Try parsing a keyword                                          
       Many content;
+      content.AddState(DataState::Tracked);
       const auto keyword = KeywordParser::Isolate(input);
       if (keyword.empty()) {
          // Try parsing a scope?                                        
@@ -931,7 +932,7 @@ namespace Langulus::Flow
       else {
          // If reached, then a keyword was found                        
          progress += keyword.size();
-         content << Text {keyword};
+         content << Text {Clone(keyword)};
       }
 
       if (op == Operator::SelectIdea) {
@@ -1004,14 +1005,14 @@ namespace Langulus::Flow
    ///   @param input - the code to peek into                                 
    ///   @return true if input begins with an operator for charging           
    Code::Operator Code::ChargeParser::Peek(const Code& input) noexcept {
-      // Parse skippables if any                                     
+      // Parse skippables if any                                        
       auto relevant = input;
       if (SkippedParser::Peek(relevant)) {
          const auto offset = SkippedParser::Parse(relevant);
          relevant = input.RightOf(offset);
       }
 
-      // Find the charge operator                                    
+      // Find the charge operator                                       
       for (Offset i = 0; i < Operator::OpCounter; ++i) {
          if (SerializationRules::Operators[i].mCharge
          and relevant.StartsWithOperator(i))

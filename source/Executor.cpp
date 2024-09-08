@@ -11,7 +11,7 @@
 #include "verbs/Create.inl"
 #include "inner/Missing.hpp"
 
-#if 1
+#if 0
    #define VERBOSE(...)      Logger::Verbose(__VA_ARGS__)
    #define VERBOSE_TAB(...)  const auto tab = Logger::VerboseTab(__VA_ARGS__)
 #else

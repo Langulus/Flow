@@ -11,7 +11,7 @@
 #define TEMPLATE()   template<class T, FactoryUsage USAGE>
 #define FACTORY()    TFactory<T, USAGE>
 
-#if 1
+#if 0
    #define VERBOSE_FACTORY(...) Logger::Verbose(__VA_ARGS__)
 #else
    #define VERBOSE_FACTORY(...) LANGULUS(NOOP)

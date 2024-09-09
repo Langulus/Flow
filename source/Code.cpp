@@ -638,7 +638,7 @@ namespace Langulus::Flow
    ///   @param optimize - attempt compile-time execution                     
    ///   @return number of parsed characters                                  
    Offset Code::OperatorParser::ParseContent(
-      Code::Operator op, const Code& input, Many& lhs, bool optimize
+      Code::Operator, const Code& input, Many& lhs, bool optimize
    ) {
       Offset progress = 0;
 

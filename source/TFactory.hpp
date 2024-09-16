@@ -78,6 +78,7 @@ namespace Langulus::Flow
       void Reset();
 
       void Create(auto*, Verb&);
+      auto CreateOne(auto*, const Neat&) -> T*;
       void Select(Verb&);
 
       IF_SAFE(void Dump() const);

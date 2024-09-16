@@ -116,6 +116,28 @@ namespace Langulus::Flow
          }
       );
    }
+   
+   /// Create (or reuse) a single element                                     
+   ///   @param producer - the producer                                       
+   ///   @param neat - the descriptor                                         
+   ///   @return the new (or reused) instance                                 
+   TEMPLATE()
+   auto FACTORY()::CreateOne(auto* producer, const Neat& neat) -> T* {
+      static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
+         "Producer isn't related to the reflected one");
+
+      // Produce amount of compatible constructs                        
+      if constexpr (IsUnique) {
+         // Check if descriptor matches any of the available            
+         const auto found = Find(neat);
+         if (found)
+            return &found->mData;
+      }
+
+      // If reached, nothing was found                                  
+      // Produce exactly one element with this descriptor               
+      return Produce(producer, neat);
+   }
 
    /// Inner creation/destruction verb                                        
    ///   @param producer - the producer                                       

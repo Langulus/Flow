@@ -59,7 +59,7 @@ namespace Langulus::Flow
       NOD() T* Produce(auto*, const Neat&);
       void CreateInner(auto*, Verb&, int, const Neat& = {});
       void Destroy(Cell*);
-      NOD() Cell* Find(const Neat&) const;
+      NOD() Cell* FindInner(const Neat&) const;
 
    public:
       /// Factories can't be default-, move- or copy-constructed              
@@ -80,6 +80,7 @@ namespace Langulus::Flow
       void Create(auto*, Verb&);
       auto CreateOne(auto*, const Neat&) -> T*;
       void Select(Verb&);
+      auto Find(const Neat&) const -> const T*;
 
       IF_SAFE(void Dump() const);
 

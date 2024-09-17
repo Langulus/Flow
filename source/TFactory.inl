@@ -68,7 +68,7 @@ namespace Langulus::Flow
    ///   @param descriptor - the normalized descriptor for the element        
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE() LANGULUS(INLINED)
-   typename FACTORY()::Cell* FACTORY()::Find(const Neat& descriptor) const {
+   typename FACTORY()::Cell* FACTORY()::FindInner(const Neat& descriptor) const {
       VERBOSE_FACTORY(NameOf<FACTORY()>(), " seeking for ", descriptor);
       const auto hash = descriptor.GetHash();
       const auto found = mHashmap.FindIt(hash);
@@ -129,7 +129,7 @@ namespace Langulus::Flow
       // Produce amount of compatible constructs                        
       if constexpr (IsUnique) {
          // Check if descriptor matches any of the available            
-         const auto found = Find(neat);
+         const auto found = FindInner(neat);
          if (found)
             return &found->mData;
       }
@@ -153,7 +153,7 @@ namespace Langulus::Flow
          // Produce amount of compatible constructs                     
          if constexpr (IsUnique) {
             // Check if descriptor matches any of the available         
-            const auto found = Find(neat);
+            const auto found = FindInner(neat);
             if (found) {
                // The unique construct was found, just return it.       
                // Mass will be ignored, it makes no sense to            
@@ -181,7 +181,7 @@ namespace Langulus::Flow
          // Destroy amount of compatible constructs                     
          if constexpr (IsUnique) {
             // Check if descriptor matches any of the available         
-            const auto found = Find(neat);
+            const auto found = FindInner(neat);
             if (found) {
                // The unique construct was found, destroy it            
                // Mass is ignored, there should be exactly one          
@@ -192,7 +192,7 @@ namespace Langulus::Flow
          else {
             // Destroy the required amount of matching items            
             do {
-               const auto found = Find(neat);
+               const auto found = FindInner(neat);
                if (not found)
                   break;
 
@@ -227,6 +227,17 @@ namespace Langulus::Flow
             TODO();
          }
       );
+   }
+
+   /// External interface for finding an entry in the factory                 
+   ///   @param neat - descriptor to match exactly                            
+   ///   @return a valid pointer if element was found                         
+   TEMPLATE()
+   auto FACTORY()::Find(const Neat& neat) const -> const T* {
+      const auto found = FindInner(neat);
+      if (found)
+         return &found->mData;
+      return nullptr;
    }
 
    /// Produce a single T with the given descriptor                           

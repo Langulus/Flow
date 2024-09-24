@@ -16,16 +16,15 @@ namespace Langulus::Verbs
 
 
    ///                                                                        
-   ///   Compare verb                                                         
-   /// General purpose three-way comparison, that checks for equality, lesser 
-   /// and greater at the same time.                                          
+   ///   Equals verb                                                          
+   /// Compares for equality, returns source if equal to argument             
    ///                                                                        
-   struct Compare : TVerb<Compare> {
-      LANGULUS(VERB) "Compare";
+   struct Equal : TVerb<Equal> {
+      LANGULUS(VERB) "Equal";
+      LANGULUS(OPERATOR) " == ";
       LANGULUS(PRECEDENCE) 3;
       LANGULUS(INFO)
-         "General purpose three-way comparison, that checks for "
-         "equality, lesser and greater at the same time";
+         "Compares for equality, returns source if equal to argument";
 
       using TVerb::TVerb;
       using TVerb::operator ==;

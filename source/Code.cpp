@@ -18,6 +18,11 @@
 #include "verbs/Conjunct.inl"
 #include "verbs/Interpret.inl"
 #include "verbs/Compare.inl"
+#include "verbs/Equal.inl"
+#include "verbs/Lower.inl"
+#include "verbs/LowerOrEqual.inl"
+#include "verbs/Greater.inl"
+#include "verbs/GreaterOrEqual.inl"
 
 LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
 
@@ -91,6 +96,11 @@ namespace Langulus::Flow
       (void)MetaOf<Verbs::Conjunct>();
       (void)MetaOf<Verbs::Interpret>();
       (void)MetaOf<Verbs::Compare>();
+      (void)MetaOf<Verbs::Equal>();
+      (void)MetaOf<Verbs::Lower>();
+      (void)MetaOf<Verbs::LowerOrEqual>();
+      (void)MetaOf<Verbs::Greater>();
+      (void)MetaOf<Verbs::GreaterOrEqual>();
 
       // Parse                                                          
       Many output;

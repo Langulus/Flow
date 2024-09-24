@@ -57,6 +57,7 @@ namespace Langulus::Flow
    ///   Langulus code container, parser, serializer and deserializer         
    ///                                                                        
    struct Code : A::Code {
+      LANGULUS(NAME) "Code";
       LANGULUS(FILES) "flow";
       LANGULUS_BASES(A::Code);
 

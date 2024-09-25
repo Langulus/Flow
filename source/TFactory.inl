@@ -68,9 +68,9 @@ namespace Langulus::Flow
    ///   @param descriptor - the normalized descriptor for the element        
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE() LANGULUS(INLINED)
-   typename FACTORY()::Cell* FACTORY()::FindInner(const Neat& descriptor) const {
+   typename FACTORY()::Cell* FACTORY()::FindInner(Describe descriptor) const {
       VERBOSE_FACTORY(NameOf<FACTORY()>(), " seeking for ", descriptor);
-      const auto hash = descriptor.GetHash();
+      const auto hash = descriptor->GetHash();
       const auto found = mHashmap.FindIt(hash);
       if (found) {
          for (auto cell : found.GetValue()) {

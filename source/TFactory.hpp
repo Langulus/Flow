@@ -56,10 +56,10 @@ namespace Langulus::Flow
       // A hash map for fast retrieval of elements                      
       TUnorderedMap<Hash, TMany<Cell*>> mHashmap;
 
-      NOD() T* Produce(auto*, const Neat&);
-      void CreateInner(auto*, Verb&, int, const Neat& = {});
+      NOD() T* Produce(auto*, Describe);
+      void CreateInner(auto*, Verb&, int, Describe);
       void Destroy(Cell*);
-      NOD() Cell* FindInner(const Neat&) const;
+      NOD() Cell* FindInner(Describe) const;
 
    public:
       /// Factories can't be default-, move- or copy-constructed              
@@ -78,9 +78,9 @@ namespace Langulus::Flow
       void Reset();
 
       void Create(auto*, Verb&);
-      auto CreateOne(auto*, const Neat&) -> T*;
+      auto CreateOne(auto*, Describe) -> T*;
       void Select(Verb&);
-      auto Find(const Neat&) const -> const T*;
+      auto Find(Describe) const -> const T*;
 
       IF_SAFE(void Dump() const);
 

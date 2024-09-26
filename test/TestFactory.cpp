@@ -55,13 +55,13 @@ SCENARIO("Test factories", "[factory]") {
 			REQUIRE(factory.GetCount() == 2);
 			REQUIRE(factory.GetType() == MetaOf<Producible>());
 			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData == prototype);
-			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData.GetNeat() == descriptor.GetDescriptor());
+			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData.GetDescriptor() == descriptor.GetDescriptor());
 			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData.GetHash() == hash);
-			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData.GetNeat() == normalized);
+			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData.GetDescriptor() == normalized);
 			REQUIRE(factory.GetFrames()[0].GetRaw()[1].mData == prototype);
-			REQUIRE(factory.GetFrames()[0].GetRaw()[1].mData.GetNeat() == descriptor.GetDescriptor());
+			REQUIRE(factory.GetFrames()[0].GetRaw()[1].mData.GetDescriptor() == descriptor.GetDescriptor());
 			REQUIRE(factory.GetFrames()[0].GetRaw()[1].mData.GetHash() == hash);
-			REQUIRE(factory.GetFrames()[0].GetRaw()[1].mData.GetNeat() == normalized);
+			REQUIRE(factory.GetFrames()[0].GetRaw()[1].mData.GetDescriptor() == normalized);
 			REQUIRE(factory.GetHashmap()[hash].GetCount() == 2);
 			REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);
 			REQUIRE(factory.GetHashmap()[hash][1] == &factory.GetFrames()[0].GetRaw()[1]);
@@ -105,9 +105,9 @@ SCENARIO("Test factories", "[factory]") {
 			REQUIRE(factory.GetCount() == 1);
 			REQUIRE(factory.GetType() == MetaOf<Producible>());
 			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData == prototype);
-			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData.GetNeat() == descriptor.GetDescriptor());
+			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData.GetDescriptor() == descriptor.GetDescriptor());
 			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData.GetHash() == hash);
-			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData.GetNeat() == normalized);
+			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData.GetDescriptor() == normalized);
 			REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
 			REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);
 
@@ -152,7 +152,7 @@ SCENARIO("Test factories", "[factory]") {
 			REQUIRE(factory.GetType() == MetaOf<Producible>());
 			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData == prototype);
          // Parent traits shouldn't participate in comparison           
-         REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData.GetNeat() == descriptor.GetDescriptor());
+         REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData.GetDescriptor() == descriptor.GetDescriptor());
 			REQUIRE(factory.GetFrames()[0].GetRaw()[0].mData.GetHash() == hash);
 			REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
 			REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);

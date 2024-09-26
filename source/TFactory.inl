@@ -68,9 +68,9 @@ namespace Langulus::Flow
    ///   @param descriptor - the normalized descriptor for the element        
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE() LANGULUS(INLINED)
-   typename FACTORY()::Cell* FACTORY()::FindInner(Describe descriptor) const {
+   auto FACTORY()::FindInner(const Many& descriptor) const -> Cell* {
       VERBOSE_FACTORY(NameOf<FACTORY()>(), " seeking for ", descriptor);
-      const auto hash = descriptor->GetHash();
+      const auto hash = descriptor.GetHash();
       const auto found = mHashmap.FindIt(hash);
       if (found) {
          for (auto cell : found.GetValue()) {
@@ -122,7 +122,7 @@ namespace Langulus::Flow
    ///   @param descriptor - the descriptor                                   
    ///   @return the new (or reused) instance                                 
    TEMPLATE()
-   auto FACTORY()::CreateOne(auto* producer, Describe descriptor) -> T* {
+   auto FACTORY()::CreateOne(auto* producer, const Many& descriptor) -> T* {
       static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
 
@@ -146,7 +146,7 @@ namespace Langulus::Flow
    ///   @param descriptor - element descriptor                               
    TEMPLATE()
    void FACTORY()::CreateInner(
-      auto* producer, Verb& verb, int count, Describe descriptor
+      auto* producer, Verb& verb, int count, const Many& descriptor
    ) {
       static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
@@ -235,7 +235,7 @@ namespace Langulus::Flow
    ///   @param descriptor - descriptor to match exactly                      
    ///   @return a valid pointer if element was found                         
    TEMPLATE()
-   auto FACTORY()::Find(Describe descriptor) const -> const T* {
+   auto FACTORY()::Find(const Many& descriptor) const -> const T* {
       const auto found = FindInner(descriptor);
       if (found)
          return &found->mData;
@@ -247,7 +247,7 @@ namespace Langulus::Flow
    ///   @param descriptor - element descriptor                               
    ///   @return the produced instance                                        
    TEMPLATE()
-   T* FACTORY()::Produce(auto* producer, Describe descriptor) {
+   auto FACTORY()::Produce(auto* producer, const Many& descriptor) -> T* {
       static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
 
@@ -305,7 +305,7 @@ namespace Langulus::Flow
    ///   @param producer - the item's producer                                
    ///   @param descriptor - the item's neat descriptor                       
    template<class T> LANGULUS(INLINED)
-   ProducedFrom<T>::ProducedFrom(T* producer, Describe descriptor)
+   ProducedFrom<T>::ProducedFrom(T* producer, const Many& descriptor)
       : mDescriptor {descriptor}
       , mProducer   {producer} {}
 

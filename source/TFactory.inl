@@ -74,7 +74,7 @@ namespace Langulus::Flow
       const auto found = mHashmap.FindIt(hash);
       if (found) {
          for (auto cell : found.GetValue()) {
-            if (cell->mData.GetNeat() != descriptor)
+            if (cell->mData.GetDescriptor() != descriptor)
                continue;
             return cell;
          }
@@ -119,33 +119,35 @@ namespace Langulus::Flow
    
    /// Create (or reuse) a single element                                     
    ///   @param producer - the producer                                       
-   ///   @param neat - the descriptor                                         
+   ///   @param descriptor - the descriptor                                   
    ///   @return the new (or reused) instance                                 
    TEMPLATE()
-   auto FACTORY()::CreateOne(auto* producer, const Neat& neat) -> T* {
+   auto FACTORY()::CreateOne(auto* producer, Describe descriptor) -> T* {
       static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
 
       // Produce amount of compatible constructs                        
       if constexpr (IsUnique) {
          // Check if descriptor matches any of the available            
-         const auto found = FindInner(neat);
+         const auto found = FindInner(descriptor);
          if (found)
             return &found->mData;
       }
 
       // If reached, nothing was found                                  
       // Produce exactly one element with this descriptor               
-      return Produce(producer, neat);
+      return Produce(producer, descriptor);
    }
 
    /// Inner creation/destruction verb                                        
    ///   @param producer - the producer                                       
    ///   @param verb - [in/out] the creation/destruction verb                 
    ///   @param count - the number of items to create (or destroy if negative)
-   ///   @param neat - element descriptor                                     
+   ///   @param descriptor - element descriptor                               
    TEMPLATE()
-   void FACTORY()::CreateInner(auto* producer, Verb& verb, int count, const Neat& neat) {
+   void FACTORY()::CreateInner(
+      auto* producer, Verb& verb, int count, Describe descriptor
+   ) {
       static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
 
@@ -153,7 +155,7 @@ namespace Langulus::Flow
          // Produce amount of compatible constructs                     
          if constexpr (IsUnique) {
             // Check if descriptor matches any of the available         
-            const auto found = FindInner(neat);
+            const auto found = FindInner(descriptor);
             if (found) {
                // The unique construct was found, just return it.       
                // Mass will be ignored, it makes no sense to            
@@ -166,12 +168,12 @@ namespace Langulus::Flow
             // Produce exactly one element with this descriptor         
             // Mass will be ignored, it makes no sense to create        
             // multiple instances if unique                             
-            verb << Produce(producer, neat);
+            verb << Produce(producer, descriptor);
          }
          else {
             // Satisfy the required count                               
             while (count >= 1) {
-               auto produced = Produce(producer, neat);
+               auto produced = Produce(producer, descriptor);
                verb << produced;
                --count;
             }
@@ -181,7 +183,7 @@ namespace Langulus::Flow
          // Destroy amount of compatible constructs                     
          if constexpr (IsUnique) {
             // Check if descriptor matches any of the available         
-            const auto found = FindInner(neat);
+            const auto found = FindInner(descriptor);
             if (found) {
                // The unique construct was found, destroy it            
                // Mass is ignored, there should be exactly one          
@@ -192,7 +194,7 @@ namespace Langulus::Flow
          else {
             // Destroy the required amount of matching items            
             do {
-               const auto found = FindInner(neat);
+               const auto found = FindInner(descriptor);
                if (not found)
                   break;
 
@@ -230,11 +232,11 @@ namespace Langulus::Flow
    }
 
    /// External interface for finding an entry in the factory                 
-   ///   @param neat - descriptor to match exactly                            
+   ///   @param descriptor - descriptor to match exactly                      
    ///   @return a valid pointer if element was found                         
    TEMPLATE()
-   auto FACTORY()::Find(const Neat& neat) const -> const T* {
-      const auto found = FindInner(neat);
+   auto FACTORY()::Find(Describe descriptor) const -> const T* {
+      const auto found = FindInner(descriptor);
       if (found)
          return &found->mData;
       return nullptr;
@@ -242,16 +244,16 @@ namespace Langulus::Flow
 
    /// Produce a single T with the given descriptor                           
    ///   @param producer - the producer                                       
-   ///   @param neat - element descriptor                                     
+   ///   @param descriptor - element descriptor                               
    ///   @return the produced instance                                        
    TEMPLATE()
-   T* FACTORY()::Produce(auto* producer, const Neat& neat) {
+   T* FACTORY()::Produce(auto* producer, Describe descriptor) {
       static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
 
       // Register entry in the hashmap, for fast search by descriptor   
-      VERBOSE_FACTORY(NameOf<FACTORY()>(), " producing: ", neat);
-      auto result = Base::NewInner(producer, neat);
+      VERBOSE_FACTORY(NameOf<FACTORY()>(), " producing: ", descriptor);
+      auto result = Base::NewInner(producer, descriptor);
       if (not result)
          return nullptr;
 
@@ -261,6 +263,7 @@ namespace Langulus::Flow
          found.GetValue() << result;
       else
          mHashmap.Insert(hash, result);
+
       return &result->mData;
    }
 
@@ -292,18 +295,18 @@ namespace Langulus::Flow
 
    /// Generic construction                                                   
    ///   @param other - intent and element to initialize with                 
-   template<class T> template<template<class> class S>
-   requires CT::Intent<S<Neat>> LANGULUS(INLINED)
-   ProducedFrom<T>::ProducedFrom(S<ProducedFrom<T>>&& other)
+   template<class T> template<template<class> class S> LANGULUS(INLINED)
+   ProducedFrom<T>::ProducedFrom(S<ProducedFrom>&& other)
+   requires CT::Intent<S<ProducedFrom>>
       // mProducer intentionally not overwritten                        
-      : mDescriptor {S<Neat> {other->mDescriptor}} {}
+      : mDescriptor {other.Nest(other->mDescriptor)} {}
 
    /// Construct a produced item                                              
    ///   @param producer - the item's producer                                
-   ///   @param neat - the item's neat descriptor                             
+   ///   @param descriptor - the item's neat descriptor                       
    template<class T> LANGULUS(INLINED)
-   ProducedFrom<T>::ProducedFrom(T* producer, const Neat& neat)
-      : mDescriptor {neat}
+   ProducedFrom<T>::ProducedFrom(T* producer, Describe descriptor)
+      : mDescriptor {descriptor}
       , mProducer   {producer} {}
 
    /// Reset the descriptor to remove circular dependencies                   
@@ -315,7 +318,7 @@ namespace Langulus::Flow
    /// Get the normalized descriptor of the produced item                     
    ///   @return the normalized descriptor                                    
    template<class T> LANGULUS(INLINED)
-   const Neat& ProducedFrom<T>::GetNeat() const noexcept {
+   auto ProducedFrom<T>::GetDescriptor() const noexcept -> const Many& {
       return mDescriptor;
    }
 
@@ -329,7 +332,7 @@ namespace Langulus::Flow
    /// Return the producer of the item (a.k.a. the owner of the factory)      
    ///   @return a pointer to the producer instance                           
    template<class T> LANGULUS(INLINED)
-   T* ProducedFrom<T>::GetProducer() const noexcept {
+   auto ProducedFrom<T>::GetProducer() const noexcept -> T* {
       return mProducer;
    }
 

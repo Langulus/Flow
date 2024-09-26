@@ -151,22 +151,44 @@ namespace Langulus::Flow
             },
             [&](const Construct& construct) {
                // Nest if constructs, but retain each construct         
-               // Make a shallow copy of the construct, and strip all   
+               VERBOSE("Executing construct: ", construct);
+
+               Many local;
+               if (not Execute(construct.GetDescriptor(), context, local, integrate, skipVerbs, silent)) {
+                  if (silent)
+                     LANGULUS_THROW(Flow, "Construct AND failure");
+                  else
+                     LANGULUS_OOPS(Flow, "Construct AND failure: ", flow);
+               }
+
+               // We can attempt an implicit Verbs::Create to make      
+               // the data at compile-time. If fail just propagate      
+               Construct solved {
+                  construct.GetType(), Abandon(local), construct.GetCharge()
+               };
+
+               Verbs::Create creator {&solved};
+               if (DispatchDeep<true, true, false>(context, creator))
+                  output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
+               else
+                  output.SmartPush(IndexBack, Abandon(solved));
+            },
+            [&](const Neat& neat) {
+               // And order-independent container                       
+               // Make a shallow copy of the Neat, and strip all        
                // verbs from it. Some of them might get reinserted, if  
                // missing, but generally they will be substituted with  
                // the corresponding results                             
-               VERBOSE("Executing construct: ", construct);
-               Construct local = construct;
-               local.GetDescriptor().template RemoveData<A::Verb>();
-               VERBOSE("Executing construct (verbs stripped): ", local);
-               bool constructIsMissing = false;
+               VERBOSE("Executing neat: ", neat);
+               Neat local = neat;
+               local.template RemoveData<A::Verb>();
+               VERBOSE("Executing neat (verbs stripped): ", local);
 
-               construct.GetDescriptor().ForEach(
+               local.ForEach(
                   [&](const A::Verb& constVerb) {
                      if (constVerb.IsMissing()) {
                         // Never touch missing stuff, only propagate it 
                         local << constVerb;
-                        constructIsMissing = true;
                         return;
                      }
 
@@ -191,27 +213,8 @@ namespace Langulus::Flow
                   }
                );
 
-               VERBOSE("Executing construct (verbs executed): ", local);
-               if (constructIsMissing
-               or construct.GetType()->mProducerRetriever
-               or not construct.GetType()->mDescriptorConstructor) {
-                  // Just propagate if missing or not instantiatable at 
-                  // compile-time                                       
-                  output.SmartPush(IndexBack, Abandon(local));
-                  return;
-               }
-
-               // We can attempt an implicit Verbs::Create to make      
-               // the data at compile-time                              
-               Verbs::Create creator {&local};
-               if (DispatchDeep<true, true, false>(context, creator))
-                  output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
-               else {
-                  if (silent)
-                     LANGULUS_THROW(Flow, "Construct creation failure");
-                  else
-                     LANGULUS_OOPS(Flow, "Construct creation failure: ", flow);
-               }
+               VERBOSE("Executing neat (verbs executed): ", local);
+               output.SmartPush(IndexBack, Abandon(local));
             },
             [&](const A::Verb& constVerb) {
                // Execute verbs                                         
@@ -309,20 +312,35 @@ namespace Langulus::Flow
             },
             [&](const Construct& construct) {
                // Nest if constructs, but retain each construct         
-               // Make a shallow copy of the construct, and strip all   
+               Many local;
+               if (Execute(construct.GetDescriptor(), context, local, integrate, skipVerbs, silent)) {
+                  executed = true;
+                  Construct solved {
+                     construct.GetType(), Abandon(local), construct.GetCharge()
+                  };
+
+                  // We can attempt an implicit Verbs::Create to make   
+                  // the data at compile-time. If fail just propagate   
+                  Verbs::Create creator {&solved};
+                  if (DispatchDeep<true, true, false>(context, creator))
+                     output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
+                  else
+                     output.SmartPush(IndexBack, Abandon(solved));
+               }
+            },
+            [&](const Neat& neat) {
+               // Make a shallow copy of the neat, and strip all        
                // verbs from it. Some of them might get reinserted, if  
                // missing, but generally they will be substituted with  
                // the corresponding results                             
-               Construct local = construct;
-               local.GetDescriptor().template RemoveData<A::Verb>();
-               bool constructIsMissing = false;
+               Neat local = neat;
+               local.template RemoveData<A::Verb>();
 
-               construct.GetDescriptor().ForEach(
+               local.ForEach(
                   [&](const A::Verb& constVerb) noexcept {
                      if (constVerb.IsMissing()) {
                         // Never touch missing stuff, only propagate it 
                         local << constVerb;
-                        constructIsMissing = true;
                         return;
                      }
 
@@ -341,26 +359,7 @@ namespace Langulus::Flow
                   }
                );
 
-               if (constructIsMissing
-               or construct.GetType()->mProducerRetriever
-               or not construct.GetType()->mDescriptorConstructor) {
-                  // Just propagate if missing or not instantiatable at 
-                  // compile-time                                       
-                  output.SmartPush(IndexBack, Abandon(local));
-                  return;
-               }
-
-               // We can attempt an implicit Verbs::Create to make      
-               // the data at compile-time                              
-               Verbs::Create creator {&local};
-               if (DispatchDeep<true, true, false>(context, creator))
-                  output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
-               else {
-                  if (silent)
-                     LANGULUS_THROW(Flow, "Construct creation failure");
-                  else
-                     LANGULUS_OOPS(Flow, "Construct creation failure: ", flow);
-               }
+               output.SmartPush(IndexBack, Abandon(local));
             },
             [&](const Verb& constVerb) {
                // Execute verbs                                         

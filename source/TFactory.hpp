@@ -57,7 +57,7 @@ namespace Langulus::Flow
       TUnorderedMap<Hash, TMany<Cell*>> mHashmap;
 
       NOD() auto Produce(auto*, const Many&) -> T*;
-      void CreateInner(auto*, Verb&, int, const Many&);
+      void CreateInner(auto*, Verb&, int, const Many& = {});
       void Destroy(Cell*);
       NOD() auto FindInner(const Many&) const -> Cell*;
 

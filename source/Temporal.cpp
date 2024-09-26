@@ -70,15 +70,17 @@ void Temporal::ResetInner(Many& scope) {
             ResetInner(static_cast<Many&>(trait));
       },
       [&](Construct& construct) {
-         auto& d = construct.GetDescriptor();
-         d.ForEachTrait([this](Trait& trait) {
+         ResetInner(construct.GetDescriptor());
+      },
+      [&](Neat& neat) {
+         neat.ForEachTrait([this](Trait& trait) {
             ResetInner(static_cast<Many&>(trait));
          });
-         d.ForEachConstruct([this](Construct& con) {
+         neat.ForEachConstruct([this](Construct& con) {
             Many wrapper {con};
             ResetInner(wrapper);
          });
-         d.ForEachTail([this](Many& stuff) {
+         neat.ForEachTail([this](Many& stuff) {
             ResetInner(stuff);
          });
       },

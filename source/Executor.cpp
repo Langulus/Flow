@@ -395,8 +395,8 @@ namespace Langulus::Flow
          ++executed;
       }
 
-      if (executed) VERBOSE(Logger::Green, "OR scope done: ", flow);
-      else          VERBOSE(Logger::Red, "OR scope failed: ", flow);
+      if (executed) VERBOSE(Logger::Green, "OR scope done: ",   flow);
+      else          VERBOSE(Logger::Red,   "OR scope failed: ", flow);
       return executed;
    }
 
@@ -473,7 +473,8 @@ namespace Langulus::Flow
          return true;
       }
 
-      VERBOSE_TAB("Executing verb: ", Logger::Cyan, verb, " (", verb.GetVerb(), ')');
+      VERBOSE_TAB("Executing verb: ",
+         Logger::Cyan, verb, " (", verb.GetVerb(), ')');
 
       // Dispatch the verb to the context, executing it                 
       // Any results should be inside verb.mOutput afterwards           
@@ -486,7 +487,8 @@ namespace Langulus::Flow
          return false;
       }
 
-      VERBOSE("Executed: ", Logger::Green, verb, " (", verb.GetVerb(), ')');
+      VERBOSE("Executed: ",
+         Logger::Green, verb, " (", verb.GetVerb(), ')');
       return true;
    }
 

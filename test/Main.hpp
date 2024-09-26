@@ -93,8 +93,8 @@ struct Producer : Referenced {};
 
 /// A mockup of a producible                                                  
 struct Producible : Referenced, ProducedFrom<Producer> {
-   Producible(Producer* producer, const Neat& neat = {})
-      : ProducedFrom {producer, neat} {}
+   Producible(Producer* producer, const Many& desc = {})
+      : ProducedFrom {producer, desc} {}
 
    ~Producible() {
       Logger::Special("Destroying Producible");

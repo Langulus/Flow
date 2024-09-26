@@ -56,10 +56,10 @@ namespace Langulus::Flow
       // A hash map for fast retrieval of elements                      
       TUnorderedMap<Hash, TMany<Cell*>> mHashmap;
 
-      NOD() T* Produce(auto*, Describe);
-      void CreateInner(auto*, Verb&, int, Describe);
+      NOD() auto Produce(auto*, const Many&) -> T*;
+      void CreateInner(auto*, Verb&, int, const Many&);
       void Destroy(Cell*);
-      NOD() Cell* FindInner(Describe) const;
+      NOD() auto FindInner(const Many&) const -> Cell*;
 
    public:
       /// Factories can't be default-, move- or copy-constructed              
@@ -78,9 +78,9 @@ namespace Langulus::Flow
       void Reset();
 
       void Create(auto*, Verb&);
-      auto CreateOne(auto*, Describe) -> T*;
+      auto CreateOne(auto*, const Many&) -> T*;
       void Select(Verb&);
-      auto Find(Describe) const -> const T*;
+      auto Find(const Many&) const -> const T*;
 
       IF_SAFE(void Dump() const);
 
@@ -98,31 +98,32 @@ namespace Langulus::Flow
    ///                                                                        
    /// Saves the descriptor by which the item was made with, in order to      
    /// compare creation requests                                              
-   ///   @attention mDerscriptor is known to cause circular dependencies, so  
-   ///      it will be reset the moment owning TFactory is destroyed          
+   ///   @attention mDescriptor is known to cause circular dependencies, so   
+   ///      it is better destroyed in two stages, Detach() being the first,   
+   ///      and TFactory destruction being the second.                        
    ///                                                                        
    template<class T>
    class ProducedFrom {
       LANGULUS(PRODUCER) T;
 
    protected:
-      // The descriptor used for hashing, and element identification    
-      Neat mDescriptor;
+      // The descriptor used for hashing and element identification     
+      Many mDescriptor;
       // The producer of the element                                    
       T* const mProducer {};
 
    public:
       ProducedFrom(const ProducedFrom&) = delete;
       ProducedFrom(ProducedFrom&&);
-      ProducedFrom(T* = nullptr, const Neat& = {});
+      ProducedFrom(T* = nullptr, const Many& = {});
 
-      template<template<class> class S> requires CT::Intent<S<Neat>>
-      ProducedFrom(S<ProducedFrom>&&);
+      template<template<class> class S>
+      ProducedFrom(S<ProducedFrom>&&) requires CT::Intent<S<ProducedFrom>>;
 
       void Detach();
-      const Neat& GetNeat() const noexcept;
+      auto GetDescriptor() const noexcept -> const Many&;
       Hash GetHash() const noexcept;
-      T* GetProducer() const noexcept;
+      auto GetProducer() const noexcept -> T*;
    };
 
 } // namespace Langulus::Flow

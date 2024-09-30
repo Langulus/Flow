@@ -400,52 +400,6 @@ namespace Langulus::Anyness
       }
    }
    
-   /// Define the otherwise undefined Langulus::Anyness::Neat::ExtractDataAs  
-   /// to use the interpret verb pipeline for runtime conversion              
-   /// Extract any data, convertible to D                                     
-   ///   @param value - [out] where to save the value, if found               
-   ///   @return the number of extracted values (always 1 if not an array)    
-   inline Count Neat::ExtractDataAs(CT::Data auto& value) const {
-      using D = Deref<decltype(value)>;
-
-      if constexpr (CT::Array<D>) {
-         // Fill a bounded array                                        
-         Count scanned = 0;
-         for (auto pair : mAnythingElse) {
-            for (auto& group : pair.mValue) {
-               const auto toscan = ::std::min(ExtentOf<D> - scanned, group.GetCount());
-               for (Offset i = 0; i < toscan; ++i) {
-                  //TODO can be optimized-out for POD
-                  try {
-                     value[scanned] = group.template AsCast<Deext<D>>(i);
-                     ++scanned;
-                  }
-                  catch (...) {}
-               }
-
-               if (scanned >= ExtentOf<D>)
-                  return ExtentOf<D>;
-            }
-         }
-
-         return scanned;
-      }
-      else {
-         // Fill a single value                                         
-         for (auto pair : mAnythingElse) {
-            for (auto& group : pair.mValue) {
-               try {
-                  value = group.template AsCast<D>();
-                  return 1;
-               }
-               catch (...) {}
-            }
-         }
-      }
-
-      return 0;
-   }
-
 } // namespace Langulus::Anyness
 
 #undef VERBOSE_CONVERSION

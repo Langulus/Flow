@@ -135,7 +135,7 @@ SCENARIO("Test factories", "[factory]") {
          REQUIRE(out2.As<Producible*>()->Reference(0) == 4);
 
          // Parent traits shouldn't participate in hashing              
-			const auto hash = descriptor.GetDescriptor().GetHash();
+			const auto hash = descriptor->GetHash();
 
 			REQUIRE(context.GetUses() == 2);
 			REQUIRE(context[0].Reference(0) == 2);

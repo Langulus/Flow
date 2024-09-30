@@ -79,7 +79,7 @@ namespace Langulus::Verbs
             // add and reflect the Verbs::Create in the producer        
             return;
          }
-         else if (construct.GetDescriptor().IsMissingDeep()) {
+         else if (construct->IsMissingDeep()) {
             // Creation of missing stuff is not allowed                 
             return;
          }
@@ -136,7 +136,7 @@ namespace Langulus::Verbs
 
       const auto createInner = [&](const Construct& descriptor) {
          if (descriptor.GetType()->mProducerRetriever
-         or  descriptor.GetDescriptor().IsMissingDeep()) {
+         or  descriptor->IsMissingDeep()) {
             // Creation of missing/runtime stuff is not allowed         
             return;
          }

@@ -10,6 +10,7 @@
 #include <Flow/Verbs/Interpret.hpp>
 
 constexpr Count SerialBlock = sizeof(Count) * 2 + sizeof(DataState);
+constexpr Count SerialTrait = sizeof(Count) + SerialBlock;
 
 
 SCENARIO("Serialization", "[serialization]") {
@@ -73,15 +74,16 @@ SCENARIO("Serialization", "[serialization]") {
    };
    const auto txtToken = MetaDataOf<Text>()->mToken.size();
    const auto traitToken = MetaDataOf<Traits::Name>()->mToken.size();
+   const auto nameToken = MetaTraitOf<Traits::Name>()->mToken.size();
 
-	GIVEN("An Any instance containing Text") {
+	GIVEN("A Many instance containing Text") {
       Many pack;
 		pack << texts[0] << texts[1] << texts[2];
 
 		WHEN("Pack is serialized as binary") {
 			const auto serialized = Verbs::Interpret::To<Bytes>(pack);
          const auto requiredSize =
-            SerialBlock                   // 1 block
+            SerialBlock
             + txtToken
             + texts[0].GetCount() + sizeof(Count)
             + texts[1].GetCount() + sizeof(Count)
@@ -95,7 +97,7 @@ SCENARIO("Serialization", "[serialization]") {
 		}
 	}
 
-	GIVEN("An Any instance containing Trait") {
+	GIVEN("A Many instance containing Trait") {
       Many pack;
 		pack  << Traits::Name(texts[0])
 		      << Traits::Name(texts[1])
@@ -104,8 +106,8 @@ SCENARIO("Serialization", "[serialization]") {
 		WHEN("Pack is serialized as binary") {
 			auto serialized = Verbs::Interpret::To<Bytes>(pack);
          const auto requiredSize =
-            SerialBlock * 4               // 4 blocks
-            + traitToken + txtToken*3
+            SerialBlock + SerialTrait*3
+            + traitToken + nameToken*3 + txtToken*3
             + texts[0].GetCount() + sizeof(Count)
             + texts[1].GetCount() + sizeof(Count)
             + texts[2].GetCount() + sizeof(Count);
@@ -118,7 +120,7 @@ SCENARIO("Serialization", "[serialization]") {
 		}
 	}
 
-	GIVEN("An Any instance containing a verb") {
+	GIVEN("A Many instance containing a verb") {
       Many pack = Verbs::Do(10).SetSource(5);
 
 		WHEN("Pack is serialized as binary") {
@@ -131,7 +133,7 @@ SCENARIO("Serialization", "[serialization]") {
 		}
 	}
 
-	GIVEN("An Any instance containing various kinds of numbers") {
+	GIVEN("A Many instance containing various kinds of numbers") {
       Many pack {10, 5, 20.0f, 40.0};
 
 		WHEN("Pack is serialized as binary") {
@@ -144,7 +146,7 @@ SCENARIO("Serialization", "[serialization]") {
 		}
 	}
 
-	GIVEN("A complex pack with various kinds of data") {
+	GIVEN("A complex Many with various kinds of data") {
       Many pack {
 			"some text"_text,
 			10, 5, 20.0f, 40.0,

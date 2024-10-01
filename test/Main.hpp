@@ -16,7 +16,6 @@ using namespace Langulus::Flow;
 /// A mockup of Langulus::Thing, for testing purposes                         
 struct Thing : Resolvable, Referenced {
    LANGULUS(ABSTRACT) false;
-   LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
 
@@ -47,7 +46,6 @@ struct Thing2 : Thing {
 /// A mockup of a universe component, for testing purposes                    
 struct Universe : Resolvable {
    LANGULUS(ABSTRACT) false;
-   LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
    Universe() : Resolvable {this} {}
@@ -56,7 +54,6 @@ struct Universe : Resolvable {
 /// A mockup of a window component, for testing purposes                      
 struct Window : Resolvable {
    LANGULUS(ABSTRACT) false;
-   LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
    Window() : Resolvable {this} {}
@@ -65,7 +62,6 @@ struct Window : Resolvable {
 /// A mockup of a user component, for testing purposes                        
 struct User : Resolvable {
    LANGULUS(ABSTRACT) false;
-   LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
    User() : Resolvable {this} {}
@@ -74,7 +70,6 @@ struct User : Resolvable {
 /// A mockup of a session component, for testing purposes                     
 struct Session : Resolvable {
    LANGULUS(ABSTRACT) false;
-   LANGULUS(UNINSERTABLE) false;
    LANGULUS(PRODUCER) Thing;
    LANGULUS_BASES(Resolvable);
    Session() : Resolvable {this} {}
@@ -99,9 +94,6 @@ struct Producible : Referenced, ProducedFrom<Producer> {
    ~Producible() {
       Logger::Special("Destroying Producible");
    }
-
-   /*Producible(Abandoned<Producible>&& other)
-      : ProducedFrom(other.Forward<ProducedFrom>()) {}*/
 
    bool operator == (const Producible& rhs) const {
       return mDescriptor == rhs.mDescriptor;

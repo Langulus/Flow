@@ -25,6 +25,7 @@ namespace Langulus::Flow
    ///                                                                        
    struct Verb : A::Verb {
       LANGULUS(NAME) "Verb";
+      LANGULUS(ACT_AS) Verb;
       LANGULUS_CONVERTS_TO(Code, Text);
       LANGULUS_BASES(A::Verb);
 

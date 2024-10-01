@@ -59,6 +59,7 @@ namespace Langulus::Flow
    struct Code : A::Code {
       LANGULUS(NAME) "Code";
       LANGULUS(FILES) "flow";
+      LANGULUS(ACT_AS) Code;
       LANGULUS_BASES(A::Code);
 
       /// The presence of this structure makes Code a serializer              

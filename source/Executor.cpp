@@ -161,17 +161,23 @@ namespace Langulus::Flow
                      LANGULUS_OOPS(Flow, "Construct AND failure: ", flow);
                }
 
-               // We can attempt an implicit Verbs::Create to make      
-               // the data at compile-time. If fail just propagate      
                Construct solved {
                   construct.GetType(), Abandon(local), construct.GetCharge()
                };
 
-               Verbs::Create creator {&solved};
-               if (DispatchDeep<true, true, false>(context, creator))
-                  output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
-               else
-                  output.SmartPush(IndexBack, Abandon(solved));
+               // We can attempt an implicit Verbs::Create to make      
+               // the data at compile-time. Allowed only if no producer 
+               // was specified.                                        
+               if (not construct.GetType()->mProducerRetriever) {
+                  Verbs::Create creator {&solved};
+                  if (DispatchDeep<true, true, false>(context, creator)) {
+                     output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
+                     return;
+                  }
+               }
+               
+               // Otherwise just propagate                              
+               output.SmartPush(IndexBack, Abandon(solved));
             },
             [&](const Neat& neat) {
                // And order-independent container                       
@@ -320,12 +326,18 @@ namespace Langulus::Flow
                   };
 
                   // We can attempt an implicit Verbs::Create to make   
-                  // the data at compile-time. If fail just propagate   
-                  Verbs::Create creator {&solved};
-                  if (DispatchDeep<true, true, false>(context, creator))
-                     output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
-                  else
-                     output.SmartPush(IndexBack, Abandon(solved));
+                  // the data at compile-time. Allowed only if no       
+                  // producer was specified.                            
+                  if (not construct.GetType()->mProducerRetriever) {
+                     Verbs::Create creator {&solved};
+                     if (DispatchDeep<true, true, false>(context, creator)) {
+                        output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
+                        return;
+                     }
+                  }
+               
+                  // Otherwise just propagate                           
+                  output.SmartPush(IndexBack, Abandon(solved));
                }
             },
             [&](const Neat& neat) {

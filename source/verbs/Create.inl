@@ -206,7 +206,7 @@ namespace Langulus::Verbs
             },
             [&](const DMeta& type) {
                if (type) {
-                  VERBOSE_CREATION("Creating: ", Logger::Yellow, type->mToken);
+                  VERBOSE_CREATION("Creating: ", Logger::Yellow, type);
                   createInner(Construct {type});
                }
             }

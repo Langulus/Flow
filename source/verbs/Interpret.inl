@@ -273,9 +273,8 @@ namespace fmt
       auto format(T const& element, CONTEXT& ctx) const {
          using namespace ::Langulus;
 
-         const auto type = element.GetTrait();
          return fmt::format_to(ctx.out(), "{}({})",
-            (type ? type->mToken : RTTI::MetaTrait::DefaultToken),
+            element.GetTrait().GetToken(),
             static_cast<const Anyness::Many&>(element)
          );
       }

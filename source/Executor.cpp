@@ -170,7 +170,7 @@ namespace Langulus::Flow
                // was specified.                                        
                if (not construct.GetType()->mProducerRetriever) {
                   Verbs::Create creator {&solved};
-                  if (DispatchDeep<true, true, false>(context, creator)) {
+                  if (Verb::GenericExecuteStateless(creator)) {
                      output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
                      return;
                   }
@@ -330,7 +330,7 @@ namespace Langulus::Flow
                   // producer was specified.                            
                   if (not construct.GetType()->mProducerRetriever) {
                      Verbs::Create creator {&solved};
-                     if (DispatchDeep<true, true, false>(context, creator)) {
+                     if (Verb::GenericExecuteStateless(creator)) {
                         output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
                         return;
                      }

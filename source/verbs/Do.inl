@@ -97,36 +97,6 @@ namespace Langulus::Verbs
 
 namespace Langulus::Flow
 {
-   /*namespace Inner
-   {
-      /// Helper function that checks if statically reflected base is valid   
-      template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class BASE>
-      LANGULUS(INLINED)
-      Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb) {
-         using T = Deref<decltype(context)>;
-         if constexpr (CT::Same<BASE, A::Block>)
-            return 0;
-         else if constexpr (CT::Constant<T>) {
-            return Execute<DISPATCH, DEFAULT, FALLBACK>(
-               static_cast<const BASE&>(context), verb);
-         }
-         else {
-            return Execute<DISPATCH, DEFAULT, FALLBACK>(
-               static_cast<BASE&>(context), verb);
-         }
-      }
-   }
-
-   /// Attempt casting context to any of its statically reflected bases, and  
-   /// execute verb there                                                     
-   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class... BASES>
-   LANGULUS(INLINED)
-   Count ExecuteInBases(CT::Data auto& context, CT::VerbBased auto& verb, Types<BASES...>) {
-      if constexpr (Types<BASES...>::Empty)
-         return 0;
-      else
-         return (Inner::ExecuteInBases<DISPATCH, DEFAULT, FALLBACK, BASES>(context, verb) or ...);
-   }*/
 
    /// Invoke a single verb on a single context                               
    ///   @tparam DISPATCH - whether or not to use context's dispatcher, if    
@@ -246,33 +216,8 @@ namespace Langulus::Flow
          else
             ith = ith.GetDense();
 
-         //if (not verb.GetSource()) {
-            // Make sure we save the source where execution happens     
          verb.SetSource(ith);
-         //}
-
          Execute<DISPATCH, DEFAULT, false>(ith, verb);
-
-         /*if (verb.IsShortCircuited()) {
-            // Short-circuit if enabled for verb                        
-            if (verb.IsDone() == context.IsOr()) {
-               // Time to early-exit                                    
-               // Will fail on first AND-failure                        
-               // Will succeed on first OR-success                      
-               if (context.IsOr()) {
-                  // OR-Success                                         
-                  // Will carry its own output, no need to use cache    
-                  verb.Done(1);
-               }
-               else {
-                  // AND-Failure                                        
-                  // All outputs are discarded                          
-                  verb.Undo();
-               }
-
-               return verb.GetSuccesses();
-            }
-         }*/
          
          if (verb.IsDone()) {
             if (verb.GetOutput()) {
@@ -327,36 +272,47 @@ namespace Langulus::Flow
          }
       }
 
-      if (context.IsDeep() or context.template Is<Trait>()) {
-         // Nest if context is deep, or a trait                         
-         // Traits are considered deep only when executing in them      
+      if (context.IsDeep()) {
+         // Nest if context is deep                                     
          // There is no escape from this scope                          
          Count successCount = 0;
          auto output = Many::FromState(context);
          for (Count i = 0; i < context.GetCount(); ++i) {
             DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(
-               context.template As<Many>(i), verb);
+               context.template Get<Many>(i), verb);
 
-            /*if (verb.IsShortCircuited()) {
-               // Short-circuit if enabled for verb                     
-               if (context.IsOr() == (successCount > 0)) {
-                  // It is time for an early return                     
-                  // Will fail on first AND-failure                     
-                  // Will succeed on first OR-success                   
-                  if (context.IsOr()) {
-                     // OR-Success                                      
-                     // Will carry its own output                       
-                     verb.Done(successCount);
-                  }
-                  else {
-                     // AND-Failure                                     
-                     // All outputs are discarded                       
-                     verb.Undo();
-                  }
-
-                  return verb.GetSuccesses();
+            if (verb.IsDone()) {
+               if (verb.GetOutput()) {
+                  // Cache output, conserving the context hierarchy     
+                  output.SmartPush(IndexBack, Langulus::Move(verb.GetOutput()));
                }
-            }*/
+
+               ++successCount;
+               verb.Undo();
+            }
+         }
+
+         if (context.IsOr())
+            return verb.template CompleteDispatch<true >(successCount, Abandon(output));
+         else
+            return verb.template CompleteDispatch<false>(successCount, Abandon(output));
+      }
+      else if (context.template Is<Trait>()) {
+         // Nest if context is trait                                    
+         // Traits are considered deep only when executing in them      
+         // There is no escape from this scope                          
+         Count successCount = 0;
+         auto output = Many::FromState(context);
+         for (Count i = 0; i < context.GetCount(); ++i) {
+            auto& t = context.template Get<Trait>(i);
+            if constexpr (CT::Constant<decltype(context)>) {
+               DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(
+                  static_cast<const Many&>(t), verb);
+            }
+            else {
+               DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(
+                  static_cast<Many&>(t), verb);
+            }
 
             if (verb.IsDone()) {
                if (verb.GetOutput()) {

@@ -74,9 +74,7 @@ namespace Langulus::Flow
       TFactory& operator = (TFactory&&) noexcept;
       ~TFactory();
 
-   public:
       void Reset();
-
       void Create(auto*, Verb&);
       auto CreateOne(auto*, const Many&) -> T*;
       void Select(Verb&);

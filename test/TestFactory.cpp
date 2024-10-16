@@ -349,7 +349,7 @@ SCENARIO("Test factories on the heap", "[factory]") {
          //TODO Missing stuff shouldn't participate in hashing
 			const auto hash = descriptor->GetHash();
 
-			REQUIRE(producer.GetReferences() == 2);
+			REQUIRE(producer.GetReferences() == 4);
 			REQUIRE(creator.IsDone());
 			REQUIRE(out1.GetCount() == 1);
 			REQUIRE(out1.IsExact<Producible*>());
@@ -414,6 +414,42 @@ SCENARIO("Test factories on the heap", "[factory]") {
          const_cast<Producible&>(prototype).Reference(-1);
 		}
 	}
+
+   wrappedProducer.Reset();
+
+   REQUIRE(memoryState.Assert());
+}
+
+SCENARIO("Nested factories and circular referencing", "[factory]") {
+   static Allocator::State memoryState;
+
+   TMany<DeepProducer> wrappedProducer;
+   wrappedProducer.New();
+   auto& deepProducer = wrappedProducer[0];
+
+   GIVEN("A factory with unique usage") {
+      Verbs::Create creator1 {
+         Construct::From<ShallowProducer>(
+            Traits::Parent(&deepProducer),
+            "test"_text
+         )
+      };
+
+      deepProducer.factory.Create(&deepProducer, creator1);
+      REQUIRE(creator1.IsDone());
+      auto& shallowProducer = creator1.GetOutput().As<ShallowProducer>();
+
+      Verbs::Create creator2 {
+         Construct::From<TheProducible>(
+            Traits::Parent(&shallowProducer),
+            "test"_text
+         )
+      };
+
+      shallowProducer.factory.Create(&shallowProducer, creator2);
+      REQUIRE(creator2.IsDone());
+
+   }
 
    wrappedProducer.Reset();
 

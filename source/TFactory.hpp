@@ -71,7 +71,7 @@ namespace Langulus::Flow
       TFactory(const TFactory&) = delete;
       TFactory(TFactory&&) = delete;
 
-      TFactory& operator = (TFactory&&) noexcept;
+      auto operator = (TFactory&&) noexcept -> TFactory&;
       ~TFactory();
 
       void Reset();
@@ -79,6 +79,7 @@ namespace Langulus::Flow
       auto CreateOne(auto*, const Many&) -> T*;
       void Select(Verb&);
       auto Find(const Many&) const -> const T*;
+      void Teardown();
 
       IF_SAFE(void Dump() const);
 
@@ -96,9 +97,10 @@ namespace Langulus::Flow
    ///                                                                        
    /// Saves the descriptor by which the item was made with, in order to      
    /// compare creation requests                                              
-   ///   @attention mDescriptor is known to cause circular dependencies, so   
-   ///      it is better destroyed in two stages, Detach() being the first,   
-   ///      and TFactory destruction being the second.                        
+   ///   @attention mDescriptor can contain anything (including Thing         
+   ///      references) and is known to cause circular dependencies. That's   
+   ///      why ProducedFrom::Teardown has to be called as a first-stage      
+   ///      destruction, usually in a custom Reference(int) routine.          
    ///                                                                        
    template<class T>
    class ProducedFrom {
@@ -108,7 +110,7 @@ namespace Langulus::Flow
       // The descriptor used for hashing and element identification     
       Many mDescriptor;
       // The producer of the element                                    
-      T* const mProducer {};
+      Ref<T> mProducer;
 
    public:
       ProducedFrom(const ProducedFrom&) = delete;
@@ -118,10 +120,10 @@ namespace Langulus::Flow
       template<template<class> class S>
       ProducedFrom(S<ProducedFrom>&&) requires CT::Intent<S<ProducedFrom>>;
 
-      void Detach();
+      void Teardown();
       auto GetDescriptor() const noexcept -> const Many&;
       Hash GetHash() const noexcept;
-      auto GetProducer() const noexcept -> T*;
+      auto GetProducer() const noexcept -> const Ref<T>&;
    };
 
 } // namespace Langulus::Flow

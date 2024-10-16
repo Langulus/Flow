@@ -87,14 +87,8 @@ struct Producible;
 
 /// A mockup of a producer                                                    
 struct Producer : Referenced {
-   TFactory<Producible> factory1;
+   TFactory<Producible>       factory1;
    TFactoryUnique<Producible> factory2;
-
-   Count Reference(int x) {
-      factory1.Reference(x);
-      factory2.Reference(x);
-      return Referenced::Reference(x);
-   }
 };
 
 /// A mockup of a producible                                                  
@@ -107,8 +101,12 @@ struct Producible : Referenced, ProducedFrom<Producer> {
    }
 
    Count Reference(int x) {
-      if (Referenced::Reference(x) == 1)
-         ProducedFrom::Detach();
+      if (Referenced::Reference(x) == 1) {
+         // First-stage destruction must occur at the point where only  
+         // the producer (or stack) has the only single reference left  
+         ProducedFrom::Teardown();
+      }
+
       return GetReferences();
    }
 
@@ -118,6 +116,62 @@ struct Producible : Referenced, ProducedFrom<Producer> {
 
    operator Text () const {
       return "Producible";
+   }
+};
+
+struct ShallowProducer;
+
+/// A producer of a producer                                                  
+struct DeepProducer : Referenced {
+   TFactory<ShallowProducer> factory;
+
+   Count Reference(int x) {
+      if (Referenced::Reference(x) == 1) {
+         // First-stage destruction must occur at the point where only  
+         // the producer (or stack) has the only single reference left  
+         factory.Teardown();
+      }
+
+      return GetReferences();
+   }
+};
+
+struct TheProducible;
+
+/// A mockup of a producible                                                  
+struct ShallowProducer : Referenced, ProducedFrom<DeepProducer> {
+   TFactory<TheProducible> factory;
+
+   ShallowProducer(DeepProducer* producer, const Many& desc = {})
+      : ProducedFrom {producer, desc} {}
+
+   Count Reference(int x) {
+      if (Referenced::Reference(x) == 1) {
+         // First-stage destruction must occur at the point where only  
+         // the producer (or stack) has the only single reference left  
+         factory.Teardown();
+         ProducedFrom::Teardown();
+      }
+
+      return GetReferences();
+   }
+};
+
+/// A mockup of a producible                                                  
+struct TheProducible : Referenced, ProducedFrom<ShallowProducer> {
+   //TODO should ProducedFrom inherit virtual Referenced directly?,
+   // and so no need for ProducedFrom::Teardown method at all????
+   TheProducible(ShallowProducer* producer, const Many& desc = {})
+      : ProducedFrom {producer, desc} {}
+
+   Count Reference(int x) {
+      if (Referenced::Reference(x) == 1) {
+         // First-stage destruction must occur at the point where only  
+         // the producer (or stack) has the only single reference left  
+         ProducedFrom::Teardown();
+      }
+
+      return GetReferences();
    }
 };
 

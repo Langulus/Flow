@@ -27,14 +27,19 @@ namespace Langulus::Flow
    TEMPLATE() LANGULUS(INLINED)
    FACTORY()::~TFactory() {
       static_assert(CT::Producible<T>, "T must have a producer");
-      Reset();
+
+      // First stage destruction that severs all connections            
+      // If TFactory was on the stack, this will be the first time it's 
+      // called. If it was on the managed heap, it would've been called 
+      // from the Reference routine                                     
+      Teardown();
    }
 
    /// Move-assignment remaps all elements to the new instance owner          
    ///   @attention notice how mFactoryOwner never changes on both sides      
    ///   @param other - the factory to move                                   
    TEMPLATE() LANGULUS(INLINED)
-   FACTORY()& FACTORY()::operator = (TFactory&& other) noexcept {
+   auto FACTORY()::operator = (TFactory&& other) noexcept -> TFactory& {
       Base::operator = (Forward<Base>(other));
       mHashmap = Move(other.mHashmap);
       return *this;
@@ -43,8 +48,25 @@ namespace Langulus::Flow
    /// Reset the factory                                                      
    TEMPLATE() LANGULUS(INLINED)
    void FACTORY()::Reset() {
-      mHashmap.Reset();
+      Teardown();
       Base::Reset();
+   }
+   
+   /// Factories can have their own hierarchies going on, and tearing them    
+   /// down to account of circular references is mandatory. Here's an example:
+   /// The Physics module has a Euclidean::World factory.                     
+   /// Each World has a factory for Euclidean::Instances                      
+   /// Each Instance refers to its World producer                             
+   /// In order to destroy a World, you have to first visit all Instances     
+   /// and sever their connection with the World, so that the proper order    
+   /// of destruction happens. Otherwise the World will be destroyed from     
+   /// the Instance::mProducer handle instead on World factory destruction.   
+   TEMPLATE() LANGULUS(INLINED)
+   void FACTORY()::Teardown() {
+      mHashmap.Reset();
+
+      for (auto& item : *this)
+         item.Reference(0);
    }
 
 #if LANGULUS(SAFE)
@@ -57,10 +79,10 @@ namespace Langulus::Flow
       );
 
       Count counter = 0;
-      ForEach([&](const T& item) {
-         Logger::Info(counter, "] ", item, ", ",
+      for (auto& item : *this) {
+         Logger::Info(counter++, "] ", item, ", ",
             item.GetReferences(), " references");
-      });
+      }
    }
 #endif
 
@@ -69,7 +91,7 @@ namespace Langulus::Flow
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE() LANGULUS(INLINED)
    auto FACTORY()::FindInner(const Many& descriptor) const -> Cell* {
-      VERBOSE_FACTORY(NameOf<FACTORY()>(), " seeking for ", descriptor);
+      VERBOSE_FACTORY(NameOf<TFactory>(), " seeking for ", descriptor);
       const auto hash = descriptor.GetHash();
       const auto found = mHashmap.FindIt(hash);
       if (found) {
@@ -252,7 +274,7 @@ namespace Langulus::Flow
          "Producer isn't related to the reflected one");
 
       // Register entry in the hashmap, for fast search by descriptor   
-      VERBOSE_FACTORY(NameOf<FACTORY()>(), " producing: ", descriptor);
+      VERBOSE_FACTORY(NameOf<TFactory>(), " producing: ", descriptor);
       auto result = Base::NewInner(producer, descriptor);
       if (not result)
          return nullptr;
@@ -309,10 +331,11 @@ namespace Langulus::Flow
       : mDescriptor {descriptor}
       , mProducer   {producer} {}
 
-   /// Reset the descriptor to remove circular dependencies                   
+   /// First-stage destruction                                                 
    template<class T> LANGULUS(INLINED)
-   void ProducedFrom<T>::Detach() {
-      return mDescriptor.Reset();
+   void ProducedFrom<T>::Teardown() {
+      mProducer.Reset();
+      mDescriptor.Reset();
    }
    
    /// Get the normalized descriptor of the produced item                     
@@ -332,7 +355,7 @@ namespace Langulus::Flow
    /// Return the producer of the item (a.k.a. the owner of the factory)      
    ///   @return a pointer to the producer instance                           
    template<class T> LANGULUS(INLINED)
-   auto ProducedFrom<T>::GetProducer() const noexcept -> T* {
+   auto ProducedFrom<T>::GetProducer() const noexcept -> const Ref<T>& {
       return mProducer;
    }
 

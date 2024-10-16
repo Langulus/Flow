@@ -83,8 +83,19 @@ struct Session : Resolvable {
    Fraction() : Resolvable(MetaOf<Fraction>()) {}
 };*/
 
+struct Producible;
+
 /// A mockup of a producer                                                    
-struct Producer : Referenced {};
+struct Producer : Referenced {
+   TFactory<Producible> factory1;
+   TFactoryUnique<Producible> factory2;
+
+   Count Reference(int x) {
+      factory1.Reference(x);
+      factory2.Reference(x);
+      return Referenced::Reference(x);
+   }
+};
 
 /// A mockup of a producible                                                  
 struct Producible : Referenced, ProducedFrom<Producer> {
@@ -93,6 +104,12 @@ struct Producible : Referenced, ProducedFrom<Producer> {
 
    ~Producible() {
       Logger::Special("Destroying Producible");
+   }
+
+   Count Reference(int x) {
+      if (Referenced::Reference(x) == 1)
+         ProducedFrom::Detach();
+      return GetReferences();
    }
 
    bool operator == (const Producible& rhs) const {

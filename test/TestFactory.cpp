@@ -283,6 +283,8 @@ SCENARIO("Test factories on the heap", "[factory]") {
 
          const_cast<Producible&>(prototype).Reference(-1);
 		}
+
+      factory.Teardown();
 	}
 
 	GIVEN("A factory with unique usage") {
@@ -413,6 +415,8 @@ SCENARIO("Test factories on the heap", "[factory]") {
 
          const_cast<Producible&>(prototype).Reference(-1);
 		}
+
+      factory.Teardown();
 	}
 
    wrappedProducer.Reset();
@@ -448,7 +452,6 @@ SCENARIO("Nested factories and circular referencing", "[factory]") {
 
       shallowProducer.factory.Create(&shallowProducer, creator2);
       REQUIRE(creator2.IsDone());
-
    }
 
    wrappedProducer.Reset();

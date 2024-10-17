@@ -48,7 +48,7 @@ namespace Langulus::Flow
    /// Reset the factory                                                      
    TEMPLATE() LANGULUS(INLINED)
    void FACTORY()::Reset() {
-      Teardown();
+      mHashmap.Reset();
       Base::Reset();
    }
    
@@ -63,10 +63,14 @@ namespace Langulus::Flow
    /// the Instance::mProducer handle instead on World factory destruction.   
    TEMPLATE() LANGULUS(INLINED)
    void FACTORY()::Teardown() {
-      mHashmap.Reset();
+      for (auto& item : *this) {
+         item.mProducer.Reset();
+         item.mDescriptor.Reset();
 
-      for (auto& item : *this)
-         item.Reference(0);
+         // Propagate Teardown routine                                  
+         if constexpr (requires { item.mData.Teardown(); })
+            item.mData.Teardown();
+      }
    }
 
 #if LANGULUS(SAFE)
@@ -331,13 +335,6 @@ namespace Langulus::Flow
       : mDescriptor {descriptor}
       , mProducer   {producer} {}
 
-   /// First-stage destruction                                                 
-   template<class T> LANGULUS(INLINED)
-   void ProducedFrom<T>::Teardown() {
-      mProducer.Reset();
-      mDescriptor.Reset();
-   }
-   
    /// Get the normalized descriptor of the produced item                     
    ///   @return the normalized descriptor                                    
    template<class T> LANGULUS(INLINED)

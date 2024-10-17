@@ -68,8 +68,8 @@ namespace Langulus::Flow
          item.mDescriptor.Reset();
 
          // Propagate Teardown routine                                  
-         if constexpr (requires { item.mData.Teardown(); })
-            item.mData.Teardown();
+         if constexpr (requires { item.Teardown(); })
+            item.Teardown();
       }
    }
 

@@ -70,9 +70,9 @@ namespace Langulus::Flow
       TFactory() = default;
       TFactory(const TFactory&) = delete;
       TFactory(TFactory&&) = delete;
+     ~TFactory();
 
       auto operator = (TFactory&&) noexcept -> TFactory&;
-      ~TFactory();
 
       void Reset();
       void Create(auto*, Verb&);
@@ -107,6 +107,9 @@ namespace Langulus::Flow
       LANGULUS(PRODUCER) T;
 
    protected:
+      template<class, FactoryUsage>
+      friend class TFactory;
+
       // The descriptor used for hashing and element identification     
       Many mDescriptor;
       // The producer of the element                                    
@@ -120,7 +123,6 @@ namespace Langulus::Flow
       template<template<class> class S>
       ProducedFrom(S<ProducedFrom>&&) requires CT::Intent<S<ProducedFrom>>;
 
-      void Teardown();
       auto GetDescriptor() const noexcept -> const Many&;
       Hash GetHash() const noexcept;
       auto GetProducer() const noexcept -> const Ref<T>&;

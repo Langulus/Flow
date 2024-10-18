@@ -126,6 +126,7 @@ namespace Langulus::Flow
       auto GetDescriptor() const noexcept -> const Many&;
       Hash GetHash() const noexcept;
       auto GetProducer() const noexcept -> const Ref<T>&;
+      void TeardownInner();
    };
 
 } // namespace Langulus::Flow

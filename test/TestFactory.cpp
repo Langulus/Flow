@@ -431,7 +431,7 @@ SCENARIO("Nested factories and circular referencing", "[factory]") {
    wrappedProducer.New();
    auto& deepProducer = wrappedProducer[0];
 
-   GIVEN("A factory with unique usage") {
+   GIVEN("A factory") {
       Verbs::Create creator1 {
          Construct::From<ShallowProducer>(
             Traits::Parent(&deepProducer),
@@ -440,9 +440,14 @@ SCENARIO("Nested factories and circular referencing", "[factory]") {
       };
 
       deepProducer.factory.Create(&deepProducer, creator1);
-      REQUIRE(creator1.IsDone());
-      auto& shallowProducer = creator1.GetOutput().As<ShallowProducer>();
+      deepProducer.factory.Create(&deepProducer, creator1);
+      deepProducer.factory.Create(&deepProducer, creator1);
+      deepProducer.factory.Create(&deepProducer, creator1);
+      deepProducer.factory.Create(&deepProducer, creator1);
+      deepProducer.factory.Create(&deepProducer, creator1);
+      deepProducer.factory.Create(&deepProducer, creator1);
 
+      auto& shallowProducer = creator1.GetOutput().As<ShallowProducer>();
       Verbs::Create creator2 {
          Construct::From<TheProducible>(
             Traits::Parent(&shallowProducer),
@@ -451,7 +456,19 @@ SCENARIO("Nested factories and circular referencing", "[factory]") {
       };
 
       shallowProducer.factory.Create(&shallowProducer, creator2);
-      REQUIRE(creator2.IsDone());
+      shallowProducer.factory.Create(&shallowProducer, creator2);
+      shallowProducer.factory.Create(&shallowProducer, creator2);
+      shallowProducer.factory.Create(&shallowProducer, creator2);
+      shallowProducer.factory.Create(&shallowProducer, creator2);
+      shallowProducer.factory.Create(&shallowProducer, creator2);
+      shallowProducer.factory.Create(&shallowProducer, creator2);
+      shallowProducer.factory.Create(&shallowProducer, creator2);
+
+      Ref<DeepProducer> justSomeExternalRef1 = &deepProducer;
+      Ref<ShallowProducer> justSomeExternalRef2 = &shallowProducer;
+
+      //deepProducer.Teardown();
+      //shallowProducer.Teardown();
    }
 
    wrappedProducer.Reset();

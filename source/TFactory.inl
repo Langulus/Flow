@@ -63,9 +63,10 @@ namespace Langulus::Flow
    /// the Instance::mProducer handle instead on World factory destruction.   
    TEMPLATE() LANGULUS(INLINED)
    void FACTORY()::Teardown() {
+      mHashmap.Reset();
+
       for (auto& item : *this) {
-         item.mProducer.Reset();
-         item.mDescriptor.Reset();
+         item.TeardownInner();
 
          // Propagate Teardown routine                                  
          if constexpr (requires { item.Teardown(); })
@@ -354,6 +355,14 @@ namespace Langulus::Flow
    template<class T> LANGULUS(INLINED)
    auto ProducedFrom<T>::GetProducer() const noexcept -> const Ref<T>& {
       return mProducer;
+   }
+   
+   /// Return the producer of the item (a.k.a. the owner of the factory)      
+   ///   @return a pointer to the producer instance                           
+   template<class T> LANGULUS(INLINED)
+   void ProducedFrom<T>::TeardownInner() {
+      mDescriptor.Reset();
+      mProducer.Reset();
    }
 
 } // namespace Langulus::Flow

@@ -159,7 +159,7 @@ namespace Langulus::Verbs
             TO result;
             return (result = from);
          }
-         else LANGULUS_ERROR("Unhandled conversion route for non-deep");
+         else static_assert(false, "Unhandled conversion route for non-deep");
       }
       else if constexpr (CT::Deep<FROM>) {
          // We're converting a container to something else              
@@ -170,7 +170,7 @@ namespace Langulus::Verbs
          else
             return result[0];
       }
-      else LANGULUS_ERROR("Interpretation impossible");
+      else static_assert(false, "Interpretation impossible");
    }
 
 } // namespace Langulus::Verbs
@@ -359,7 +359,7 @@ namespace Langulus::Anyness
          else if constexpr (CT::Defaultable<T>)
             return {};
          else {
-            LANGULUS_ERROR(
+            static_assert(false,
                "Unable to AsCast to non-default-constructible type, "
                "when lack of FATAL_FAILURE demands it");
          }
@@ -393,7 +393,7 @@ namespace Langulus::Anyness
       else if constexpr (CT::Defaultable<T>)
          return {};
       else {
-         LANGULUS_ERROR(
+         static_assert(false,
             "Unable to AsCast to non-default-constructible type, "
             "when lack of FATAL_FAILURE demands it");
       }

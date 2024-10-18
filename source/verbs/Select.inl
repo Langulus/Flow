@@ -200,7 +200,7 @@ namespace Langulus::Verbs
          else if constexpr (CT::Similar<META, TMeta>)
             member = context.GetType()->GetMember(meta, nullptr, i->GetOffset());
          else
-            LANGULUS_ERROR("Meta not supported for selecting members");
+            static_assert(false, "Meta not supported for selecting members");
 
          if (member) {
             VERBOSE_SELECT(

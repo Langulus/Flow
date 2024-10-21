@@ -80,12 +80,21 @@ namespace Langulus::Flow
       (void)MetaOf<Traits::Max>();
       (void)MetaOf<Traits::Input>();
       (void)MetaOf<Traits::Output>();
+      (void)MetaOf<Traits::Time>();
 
       // Make sure that all default types are registered before parsing 
       (void)MetaOf<Index>();
       (void)MetaOf<Temporal>();
-      //(void)MetaOf<Time>(); //TODO causes conflict with the trait that isn't detected due to too lax constraints!
+      (void)MetaOf<Time>();
       (void)MetaOf<Code>();
+
+      // Make sure that all default constants are registered            
+      (void)MetaOf<Constants::Yes>();
+      (void)MetaOf<Constants::No>();
+      (void)MetaOf<Constants::True>();
+      (void)MetaOf<Constants::False>();
+      (void)MetaOf<Constants::Null>();
+      (void)MetaOf<Constants::Nothing>();
 
       // Make sure that all default verbs are registered before parsing 
       (void)MetaOf<Verbs::Do>();
@@ -352,7 +361,7 @@ namespace Langulus::Flow
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       // Search for an exact token in meta definitions                  
-      const auto dmeta = RTTI::GetMetaData(keyword);
+      /*const auto dmeta = RTTI::GetMetaData(keyword);
       const auto tmeta = RTTI::GetMetaTrait(keyword);
       const auto cmeta = RTTI::GetMetaConstant(keyword);
 
@@ -380,7 +389,7 @@ namespace Langulus::Flow
          };
          lhs.SmartPush(IndexBack, Clone(constant));
       }
-      else {
+      else {*/
          // If this is reached, then exactly one match in symbols       
          // Push found meta data, if any                                
          const auto meta = Disambiguate(progress, input, keyword);
@@ -413,7 +422,7 @@ namespace Langulus::Flow
             const Block<> constant {{}, cmeta};
             lhs.SmartPush(IndexBack, Clone(constant));
          }
-      }
+      //}
 
       VERBOSE("Keyword parsed: `", keyword, "` as ", lhs, " (of type ", lhs.GetToken(), ")");
       return progress;

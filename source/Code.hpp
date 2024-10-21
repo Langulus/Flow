@@ -174,3 +174,10 @@ namespace Langulus
    /// Convenience operator for code string literals                          
    Flow::Code operator "" _code(const char*, ::std::size_t);
 }
+
+LANGULUS_DEFINE_CONSTANT(Yes,     true,    "Yes",     "The true boolean value");
+LANGULUS_DEFINE_CONSTANT(True,    true,    "True",    "The true boolean value");
+LANGULUS_DEFINE_CONSTANT(No,      false,   "No",      "The false boolean value");
+LANGULUS_DEFINE_CONSTANT(False,   false,   "False",   "The false boolean value");
+LANGULUS_DEFINE_CONSTANT(Null,    nullptr, "Null",    "Nothing, literally");
+LANGULUS_DEFINE_CONSTANT(Nothing, nullptr, "Nothing", "Nothing, literally");

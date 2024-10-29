@@ -13,76 +13,69 @@
 namespace Langulus
 {
    
-   /// Number of digits in a value                                            
-   /// Credit goes to http://stackoverflow.com/questions/1489830              
-   NOD() constexpr LANGULUS(INLINED) Count CountDigits(uint8_t x) noexcept {
-      return (x < 10u ? 1 : (x < 100u ? 2 : 3));
-   }
-
-   NOD() constexpr LANGULUS(INLINED) Count CountDigits(int8_t x) noexcept {
-      return CountDigits(static_cast<uint8_t>(::std::abs(x)));
-   }
-
-   NOD() constexpr LANGULUS(INLINED) Count CountDigits(uint16_t x) noexcept {
-      return (x < 10u ? 1 : (x < 100u ? 2 : (x < 1000u ? 3 : (x < 10000u ? 4 : 5))));
-   }
-
-   NOD() constexpr LANGULUS(INLINED) Count CountDigits(int16_t x) noexcept {
-      return CountDigits(static_cast<uint16_t>(::std::abs(x)));
-   }
-
-   NOD() constexpr LANGULUS(INLINED) Count CountDigits(uint32_t x) noexcept {
-      return
-         (x < 10u ? 1 :
-         (x < 100u ? 2 :
-         (x < 1000u ? 3 :
-         (x < 10000u ? 4 :
-         (x < 100000u ? 5 :
-         (x < 1000000u ? 6 :
-         (x < 10000000u ? 7 :
-         (x < 100000000u ? 8 :
-         (x < 1000000000u ? 9 : 10)))))))));
-   }
-
-   NOD() constexpr LANGULUS(INLINED) Count pcNumDigits(int32_t x) noexcept {
-      return CountDigits(static_cast<uint32_t>(::std::abs(x)));
-   }
-
-   NOD() constexpr LANGULUS(INLINED) Count CountDigits(uint64_t x) noexcept {
-      return
-         (x < 10ull ? 1 :
-         (x < 100ull ? 2 :
-         (x < 1000ull ? 3 :
-         (x < 10000ull ? 4 :
-         (x < 100000ull ? 5 :
-         (x < 1000000ull ? 6 :
-         (x < 10000000ull ? 7 :
-         (x < 100000000ull ? 8 :
-         (x < 1000000000ull ? 9 :
-         (x < 10000000000ull ? 10 :
-         (x < 100000000000ull ? 11 :
-         (x < 1000000000000ull ? 12 :
-         (x < 10000000000000ull ? 13 :
-         (x < 100000000000000ull ? 14 :
-         (x < 1000000000000000ull ? 15 :
-         (x < 10000000000000000ull ? 16 :
-         (x < 100000000000000000ull ? 17 :
-         (x < 1000000000000000000ull ? 18 :
-         (x < 10000000000000000000ull ? 19 : 20
-      )))))))))))))))))));
-   }
-
-   NOD() constexpr LANGULUS(INLINED) Count CountDigits(int64_t x) noexcept {
-      // http://graphics.stanford.edu/~seander/bithacks.html#IntegerAbs 
-      int const mask = x >> (sizeof(int64_t) * 8 - 1);
-      return CountDigits(static_cast<uint64_t>((x + mask) ^ mask));
-   }
-
    /// Count digits in real numbers                                           
    /// The dot in the real number is considered a digit, too                  
-   ///   @param x - real number to cound digits of                            
-   template<CT::Real T>
-   NOD() constexpr LANGULUS(INLINED) Count CountDigits(T x) noexcept {
+   /// Credit goes to http://stackoverflow.com/questions/1489830              
+   ///   @param x - real number to count digits of                            
+   template<CT::Integer T> NOD() LANGULUS(INLINED)
+   constexpr Count CountDigits(T x) noexcept {
+      if constexpr (CT::UnsignedInteger8<T>)
+         return (x < 10u ? 1 : (x < 100u ? 2 : 3));
+      else if constexpr (CT::SignedInteger8<T>)
+         return CountDigits(static_cast<uint8_t>(::std::abs(x)));
+      else if constexpr (CT::UnsignedInteger16<T>)
+         return (x < 10u ? 1 : (x < 100u ? 2 : (x < 1000u ? 3 : (x < 10000u ? 4 : 5))));
+      else if constexpr (CT::SignedInteger16<T>)
+         return CountDigits(static_cast<uint16_t>(::std::abs(x)));
+      else if constexpr (CT::UnsignedInteger32<T>) {
+         return
+            (x < 10u ? 1 :
+            (x < 100u ? 2 :
+            (x < 1000u ? 3 :
+            (x < 10000u ? 4 :
+            (x < 100000u ? 5 :
+            (x < 1000000u ? 6 :
+            (x < 10000000u ? 7 :
+            (x < 100000000u ? 8 :
+            (x < 1000000000u ? 9 : 10)))))))));
+      }
+      else if constexpr (CT::SignedInteger32<T>)
+         return CountDigits(static_cast<uint32_t>(::std::abs(x)));
+      else if constexpr (CT::UnsignedInteger64<T>) {
+         return
+            (x < 10ull ? 1 :
+            (x < 100ull ? 2 :
+            (x < 1000ull ? 3 :
+            (x < 10000ull ? 4 :
+            (x < 100000ull ? 5 :
+            (x < 1000000ull ? 6 :
+            (x < 10000000ull ? 7 :
+            (x < 100000000ull ? 8 :
+            (x < 1000000000ull ? 9 :
+            (x < 10000000000ull ? 10 :
+            (x < 100000000000ull ? 11 :
+            (x < 1000000000000ull ? 12 :
+            (x < 10000000000000ull ? 13 :
+            (x < 100000000000000ull ? 14 :
+            (x < 1000000000000000ull ? 15 :
+            (x < 10000000000000000ull ? 16 :
+            (x < 100000000000000000ull ? 17 :
+            (x < 1000000000000000000ull ? 18 :
+            (x < 10000000000000000000ull ? 19 : 20
+         )))))))))))))))))));
+      }
+      else if constexpr (CT::SignedInteger64<T>) {
+         // http://graphics.stanford.edu/~seander/bithacks.html#IntegerAbs 
+         int const mask = x >> (sizeof(int64_t) * 8 - 1);
+         return CountDigits(static_cast<uint64_t>((x + mask) ^ mask));
+      }
+      else static_assert(false, "Unimplemented integer");
+   }
+
+   /// Count digits in integer numbers                                        
+   ///   @param x - integer number to count digits of                         
+   template<CT::Real T> NOD() LANGULUS(INLINED)
+   constexpr Count CountDigits(T x) noexcept {
       T floored;
       T fraction {::std::abs(::std::modf(x, &floored))};
       if (fraction == 0)
@@ -104,8 +97,8 @@ namespace Langulus
    ///   @param lhs - left number                                             
    ///   @param rhs - right number                                            
    ///   @return the concatenation of the two numbers                         
-   template<CT::Number T>
-   NOD() LANGULUS(INLINED) T ConcatenateNumbers(const T& lhs, const T& rhs) {
+   template<CT::Number T> NOD() LANGULUS(INLINED)
+   T ConcatenateNumbers(const T& lhs, const T& rhs) {
       T result {lhs};
       result *= ::std::pow(T {10}, static_cast<T>(CountDigits(rhs)));
       result += rhs;

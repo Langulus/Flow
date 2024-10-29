@@ -24,6 +24,10 @@
 #include "verbs/Greater.inl"
 #include "verbs/GreaterOrEqual.inl"
 
+#if LANGULUS_COMPILER(WASM)
+   #include <string>
+#endif
+
 LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
 
 #define ENABLE_VERBOSE() 0
@@ -469,10 +473,21 @@ namespace Langulus::Flow
       Offset progress = 0;
       VERBOSE_TAB("Parsing number");
 
-      if (auto [p, ec] = ::std::from_chars(input.GetRaw(), input.GetRaw() + input.GetCount(), rhs); 
+   #if LANGULUS_COMPILER(WASM)
+      // Some standard library implementations don't allow for          
+      // from_chars that involve parsing float/double                   
+      if constexpr (CT::Float<Real>)
+         rhs = ::std::stof(std::string(Token(input.GetRaw(), input.GetRaw() + input.GetCount())));
+      else if constexpr (CT::Double<Real>)
+         rhs = ::std::stod(std::string(Token(input.GetRaw(), input.GetRaw() + input.GetCount())));
+      
+      static_assert(CT::Float<Real> or CT::Double<Real>, "Unsupported real number type");
+   #else
+      if (auto [p, ec] = ::std::from_chars(input.GetRaw(), input.GetRaw() + input.GetCount(), rhs);
          ec == ::std::errc()) {
          progress = p - input.GetRaw();
       }
+   #endif
 
       VERBOSE(Logger::Green, "Number parsed: ", rhs);
       lhs << rhs;

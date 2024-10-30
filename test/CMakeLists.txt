@@ -4,14 +4,7 @@ file(GLOB_RECURSE
 	*.cpp
 )
 
-add_executable(LangulusFlowTest ${LANGULUS_FLOW_TEST_SOURCES})
-
-target_link_libraries(LangulusFlowTest
-	PRIVATE		LangulusFlow
-				Catch2
-)
-
-add_test(
-	NAME		LangulusFlowTest
-	COMMAND		LangulusFlowTest
+add_langulus_test(LangulusFlowTest
+	SOURCES		${LANGULUS_FLOW_TEST_SOURCES}
+	LIBRARIES	LangulusFlow
 )

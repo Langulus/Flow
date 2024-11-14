@@ -9,7 +9,7 @@
 #include "Code.inl"
 #include "Resolvable.inl"
 #include "inner/Missing.hpp"
-#include "inner/Fork.hpp"
+#include "inner/Entangled.hpp"
 #include "Temporal.hpp"
 
 #if 1
@@ -49,8 +49,15 @@ Temporal::operator Text() const {
 
 /// Reset progress for the priority stack                                     
 void Temporal::Reset() {
+   // Reset timers                                                      
    mStart = mNow = {};
+
+   // Reset the execution state of all verbs in the priority stack      
    ResetInner(mPriorityStack);
+
+   // Reset all entanglements                                           
+   for (auto b : mEntanglements)
+      *b = false;
 }
 
 /// Reset progress for all verbs inside a scope                               
@@ -64,6 +71,12 @@ void Temporal::ResetInner(Many& scope) {
       [&](Inner::Missing& missing) {
          if (missing.mContent.IsDense())
             ResetInner(missing.mContent);
+      },
+      [&](Inner::Entangled& entangled) {
+         if (entangled.mActiveContent.IsDense())
+            ResetInner(entangled.mActiveContent);
+         if (entangled.mPassiveContent.IsDense())
+            ResetInner(entangled.mPassiveContent);
       },
       [&](Trait& trait) {
          if (trait.IsDense())
@@ -473,13 +486,11 @@ bool Temporal::PushFutures(const Many& scope, Neat& stack) {
 /// Push a scope into future points already available in the flow             
 ///   @param scope - the scope to push                                        
 void Temporal::Link(const Many& scope) {
+   Ref<bool> entangled;
+
    if (scope.IsOr()) {
-      // Push ambiguously - each branch is inserted on its own in future   
-      // link points, and then entangled if branches end up in different   
-      // places, so that if one executes - the other doesn't.              
-      // There's no escape from this branch.                               
-      TODO();
-      return;
+      // Every time we push an OR scope we create an entanglement       
+      entangled = mEntanglements.Emplace(IndexBack).New();
    }
 
    if (scope.IsDeep()) {
@@ -503,73 +514,74 @@ void Temporal::Link(const Many& scope) {
             Link(sub);
          });
       }
+
+      return;
    }
-   else {
-      // Handle shallow scope                                           
-      scope.ForEach(
-         [&](const Trait& t) {
-            // Forward to all future points in the priority stack       
-            TMany<Trait> local = t;
-            LANGULUS_ASSERT(
-               PushFutures(local, mPriorityStack),
-               Flow, "Couldn't push to future"
-            );
-         },
-         [&](const Construct& c) {
-            // Forward to all future points in the priority stack       
-            TMany<Construct> local = c;
-            LANGULUS_ASSERT(
-               PushFutures(local, mPriorityStack),
-               Flow, "Couldn't push to future"
-            );
-         },
-         [&](const Verb& v) {
-            if (v.IsVerb<Verbs::Do>()) {
-               // "Do" verbs act as context/mass/rate/time setters      
-               // Don't push them, but use them to set environment for  
-               // any sub-verbs                                         
-               LinkRelative(v.GetArgument(), v);
-            }
-            else if (v.GetTime()) {
-               // Verb is timed, forward it to the time stack           
-               TMany<Verb> local = v;
-               local[0].SetTime(0);
 
-               auto found = mTimeStack.FindIt(v.GetTime());
-               if (not found) {
-                  mTimeStack.Insert(v.GetTime(), this);
-                  found = mTimeStack.FindIt(v.GetTime());
-               }
-
-               found.GetValue().LinkRelative(local, v);
-            }
-            else if (v.GetRate()) {
-               // Verb is rated, forward it to the frequency stack      
-               TMany<Verb> local = v;
-               local[0].SetRate(0);
-
-               auto found = mFrequencyStack.FindIt(v.GetRate());
-               if (not found) {
-                  mFrequencyStack.Insert(v.GetRate(), this);
-                  found = mFrequencyStack.FindIt(v.GetRate());
-               }
-
-               LANGULUS_ASSERT(
-                  found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
-                  Flow, "Couldn't push to future"
-               );
-            }
-            else {
-               // Forward it to the priority stack                      
-               TMany<Verb> local = v;
-               LANGULUS_ASSERT(
-                  PushFutures(local, mPriorityStack),
-                  Flow, "Couldn't push to future"
-               );
-            }
+   // Handle shallow scope                                              
+   scope.ForEach(
+      [&](const Trait& t) {
+         // Forward to all future points in the priority stack          
+         TMany<Trait> local = t;
+         LANGULUS_ASSERT(
+            PushFutures(local, mPriorityStack),
+            Flow, "Couldn't push to future"
+         );
+      },
+      [&](const Construct& c) {
+         // Forward to all future points in the priority stack          
+         TMany<Construct> local = c;
+         LANGULUS_ASSERT(
+            PushFutures(local, mPriorityStack),
+            Flow, "Couldn't push to future"
+         );
+      },
+      [&](const Verb& v) {
+         if (v.IsVerb<Verbs::Do>()) {
+            // "Do" verbs act as context/mass/rate/time setters         
+            // Don't push them, but use them to set environment for     
+            // any sub-verbs                                            
+            LinkRelative(v.GetArgument(), v);
          }
-      );
-   }
+         else if (v.GetTime()) {
+            // Verb is timed, forward it to the time stack              
+            TMany<Verb> local = v;
+            local[0].SetTime(0);
+
+            auto found = mTimeStack.FindIt(v.GetTime());
+            if (not found) {
+               mTimeStack.Insert(v.GetTime(), this);
+               found = mTimeStack.FindIt(v.GetTime());
+            }
+
+            found.GetValue().LinkRelative(local, v);
+         }
+         else if (v.GetRate()) {
+            // Verb is rated, forward it to the frequency stack         
+            TMany<Verb> local = v;
+            local[0].SetRate(0);
+
+            auto found = mFrequencyStack.FindIt(v.GetRate());
+            if (not found) {
+               mFrequencyStack.Insert(v.GetRate(), this);
+               found = mFrequencyStack.FindIt(v.GetRate());
+            }
+
+            LANGULUS_ASSERT(
+               found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
+               Flow, "Couldn't push to future"
+            );
+         }
+         else {
+            // Forward it to the priority stack                         
+            TMany<Verb> local = v;
+            LANGULUS_ASSERT(
+               PushFutures(local, mPriorityStack),
+               Flow, "Couldn't push to future"
+            );
+         }
+      }
+   );
 }
 
 /// Push a scope into future points already available in the flow, but do it  
@@ -585,153 +597,153 @@ void Temporal::LinkRelative(const Many& scope, const Verb& override) {
       scope.ForEach([&](const Many& sub) {
          LinkRelative(sub, override);
       });
+      return;
    }
-   else {
-      // Handle shallow scope                                           
-      scope.ForEach(
-         [&](const Trait& t) {
-            TMany<Trait> local = t;
 
-            // Forward to future point in appropriate stack,            
-            // according to the override verb                           
-            if (override.GetTime()) {
-               // Trait is timed, forward it to the time stack          
-               auto found = mTimeStack.FindIt(override.GetTime());
-               if (not found) {
-                  mTimeStack.Insert(override.GetTime(), this);
-                  found = mTimeStack.FindIt(override.GetTime());
-               }
+   // Handle shallow scope                                              
+   scope.ForEach(
+      [&](const Trait& t) {
+         TMany<Trait> local = t;
 
-               LANGULUS_ASSERT(
-                  found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
-                  Flow, "Couldn't push to future"
-               );
+         // Forward to future point in appropriate stack, according to  
+         // the override verb                                           
+         if (override.GetTime()) {
+            // Trait is timed, forward it to the time stack             
+            auto found = mTimeStack.FindIt(override.GetTime());
+            if (not found) {
+               mTimeStack.Insert(override.GetTime(), this);
+               found = mTimeStack.FindIt(override.GetTime());
             }
-            else if (override.GetRate()) {
-               // Verb is rated, forward it to the frequency stack      
-               auto found = mFrequencyStack.FindIt(override.GetRate());
-               if (not found) {
-                  mFrequencyStack.Insert(override.GetRate(), this);
-                  found = mFrequencyStack.FindIt(override.GetRate());
-               }
 
-               LANGULUS_ASSERT(
-                  found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
-                  Flow, "Couldn't push to future"
-               );
-            }
-            else {
-               // Forward it to the priority stack                      
-               LANGULUS_ASSERT(
-                  PushFutures(local, mPriorityStack),
-                  Flow, "Couldn't push to future"
-               );
-            }
-         },
-         [&](const Construct& c) {
-            TMany<Construct> local = c;
-
-            // Forward to future point in appropriate stack,            
-            // according to the override verb                           
-            if (override.GetTime()) {
-               // Trait is timed, forward it to the time stack          
-               auto found = mTimeStack.FindIt(override.GetTime());
-               if (not found) {
-                  mTimeStack.Insert(override.GetTime(), this);
-                  found = mTimeStack.FindIt(override.GetTime());
-               }
-
-               LANGULUS_ASSERT(
-                  found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
-                  Flow, "Couldn't push to future"
-               );
-            }
-            else if (override.GetRate()) {
-               // Verb is rated, forward it to the frequency stack      
-               auto found = mFrequencyStack.FindIt(override.GetRate());
-               if (not found) {
-                  mFrequencyStack.Insert(override.GetRate(), this);
-                  found = mFrequencyStack.FindIt(override.GetRate());
-               }
-
-               LANGULUS_ASSERT(
-                  found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
-                  Flow, "Couldn't push to future"
-               );
-            }
-            else {
-               // Forward it to the priority stack                      
-               LANGULUS_ASSERT(
-                  PushFutures(local, mPriorityStack),
-                  Flow, "Couldn't push to future"
-               );
-            }
-         },
-         [&](const Verb& v) {
-            // Multiply verb energy and merge contexts                  
-            const Verb localOverride = v * override;
-
-            if (v.IsVerb<Verbs::Do>()) {
-               // "Do" verbs act as context/mass/rate/time setters      
-               // Don't push them, but use them to set environment for  
-               // any sub-verbs                                         
-               LinkRelative(v.GetArgument(), localOverride);
-            }
-            else if (localOverride.GetTime()) {
-               // Verb is timed, forward it to the time stack           
-               const auto time = localOverride.GetTime();
-               TMany<Verb> local = v;
-               local[0].SetTime(0);
-
-               auto found = mTimeStack.FindIt(time);
-               if (not found) {
-                  mTimeStack.Insert(time, this);
-                  found = mTimeStack.FindIt(time);
-               }
-
-               found.GetValue().LinkRelative(local, localOverride);
-            }
-            else if (localOverride.GetRate()) {
-               // Verb is rated, forward it to the frequency stack      
-               const auto rate = localOverride.GetRate();
-               TMany<Verb> local = v;
-               local[0].SetRate(0);
-               if (not local[0].GetSource()) //TODO check if this is allowed - no other branch seems to override source
-                  local[0].SetSource(localOverride.GetSource());
-
-               auto found = mFrequencyStack.FindIt(rate);
-               if (not found) {
-                  mFrequencyStack.Insert(rate, this);
-                  found = mFrequencyStack.FindIt(rate);
-               }
-
-               LANGULUS_ASSERT(
-                  found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
-                  Flow, "Couldn't push to future"
-               );
-            }
-            else {
-               // Forward it to the priority stack                      
-               // Collapse all verb charges at this point               
-               TMany<Verb> local = v;
-               local[0].SetMass(localOverride.GetMass());
-               local[0].SetPriority(localOverride.GetPriority());
-
-               // Always push any valid source to the future, so that   
-               // missing past can get satisfied by it                  
-               if (override.GetSource()) {
-                  LANGULUS_ASSERT(
-                     PushFutures(override.GetSource(), mPriorityStack),
-                     Flow, "Couldn't push to future"
-                  );
-               }
-
-               LANGULUS_ASSERT(
-                  PushFutures(local, mPriorityStack),
-                  Flow, "Couldn't push to future"
-               );
-            }
+            LANGULUS_ASSERT(
+               found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
+               Flow, "Couldn't push to future"
+            );
          }
-      );
-   }
+         else if (override.GetRate()) {
+            // Verb is rated, forward it to the frequency stack         
+            auto found = mFrequencyStack.FindIt(override.GetRate());
+            if (not found) {
+               mFrequencyStack.Insert(override.GetRate(), this);
+               found = mFrequencyStack.FindIt(override.GetRate());
+            }
+
+            LANGULUS_ASSERT(
+               found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
+               Flow, "Couldn't push to future"
+            );
+         }
+         else {
+            // Forward it to the priority stack                         
+            LANGULUS_ASSERT(
+               PushFutures(local, mPriorityStack),
+               Flow, "Couldn't push to future"
+            );
+         }
+      },
+      [&](const Construct& c) {
+         TMany<Construct> local = c;
+
+         // Forward to future point in appropriate stack,               
+         // according to the override verb                              
+         if (override.GetTime()) {
+            // Trait is timed, forward it to the time stack             
+            auto found = mTimeStack.FindIt(override.GetTime());
+            if (not found) {
+               mTimeStack.Insert(override.GetTime(), this);
+               found = mTimeStack.FindIt(override.GetTime());
+            }
+
+            LANGULUS_ASSERT(
+               found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
+               Flow, "Couldn't push to future"
+            );
+         }
+         else if (override.GetRate()) {
+            // Verb is rated, forward it to the frequency stack         
+            auto found = mFrequencyStack.FindIt(override.GetRate());
+            if (not found) {
+               mFrequencyStack.Insert(override.GetRate(), this);
+               found = mFrequencyStack.FindIt(override.GetRate());
+            }
+
+            LANGULUS_ASSERT(
+               found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
+               Flow, "Couldn't push to future"
+            );
+         }
+         else {
+            // Forward it to the priority stack                         
+            LANGULUS_ASSERT(
+               PushFutures(local, mPriorityStack),
+               Flow, "Couldn't push to future"
+            );
+         }
+      },
+      [&](const Verb& v) {
+         // Multiply verb energy and merge contexts                     
+         const Verb localOverride = v * override;
+
+         if (v.IsVerb<Verbs::Do>()) {
+            // "Do" verbs act as context/mass/rate/time setters         
+            // Don't push them, but use them to set environment for     
+            // any sub-verbs                                            
+            LinkRelative(v.GetArgument(), localOverride);
+         }
+         else if (localOverride.GetTime()) {
+            // Verb is timed, forward it to the time stack              
+            const auto time = localOverride.GetTime();
+            TMany<Verb> local = v;
+            local[0].SetTime(0);
+
+            auto found = mTimeStack.FindIt(time);
+            if (not found) {
+               mTimeStack.Insert(time, this);
+               found = mTimeStack.FindIt(time);
+            }
+
+            found.GetValue().LinkRelative(local, localOverride);
+         }
+         else if (localOverride.GetRate()) {
+            // Verb is rated, forward it to the frequency stack         
+            const auto rate = localOverride.GetRate();
+            TMany<Verb> local = v;
+            local[0].SetRate(0);
+            if (not local[0].GetSource()) //TODO check if this is allowed - no other branch seems to override source
+               local[0].SetSource(localOverride.GetSource());
+
+            auto found = mFrequencyStack.FindIt(rate);
+            if (not found) {
+               mFrequencyStack.Insert(rate, this);
+               found = mFrequencyStack.FindIt(rate);
+            }
+
+            LANGULUS_ASSERT(
+               found.GetValue().PushFutures(local, found.GetValue().mPriorityStack),
+               Flow, "Couldn't push to future"
+            );
+         }
+         else {
+            // Forward it to the priority stack                         
+            // Collapse all verb charges at this point                  
+            TMany<Verb> local = v;
+            local[0].SetMass(localOverride.GetMass());
+            local[0].SetPriority(localOverride.GetPriority());
+
+            // Always push any valid source to the future, so that      
+            // missing past can get satisfied by it                     
+            if (override.GetSource()) {
+               LANGULUS_ASSERT(
+                  PushFutures(override.GetSource(), mPriorityStack),
+                  Flow, "Couldn't push to future"
+               );
+            }
+
+            LANGULUS_ASSERT(
+               PushFutures(local, mPriorityStack),
+               Flow, "Couldn't push to future"
+            );
+         }
+      }
+   );
 }

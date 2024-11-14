@@ -66,6 +66,9 @@ namespace Langulus::Flow
       // Each unit of time is equal to one mRatePeriod                  
       TUnorderedMap<Real, Temporal> mFrequencyStack;
 
+      // An array of entanglement points                                
+      TMany<Ref<bool>> mEntanglements;
+
    protected:
       LANGULUS_API(FLOW) static Many Compile(const Many&, Real priority);
       LANGULUS_API(FLOW) static Many Compile(const Neat&, Real priority);

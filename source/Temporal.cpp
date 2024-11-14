@@ -12,7 +12,7 @@
 #include "inner/Fork.hpp"
 #include "Temporal.hpp"
 
-#if 0
+#if 1
    #define VERBOSE_TEMPORAL(...)       Logger::Verbose(*this, ": ", __VA_ARGS__)
    #define VERBOSE_TEMPORAL_TAB(...)   const auto tab = Logger::VerboseTab(*this, ": ", __VA_ARGS__)
 #else
@@ -470,12 +470,17 @@ bool Temporal::PushFutures(const Many& scope, Neat& stack) {
    return atLeastOneSuccess;
 }
 
-/// Experimental                                                              
-/// Experimental                                                              
-/// Experimental                                                              
+/// Push a scope into future points already available in the flow             
+///   @param scope - the scope to push                                        
 void Temporal::Link(const Many& scope) {
-   if (scope.IsOr())
+   if (scope.IsOr()) {
+      // Push ambiguously - each branch is inserted on its own in future   
+      // link points, and then entangled if branches end up in different   
+      // places, so that if one executes - the other doesn't.              
+      // There's no escape from this branch.                               
       TODO();
+      return;
+   }
 
    if (scope.IsDeep()) {
       if (scope.IsSparse()) {
@@ -483,7 +488,7 @@ void Temporal::Link(const Many& scope) {
          // anything, because that would require changing data behind   
          // the handle. This allows for specifying contexts externally, 
          // but also makes the flow impure, because it allows it to be  
-         // affacted by external influence.                             
+         // affected by external influence.                             
          scope.ForEach([&](const Many& sub) {
             VERBOSE_TEMPORAL_TAB("Pushing sparse block ", sub, " to ", mPriorityStack);
             LANGULUS_ASSERT(
@@ -567,9 +572,10 @@ void Temporal::Link(const Many& scope) {
    }
 }
 
-/// Experimental                                                              
-/// Experimental                                                              
-/// Experimental                                                              
+/// Push a scope into future points already available in the flow, but do it  
+/// in a manner similar in energy to a given verb                             
+///   @param scope - the scope to push                                        
+///   @param override - the reference verb                                    
 void Temporal::LinkRelative(const Many& scope, const Verb& override) {
    if (scope.IsOr())
       TODO();
@@ -690,7 +696,7 @@ void Temporal::LinkRelative(const Many& scope, const Verb& override) {
                const auto rate = localOverride.GetRate();
                TMany<Verb> local = v;
                local[0].SetRate(0);
-               if (not local[0].GetSource())
+               if (not local[0].GetSource()) //TODO check if this is allowed - no other branch seems to override source
                   local[0].SetSource(localOverride.GetSource());
 
                auto found = mFrequencyStack.FindIt(rate);
@@ -719,13 +725,6 @@ void Temporal::LinkRelative(const Many& scope, const Verb& override) {
                      Flow, "Couldn't push to future"
                   );
                }
-
-               /*
-               if (not local[0].GetSource()) {
-                  // Directly substitute missing sources                
-                  //TODO fill missing only to allow for explicit stateless execution?
-                  local[0].SetSource(localOverride.GetSource());
-               }*/
 
                LANGULUS_ASSERT(
                   PushFutures(local, mPriorityStack),

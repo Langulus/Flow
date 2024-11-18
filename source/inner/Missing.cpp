@@ -27,7 +27,7 @@ using namespace Langulus::Flow::Inner;
 /// Initialize a missing point by a precompiled filter                        
 ///   @param filter - the filter to set                                       
 Missing::Missing(const TMany<DMeta>& filter, Real priority)
-   : mFilter {filter}
+   : mFilter   {filter}
    , mPriority {priority} { }
 
 /// Initialize a missing point by a filter, will be precompiled               
@@ -152,7 +152,11 @@ bool Missing::Push(const Many& content) {
       // Fill any missing points with whatever is available             
       Many linked;
       try { linked = Link(content, *this); }
-      catch (const Except::Link&) { return false; }
+      catch (const Except::Link&) {
+         // Failed to link, probably due to proprity constraints        
+         // Dig into mContents in search of another nested future point 
+         return Temporal::PushFutures(content, mContent);
+      }
 
       if (linked) {
          // Avoid duplications if new content is sparse                 
@@ -267,7 +271,7 @@ Many Missing::Link(const Many& scope, const Missing& context) const {
       [&](const Inner::MissingPast& past) {
          // Replace a missing past point with provided context          
          VERBOSE_MISSING_POINT_TAB("Linking past point: ", past);
-         if (mPriority != NoPriority and mPriority <= past.mPriority) {
+         if (mPriority > past.mPriority) {
             VERBOSE_MISSING_POINT(Logger::DarkYellow,
                "Skipped past point with higher priority: ", past);
             LANGULUS_THROW(Link, "Past point of higher priority");
@@ -349,11 +353,11 @@ Many Missing::Link(const Many& scope, const Missing& context) const {
 Missing::operator Text() const {
    Text result;
 
-   if ((mPriority and mPriority != NoPriority) or mContent) {
+   if (mPriority or mContent) {
       result += '(';
       mFilter.Serialize(result);
 
-      if (mPriority and mPriority != NoPriority)
+      if (mPriority)
          result += Text {" !", mPriority};
 
       if (mContent) {

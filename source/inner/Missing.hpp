@@ -12,10 +12,9 @@
 namespace Langulus::Flow::Inner
 {
 
-   constexpr auto NoPriority = Charge::MaxPriority;
    struct MissingPast;
    struct MissingFuture;
-   using Pasts = TMany<MissingPast*>;
+   using Pasts   = TMany<MissingPast*>;
    using Futures = TMany<MissingFuture*>;
 
 
@@ -27,11 +26,13 @@ namespace Langulus::Flow::Inner
 
       TMany<DMeta> mFilter;
       Many mContent;
-      Real mPriority {NoPriority};
+      Real mPriority {0};
 
       Missing() = default;
-      Missing(const TMany<DMeta>&, Real priority);
-      Missing(const Many&,         Real priority);
+      explicit Missing(Missing&&) = default;
+      explicit Missing(const Missing&) = default;
+      explicit Missing(const TMany<DMeta>&, Real priority = 0);
+      explicit Missing(const Many&,         Real priority = 0);
 
       NOD() bool Accepts(const Many&) const;
       NOD() bool IsSatisfied() const;
@@ -63,7 +64,6 @@ namespace Langulus::Flow::Inner
       LANGULUS_BASES(Missing);
       using Missing::Missing;
       MissingFuture();
-      static Futures Find(const Many& scope, const Real priority, Real& priorityFeedback);
    };
 
 } // namespace Langulus::Flow::Inner

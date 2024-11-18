@@ -512,6 +512,9 @@ namespace Langulus::Flow
    ///   @param input - the code to peek into                                 
    ///   @return true if input begins with an operators                       
    Code::Operator Code::OperatorParser::Peek(const Code& input) noexcept {
+      if (not input)
+         return Operator::NoOperator;
+
       const auto builtin = PeekBuiltin(input);
       if (builtin != Operator::NoOperator)
          return builtin;
@@ -976,13 +979,30 @@ namespace Langulus::Flow
       if (op == Operator::SelectIdea) {
          // Implicitly create/select an idea                            
          Verbs::Create verb {Construct::FromToken("Idea", Abandon(content))};
-         verb.SetSource(Many::Past());
-         lhs.SmartPush(IndexBack, Abandon(verb));
+         verb.SetSource(Many::Past("Thing"));
+
+         // Check if there's a scope after an idea - it can be used to  
+         // assemble the idea into data, while optionally providing     
+         // future arguments for that process                           
+         const auto tail = input.RightOf(progress);
+         const auto next_op = OperatorParser::Peek(tail);
+         if (next_op == Operator::OpenScope
+         or next_op == Operator::OpenScopeAlt) {
+            // Scoped data was found                                    
+            // Wrap everything in a Verbs::Do                           
+            Many arguments;
+            progress += OperatorParser::Parse(next_op, tail, arguments, 0, true);
+
+            Verbs::Do doer {Abandon(arguments)};
+            doer.SetSource(Abandon(verb));
+            lhs.SmartPush(IndexBack, Abandon(doer));
+         }
+         else lhs.SmartPush(IndexBack, Abandon(verb));
       }
       else if (op == Operator::SelectThing) {
          // Implicitly select an object by name                         
          Verbs::Select verb {Construct::FromToken("Thing", Abandon(content))};
-         verb.SetSource(Many::Past());
+         verb.SetSource(Many::Past("Thing"));
          lhs.SmartPush(IndexBack, Abandon(verb));
       }
       else {

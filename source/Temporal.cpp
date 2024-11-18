@@ -13,9 +13,11 @@
 #include "Temporal.hpp"
 
 #if 1
+   #define VERBOSE_ENABLED() 1
    #define VERBOSE_TEMPORAL(...)       Logger::Verbose(*this, ": ", __VA_ARGS__)
    #define VERBOSE_TEMPORAL_TAB(...)   const auto tab = Logger::VerboseTab(*this, ": ", __VA_ARGS__)
 #else
+   #define VERBOSE_ENABLED() 0
    #define VERBOSE_TEMPORAL(...)       LANGULUS(NOOP)
    #define VERBOSE_TEMPORAL_TAB(...)   LANGULUS(NOOP)
 #endif
@@ -123,13 +125,95 @@ bool Temporal::IsValid() const {
 /// Dump the contents of the flow to the log in a pretty, colorized and       
 /// easily readable way                                                       
 void Temporal::Dump() const {
+   Logger::Verbose(*this, ": DUMPING CONTENTS...");
+
    if (mPriorityStack)
-      Logger::Verbose(mPriorityStack);
-   if (mTimeStack)
-      Logger::Verbose(mTimeStack);
-   if (mFrequencyStack)
-      Logger::Verbose(mFrequencyStack);
+      DumpInner(mPriorityStack, true);
+
+   for (auto pair : mTimeStack) {
+      auto tab = Logger::Section(Logger::PushPurple, "At time ", pair.mKey, ":");
+      pair.mValue.Dump();
+   }
+
+   for (auto pair : mFrequencyStack) {
+      auto tab = Logger::Section(Logger::PushBlue, "At rate ", pair.mKey, ":");
+      pair.mValue.Dump();
+   }
 }
+
+/// Inner nested dumper                                                       
+///   @return true if stuff was dumped on a new line                          
+bool Temporal::DumpInner(const Many& data, bool newline) const {
+   if (data.IsDeep()) {
+      if (data.IsOr()) {
+         // Display a range of alternatives                             
+         bool first = true;
+         Logger::Verbose(Logger::PushDarkYellow, '(', Logger::Pop);
+         data.ForEach([&](const Many& group) {
+            if (not first)
+               Logger::Verbose(Logger::PushDarkYellow, "or ", Logger::Pop);
+            else
+               Logger::Verbose("|  ");
+            Logger::Append(Logger::Tab);
+            DumpInner(group);
+            Logger::Append(Logger::Untab);
+            first = false;
+         });
+         Logger::Verbose(Logger::PushDarkYellow, ')', Logger::Pop);
+         newline = true;
+      }
+      else {
+         // Display a range of sequentials                              
+         data.ForEach([&](const Many& group) {
+            newline = DumpInner(group, newline);
+         });
+      }
+
+      return newline;
+   }
+
+   // Flat if reached                                                   
+   // Do some special formatting for specific things                    
+   const auto done = data.ForEach(
+      [&](const Inner::MissingFuture& p) {
+         if ((p.mPriority and p.mPriority != Inner::NoPriority) or p.mContent) {
+            if (p.mContent)
+               newline = DumpInner(p.mContent, newline);
+
+            Logger::Verbose(Logger::PushGreen, '(', Logger::Hex(&p), ' ', p.mFilter);
+            if (p.mPriority and p.mPriority != Inner::NoPriority)
+               Logger::Append(" !", p.mPriority);
+            Logger::Append(')', Logger::Pop);
+         }
+         else Logger::Verbose(Logger::PushGreen, '(', Logger::Hex(&p), ' ', p.mFilter, Logger::Pop);
+      },
+      [&](const Inner::MissingPast& p) {
+         if ((p.mPriority and p.mPriority != Inner::NoPriority) or p.mContent) {
+            if (p.mContent)
+               newline = DumpInner(p.mContent, newline);
+
+            Logger::Verbose(Logger::PushYellow, '(', Logger::Hex(&p), ' ', p.mFilter);
+            if (p.mPriority and p.mPriority != Inner::NoPriority)
+               Logger::Append(" !", p.mPriority);
+            Logger::Append(')', Logger::Pop);
+         }
+         else Logger::Verbose(Logger::PushYellow, '(', Logger::Hex(&p), ' ', p.mFilter, Logger::Pop);
+      },
+      [&](const Verb& v) {
+         Logger::Verbose(v, ", ");
+      }
+   );
+
+   // Just dump anything else                                           
+   if (not done) {
+      if (newline)   Logger::Verbose(data, ", ");
+      else           Logger::Append (data, ", ");
+      return false;
+   }
+
+   return true;
+}
+
 
 /// Get the accumulated running time across all Updates                       
 ///   @return the time                                                        
@@ -144,14 +228,14 @@ Langulus::Time Temporal::GetUptime() const {
 bool Temporal::Update(Time dt, Many& sideffects) {
    if (mStart == mNow) {
       // We're at the beginning of time - execute the priority stack    
-      VERBOSE_TEMPORAL(Logger::Purple,
-         "Flow before execution: ", mPriorityStack);
+      //VERBOSE_TEMPORAL(Logger::Purple,
+      //   "Flow before execution: ", mPriorityStack);
 
       Many unusedContext;
       Execute(mPriorityStack, unusedContext, sideffects, false);
 
-      VERBOSE_TEMPORAL(Logger::Purple,
-         "Flow after execution: ", mPriorityStack);
+      //VERBOSE_TEMPORAL(Logger::Purple,
+      //   "Flow after execution: ", mPriorityStack);
    }
 
    // Avoid updating anything else, if no time had passed               
@@ -249,22 +333,29 @@ void Temporal::Merge(const Temporal& other) {
 ///   @param scope - the scope to analyze and push                            
 ///   @return true if the flow changed                                        
 Many Temporal::PushInner(Many scope) {
-   VERBOSE_TEMPORAL_TAB("Pushing: ", scope);
+   Many compiled;
 
-   // Compile pushed scope to an intermediate format                    
-   auto compiled = Compile(scope, Inner::NoPriority);
-   VERBOSE_TEMPORAL("Compiled to: ", compiled);
+   {
+      #if VERBOSE_ENABLED()
+         VERBOSE_TEMPORAL_TAB("Pushing: ");
+         DumpInner(scope);
+      #endif
+
+      // Compile pushed scope to an intermediate format                 
+      compiled = Compile(scope, Inner::NoPriority);
+   }
+   {
+      #if VERBOSE_ENABLED()
+         VERBOSE_TEMPORAL_TAB("Compiled to: ");
+         DumpInner(compiled);
+      #endif
+   }
 
    // Link new scope with the available stacks                          
    try { Link(compiled); }
    catch (...) { return {}; }
 
-   if (mPriorityStack)
-      VERBOSE_TEMPORAL(Logger::Purple, "Priority flow: ", mPriorityStack);
-   if (mTimeStack)
-      VERBOSE_TEMPORAL(Logger::Purple, "Time flow: ", mTimeStack);
-   if (mFrequencyStack)
-      VERBOSE_TEMPORAL(Logger::Purple, "Frequency flow: ", mFrequencyStack);
+   Dump();
 
    // Execute the new scope and return any side effects                 
    Many sideffects;
@@ -290,7 +381,7 @@ Many Temporal::Compile(const Many& scope, Real priority) {
    }
    else if (scope.IsFuture()) {
       // Convert the scope to a MissingFuture intermediate format       
-      result = Inner::MissingFuture {scope, priority};
+      result = Inner::MissingFuture {scope, Inner::NoPriority};
       return Abandon(result);
    }
    else if (scope.IsDeep()) {
@@ -458,7 +549,7 @@ bool Temporal::PushFutures(const Many& scope, Many& stack) {
          return Loop::Continue;
       },
       [&](Inner::MissingFuture& future) {
-         VERBOSE_TEMPORAL_TAB("Pushing ", scope, " to ", future);
+         VERBOSE_TEMPORAL_TAB("Pushing ", scope, " to ", Logger::Hex(&future), " ??");
          atLeastOneSuccess |= future.Push(scope);
          // Continue linking only if the stack is branched              
          return not (stack.IsOr() and atLeastOneSuccess);
@@ -501,7 +592,6 @@ void Temporal::Link(const Many& scope) {
          // but also makes the flow impure, because it allows it to be  
          // affected by external influence.                             
          scope.ForEach([&](const Many& sub) {
-            VERBOSE_TEMPORAL_TAB("Pushing sparse block ", sub, " to ", mPriorityStack);
             LANGULUS_ASSERT(
                PushFutures(&sub, mPriorityStack),
                Flow, "Couldn't push to future"
@@ -589,8 +679,12 @@ void Temporal::Link(const Many& scope) {
 ///   @param scope - the scope to push                                        
 ///   @param override - the reference verb                                    
 void Temporal::LinkRelative(const Many& scope, const Verb& override) {
-   if (scope.IsOr())
-      TODO();
+   Ref<bool> entangled;
+
+   if (scope.IsOr()) {
+      // Every time we push an OR scope we create an entanglement       
+      entangled = mEntanglements.Emplace(IndexBack).New();
+   }
 
    if (scope.IsDeep()) {
       // Nest deep scope                                                

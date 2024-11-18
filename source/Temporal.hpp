@@ -70,11 +70,11 @@ namespace Langulus::Flow
       TMany<Ref<bool>> mEntanglements;
 
    protected:
-      LANGULUS_API(FLOW) static Many Compile(const Many&, Real priority);
-      LANGULUS_API(FLOW) static Many Compile(const Neat&, Real priority);
+      LANGULUS_API(FLOW) static Many Compile(const Many&, Real priority = 0);
+      LANGULUS_API(FLOW) static Many Compile(const Neat&, Real priority = 0);
 
-      LANGULUS_API(FLOW) bool PushFutures(const Many&, Many&);
-      LANGULUS_API(FLOW) bool PushFutures(const Many&, Neat&);
+      LANGULUS_API(FLOW) static bool PushFutures(const Many&, Many&);
+      LANGULUS_API(FLOW) static bool PushFutures(const Many&, Neat&);
 
       LANGULUS_API(FLOW) void Link(const Many&);
       LANGULUS_API(FLOW) void LinkRelative(const Many&, const Verb&);

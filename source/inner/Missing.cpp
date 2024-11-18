@@ -125,7 +125,7 @@ bool Missing::Push(const Many& content) {
 
       return atLeastOneSuccess;
    }
-   else if (mFilter.IsPast() and content.template CastsTo<A::Verb>()) {
+   /*else if (mFilter.IsPast() and content.template CastsTo<A::Verb>()) {
       //TODO orness
       
       // Verbs are allowed to be pushed to past points only if points   
@@ -143,7 +143,7 @@ bool Missing::Push(const Many& content) {
       });
 
       return atLeastOneSuccess;
-   }
+   }*/
 
    //                                                                   
    // If reached, we're pushing flat data                               
@@ -151,7 +151,7 @@ bool Missing::Push(const Many& content) {
    if (not mFilter) {
       // Fill any missing points with whatever is available             
       Many linked;
-      try { linked = Link(content, mContent); }
+      try { linked = Link(content, *this); }
       catch (const Except::Link&) { return false; }
 
       if (linked) {
@@ -184,13 +184,12 @@ bool Missing::Push(const Many& content) {
    return false;
 }
 
-/// Links the missing past points of the provided scope, using mContent as    
-/// the past, and returns a viable overwrite for mContent                     
+/// Links the missing past points with the provided context                   
 ///   @attention assumes argument is a valid scope                            
 ///   @param scope - the scope to link                                        
-///   @param context - the data used for linking                              
+///   @param context - the past context                                       
 ///   @return the linked equivalent to the provided scope                     
-Many Missing::Link(const Many& scope, const Many& context) const {
+Many Missing::Link(const Many& scope, const Missing& context) const {
    Many result;
    if (scope.IsOr())
       result.MakeOr();
@@ -274,13 +273,20 @@ Many Missing::Link(const Many& scope, const Many& context) const {
             LANGULUS_THROW(Link, "Past point of higher priority");
          }
 
-         Inner::MissingPast pastShallowCopy;
-         pastShallowCopy.mFilter = past.mFilter;
-         if (not pastShallowCopy.Push(context)) {
-            if (not scope.IsOr())
-               LANGULUS_THROW(Link, "Scope not likable");
+         if (past.mFilter) {
+            Inner::MissingPast pastShallowCopy;
+            pastShallowCopy.mFilter = past.mFilter;
+            if (not pastShallowCopy.Push(context.mContent)) {
+               if (not scope.IsOr())
+                  LANGULUS_THROW(Link, "Scope not likable");
+            }
+            result << Abandon(pastShallowCopy.mContent);
          }
-         result << Abandon(pastShallowCopy.mContent);
+         else {
+            auto& mutableContext = const_cast<Missing&>(context);
+            result << Move(mutableContext.mContent);
+            mutableContext.mPriority = past.mPriority;
+         }
       }
    );
 
@@ -296,15 +302,12 @@ Many Missing::Link(const Many& scope, const Many& context) const {
    return Abandon(result);
 }
 
-/// Links the missing past points of the provided Neat, using mContent as     
-/// the past, and returns a viable overwrite for mContent                     
+/// Links the missing past points with the provided context                   
 ///   @attention assumes argument is a valid scope                            
 ///   @param neat - the Neat to link                                          
-///   @param environment - a fallback past provided by Temporal               
-///   @param consumedPast - [out] set to true if anythingin this point has    
-///      been used in any scope missing past                                  
+///   @param context - the past context                                       
 ///   @return the linked equivalent to the provided Neat                      
-Many Missing::Link(const Neat& neat, const Many& context) const {
+/*Many Missing::Link(const Neat& neat, const Missing& context) const {
    Neat result;
    neat.ForEachTrait([&](const Trait& trait) {
       // Link a trait inside the neat scope                             
@@ -340,7 +343,7 @@ Many Missing::Link(const Neat& neat, const Many& context) const {
    });
 
    return Abandon(result);
-}
+}*/
 
 /// Log the missing point                                                     
 Missing::operator Text() const {

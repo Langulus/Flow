@@ -117,6 +117,7 @@ namespace Langulus::Flow
 
    protected:
       void ResetInner(Many&);
+      bool DumpInner(const Many&, bool newline = false) const;
    };
 
 } // namespace Langulus::Flow

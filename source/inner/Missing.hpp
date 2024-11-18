@@ -37,8 +37,8 @@ namespace Langulus::Flow::Inner
       NOD() bool IsSatisfied() const;
 
       bool Push(const Many&);
-      Many Link(const Many&, const Many& context) const;
-      Many Link(const Neat&, const Many& context) const;
+      Many Link(const Many&, const Missing&) const;
+      //Many Link(const Neat&, const Missing&) const;
       Many Collapse() const;
 
       // Needs to be implicit, so that its inherited                    

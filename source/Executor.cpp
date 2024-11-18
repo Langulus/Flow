@@ -111,7 +111,7 @@ namespace Langulus::Flow
                if (silent)
                   LANGULUS_THROW(Flow, "Deep AND failure");
                else
-                  LANGULUS_OOPS(Flow, "Deep AND failure: ", flow);
+                  LANGULUS_OOPS(Flow, "Deep AND failure: "/*, flow*/);
             }
 
             output.SmartPush(IndexBack, Abandon(local));
@@ -126,7 +126,7 @@ namespace Langulus::Flow
                   if (silent)
                      LANGULUS_THROW(Flow, "Missing point failure");
                   else
-                     LANGULUS_OOPS(Flow, "Missing point failure: ", flow);
+                     LANGULUS_OOPS(Flow, "Missing point failure: "/*, flow*/);
                }
 
                output.SmartPush(IndexBack, Abandon(local));
@@ -144,7 +144,7 @@ namespace Langulus::Flow
                   if (silent)
                      LANGULUS_THROW(Flow, "Trait AND failure");
                   else
-                     LANGULUS_OOPS(Flow, "Trait AND failure: ", flow);
+                     LANGULUS_OOPS(Flow, "Trait AND failure: "/*, flow*/);
                }
 
                output.SmartPush(IndexBack, Trait::From(trait.GetTrait(), Abandon(local)));
@@ -158,7 +158,7 @@ namespace Langulus::Flow
                   if (silent)
                      LANGULUS_THROW(Flow, "Construct AND failure");
                   else
-                     LANGULUS_OOPS(Flow, "Construct AND failure: ", flow);
+                     LANGULUS_OOPS(Flow, "Construct AND failure: "/*, flow*/);
                }
 
                Construct solved {
@@ -212,7 +212,7 @@ namespace Langulus::Flow
                         if (silent)
                            LANGULUS_THROW(Flow, "Construct AND failure");
                         else
-                           LANGULUS_OOPS(Flow, "Construct AND failure: ", flow);
+                           LANGULUS_OOPS(Flow, "Construct AND failure: "/*, flow*/);
                      }
                      else if (verb.GetOutput())
                         local << Abandon(verb.GetOutput());
@@ -266,7 +266,7 @@ namespace Langulus::Flow
          output.SmartPush(IndexBack, flow);
       }
 
-      VERBOSE(Logger::Green, "AND scope done: ", flow);
+      VERBOSE(Logger::Green, "AND scope done: "/*, flow*/);
       return true;
    }
 

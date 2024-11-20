@@ -29,10 +29,8 @@ namespace Langulus::Flow::Inner
       Real mPriority {0};
 
       Missing() = default;
-      explicit Missing(Missing&&) = default;
-      explicit Missing(const Missing&) = default;
-      explicit Missing(const TMany<DMeta>&, Real priority = 0);
-      explicit Missing(const Many&,         Real priority = 0);
+      explicit Missing(const TMany<DMeta>&, Real priority);
+      explicit Missing(const Many&,         Real priority);
 
       NOD() bool Accepts(const Many&) const;
       NOD() bool IsSatisfied() const;

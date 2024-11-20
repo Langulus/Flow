@@ -117,7 +117,8 @@ namespace Langulus::Flow
 
    protected:
       void ResetInner(Many&);
-      bool DumpInner(const Many&, bool newline = false) const;
+      static bool DumpInner(const Many&, bool newline, bool& first);
+      static void DumpSeparator(const Many&, bool newline, bool& first);
    };
 
 } // namespace Langulus::Flow

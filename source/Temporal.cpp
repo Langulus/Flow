@@ -122,188 +122,6 @@ bool Temporal::IsValid() const {
    return mPriorityStack or mTimeStack or mFrequencyStack;
 }
 
-/// Dump the contents of the flow to the log in a pretty, colorized and       
-/// easily readable way                                                       
-void Temporal::Dump() const {
-   Logger::Verbose(*this, ": DUMPING CONTENTS...");
-
-   if (mPriorityStack)
-      DumpInner(mPriorityStack, true);
-
-   for (auto pair : mTimeStack) {
-      auto tab = Logger::Section(Logger::PushPurple, "At time ", pair.mKey, ":");
-      pair.mValue.Dump();
-   }
-
-   for (auto pair : mFrequencyStack) {
-      auto tab = Logger::Section(Logger::PushBlue, "At rate ", pair.mKey, ":");
-      pair.mValue.Dump();
-   }
-}
-
-/// Inner nested dumper                                                       
-///   @return true if stuff was dumped on a new line                          
-bool Temporal::DumpInner(const Many& data, bool newline) const {
-   if (data.IsDeep()) {
-      if (data.IsOr()) {
-         // Display a range of alternatives                             
-         bool first = true;
-         Logger::Verbose(Logger::PushDarkYellow, '(', Logger::Pop);
-         data.ForEach([&](const Many& group) {
-            if (not first)
-               Logger::Verbose(Logger::PushDarkYellow, "or ", Logger::Pop);
-            else
-               Logger::Verbose("|  ");
-            Logger::Append(Logger::Tab);
-            DumpInner(group);
-            Logger::Append(Logger::Untab);
-            first = false;
-         });
-         Logger::Verbose(Logger::PushDarkYellow, ')', Logger::Pop);
-         newline = true;
-      }
-      else {
-         // Display a range of sequentials                              
-         data.ForEach([&](const Many& group) {
-            newline = DumpInner(group, newline);
-         });
-      }
-
-      return newline;
-   }
-
-   // Flat if reached                                                   
-   // Do some special formatting for specific things                    
-   const auto done = data.ForEach(
-      [&](const Verb& v) {
-         // Can we fit the verb on a single line?                       
-         const auto serv = static_cast<Text>(v);
-         const auto separated = serv.GetCount() > 200;
-
-         if (v.IsDone() and v.GetOutput()) {
-            // If verb has been executed with output, just dump the     
-            // output                                                   
-            newline = DumpInner(v.GetOutput(), newline or separated);
-            return;
-         }
-
-         // If reached, then verb hasn't been executed yet              
-         // Let's check if there's a source in which verb is executed   
-         if (v.GetSource().IsValid())
-            newline = DumpInner(v.GetSource(), newline or separated);
-
-         // After the source, we decide whether to write verb token or  
-         // verb operator, depending on the verb definition, state and  
-         // charge                                                      
-         if (not v.GetVerb()) {
-            // An invalid verb is always written as token               
-            if (newline or separated)
-               Logger::Verbose(Logger::PushBlue, NameOf<Verb>(), Logger::Pop);
-            else {
-               if (v.GetSource().IsValid())
-                  Logger::Append(' ');
-               Logger::Append(Logger::PushBlue, NameOf<Verb>(), Logger::Pop);
-            }
-         }
-         else {
-            // A valid verb is written either as token, or as operator  
-            auto vmeta = v.GetVerb();
-
-            if (v.GetMass() < 0) {
-               if (not vmeta->mOperatorReverse.empty() and (v.GetCharge().operator*(-1)).IsDefault()) {
-                  // Write as operator                                  
-                  if (newline or separated)
-                     Logger::Verbose(Logger::PushBlue, vmeta->mOperatorReverse, Logger::Pop);
-                  else
-                     Logger::Append(Logger::PushBlue, vmeta->mOperatorReverse, Logger::Pop);
-               }
-               else {
-                  // Write as token                                     
-                  if (newline or separated)
-                     Logger::Verbose(Logger::PushBlue, vmeta->mTokenReverse, v.GetCharge().operator*(-1), Logger::Pop);
-                  else {
-                     if (v.GetSource().IsValid())
-                        Logger::Append(' ');
-                     Logger::Append(Logger::PushBlue, vmeta->mTokenReverse, v.GetCharge().operator*(-1), Logger::Pop);
-                  }
-               }
-            }
-            else {
-               if (not vmeta->mOperator.empty() and v.GetCharge().IsDefault()) {
-                  // Write as operator                                  
-                  if (newline or separated)
-                     Logger::Verbose(Logger::PushBlue, vmeta->mOperator, Logger::Pop);
-                  else
-                     Logger::Append(Logger::PushBlue, vmeta->mOperator, Logger::Pop);
-               }
-               else {
-                  // Write as token                                     
-                  if (newline or separated)
-                     Logger::Verbose(Logger::PushBlue, vmeta->mToken, v.GetCharge(), Logger::Pop);
-                  else {
-                     if (v.GetSource().IsValid())
-                        Logger::Append(' ');
-                     Logger::Append(Logger::PushBlue, vmeta->mToken, v.GetCharge(), Logger::Pop);
-                  }
-               }
-            }
-         }
-
-         if (not v.IsValid())
-            return;
-
-         newline = DumpInner(v.GetArgument(), newline or separated);
-      },
-      [&](const Inner::MissingFuture& p) {
-         if (p.mPriority or p.mContent) {
-            if (p.mContent)
-               newline = DumpInner(p.mContent, newline);
-
-            Logger::Verbose(Logger::PushGreen, '(', Logger::Hex(&p), ' ', p.mFilter);
-            if (p.mPriority)
-               Logger::Append(" !", p.mPriority);
-            Logger::Append(')', Logger::Pop);
-         }
-         else Logger::Verbose(Logger::PushGreen, '(', Logger::Hex(&p), ' ', p.mFilter, ')', Logger::Pop);
-      },
-      [&](const Inner::MissingPast& p) {
-         if (p.mPriority or p.mContent) {
-            if (p.mContent)
-               newline = DumpInner(p.mContent, newline);
-
-            Logger::Verbose(Logger::PushYellow, '(', Logger::Hex(&p), ' ', p.mFilter);
-            if (p.mPriority)
-               Logger::Append(" !", p.mPriority);
-            Logger::Append(')', Logger::Pop);
-         }
-         else Logger::Verbose(Logger::PushYellow, '(', Logger::Hex(&p), ' ', p.mFilter, ')', Logger::Pop);
-      }
-   );
-
-   // Just dump anything else                                           
-   if (not done) {
-      bool first = true;
-      if (newline) {
-         data.ForEachElement([&](const Many& element) {
-            if (not first)
-               Logger::Verbose(", ");
-            Logger::Verbose(element);
-         });
-      }
-      else {
-         data.ForEachElement([&](const Many& element) {
-            if (not first)
-               Logger::Append(", ");
-            Logger::Append(element);
-         });
-      }
-      return false;
-   }
-
-   return true;
-}
-
-
 /// Get the accumulated running time across all Updates                       
 ///   @return the time                                                        
 Langulus::Time Temporal::GetUptime() const {
@@ -427,7 +245,8 @@ Many Temporal::PushInner(Many scope) {
    {
       #if VERBOSE_ENABLED()
          VERBOSE_TEMPORAL_TAB("Pushing: ");
-         DumpInner(scope);
+         bool unused = true;
+         DumpInner(scope, true, unused);
       #endif
 
       // Compile pushed scope to an intermediate format                 
@@ -436,7 +255,8 @@ Many Temporal::PushInner(Many scope) {
    {
       #if VERBOSE_ENABLED()
          VERBOSE_TEMPORAL_TAB("Compiled to: ");
-         DumpInner(compiled);
+         bool unused = true;
+         DumpInner(compiled, true, unused);
       #endif
    }
 
@@ -470,7 +290,7 @@ Many Temporal::Compile(const Many& scope, Real priority) {
    }
    else if (scope.IsFuture()) {
       // Convert the scope to a MissingFuture intermediate format       
-      result = Inner::MissingFuture {scope};
+      result = Inner::MissingFuture {scope, 0};
       return Abandon(result);
    }
    else if (scope.IsDeep()) {

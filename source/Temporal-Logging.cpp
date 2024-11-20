@@ -122,13 +122,19 @@ bool Temporal::DumpInner(const Many& data, bool newline, bool& first) {
             Text srcScope;
             if (Rules::BeginScope(v.GetSource(), srcScope))
                Logger::Append(Logger::PushBlue, srcScope, Logger::Pop);
+            else if (separated)
+               Logger::Append(Logger::PushBlue, '(', Logger::Pop, Logger::Tab);
 
             bool unused = true;
-            DumpInner(v.GetSource(), false, unused);
+            DumpInner(v.GetSource(), separated, unused);
 
             srcScope.Clear();
             if (Rules::EndScope(v.GetSource(), srcScope))
                Logger::Append(Logger::PushBlue, srcScope, Logger::Pop);
+            else if (separated) {
+               Logger::Append(Logger::Untab);
+               Logger::Verbose(Logger::PushBlue, ')', Logger::Pop);
+            }
          }
 
          // After the source, we decide whether to write verb token or  
@@ -139,17 +145,17 @@ bool Temporal::DumpInner(const Many& data, bool newline, bool& first) {
          if (writtenAsToken and v.GetSource().IsValid())
             Logger::Append(' ');
 
-         if (separated)
+         /*if (separated)
             Logger::Verbose(Logger::PushBlue, token, Logger::Pop);
-         else
+         else*/
             Logger::Append(Logger::PushBlue, token, Logger::Pop);
 
          if (not v.GetArgument().IsValid())
             return;
 
          // If reached, then argument is valid - write it               
-         if (separated)
-            Logger::Verbose("");
+         //if (separated)
+         //   Logger::Verbose("");
          
          if (writtenAsToken and v.GetArgument().IsValid())
             Logger::Append(' ');
@@ -157,13 +163,19 @@ bool Temporal::DumpInner(const Many& data, bool newline, bool& first) {
          Text argScope;
          if (Rules::BeginScope(v.GetArgument(), argScope))
             Logger::Append(Logger::PushBlue, argScope, Logger::Pop);
+         else if (separated)
+            Logger::Append(Logger::PushBlue, '(', Logger::Pop, Logger::Tab);
 
          bool unused = true;
-         DumpInner(v.GetArgument(), false, unused);
+         DumpInner(v.GetArgument(), separated, unused);
 
          argScope.Clear();
          if (Rules::EndScope(v.GetArgument(), argScope))
             Logger::Append(Logger::PushBlue, argScope, Logger::Pop);
+         else if (separated) {
+            Logger::Append(Logger::Untab);
+            Logger::Verbose(Logger::PushBlue, ')', Logger::Pop);
+         }
       },
       [&](const Inner::MissingFuture& p) {
          // Write a missing future linking point                        

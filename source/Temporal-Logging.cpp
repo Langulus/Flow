@@ -145,17 +145,10 @@ bool Temporal::DumpInner(const Many& data, bool newline, bool& first) {
          if (writtenAsToken and v.GetSource().IsValid())
             Logger::Append(' ');
 
-         /*if (separated)
-            Logger::Verbose(Logger::PushBlue, token, Logger::Pop);
-         else*/
-            Logger::Append(Logger::PushBlue, token, Logger::Pop);
+         Logger::Append(Logger::PushBlue, token, Logger::Pop);
 
          if (not v.GetArgument().IsValid())
             return;
-
-         // If reached, then argument is valid - write it               
-         //if (separated)
-         //   Logger::Verbose("");
          
          if (writtenAsToken and v.GetArgument().IsValid())
             Logger::Append(' ');

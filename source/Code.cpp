@@ -978,7 +978,7 @@ namespace Langulus::Flow
 
       if (op == Operator::SelectIdea) {
          // Implicitly create/select an idea                            
-         Verbs::Create verb {Construct::FromToken("Idea", Abandon(content))};
+         Verbs::Select verb {Construct::FromToken("Idea", Abandon(content))};
          verb.SetSource(Many::Past("Thing"));
 
          // Check if there's a scope after an idea - it can be used to  

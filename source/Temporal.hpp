@@ -43,6 +43,8 @@ namespace Langulus::Flow
    class Temporal final {
       LANGULUS_CONVERTS_TO(Code, Text);
       friend struct Inner::Missing;
+      friend struct Inner::MissingFuture;
+      friend struct Inner::MissingPast;
 
    private:
       // Parent flow                                                    
@@ -59,6 +61,12 @@ namespace Langulus::Flow
 
       // Priority stack, i.e. hierarchy of events that happen once      
       Many mPriorityStack;
+
+      // A reference to the top future point                            
+      // Future points are hierarchical, and from there you can crawl   
+      // to any other missing future in the hierarchy                   
+      Inner::MissingFuture* mFuture = nullptr;
+
       // Verb temporal stack, i.e. events that happen at specific time  
       // Each unit of time is equal to one mTimePeriod                  
       TOrderedMap<Real, Temporal> mTimeStack;
@@ -71,10 +79,10 @@ namespace Langulus::Flow
 
    protected:
       LANGULUS_API(FLOW) static Many Compile(const Many&, Real priority = 0);
-      LANGULUS_API(FLOW) static Many Compile(const Neat&, Real priority = 0);
+      //LANGULUS_API(FLOW) static Many Compile(const Neat&, Real priority = 0);
 
-      LANGULUS_API(FLOW) static bool PushFutures(const Many&, Many&);
-      LANGULUS_API(FLOW) static bool PushFutures(const Many&, Neat&);
+      LANGULUS_API(FLOW) static bool PushFutures(const Many&, Inner::MissingFuture&) noexcept;
+      //LANGULUS_API(FLOW) static bool PushFutures(const Many&, Neat&);
 
       LANGULUS_API(FLOW) void Link(const Many&);
       LANGULUS_API(FLOW) void LinkRelative(const Many&, const Verb&);
@@ -119,6 +127,10 @@ namespace Langulus::Flow
       void ResetInner(Many&);
       static bool DumpInner(const Many&, bool newline, bool& first);
       static void DumpSeparator(const Many&, bool newline, bool& first);
+      static void DumpMissing(const Inner::Missing&);
+      static void DumpVerb(const A::Verb&);
+      static void DumpTrait(const Trait&);
+      static void DumpConstruct(const Construct&);
    };
 
 } // namespace Langulus::Flow

@@ -9,6 +9,7 @@
 #include "Code.hpp"
 #include "Time.hpp"
 #include <Anyness/TMap.hpp>
+#include "inner/Entangled.hpp"
 
 
 namespace Langulus::Flow
@@ -75,19 +76,8 @@ namespace Langulus::Flow
       TUnorderedMap<Real, Temporal> mFrequencyStack;
 
       // An array of entanglement points                                
-      TMany<Ref<bool>> mEntanglements;
-
-   protected:
-      LANGULUS_API(FLOW) static Many Compile(const Many&, Real priority = 0);
-      //LANGULUS_API(FLOW) static Many Compile(const Neat&, Real priority = 0);
-
-      LANGULUS_API(FLOW) static bool PushFutures(const Many&, Inner::MissingFuture&) noexcept;
-      //LANGULUS_API(FLOW) static bool PushFutures(const Many&, Neat&);
-
-      LANGULUS_API(FLOW) void Link(const Many&);
-      LANGULUS_API(FLOW) void LinkRelative(const Many&, const Verb&);
-
-      LANGULUS_API(FLOW) Many PushInner(Many);
+      using Entanglement = Ref<Inner::Entanglement>;
+      TMany<Entanglement> mEntanglements;
 
    public:
       LANGULUS_API(FLOW) Temporal();
@@ -124,6 +114,13 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) void Dump() const;
 
    protected:
+      LANGULUS_API(FLOW) static Many Compile(const Many&, Real priority = 0);
+      LANGULUS_API(FLOW) static bool PushFutures(const Many&, Inner::MissingFuture&, const Entanglement&) noexcept;
+
+      LANGULUS_API(FLOW) void Link(const Many&, const Entanglement&);
+      LANGULUS_API(FLOW) void LinkRelative(const Many&, const Verb&, const Entanglement&);
+      LANGULUS_API(FLOW) Many PushInner(Many);
+
       void ResetInner(Many&);
       static bool DumpInner(const Many&, bool newline, bool& first);
       static void DumpSeparator(const Many&, bool newline, bool& first);

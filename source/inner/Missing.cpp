@@ -94,7 +94,7 @@ void MissingPast::FillPast(const Many& content) {
    if (content.IsDeep()) {
       // Always nest deep contents, we must filter each part and        
       // make sure branches are correctly inserted in forks             
-      if (content.IsOr()) {
+      if (content.IsOr() and content.IsDense()) {
          // We're building a fork, we should take special care to       
          // preserve the hierarchy of the branches                      
          MissingPast fork {this, mFilter, mPriority};
@@ -114,19 +114,46 @@ void MissingPast::FillPast(const Many& content) {
 
          mContent.SmartPush(IndexBack, Abandon(fork.mContent));
       }
-      else {
+      else if (content.IsDense()) {
          // Just nest-push                                              
          content.ForEach([&](const Many& subcontent) {
             FillPast(subcontent);
          });
       }
+      else {
+         // Sparse blocks are always inserted as-is, and never repeated 
+         // They are never linked, so not to affect contents outside    
+         // this flow. This makes the flow impure, because it can be    
+         // affected from the outside.                                  
+         bool atLeastOneSuccess = false;
+         content.ForEach([&](const Many& subcontent) {
+            if (not mFilter) {
+               mContent <<= &subcontent;
+               atLeastOneSuccess = true;
+            }
+            else if (subcontent.GetType()) {
+               for (const auto& type : mFilter) {
+                  if (not subcontent.GetType()->CastsTo<false>(type))
+                     continue;
+
+                  mContent <<= &subcontent;
+                  atLeastOneSuccess = true;
+                  break;
+               }
+            }
+         });
+
+         if (not atLeastOneSuccess)
+            LANGULUS_THROW(Link, "Nothing was pushed");
+      }
+
       return;
    }
    else if (content.Is<Inner::Redundant>()) {
       // Redundant data serves only the purpose of filling past         
       // and acts as a deep container                                   
-      content.ForEach([&](const Inner::Redundant& subcontent) {
-         FillPast(subcontent.mContent);
+      content.ForEach([&](const Inner::Redundant& redundant) {
+         FillPast(redundant.mContent);
       });
    }
 
@@ -143,10 +170,17 @@ void MissingPast::FillPast(const Many& content) {
    if (mFilter) {
       // Filters are available, interpret source as requested           
       Verbs::Interpret interpreter {mFilter};
-      if (DispatchDeep(content, interpreter)) {
-         auto& output = interpreter.GetOutput();
-         VERBOSE_MISSING_POINT("Satisfying filter by interpreting ", content, " as ", output);
+      auto& output = interpreter.GetOutput();
+      if (DispatchDeep(content, interpreter) and output) {
+         VERBOSE_MISSING_POINT(Logger::Green, 
+            "Satisfying filter by interpreting ", content, " as ", output);
          commit(output);
+      }
+      else if (not mContent) {
+         #if VERBOSE_MISSING_ENABLED()
+            Logger::Error("Unsatisfied filter: ", mFilter);
+         #endif
+            LANGULUS_THROW(Link, "Unsatisfied filter");
       }
    }
    //else commit(content);
@@ -223,6 +257,7 @@ void MissingFuture::FillFuture(const Many& content) {
       }
 
       // Contents were modified, remap futures below                    
+      mBelow = {};
       Inner::Missing::RemapFutures(*this, mContent);
       return;
    }
@@ -233,14 +268,14 @@ void MissingFuture::FillFuture(const Many& content) {
    // If past fails to be satisfied with the current context, move      
    // to the one above and repeat until satisfied or nothing left above 
    Many linked;
-   const MissingFuture* context = this;
+   MissingFuture* context = this;
    while (context) {
       try {
          linked = Link(content, *context);
          break;
       }
       catch (...) {
-         context = static_cast<const MissingFuture*>(context->mAbove);
+         context = static_cast<MissingFuture*>(context->mAbove);
          continue;
       }
    }
@@ -266,16 +301,24 @@ void MissingFuture::FillFuture(const Many& content) {
    if (mFilter) {
       // Filters are available, interpret contents as requested         
       Verbs::Interpret interpreter {mFilter};
-      if (DispatchDeep(linked, interpreter)) {
-         auto& output = interpreter.GetOutput();
-         VERBOSE_MISSING_POINT("Satisfying filter by interpreting ", linked, " as ", output);
+      auto& output = interpreter.GetOutput();
+      if (DispatchDeep(linked, interpreter) and output) {
+         VERBOSE_MISSING_POINT(Logger::Green, 
+            "Satisfying filter by interpreting ", linked, " as ", output);
          commit(output);
+      }
+      else if (not mContent) {
+         #if VERBOSE_MISSING_ENABLED()
+            Logger::Error("Unsatisfied filter: ", mFilter);
+         #endif
+            LANGULUS_THROW(Link, "Unsatisfied filter");
       }
    }
    else commit(linked);
 
    // Contents were modified in a way that can introduce new            
    // futures below, so remap those                                     
+   mBelow = {};
    Inner::Missing::RemapFutures(*this, mContent);
 }
 
@@ -389,11 +432,9 @@ Many Missing::Link(const Many& scope, const MissingFuture& context) const {
             // contents should completely wrap around the old           
             auto& mutableContext = const_cast<MissingFuture&>(context);
             mutableContext.mPriority = past.mPriority;
-            result << mutableContext.mContent;
-
-            // Old contents become redundant                            
-            mutableContext.mContent = Inner::Redundant {Move(mutableContext.mContent)};
-         }  
+            // Insert as redundant so that it doesn't clog the log      
+            result << Inner::Redundant {mutableContext.mContent};
+         }
          else {
             // Nothing to link with                                     
             #if VERBOSE_MISSING_ENABLED()
@@ -415,85 +456,56 @@ Many Missing::Link(const Many& scope, const MissingFuture& context) const {
 ///   @param context - the future point to search below                       
 ///   @param stack - used for nesting deep contents                           
 ///   @return the hierarchy of future points below the context                
-Many Missing::RemapFutures(MissingFuture& context, const Many& stack) {
-   if (&stack == &context.mContent)
-      context.mBelow = {};
-
+void Missing::RemapFutures(MissingFuture& context, const Many& stack) {
    if (not stack or stack.IsSparse())
-      return {};    // No point in scanning sparse stacks - they're     
-                    // never linked with                                
+      return;           // No point in scanning sparse stacks - they're 
+                        // never linked with                            
 
-   Many result;
    if (stack.IsOr())
-      result.MakeOr();
+      context.mBelow.MakeOr();
 
    if (stack.IsDeep()) {
       // Nest deep stack if dense                                       
-      stack.ForEach([&](const Many& substack) {
-         auto temp = RemapFutures(context, substack);
-         result.SmartPush(stack.IsOr() ? IndexBack : IndexFront, Abandon(temp));
+      stack.ForEachRev([&](const Many& substack) {
+         RemapFutures(context, substack);
       });
-
-      if (&stack == &context.mContent)
-         context.mBelow = result;
-      return result;
+      return;
    }
 
    // Flat if reached                                                   
-   stack.ForEach(
+   stack.ForEachRev(
       [&](const Trait& trait) {
          // Nest inside traits                                          
-         auto temp = RemapFutures(context, static_cast<const Many&>(trait));
-         result.SmartPush(stack.IsOr() ? IndexBack : IndexFront, Abandon(temp));
+         RemapFutures(context, static_cast<const Many&>(trait));
       },
       [&](const Construct& con) {
          // Nest inside constructs                                      
-         auto temp = RemapFutures(context, con.GetDescriptor());
-         result.SmartPush(stack.IsOr() ? IndexBack : IndexFront, Abandon(temp));
+         RemapFutures(context, con.GetDescriptor());
       },
       [&](const A::Verb& verb) {
          // Nest inside verbs                                           
-         Many temp;
-         auto temps = RemapFutures(context, verb.GetSource());
-         temp.SmartPush(IndexBack, Abandon(temps));
-         auto tempa = RemapFutures(context, verb.GetArgument());
-         temp.SmartPush(IndexBack, Abandon(tempa));
-
-         result.SmartPush(stack.IsOr() ? IndexBack : IndexFront, Abandon(temp));
+         RemapFutures(context, verb.GetArgument());
+         RemapFutures(context, verb.GetSource());
       },
       [&](const Inner::MissingFuture& below_const) {
          // Nest/register missing future points                         
          auto& below = const_cast<Inner::MissingFuture&>(below_const);
-         auto temp = RemapFutures(below, below.mContent);
+         below.mSuspended = false;
+         below.mAbove = &context;
+         below.mBelow = {};
+         RemapFutures(below, below.mContent);
 
-         if (below.mPriority == context.mPriority) {
-            if (not temp) {
-               // No more missing futures below, don't suspend this one 
-               below.mSuspended = false;
-               below.mAbove = &context;
-               result >> &below;
-            }
-            else {
-               // More missing futures below, suspend this one          
-               below.mSuspended = true;
-               temp.ForEachDeep([&](Inner::MissingFuture& next) {
-                  next.mAbove = &context;
-               });
-               result.SmartPush(stack.IsOr() ? IndexBack : IndexFront, Abandon(temp));
-            }
+         if (below.mPriority == context.mPriority and below.mBelow) {
+            // More missing futures below, suspend this one             
+            below.mSuspended = true;
+            below.mBelow.ForEachDeep([&](Inner::MissingFuture& next) {
+               next.mAbove = &context;
+               context.mBelow << &next;
+            });
          }
-         else {
-            // Register the future point                                
-            below.mSuspended = false;
-            below.mAbove = &context;
-            result >> &below;
-         }
+         else context.mBelow << &below;
       }
    );
-
-   if (&stack == &context.mContent)
-      context.mBelow = result;
-   return result;
 }
 
 /// Log the missing point                                                     

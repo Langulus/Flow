@@ -38,7 +38,7 @@ namespace Langulus::Flow::Inner
       // Missing points under this one (in reversed order, can be OR)   
       Many mBelow;
       // Missing point above this one                                   
-      const Inner::Missing* mAbove = nullptr;
+      Inner::Missing* mAbove = nullptr;
 
       Missing() = default;
       explicit Missing(Inner::Missing*, const TMany<DMeta>&, Real priority);
@@ -52,7 +52,7 @@ namespace Langulus::Flow::Inner
       // Needs to be implicit so that it's inherited                    
       operator Text() const;
 
-      static Many RemapFutures(MissingFuture&, const Many&);
+      static void RemapFutures(MissingFuture&, const Many&);
 
    protected:
       template<class T>

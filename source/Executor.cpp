@@ -10,6 +10,7 @@
 #include "verbs/Interpret.inl"
 #include "verbs/Create.inl"
 #include "inner/Missing.hpp"
+#include "inner/Redundant.hpp"
 
 #if 0
    #define VERBOSE(...)      Logger::Verbose(__VA_ARGS__)
@@ -427,12 +428,14 @@ namespace Langulus::Flow
 
       // Integrate the verb source to environment                       
       Many localSource;
-      if (not Execute(verb.GetSource(), context, localSource, true, silent)) {
-         // It's considered error only if verb is not monocast          
-         if (not silent)
-            FLOW_ERRORS("Error at source of: ", verb);
-         return false;
+      if (not verb.GetSource().Is<Inner::Redundant>()) {
+         if (not Execute(verb.GetSource(), context, localSource, true, silent)) {
+            if (not silent)
+               FLOW_ERRORS("Error at source of: ", verb);
+            return false;
+         }
       }
+      else localSource = verb.GetSource().Get<Inner::Redundant>().mContent;
 
       if (localSource.IsInvalid())
          localSource = context;
@@ -440,7 +443,6 @@ namespace Langulus::Flow
       // Integrate the verb argument to the source                      
       Many localArgument;
       if (not Execute(verb.GetArgument(), localSource, localArgument, true, silent)) {
-         // It's considered error only if verb is not monocast          
          if (not silent)
             FLOW_ERRORS("Error at argument of: ", verb);
          return false;

@@ -12,6 +12,15 @@
 namespace Langulus::Flow::Inner
 {
 
+
+   ///                                                                        
+   ///   Entanglment definition                                               
+   ///                                                                        
+   struct Entanglement {
+      Entanglement* mParent = nullptr;
+      bool          mDone = false;
+   };
+
    ///                                                                        
    ///   Entangled contents                                                   
    ///                                                                        
@@ -23,49 +32,47 @@ namespace Langulus::Flow::Inner
    /// up in separate blocks), we must keep track of when a branch has been   
    /// satisfied, so that the rest are ignored regardless where they end up.  
    /// This is achieved by pushing branch contents into an Entangled element, 
-   /// that has a reference to a shared bool flag.                            
+   /// that has a reference to a shared Entanglement object owned by the flow 
    ///                                                                        
    struct Entangled {
-      // A reference to a shared boolean flag                           
-      Ref<bool> mDone;
-      // The actual contents of the branch                              
-      Many mActiveContent;
-      // Fallback contents for when branch is no longer active          
-      Many mPassiveContent;
-
       LANGULUS_CONVERTS_TO(Text);
+
+      // A reference to a shared boolean flag                           
+      Ref<Entanglement> mDone;
+      // Contents when mDone is true                                    
+      Many mTrueContent;
+      // Contents when mDone is false                                   
+      Many mFalseContent;
 
       /// Construct an entangled branch                                       
       ///   @param done - a reference to the shared completion flag           
-      ///   @param active - active branch contents                            
-      ///   @param passive - passive branch contents                          
-      Entangled(bool* done, Many&& active, Many&& passive)
+      ///   @param ontrue - true path branch contents                         
+      ///   @param onfalse - false path branch contents                       
+      Entangled(Entanglement* done, Many&& ontrue, Many&& onfalse)
          : mDone           {done}
-         , mActiveContent  {Forward<Many>(active)}
-         , mPassiveContent {Forward<Many>(passive)} {
+         , mTrueContent    {Forward<Many>(ontrue)}
+         , mFalseContent   {Forward<Many>(onfalse)} {
          LANGULUS_ASSUME(DevAssumes, done, "Invalid entanglement handle");
       }
 
       /// Just stringify the contents                                         
       explicit operator Text() const {
          Text result;
-         if (IsActive())
-            mActiveContent.Serialize(result);
-         else
-            mPassiveContent.Serialize(result);
+         if (IsActive())  mTrueContent.Serialize(result);
+         else            mFalseContent.Serialize(result);
          return result;
       }
 
       /// Check if the branch is still active (if it must be executed)        
-      ///   @return true if branch has to be executed                         
+      ///   @return true if we're on the true path                            
       bool IsActive() const noexcept {
-         return not *mDone;
+         return mDone->mDone;
       }
 
       /// Get the branch contents                                             
       ///   @return the contents                                              
       auto GetContent() const noexcept -> const Many& {
-         return IsActive() ? mActiveContent : mPassiveContent;
+         return IsActive() ? mTrueContent : mFalseContent;
       }
    };
 

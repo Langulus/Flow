@@ -54,7 +54,7 @@ Temporal::operator Text() const {
 /// Reset progress for the priority stack                                     
 void Temporal::Reset() {
    // Reset timers                                                      
-   mStart = mNow = {};
+   mStart = mNow = mPrevTime = {};
 
    // Reset the execution state of all verbs in the priority stack      
    ResetInner(mPriorityStack);
@@ -126,8 +126,14 @@ bool Temporal::IsValid() const {
 
 /// Get the accumulated running time across all Updates                       
 ///   @return the time                                                        
-Langulus::Time Temporal::GetUptime() const {
+auto Temporal::GetUptime() const -> Time {
    return mNow - mStart;
+}
+
+/// Get the difference in time between the last two updates                   
+///   @return the time differences                                            
+auto Temporal::GetDeltaTime() const -> Time {
+   return mNow - mPrevTime;
 }
 
 /// Advance the flow - moves time forward, executes stacks                    
@@ -146,6 +152,7 @@ bool Temporal::Update(Time dt, Many& sideffects) {
       return true;
 
    // Advance the global cycler for the flow                            
+   mPrevTime = mNow;
    mNow += dt;
 
    // Execute flows that occur periodically                             

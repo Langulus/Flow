@@ -44,8 +44,8 @@ namespace Langulus::Flow::Inner
       explicit Missing(Inner::Missing*, const TMany<DMeta>&, Real priority);
       explicit Missing(Inner::Missing*, const Many&,         Real priority);
 
-      NOD() bool Accepts(const Many&) const;
-      NOD() bool IsSatisfied() const;
+      bool Accepts(const Many&) const;
+      bool IsSatisfied() const;
 
       Many Link(const Many&, const MissingFuture&) const;
 

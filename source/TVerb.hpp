@@ -31,10 +31,10 @@ namespace Langulus::Flow
       template<CT::Data T1, CT::Data...TN> requires CT::VerbMakable<T1, TN...>
       TVerb(T1&&, TN&&...);
 
-      NOD() static VERB From(const Charge& = {}, VerbState = {});
-      NOD() static VERB From(CT::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
+      static VERB From(const Charge& = {}, VerbState = {});
+      static VERB From(CT::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
 
-      NOD() VERB Fork(auto&&...) const noexcept;
+      VERB Fork(auto&&...) const noexcept;
 
       ///                                                                     
       ///   Assignment                                                        
@@ -43,8 +43,8 @@ namespace Langulus::Flow
       TVerb& operator = (const TVerb&);
       TVerb& operator = (TVerb&&);
 
-      NOD() explicit operator Code() const;
-      NOD() explicit operator Text() const;
+      explicit operator Code() const;
+      explicit operator Text() const;
 
       ///                                                                     
       ///   Assignment                                                        
@@ -64,8 +64,8 @@ namespace Langulus::Flow
       ///                                                                     
       ///   Charge arithmetics                                                
       ///                                                                     
-      VERB operator * (Real) const;
-      VERB operator ^ (Real) const;
+      VERB  operator *  (Real) const;
+      VERB  operator ^  (Real) const;
 
       VERB& operator *= (Real) noexcept;
       VERB& operator ^= (Real) noexcept;
@@ -73,7 +73,7 @@ namespace Langulus::Flow
       ///                                                                     
       ///   Capsulation                                                       
       ///                                                                     
-      NOD() Hash GetHash() const;
+      Hash  GetHash() const;
 
       VERB& ShortCircuit(bool) noexcept;
       VERB& Multicast(bool) noexcept;
@@ -89,16 +89,16 @@ namespace Langulus::Flow
       ///   RTTI                                                              
       ///                                                                     
       template<CT::Verb>
-      NOD() constexpr bool  IsVerb() const noexcept;
-      NOD() constexpr bool  IsVerb(VMeta) const noexcept;
-      NOD() constexpr VMeta GetVerb() const noexcept;
-      NOD() constexpr Token GetToken() const;
+      constexpr bool  IsVerb() const noexcept;
+      constexpr bool  IsVerb(VMeta) const noexcept;
+      constexpr VMeta GetVerb() const noexcept;
+      constexpr Token GetToken() const;
 
       ///                                                                     
       ///   Comparison                                                        
       ///                                                                     
-      NOD() bool operator == (const CT::VerbBased auto&) const;
-      NOD() bool operator == (VMeta) const noexcept;
+      bool operator == (const CT::VerbBased auto&) const;
+      bool operator == (VMeta) const noexcept;
 
       ///                                                                     
       ///   Insertion                                                         

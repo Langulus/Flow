@@ -17,7 +17,7 @@ namespace Langulus
    /// The dot in the real number is considered a digit, too                  
    /// Credit goes to http://stackoverflow.com/questions/1489830              
    ///   @param x - real number to count digits of                            
-   template<CT::Integer T> NOD() LANGULUS(INLINED)
+   template<CT::Integer T> LANGULUS(INLINED)
    constexpr Count CountDigits(T x) noexcept {
       if constexpr (CT::UnsignedInteger8<T>)
          return (x < 10u ? 1 : (x < 100u ? 2 : 3));
@@ -74,7 +74,7 @@ namespace Langulus
 
    /// Count digits in integer numbers                                        
    ///   @param x - integer number to count digits of                         
-   template<CT::Real T> NOD() LANGULUS(INLINED)
+   template<CT::Real T> LANGULUS(INLINED)
    constexpr Count CountDigits(T x) noexcept {
       T floored;
       T fraction {::std::abs(::std::modf(x, &floored))};
@@ -97,7 +97,7 @@ namespace Langulus
    ///   @param lhs - left number                                             
    ///   @param rhs - right number                                            
    ///   @return the concatenation of the two numbers                         
-   template<CT::Number T> NOD() LANGULUS(INLINED)
+   template<CT::Number T> LANGULUS(INLINED)
    T ConcatenateNumbers(const T& lhs, const T& rhs) {
       T result {lhs};
       result *= ::std::pow(T {10}, static_cast<T>(CountDigits(rhs)));

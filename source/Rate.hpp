@@ -109,16 +109,16 @@ namespace Langulus::Flow
       constexpr RefreshRate(const CT::Number auto&) noexcept;
       constexpr RefreshRate(const Enum&) noexcept;
 
-      NOD() constexpr bool IsUniform() const noexcept;
-      NOD() constexpr bool IsStaticUniform() const noexcept;
-      NOD() constexpr bool IsDynamicUniform() const noexcept;
-      NOD() constexpr bool IsAttribute() const noexcept;
-      NOD() constexpr bool IsInput() const noexcept;
-      NOD() constexpr bool IsShaderStage() const noexcept;
-      NOD() constexpr Offset GetInputIndex() const;
-      NOD() constexpr Offset GetStaticUniformIndex() const;
-      NOD() constexpr Offset GetDynamicUniformIndex() const;
-      NOD() constexpr Offset GetStageIndex() const;
+      constexpr bool IsUniform() const noexcept;
+      constexpr bool IsStaticUniform() const noexcept;
+      constexpr bool IsDynamicUniform() const noexcept;
+      constexpr bool IsAttribute() const noexcept;
+      constexpr bool IsInput() const noexcept;
+      constexpr bool IsShaderStage() const noexcept;
+      constexpr auto GetInputIndex() const -> Offset;
+      constexpr auto GetStaticUniformIndex() const -> Offset;
+      constexpr auto GetDynamicUniformIndex() const -> Offset;
+      constexpr auto GetStageIndex() const -> Offset;
 
       constexpr operator Enum () const noexcept {
          return static_cast<Enum>(mMode);

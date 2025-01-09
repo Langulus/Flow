@@ -51,16 +51,16 @@ namespace Langulus::Flow
       Resolvable& operator = (Resolvable&&) noexcept = default;
 
       template<CT::Data>
-      NOD() bool CastsTo() const;
-      NOD() bool CastsTo(DMeta) const IF_UNSAFE(noexcept);
+      bool CastsTo() const;
+      bool CastsTo(DMeta) const IF_UNSAFE(noexcept);
 
       template<CT::Data>
-      NOD() bool Is() const;
-      NOD() bool Is(DMeta) const noexcept;
+      bool Is() const;
+      bool Is(DMeta) const noexcept;
 
-      NOD() Token GetToken() const IF_UNSAFE(noexcept);
-      NOD() DMeta GetType()  const noexcept;
-      NOD() Block<> GetBlock() const noexcept;
+      Token GetToken() const IF_UNSAFE(noexcept);
+      DMeta GetType()  const noexcept;
+      Block<> GetBlock() const noexcept;
 
       template<bool DISPATCH = true, bool DEFAULT = true>
       auto& Run(CT::VerbBased auto&&);
@@ -69,18 +69,18 @@ namespace Langulus::Flow
       Many Run(const Many&);
       Many Run(const Temporal&);
 
-      NOD() Block<> GetMember(TMeta) noexcept;
-      NOD() Block<> GetMember(TMeta) const noexcept;
+      Block<> GetMember(TMeta) noexcept;
+      Block<> GetMember(TMeta) const noexcept;
 
-      NOD() Block<> GetMember(TMeta, CT::Index auto) noexcept;
-      NOD() Block<> GetMember(TMeta, CT::Index auto) const noexcept;
+      Block<> GetMember(TMeta, CT::Index auto) noexcept;
+      Block<> GetMember(TMeta, CT::Index auto) const noexcept;
 
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         NOD() Block<> GetMember(const Token&) noexcept;
-         NOD() Block<> GetMember(const Token&) const noexcept;
+         Block<> GetMember(const Token&) noexcept;
+         Block<> GetMember(const Token&) const noexcept;
 
-         NOD() Block<> GetMember(const Token&, CT::Index auto) noexcept;
-         NOD() Block<> GetMember(const Token&, CT::Index auto) const noexcept;
+         Block<> GetMember(const Token&, CT::Index auto) noexcept;
+         Block<> GetMember(const Token&, CT::Index auto) const noexcept;
       #endif
 
       template<CT::Trait>
@@ -95,7 +95,7 @@ namespace Langulus::Flow
       // All inheritances of Resolvable will become convertible to Text 
       // and will share the reflected conversions list, but with one    
       // condition: the conversion operator must remain implicit.       
-      NOD() operator Text() const;
+      operator Text() const;
 
       Text Self() const;
    };
@@ -105,7 +105,7 @@ namespace Langulus::Flow
 namespace Langulus
 {
 
-   NOD() Anyness::Text IdentityOf(const auto&);
-   NOD() Anyness::Text IdentityOf(const Token&, const auto&);
+   Anyness::Text IdentityOf(const auto&);
+   Anyness::Text IdentityOf(const Token&, const auto&);
 
 } // namespace Langulus

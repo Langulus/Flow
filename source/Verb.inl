@@ -252,14 +252,17 @@ namespace Langulus::Flow
    template<CT::VerbBased THIS> LANGULUS(INLINED)
    constexpr Token Verb::GetToken() const {
       if constexpr (CT::Verb<THIS>) {
-         return mMass < 0
+         return mMass < 0 and not GetVerb<THIS>()->mTokenReverse.empty()
             ? GetVerb<THIS>()->mTokenReverse
             : GetVerb<THIS>()->mToken;
       }
       else {
          if (not mVerb)
             return RTTI::MetaVerb::DefaultToken;
-         return mMass < 0 ? mVerb->mTokenReverse : mVerb->mToken;
+
+         return mMass < 0 and not mVerb->mTokenReverse.empty()
+            ? mVerb->mTokenReverse
+            : mVerb->mToken;
       }
    }
 

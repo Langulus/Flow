@@ -40,14 +40,14 @@ namespace Langulus::Flow
       Verb(T1&&, TN&&...);
 
       template<CT::Verb>
-      NOD() static Verb From(const Charge& = {}, VerbState = {});
+      static Verb From(const Charge& = {}, VerbState = {});
       template<CT::Verb>
-      NOD() static Verb From(CT::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
-      NOD() static Verb FromMeta(VMeta, CT::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
-      NOD() static Verb FromMeta(VMeta, const Charge& = {}, VerbState = {});
+      static Verb From(CT::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
+      static Verb FromMeta(VMeta, CT::UnfoldInsertable auto&&, const Charge& = {}, VerbState = {});
+      static Verb FromMeta(VMeta, const Charge& = {}, VerbState = {});
 
       template<CT::VerbBased THIS = Verb>
-      NOD() THIS Fork(auto&&...) const noexcept;
+      THIS Fork(auto&&...) const noexcept;
 
       ///                                                                     
       ///   Assignment                                                        
@@ -87,7 +87,7 @@ namespace Langulus::Flow
       ///   Capsulation                                                       
       ///                                                                     
       template<CT::VerbBased THIS = Verb>
-      NOD() Hash GetHash() const;
+      Hash GetHash() const;
 
       template<CT::VerbBased THIS = Verb>
       THIS& ShortCircuit(bool) noexcept;
@@ -114,15 +114,15 @@ namespace Langulus::Flow
       ///   RTTI                                                              
       ///                                                                     
       template<CT::VerbBased = Verb>
-      NOD() constexpr Token GetToken() const;
+      constexpr Token GetToken() const;
 
       template<CT::VerbBased = Verb>
-      NOD() constexpr bool IsVerb(VMeta) const noexcept;
+      constexpr bool IsVerb(VMeta) const noexcept;
       template<CT::Verb, CT::VerbBased = Verb>
-      NOD() constexpr bool IsVerb() const noexcept;
+      constexpr bool IsVerb() const noexcept;
 
       template<CT::VerbBased = Verb>
-      NOD() constexpr VMeta GetVerb() const noexcept;
+      constexpr VMeta GetVerb() const noexcept;
 
       template<CT::Verb>
       Verb& SetVerb();
@@ -133,9 +133,9 @@ namespace Langulus::Flow
       ///   Comparison                                                        
       ///                                                                     
       template<CT::VerbBased = Verb>
-      NOD() bool operator == (const CT::VerbBased auto&) const;
+      bool operator == (const CT::VerbBased auto&) const;
       template<CT::VerbBased = Verb>
-      NOD() bool operator == (VMeta) const noexcept;
+      bool operator == (VMeta) const noexcept;
 
       ///                                                                     
       ///   Insertion                                                         
@@ -157,7 +157,7 @@ namespace Langulus::Flow
       static bool GenericExecuteDefault(Many&, CT::VerbBased auto&);
       static bool GenericExecuteStateless(CT::VerbBased auto&);
 
-      NOD() explicit operator Code() const;
+      explicit operator Code() const;
 
       template<bool OR>
       Count CompleteDispatch(Count, Abandoned<Many>&&);

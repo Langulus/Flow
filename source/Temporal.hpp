@@ -46,6 +46,7 @@ namespace Langulus::Flow
       friend struct Inner::Missing;
       friend struct Inner::MissingFuture;
       friend struct Inner::MissingPast;
+      using Time = Langulus::Time;
 
    private:
       // Parent flow                                                    
@@ -54,6 +55,8 @@ namespace Langulus::Flow
       Time mStart;
       // The time at which current flow execution happens               
       Time mNow;
+      // The time at which current previous flow execution happened     
+      Time mPrevTime;
 
       // Period that corresponds to a unit of Charge::mTime             
       Time mTimePeriod = 1s;
@@ -88,17 +91,16 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) Temporal& operator = (Temporal&&) noexcept = default;
       LANGULUS_API(FLOW) Temporal& operator = (const Temporal&) noexcept = default;
 
-      NOD() LANGULUS_API(FLOW) operator Code() const;
-      NOD() LANGULUS_API(FLOW) operator Text() const;
+      LANGULUS_API(FLOW) operator Code() const;
+      LANGULUS_API(FLOW) operator Text() const;
 
-      NOD() LANGULUS_API(FLOW)
+      LANGULUS_API(FLOW)
       bool operator == (const Temporal&) const;
 
-      NOD() LANGULUS_API(FLOW)
-      bool IsValid() const;
+      LANGULUS_API(FLOW) bool IsValid() const;
 
-      NOD() LANGULUS_API(FLOW)
-      Time GetUptime() const;
+      LANGULUS_API(FLOW) Time GetUptime() const;
+      LANGULUS_API(FLOW) Time GetDeltaTime() const;
 
       LANGULUS_API(FLOW) void Merge(const Temporal&);
 

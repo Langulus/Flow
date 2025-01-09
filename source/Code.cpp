@@ -84,7 +84,10 @@ namespace Langulus::Flow
       (void)MetaOf<Traits::Max>();
       (void)MetaOf<Traits::Input>();
       (void)MetaOf<Traits::Output>();
+      (void)MetaOf<Traits::Mass>();
+      (void)MetaOf<Traits::Rate>();
       (void)MetaOf<Traits::Time>();
+      (void)MetaOf<Traits::Priority>();
 
       // Make sure that all default types are registered before parsing 
       (void)MetaOf<Index>();
@@ -289,32 +292,32 @@ namespace Langulus::Flow
          const auto asview = Token {relevant};
 
          if (relevant[0] > 0 and relevant[0] <= 32) {
-            // Skip a single skippable character                     
+            // Skip a single skippable character                        
             ++progress;
             continue;
          }
          else if (asview.starts_with("//")) {
-            // Skip an entire line comment                           
+            // Skip an entire line comment                              
             while (progress < input.GetCount() and input[progress] != '\n')
                ++progress;
             continue;
          }
          else if (asview.starts_with("/*")) {
-            // Skip a block comment (across multiple new lines)      
+            // Skip a block comment (across multiple new lines)         
             while (progress + 1 < input.GetCount() and (input[progress] != '*' or input[progress + 1] != '/'))
                ++progress;
 
             if (progress + 1 < input.GetCount())
-               // Skip the "*/" tag                                  
+               // Skip the "*/" tag                                     
                progress += 2;
             else 
-               // Skip to end of input, "*/" was never found         
+               // Skip to end of input, "*/" was never found            
                progress = input.GetCount();
 
             continue;
          }
 
-         // If reached, then something valuable was encountered      
+         // If reached, then something valuable was encountered         
          break;
       }
 
@@ -364,13 +367,18 @@ namespace Langulus::Flow
       VERBOSE_TAB("Keyword isolated: ", keyword);
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      // Search for an exact token in meta definitions                  
-      /*const auto dmeta = RTTI::GetMetaData(keyword);
-      const auto tmeta = RTTI::GetMetaTrait(keyword);
-      const auto cmeta = RTTI::GetMetaConstant(keyword);
+      // If this is reached, then exactly one match in symbols          
+      // Push found meta data, if any                                   
+      const auto meta = Disambiguate(progress, input, keyword);
+      if (not meta) {
+         PRETTY_ERROR("Disambiguation of `", keyword, "` failed");
+      }
 
-      if (dmeta and not tmeta and not cmeta) {
-         // Exact non-ambiguous data definition found                   
+      const auto dmeta = meta.As<DMeta>();
+      const auto tmeta = meta.As<TMeta>();
+      const auto cmeta = meta.As<CMeta>();
+
+      if (dmeta) {
          if (allowCharge) {
             const auto relevant = input.RightOf(progress);
             if (ChargeParser::Peek(relevant) != Operator::NoOperator) {
@@ -383,50 +391,14 @@ namespace Langulus::Flow
          }
          else lhs << dmeta;
       }
-      else if (not dmeta and tmeta and not cmeta) {
-         // Exact non-ambiguous trait definition found                  
+
+      if (tmeta)
          lhs << tmeta;
-      }
-      else if (not dmeta and not tmeta and cmeta) {
-         const Block<> constant {
-            {}, cmeta->mValueType, 1, cmeta->mPtrToValue, nullptr
-         };
+
+      if (cmeta) {
+         const Block<> constant {{}, cmeta};
          lhs.SmartPush(IndexBack, Clone(constant));
       }
-      else {*/
-         // If this is reached, then exactly one match in symbols       
-         // Push found meta data, if any                                
-         const auto meta = Disambiguate(progress, input, keyword);
-         if (not meta) {
-            PRETTY_ERROR("Disambiguation of `", keyword, "` failed");
-         }
-
-         const auto dmeta = meta.As<DMeta>();
-         const auto tmeta = meta.As<TMeta>();
-         const auto cmeta = meta.As<CMeta>();
-
-         if (dmeta) {
-            if (allowCharge) {
-               const auto relevant = input.RightOf(progress);
-               if (ChargeParser::Peek(relevant) != Operator::NoOperator) {
-                  // Parse charge for the keyword                       
-                  Charge charge;
-                  progress += ChargeParser::Parse(relevant, charge);
-                  lhs << Construct {dmeta, Many {}, charge};
-               }
-               else lhs << dmeta;
-            }
-            else lhs << dmeta;
-         }
-
-         if (tmeta)
-            lhs << tmeta;
-
-         if (cmeta) {
-            const Block<> constant {{}, cmeta};
-            lhs.SmartPush(IndexBack, Clone(constant));
-         }
-      //}
 
       VERBOSE("Keyword parsed: `", keyword, "` as ", lhs, " (of type ", lhs.GetToken(), ")");
       return progress;
@@ -575,14 +547,6 @@ namespace Langulus::Flow
    ) {
       Offset progress = 0;
       if (op < Operator::NoOperator) {
-         // Handle a built-in operator                                  
-         /*if (GlobalOperators[op].mPrecedence and priority >= GlobalOperators[op].mPrecedence) {
-            VERBOSE(Logger::Yellow, 
-               "Delaying built-in operator [", GlobalOperators[op].mToken,
-               "] due to a prioritized operation");
-            return 0;
-         }*/
-
          // Skip the operator, we already know it                       
          progress += SerializationRules::Operators[op].mToken.size();
          VERBOSE_TAB("Parsing built-in operator: [",
@@ -631,11 +595,11 @@ namespace Langulus::Flow
 
             VERBOSE_TAB("Parsing reflected operator: [", word, "] (", found, ")");
             progress += word.size();
-            const Code relevant = input.RightOf(progress);
             auto operation = Verb::FromMeta(found);
             if (CompareOperators(word, found->mOperatorReverse))
                operation.SetMass(-1);
 
+            const Code relevant = input.RightOf(progress);
             return progress + ParseReflected(operation, relevant, lhs, optimize);
          #else
             PRETTY_ERROR("Can't parse reflected operator, managed reflection feature is disabled");
@@ -656,11 +620,11 @@ namespace Langulus::Flow
 
             progress += word.size();
             VERBOSE_TAB("Parsing reflected verb: [", word, "] (", found, ")");
-            const Code relevant = input.RightOf(progress);
             auto operation = Verb::FromMeta(found);
             if (CompareOperators(word, found->mTokenReverse))
                operation.SetMass(-1);
 
+            const Code relevant = input.RightOf(progress);
             return progress + ParseReflected(operation, relevant, lhs, optimize);
          #else
             PRETTY_ERROR("Can't parse reflected verb, managed reflection feature is disabled");

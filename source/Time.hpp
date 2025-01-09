@@ -76,7 +76,7 @@ namespace Langulus
       constexpr explicit operator bool() const noexcept;
 
       template<CT::BuiltinNumber T = Real>
-      NOD() T Seconds() const noexcept;
+      T Seconds() const noexcept;
 
       Time operator + (auto&& rhs) const {
          return ::std::chrono::duration_cast<Base>(
@@ -95,7 +95,7 @@ namespace Langulus
    ///                                                                        
    class SteadyClock : public A::Clock, private StdClock {
       LANGULUS_BASES(A::Clock);
-      NOD() static TimePoint Now() noexcept;
+      static TimePoint Now() noexcept;
    };
 
    namespace CT

@@ -21,7 +21,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    static_assert(CT::Complete<Temporal>);
 
    // Required for constants, such as single, many, etc.                
-   (void) MetaOf<Index>();
+   //(void) MetaOf<Index>();
 
    GIVEN("The script with line comments") {
       const auto code = "//some comment\n`plural` associate index::many //same line comment with no new line"_code;
@@ -512,6 +512,21 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Many required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(0.2_real).SetPriority(0.3_real).SetRate(0.4_real).SetMass(0.5_real);
+
+      WHEN("Parsed") {
+         const auto parsed = code.Parse();
+         DumpResults(code, parsed, required);
+         REQUIRE(parsed == required);
+      }
+   }
+
+   GIVEN("The script: ? create@-0.2!-0.3^-0.4*-0.5 Name(A::Text??)") {
+      const Code code = "? create@-0.2!-0.3^-0.4*-0.5 Name(A::Text??)";
+      Many missingFutureText = Many::Future();
+      missingFutureText << MetaOf<A::Text>();
+      const Many required = Verbs::Create {Traits::Name {missingFutureText}}
+         .SetSource(Many::Past())
+         .SetTime(-0.2_real).SetPriority(-0.3_real).SetRate(-0.4_real).SetMass(-0.5_real);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();

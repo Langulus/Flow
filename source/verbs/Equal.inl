@@ -9,12 +9,6 @@
 #include "Equal.hpp"
 #include "../TVerb.inl"
 
-#if 0
-   #define VERBOSE_COMPARE(...) Logger::Verbose(__VA_ARGS__)
-#else
-   #define VERBOSE_COMPARE(...) LANGULUS(NOOP)
-#endif
-
 
 namespace Langulus::Verbs
 {
@@ -88,5 +82,3 @@ namespace Langulus::Verbs
    }
 
 } // namespace Langulus::Verbs
-
-#undef VERBOSE_COMPARE

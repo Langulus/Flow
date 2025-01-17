@@ -127,10 +127,10 @@ namespace Langulus::Flow
       return Verb::ShortCircuit<VERB>(state);
    }
 
-   TEMPLATE() LANGULUS(INLINED)
+   /*TEMPLATE() LANGULUS(INLINED)
    VERB& TME()::Multicast(bool state) noexcept {
       return Verb::Multicast<VERB>(state);
-   }
+   }*/
 
    TEMPLATE() LANGULUS(INLINED)
    VERB& TME()::SetVerbState(VerbState state) noexcept {

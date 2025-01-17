@@ -100,7 +100,8 @@ namespace Langulus::Flow
 
    /// Invoke a single verb on a single context                               
    ///   @tparam DISPATCH - whether or not to use context's dispatcher, if    
-   ///      any is statically available or reflected                          
+   ///      any is statically available or reflected. This is mainly used for 
+   ///      infinite regress protection when doing a verb from a dispatcher   
    ///   @tparam DEFAULT - whether or not to attempt default verb execution   
    ///      if such is statically available or reflected this is done only    
    ///      if direct or dispatched execution fails                           
@@ -128,26 +129,31 @@ namespace Langulus::Flow
       else {
          if constexpr (FALLBACK) {
             // Execute the default verb                                 
-            Verb::GenericExecuteDefault(context, verb);
+            if (context.IsValid())
+               Verb::GenericExecuteDefault(context, verb);
+            else
+               Verb::GenericExecuteStateless(verb);
          }
          else if constexpr (DISPATCH) {
             // Context might have a dispatcher                          
             // If that is the case, then it is the context's            
             // responsibility to dispatch the verb!                     
             if constexpr (CT::Deep<T>) {
-               auto meta = context.GetType();
-               if constexpr (CT::Constant<T>) {
-                  if (meta->mDispatcherConstant)
+               if (context) {
+                  auto meta = context.GetType();
+                  if constexpr (CT::Constant<T>) {
+                     if (meta->mDispatcherConstant)
+                        meta->mDispatcherConstant(context.GetRaw(), verb);
+                     else
+                        Verb::GenericExecuteIn(context, verb);
+                  }
+                  else if (meta->mDispatcherConstant)
                      meta->mDispatcherConstant(context.GetRaw(), verb);
+                  else if (meta->mDispatcherMutable)
+                     meta->mDispatcherMutable(context.GetRaw(), verb);
                   else
                      Verb::GenericExecuteIn(context, verb);
                }
-               else if (meta->mDispatcherConstant)
-                  meta->mDispatcherConstant(context.GetRaw(), verb);
-               else if (meta->mDispatcherMutable)
-                  meta->mDispatcherMutable(context.GetRaw(), verb);
-               else
-                  Verb::GenericExecuteIn(context, verb);
             }
             else Verb::GenericExecuteIn(context, verb);
          }
@@ -174,17 +180,18 @@ namespace Langulus::Flow
    /// If an element is not able to execute verb, attempt calling the default 
    /// This should be called only in memory blocks that are flat              
    ///   @tparam RESOLVE - whether or not to perform runtime resolve of the   
-   ///                     contexts, getting the most concrete type           
-   ///   @tparam DISPATCH - whether or not to use custom dispatcher for       
-   ///                      contexts, if any                                  
+   ///      contexts, getting the most concrete type                          
+   ///   @tparam DISPATCH - whether or not to use context's dispatcher, if    
+   ///      any is statically available or reflected. This is mainly used for 
+   ///      infinite regress protection when doing a verb from a dispatcher   
    ///   @tparam DEFAULT - whether or not to allow default/stateless verb     
-   ///                     execution, if all else fails                       
+   ///      execution, if all else fails                                      
    ///   @param context - the context in which to dispatch the verb           
    ///   @param verb - the verb to send over                                  
    ///   @return the number of successful executions                          
    template<bool RESOLVE, bool DISPATCH, bool DEFAULT>
    Count DispatchFlat(CT::Deep auto& context, CT::VerbBased auto& verb) {
-      if (not context or verb.IsMonocast()) {
+      /*if (not context or verb.IsMonocast()) {
          if (context.IsInvalid()) {
             // Context is empty and doesn't have any relevant states,   
             // and execution happens only if DEFAULT verbs are allowed, 
@@ -202,6 +209,14 @@ namespace Langulus::Flow
             Execute<DISPATCH, DEFAULT, true>(context, verb);
             return verb.GetSuccesses();
          }
+      }*/
+      if (not context) {
+         // Context is empty and doesn't have any relevant states,      
+         // and execution happens only if DEFAULT verbs are allowed,    
+         // as a stateless verb execution                               
+         verb.SetSource(context);
+         Execute<DISPATCH, DEFAULT, true>(context, verb);
+         return verb.GetSuccesses();
       }
 
       Count successCount = 0;
@@ -242,17 +257,18 @@ namespace Langulus::Flow
    /// considered failed, unless it's an OR scope - OR scopes stop execution  
    /// right after the first success and fail only if all branches fail       
    ///   @tparam RESOLVE - whether or not to perform runtime resolve of the   
-   ///                     contexts, getting the most concrete type           
-   ///   @tparam DISPATCH - whether or not to use custom dispatcher for       
-   ///                      contexts, if any                                  
+   ///      contexts, getting the most concrete type                          
+   ///   @tparam DISPATCH - whether or not to use context's dispatcher, if    
+   ///      any is statically available or reflected. This is mainly used for 
+   ///      infinite regress protection when doing a verb from a dispatcher   
    ///   @tparam DEFAULT - whether or not to allow default/stateless verb     
-   ///                     execution, if all else fails                       
+   ///      execution, if all else fails                                      
    ///   @param context - the context in which scope will be dispatched to    
    ///   @param verb - the verb to execute                                    
    ///   @return the number of successful executions                          
    template<bool RESOLVE, bool DISPATCH, bool DEFAULT>
    Count DispatchDeep(CT::Deep auto& context, CT::VerbBased auto& verb) {
-      if (not context or verb.IsMonocast()) {
+      /*if (not context or verb.IsMonocast()) {
          if (context.IsInvalid()) {
             // Context is empty and doesn't have any relevant states,   
             // and execution happens only if DEFAULT verbs are allowed, 
@@ -270,6 +286,14 @@ namespace Langulus::Flow
             Execute<DISPATCH, DEFAULT, true>(context, verb);
             return verb.GetSuccesses();
          }
+      }*/
+      if (not context) {
+         // Context is empty and doesn't have any relevant states,      
+         // and execution happens only if DEFAULT verbs are allowed,    
+         // as a stateless verb execution                               
+         verb.SetSource(context);
+         Execute<DISPATCH, DEFAULT, true>(context, verb);
+         return verb.GetSuccesses();
       }
 
       if (context.IsDeep()) {

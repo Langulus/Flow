@@ -168,8 +168,9 @@ namespace Langulus::Flow
 
                // We can attempt an implicit Verbs::Create to make      
                // the data at compile-time. Allowed only if no producer 
-               // was specified.                                        
-               if (not construct.GetType()->mProducerRetriever) {
+               // was specified and if construct is not flow-dependent. 
+               if (not construct.GetType()->mProducerRetriever
+               /*and not construct.GetCharge().IsFlowDependent()*/) {
                   Verbs::Create creator {&solved};
                   if (Verb::GenericExecuteStateless(creator)) {
                      output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
@@ -187,7 +188,7 @@ namespace Langulus::Flow
                // missing, but generally they will be substituted with  
                // the corresponding results                             
                VERBOSE("Executing neat: ", neat);
-               Neat local = neat;
+               /*Neat local = neat;
                local.template RemoveData<A::Verb>();
                VERBOSE("Executing neat (verbs stripped): ", local);
 
@@ -213,7 +214,7 @@ namespace Langulus::Flow
                         if (silent)
                            LANGULUS_THROW(Flow, "Construct AND failure");
                         else
-                           LANGULUS_OOPS(Flow, "Construct AND failure: "/*, flow*/);
+                           LANGULUS_OOPS(Flow, "Construct AND failure: ");
                      }
                      else if (verb.GetOutput())
                         local << Abandon(verb.GetOutput());
@@ -221,7 +222,8 @@ namespace Langulus::Flow
                );
 
                VERBOSE("Executing neat (verbs executed): ", local);
-               output.SmartPush(IndexBack, Abandon(local));
+               output.SmartPush(IndexBack, Abandon(local));*/
+               TODO();
             },
             [&](const A::Verb& constVerb) {
                // Execute verbs                                         
@@ -243,6 +245,14 @@ namespace Langulus::Flow
                   constVerb.GetVerbState()
                );
                verb.SetSource(constVerb.GetSource());
+
+               if (verb.IsMissing()) {
+                  if (integrate) {
+                     output.SmartPush(IndexBack, verb);
+                     return Loop::Continue;
+                  }
+                  else FLOW_ERRORS("Trying to execute a missing verb: ", verb);
+               }
 
                // Execute the verb                                      
                if (not ExecuteVerb(context, verb, silent)) {
@@ -329,7 +339,8 @@ namespace Langulus::Flow
                   // We can attempt an implicit Verbs::Create to make   
                   // the data at compile-time. Allowed only if no       
                   // producer was specified.                            
-                  if (not construct.GetType()->mProducerRetriever) {
+                  if (not construct.GetType()->mProducerRetriever
+                  /*and not construct.GetCharge().IsFlowDependent()*/) {
                      Verbs::Create creator {&solved};
                      if (Verb::GenericExecuteStateless(creator)) {
                         output.SmartPush(IndexBack, Abandon(creator.GetOutput()));
@@ -346,7 +357,7 @@ namespace Langulus::Flow
                // verbs from it. Some of them might get reinserted, if  
                // missing, but generally they will be substituted with  
                // the corresponding results                             
-               Neat local = neat;
+               /*Neat local = neat;
                local.template RemoveData<A::Verb>();
 
                local.ForEach(
@@ -372,7 +383,8 @@ namespace Langulus::Flow
                   }
                );
 
-               output.SmartPush(IndexBack, Abandon(local));
+               output.SmartPush(IndexBack, Abandon(local));*/
+               TODO();
             },
             [&](const Verb& constVerb) {
                // Execute verbs                                         
@@ -387,6 +399,14 @@ namespace Langulus::Flow
                   constVerb,
                   constVerb.GetVerbState()
                );
+
+               if (verb.IsMissing()) {
+                  if (integrate) {
+                     output.SmartPush(IndexBack, verb);
+                     return Loop::Continue;
+                  }
+                  else FLOW_ERRORS("Trying to execute a missing verb: ", verb);
+               }
 
                if (not ExecuteVerb(context, verb, silent))
                   return Loop::Continue;
@@ -419,12 +439,12 @@ namespace Langulus::Flow
    ///      executing at compile-time, for example                            
    ///   @return true of no errors occured                                    
    bool IntegrateVerb(Many& context, Verb& verb, const bool silent) {
-      if (verb.IsMonocast()) {
+      /*if (verb.IsMonocast()) {
          // We're executing on whole argument/source, so be lazy        
          if (verb.GetSource().IsInvalid())
             verb.SetSource(context);
          return true;
-      }
+      }*/
 
       // Integrate the verb source to environment                       
       Many localSource;

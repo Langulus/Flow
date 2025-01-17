@@ -76,7 +76,7 @@ namespace Langulus::Flow
       Hash  GetHash() const;
 
       VERB& ShortCircuit(bool) noexcept;
-      VERB& Multicast(bool) noexcept;
+      //VERB& Multicast(bool) noexcept;
       VERB& SetVerbState(VerbState) noexcept;
       VERB& Invert() noexcept;
       VERB& SetMass(Real) noexcept;

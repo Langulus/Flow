@@ -1003,18 +1003,51 @@ namespace Langulus::Flow
          // Try executing operator at compile-time                      
          // We must disable multicast for this                          
          VERBOSE_TAB("Attempting compile-time execution... ");
-         const auto opStateBackup = op.GetVerbState();
-         op.Multicast(false);
-         Many output;
-         Many scope {op};
-         if (Execute(scope, lhs, output, false, true)) {
-            // The verb was executed at compile-time, so directly       
-            // substitute LHS with the result                           
-            VERBOSE("Verb was executed at compile time: ", output);
-            lhs = Abandon(output);
-            return progress;
+
+         // Next-execute the argument first                             
+         Many unusedContext;
+         Many argument;
+         if (Execute(op.GetArgument(), unusedContext, argument, true, true)) {
+            // Then the verb itself                                     
+            Many opSrcBackup = Move(op.GetSource());
+            Many opArgBackup = Move(op.GetArgument());
+            op.SetSource(lhs);
+            op.SetArgument(argument);
+            Execute<1, 1, 0>(lhs, op);
+
+            if (op.GetSuccesses()) {
+               // The verb was executed at compile-time, so directly    
+               // substitute LHS with the verb's output                 
+               VERBOSE("Verb was executed at compile time: ", op.GetOutput());
+               lhs = Move(op.GetOutput());
+               return progress;
+            }
+            else {
+               op.SetSource(Abandon(opSrcBackup));
+               //op.SetArgument(Abandon(opArgBackup));
+               IF_SAFE(op.GetOutput().Reset());
+            }
          }
-         else op.SetVerbState(opStateBackup);
+         else {
+            // Argument didn't execute, but we could still try to       
+            // pre-compute the op. Like for example when conjuncting    
+            // two containers.                                          
+            Many opSrcBackup = Move(op.GetSource());
+            op.SetSource(lhs);
+            Execute<1, 1, 0>(lhs, op);
+
+            if (op.GetSuccesses()) {
+               // The verb was executed at compile-time, so directly    
+               // substitute LHS with the verb's output                 
+               VERBOSE("Verb was executed at compile time: ", op.GetOutput());
+               lhs = Move(op.GetOutput());
+               return progress;
+            }
+            else {
+               op.SetSource(Abandon(opSrcBackup));
+               IF_SAFE(op.GetOutput().Reset());
+            }
+         }
       }
 
       // Either compile-time execution is impossible, or we don't       

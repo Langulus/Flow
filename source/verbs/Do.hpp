@@ -49,14 +49,14 @@ namespace Langulus::Flow
    template<bool DISPATCH, bool DEFAULT, bool FALLBACK>
    Count Execute(CT::Data auto&, CT::VerbBased auto&);
 
-   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class...BASES>
+   /*template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class...BASES>
    Count ExecuteInBases(CT::Data auto&, CT::VerbBased auto&, Types<BASES...>);
 
    namespace Inner
    {
       template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class BASE>
       Count ExecuteInBases(CT::Data auto&, CT::VerbBased auto&);
-   }
+   }*/
 
    template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true>
    Count DispatchFlat(CT::Deep auto&, CT::VerbBased auto&);

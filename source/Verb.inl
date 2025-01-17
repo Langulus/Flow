@@ -206,14 +206,14 @@ namespace Langulus::Flow
    /// Change the verb's castness                                             
    ///   @param toggle - enable or disable multicast                          
    ///   @return a reference to this verb for chaining                        
-   template<CT::VerbBased THIS> LANGULUS(INLINED)
+   /*template<CT::VerbBased THIS> LANGULUS(INLINED)
    THIS& Verb::Multicast(bool toggle) noexcept {
       if (toggle)
          mState -= VerbState::Monocast;
       else
          mState += VerbState::Monocast;
       return *reinterpret_cast<THIS*>(this);
-   }
+   }*/
 
    /// Check if verb is matches the provided V1                               
    ///   @tparam V1 - the verb to compare against                             

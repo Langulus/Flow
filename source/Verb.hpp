@@ -91,8 +91,8 @@ namespace Langulus::Flow
 
       template<CT::VerbBased THIS = Verb>
       THIS& ShortCircuit(bool) noexcept;
-      template<CT::VerbBased THIS = Verb>
-      THIS& Multicast(bool) noexcept;
+      /*template<CT::VerbBased THIS = Verb>
+      THIS& Multicast(bool) noexcept;*/
       template<CT::VerbBased THIS = Verb>
       THIS& SetVerbState(VerbState) noexcept;
 

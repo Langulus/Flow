@@ -29,14 +29,14 @@ namespace Langulus
       #if not LANGULUS(PARANOID) and LANGULUS(DEBUG)
          // Feel like getting doxxed? Directly dump the memory address  
          result += Anyness::Text {
-            fmt::format("{:X}",
+            fmt::format("{:02X}",
                reinterpret_cast<intptr_t>(&DenseCast(instance))
             )
          };
       #else
          // Obfuscate the pointer, by hashing it                        
          result += Anyness::Text {
-            fmt::format("{:X}", HashOf(&DenseCast(instance)).mHash)
+            fmt::format("{:02X}", HashOf(&DenseCast(instance)).mHash)
          };
       #endif
       result += Text::Operator::CloseScope;

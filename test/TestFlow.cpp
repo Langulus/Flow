@@ -535,5 +535,26 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       }
    }
 
+   GIVEN("The script: Input(`test`, 6, true)") {
+      const Code code = "Input(`test`, 6, true)";
+      const Many required = Traits::Input {"test", 6_real, true};
+
+      WHEN("Parsed") {
+         const auto parsed = code.Parse();
+         DumpResults(code, parsed, required);
+         REQUIRE(parsed == required);
+         REQUIRE(parsed.GetCount() == 1);
+         REQUIRE(parsed.IsExact<Trait>());
+         REQUIRE(parsed.Get<Trait>().IsExact<Many>());
+         REQUIRE(parsed.Get<Trait>().GetCount() == 3);
+         REQUIRE(parsed.Get<Trait>().Get<Many>(0).IsExact<Text>());
+         REQUIRE(parsed.Get<Trait>().Get<Many>(1).IsExact<Real>());
+         REQUIRE(parsed.Get<Trait>().Get<Many>(2).IsExact<bool>());
+         REQUIRE(parsed.Get<Trait>().Get<Many>(0) == "test");
+         REQUIRE(parsed.Get<Trait>().Get<Many>(1) == 6_real);
+         REQUIRE(parsed.Get<Trait>().Get<Many>(2) == true);
+      }
+   }
+
    REQUIRE(memoryState.Assert());
 }

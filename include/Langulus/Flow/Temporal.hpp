@@ -6,4 +6,6 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../source/Resolvable.inl"
+#include "../../../source/Temporal.hpp"
+#include "../../../source/Code.inl"
+#include "../../../source/Time.inl"

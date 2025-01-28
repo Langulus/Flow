@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include <RTTI/Meta.hpp>
+#include <Langulus/RTTI/Meta.hpp>
 
 #if defined(LANGULUS_EXPORT_ALL) || defined(LANGULUS_EXPORT_FLOW)
    #define LANGULUS_API_FLOW() LANGULUS_EXPORT()

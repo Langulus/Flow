@@ -7,8 +7,8 @@
 ///                                                                           
 #pragma once
 #include "Common.hpp"
-#include <Anyness/Neat.hpp>
-#include <Anyness/THive.hpp>
+//#include <Langulus/Anyness/Neat.hpp>
+#include <Langulus/Anyness/THive.hpp>
 
 
 namespace Langulus::Flow

@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "TFactory.hpp"
+#include "Verb.hpp"
 
 #define TEMPLATE()   template<class T, FactoryUsage USAGE>
 #define FACTORY()    TFactory<T, USAGE>

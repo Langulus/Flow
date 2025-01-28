@@ -6,8 +6,8 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include <Flow/Resolvable.hpp>
-#include <Flow/Factory.hpp>
+#include <Langulus/Flow/Resolvable.hpp>
+#include <Langulus/Flow/Factory.hpp>
 
 using namespace Langulus;
 using namespace Langulus::Flow;

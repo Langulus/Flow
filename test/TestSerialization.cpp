@@ -6,8 +6,8 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "Common.hpp"
-#include <Anyness/Serial.hpp>
-#include <Flow/Verbs/Interpret.hpp>
+#include <Langulus/Anyness/Serial.hpp>
+#include <Langulus/Verbs/Interpret.hpp>
 
 constexpr Count SerialBlock = sizeof(Count) * 2 + sizeof(DataState);
 constexpr Count SerialTrait = sizeof(Count) + SerialBlock;

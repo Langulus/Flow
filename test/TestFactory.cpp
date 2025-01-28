@@ -6,9 +6,9 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "Common.hpp"
-#include <Flow/Verbs/Create.hpp>
-#include <Flow/Verbs/Interpret.hpp>
-#include <Flow/Factory.hpp>
+#include <Langulus/Verbs/Create.hpp>
+#include <Langulus/Verbs/Interpret.hpp>
+#include <Langulus/Flow/Factory.hpp>
 
 
 SCENARIO("Test factories on the stack", "[factory]") {

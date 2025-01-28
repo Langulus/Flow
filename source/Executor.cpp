@@ -182,6 +182,7 @@ namespace Langulus::Flow
                output.SmartPush(IndexBack, Abandon(solved));
             },
             [&](const Neat& neat) {
+               (void)neat;
                // And order-independent container                       
                // Make a shallow copy of the Neat, and strip all        
                // verbs from it. Some of them might get reinserted, if  
@@ -353,6 +354,8 @@ namespace Langulus::Flow
                }
             },
             [&](const Neat& neat) {
+               (void)neat;
+
                // Make a shallow copy of the neat, and strip all        
                // verbs from it. Some of them might get reinserted, if  
                // missing, but generally they will be substituted with  

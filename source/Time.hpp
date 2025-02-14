@@ -63,15 +63,25 @@ namespace Langulus
       using Base = duration;
       using Base::duration;
 
+      /// Default constructor means zero duration                             
       constexpr Time() noexcept
-         : duration {zero()} {
+         : Base {zero()} {
          using Representation = typename Base::rep;
          static_assert(sizeof(Representation) == sizeof(Time),
             "Size mismatch");
       }
 
-      constexpr Time(const duration& a) noexcept
-         : duration {a} {}
+      /// Constrcut by duration_cast to the contained type                    
+      template<class T, class PERIOD>
+      constexpr Time(const std::chrono::duration<T, PERIOD>& a) noexcept
+         : Base {std::chrono::duration_cast<Base>(a)} {}
+
+      /// Assign by duration_cast to the contained type                       
+      template<class T, class PERIOD>
+      Time& operator = (const std::chrono::duration<T, PERIOD>& rhs) {
+         Base::operator = (std::chrono::duration_cast<Base>(rhs));
+         return *this;
+      }
 
       constexpr explicit operator bool() const noexcept;
 

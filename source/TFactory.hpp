@@ -49,6 +49,7 @@ namespace Langulus::Flow
       LANGULUS(TYPED) T;
       using Base = Anyness::THive<T>;
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
+      static constexpr bool IsNotUnique = not IsUnique;
 
    protected:
       using typename Base::Cell;
@@ -77,6 +78,8 @@ namespace Langulus::Flow
       void Reset();
       void Create(auto*, Verb&);
       auto CreateOne(auto*, const Many&) -> T*;
+      template<class...ARG>
+      auto Emplace(ARG&&...) -> T* requires IsNotUnique;
       void Select(Verb&);
       auto Find(const Many&) const -> const T*;
       void Teardown();

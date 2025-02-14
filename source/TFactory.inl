@@ -154,7 +154,6 @@ namespace Langulus::Flow
       static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
 
-      // Produce amount of compatible constructs                        
       if constexpr (IsUnique) {
          // Check if descriptor matches any of the available            
          const auto found = FindInner(descriptor);
@@ -165,6 +164,25 @@ namespace Langulus::Flow
       // If reached, nothing was found                                  
       // Produce exactly one element with this descriptor               
       return Produce(producer, descriptor);
+   }
+
+   /// Emplace a non-unique element manually with custom constructor          
+   ///   @param arguments... - arguments to forwards towards contructor       
+   ///   @return a pointer to the newly created element                       
+   TEMPLATE() template<class...ARG>
+   auto FACTORY()::Emplace(ARG&&...arguments) -> T* requires IsNotUnique {
+      auto result = Base::NewInner(Forward<ARG>(arguments)...);
+      if (not result)
+         return nullptr;
+
+      const auto hash = result->mData.GetHash();
+      const auto found = mHashmap.FindIt(hash);
+      if (found)
+         found.GetValue() << result;
+      else
+         mHashmap.Insert(hash, result);
+
+      return &result->mData;
    }
 
    /// Inner creation/destruction verb                                        

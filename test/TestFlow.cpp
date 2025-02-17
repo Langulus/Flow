@@ -5,7 +5,6 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "Common.hpp"
 #include <Langulus/Flow/Temporal.hpp>
 #include <Langulus/Verbs/Associate.hpp>
 #include <Langulus/Verbs/Create.hpp>
@@ -13,6 +12,7 @@
 #include <Langulus/Verbs/Catenate.hpp>
 #include <Langulus/Verbs/Conjunct.hpp>
 #include <Langulus/Verbs/Interpret.hpp>
+#include "Common.hpp"
 
 
 SCENARIO("Parsing scripts with corner cases", "[flow]") {

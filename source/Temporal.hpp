@@ -9,18 +9,10 @@
 #include "Code.hpp"
 #include "Time.hpp"
 #include <Langulus/Anyness/TMap.hpp>
-#include "inner/Entangled.hpp"
 
 
 namespace Langulus::Flow
 {
-   namespace Inner
-   {
-      struct Missing;
-      struct MissingFuture;
-      struct MissingPast;
-   }
-
 
    ///                                                                        
    ///   Temporal flow                                                        
@@ -42,11 +34,19 @@ namespace Langulus::Flow
    /// complete your scripts at runtime.                                      
    ///                                                                        
    class Temporal final {
+   public:
       LANGULUS_CONVERTS_TO(Code, Text);
-      friend struct Inner::Missing;
-      friend struct Inner::MissingFuture;
-      friend struct Inner::MissingPast;
+
+      struct Missing;
+      struct MissingFuture;
+      struct MissingPast;
+      struct Entangled;
+      struct Entanglement;
+      struct Redundant;
+
       using Time = Langulus::Time;
+      using Pasts = TMany<MissingPast*>;
+      using Futures = TMany<MissingFuture*>;
 
    private:
       // Parent flow                                                    
@@ -69,7 +69,7 @@ namespace Langulus::Flow
       // A reference to the top future point                            
       // Future points are hierarchical, and from there you can crawl   
       // to any other missing future in the hierarchy                   
-      Inner::MissingFuture* mFuture = nullptr;
+      MissingFuture* mFuture = nullptr;
 
       // Verb temporal stack, i.e. events that happen at specific time  
       // Each unit of time is equal to one mTimePeriod                  
@@ -79,17 +79,17 @@ namespace Langulus::Flow
       TUnorderedMap<Real, Temporal> mFrequencyStack;
 
       // An array of entanglement points                                
-      using Entanglement = Ref<Inner::Entanglement>;
-      TMany<Entanglement> mEntanglements;
+      TMany<Ref<Entanglement>> mEntanglements;
 
    public:
       LANGULUS_API(FLOW) Temporal();
       LANGULUS_API(FLOW) Temporal(Temporal*);
-      LANGULUS_API(FLOW) Temporal(Temporal&&) noexcept = default;
-      LANGULUS_API(FLOW) Temporal(const Temporal&) noexcept = default;
+      LANGULUS_API(FLOW) Temporal(Temporal&&) noexcept;
+      LANGULUS_API(FLOW) Temporal(const Temporal&) noexcept;
+      LANGULUS_API(FLOW) ~Temporal();
 
-      LANGULUS_API(FLOW) Temporal& operator = (Temporal&&) noexcept = default;
-      LANGULUS_API(FLOW) Temporal& operator = (const Temporal&) noexcept = default;
+      LANGULUS_API(FLOW) Temporal& operator = (Temporal&&) noexcept;
+      LANGULUS_API(FLOW) Temporal& operator = (const Temporal&) noexcept;
 
       LANGULUS_API(FLOW) operator Code() const;
       LANGULUS_API(FLOW) operator Text() const;
@@ -117,16 +117,16 @@ namespace Langulus::Flow
 
    protected:
       LANGULUS_API(FLOW) static Many Compile(const Many&, Real priority = 0);
-      LANGULUS_API(FLOW) static bool PushFutures(const Many&, Inner::MissingFuture&, const Entanglement&) noexcept;
+      LANGULUS_API(FLOW) static bool PushFutures(const Many&, MissingFuture&, const Ref<Entanglement>&) noexcept;
 
-      LANGULUS_API(FLOW) void Link(const Many&, const Entanglement&);
-      LANGULUS_API(FLOW) void LinkRelative(const Many&, const Verb&, const Entanglement&);
+      LANGULUS_API(FLOW) void Link(const Many&, const Ref<Entanglement>&);
+      LANGULUS_API(FLOW) void LinkRelative(const Many&, const Verb&, const Ref<Entanglement>&);
       LANGULUS_API(FLOW) Many PushInner(Many);
 
       void ResetInner(Many&);
       static bool DumpInner(const Many&, bool newline, bool& first);
       static void DumpSeparator(const Many&, bool newline, bool& first);
-      static void DumpMissing(const Inner::Missing&);
+      static void DumpMissing(const Missing&);
       static void DumpVerb(const A::Verb&);
       static void DumpTrait(const Trait&);
       static void DumpConstruct(const Construct&);

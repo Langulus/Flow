@@ -8,9 +8,10 @@
 #include "Time.inl"
 #include "Code.inl"
 #include "Resolvable.inl"
+#include "Temporal.hpp"
 #include "inner/Missing.hpp"
 #include "inner/Entangled.hpp"
-#include "Temporal.hpp"
+#include "inner/Redundant.hpp"
 
 #if 1
    #define VERBOSE_ENABLED() 1
@@ -28,8 +29,8 @@ using namespace Langulus::Flow;
 /// Default constructor, add the initial missing future point                 
 ///   @param environment - the initial flow environment                       
 Temporal::Temporal() {
-   mPriorityStack << Inner::MissingFuture {};
-   mFuture = mPriorityStack.Get<Inner::MissingFuture*>();
+   mPriorityStack << MissingFuture {};
+   mFuture = mPriorityStack.Get<MissingFuture*>();
 }
 
 /// Construct as a sub-flow                                                   
@@ -37,8 +38,66 @@ Temporal::Temporal() {
 ///   @param parent - the parent flow                                         
 Temporal::Temporal(Temporal* parent)
    : mParent {parent} {
-   mPriorityStack << Inner::MissingFuture {};
-   mFuture = mPriorityStack.Get<Inner::MissingFuture*>();
+   mPriorityStack << MissingFuture {};
+   mFuture = mPriorityStack.Get<MissingFuture*>();
+}
+
+Temporal::Temporal(Temporal&& other) noexcept
+   : mParent         {::std::move(other.mParent)}
+   , mStart          {::std::move(other.mStart)}
+   , mNow            {::std::move(other.mNow)}
+   , mPrevTime       {::std::move(other.mPrevTime)}
+   , mTimePeriod     {::std::move(other.mTimePeriod)}
+   , mRatePeriod     {::std::move(other.mRatePeriod)}
+   , mPriorityStack  {::std::move(other.mPriorityStack)}
+   , mFuture         {::std::move(other.mFuture)}
+   , mTimeStack      {::std::move(other.mTimeStack)}
+   , mFrequencyStack {::std::move(other.mFrequencyStack)}
+   , mEntanglements  {::std::move(other.mEntanglements)} {}
+
+Temporal::Temporal(const Temporal& other) noexcept
+   : mParent         {other.mParent}
+   , mStart          {other.mStart}
+   , mNow            {other.mNow}
+   , mPrevTime       {other.mPrevTime}
+   , mTimePeriod     {other.mTimePeriod}
+   , mRatePeriod     {other.mRatePeriod}
+   , mPriorityStack  {other.mPriorityStack}
+   , mFuture         {other.mFuture}
+   , mTimeStack      {other.mTimeStack}
+   , mFrequencyStack {other.mFrequencyStack}
+   , mEntanglements  {other.mEntanglements} {}
+
+Temporal::~Temporal() {}
+
+Temporal& Temporal::operator = (Temporal&& rhs) noexcept {
+   mParent         = ::std::move(rhs.mParent);
+   mStart          = ::std::move(rhs.mStart);
+   mNow            = ::std::move(rhs.mNow);
+   mPrevTime       = ::std::move(rhs.mPrevTime);
+   mTimePeriod     = ::std::move(rhs.mTimePeriod);
+   mRatePeriod     = ::std::move(rhs.mRatePeriod);
+   mPriorityStack  = ::std::move(rhs.mPriorityStack);
+   mFuture         = ::std::move(rhs.mFuture);
+   mTimeStack      = ::std::move(rhs.mTimeStack);
+   mFrequencyStack = ::std::move(rhs.mFrequencyStack);
+   mEntanglements  = ::std::move(rhs.mEntanglements);
+   return *this;
+}
+
+Temporal& Temporal::operator = (const Temporal& rhs) noexcept {
+   mParent         = rhs.mParent;
+   mStart          = rhs.mStart;
+   mNow            = rhs.mNow;
+   mPrevTime       = rhs.mPrevTime;
+   mTimePeriod     = rhs.mTimePeriod;
+   mRatePeriod     = rhs.mRatePeriod;
+   mPriorityStack  = rhs.mPriorityStack;
+   mFuture         = rhs.mFuture;
+   mTimeStack      = rhs.mTimeStack;
+   mFrequencyStack = rhs.mFrequencyStack;
+   mEntanglements  = rhs.mEntanglements;
+   return *this;
 }
 
 /// Serialize temporal as Code                                                
@@ -72,11 +131,11 @@ void Temporal::ResetInner(Many& scope) {
          if (m.IsDense())
             ResetInner(m);
       },
-      [&](Inner::Missing& missing) {
+      [&](Missing& missing) {
          if (missing.mContent.IsDense())
             ResetInner(missing.mContent);
       },
-      [&](Inner::Entangled& entangled) {
+      [&](Entangled& entangled) {
          if (entangled.mTrueContent.IsDense())
             ResetInner(entangled.mTrueContent);
          if (entangled.mFalseContent.IsDense())
@@ -288,12 +347,12 @@ Many Temporal::Compile(const Many& scope, Real priority) {
 
    if (scope.IsPast()) {
       // Convert the scope to a MissingPast intermediate format         
-      result = Inner::MissingPast {nullptr, scope, priority};
+      result = MissingPast {nullptr, scope, priority};
       return Abandon(result);
    }
    else if (scope.IsFuture()) {
       // Convert the scope to a MissingFuture intermediate format       
-      result = Inner::MissingFuture {nullptr, scope, 0};
+      result = MissingFuture {nullptr, scope, 0};
       return Abandon(result);
    }
    else if (scope.IsDeep()) {
@@ -359,11 +418,11 @@ Many Temporal::Compile(const Many& scope, Real priority) {
 /// Link a scope's past points to future points that are on the stack         
 ///   @param scope - the scope to link and insert                             
 ///   @param entanglementAbove - an optional entanglement from above scope    
-void Temporal::Link(const Many& scope, const Entanglement& entanglementAbove) {
+void Temporal::Link(const Many& scope, const Ref<Entanglement>& entanglementAbove) {
    LANGULUS_ASSUME(DevAssumes, mFuture, "Invalid future");
 
    // Every time we push an OR scope we create an entanglement          
-   Entanglement entanglement;
+   Ref<Entanglement> entanglement;
    if (scope.IsOr()) {
       entanglement = mEntanglements.Emplace(IndexBack)
          .New(entanglementAbove ? entanglementAbove->mParent : nullptr);
@@ -476,12 +535,12 @@ void Temporal::Link(const Many& scope, const Entanglement& entanglementAbove) {
 void Temporal::LinkRelative(
    const Many& scope,
    const Verb& override,
-   const Entanglement& entanglementAbove
+   const Ref<Entanglement>& entanglementAbove
 ) {
    LANGULUS_ASSUME(DevAssumes, mFuture, "Invalid future");
 
    // Every time we push an OR scope we create an entanglement          
-   Entanglement entanglement;
+   Ref<Entanglement> entanglement;
    if (scope.IsOr()) {
       entanglement = mEntanglements.Emplace(IndexBack)
          .New(entanglementAbove ? entanglementAbove->mParent : nullptr);
@@ -665,8 +724,8 @@ void Temporal::LinkRelative(
 ///      'future', or in any of the futures below it                          
 bool Temporal::PushFutures(
    const Many& scope,
-   Inner::MissingFuture& future,
-   const Entanglement& entanglementAbove
+   MissingFuture& future,
+   const Ref<Entanglement>& entanglementAbove
 ) noexcept {
    bool atLeastOneSuccess = false;
    try {
@@ -679,7 +738,7 @@ bool Temporal::PushFutures(
    // If reached, then scope wasn't linked in the immediate future      
    // Dig deeper for any future points below the provided one           
    if (not atLeastOneSuccess or not scope.IsExecutableDeep()) {
-      future.mBelow.ForEach([&](Inner::MissingFuture& below) {
+      future.mBelow.ForEach([&](MissingFuture& below) {
          atLeastOneSuccess |= PushFutures(scope, below, entanglementAbove);
          // Continue linking only if the future is uncertain            
          //return not (future.mBelow.IsOr() and atLeastOneSuccess);

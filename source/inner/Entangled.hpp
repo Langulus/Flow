@@ -6,17 +6,17 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../Verb.hpp"
+#include "../Temporal.hpp"
 
 
-namespace Langulus::Flow::Inner
+namespace Langulus::Flow
 {
 
 
    ///                                                                        
-   ///   Entanglment definition                                               
+   ///   Entanglement definition                                              
    ///                                                                        
-   struct Entanglement {
+   struct Temporal::Entanglement {
       Entanglement* mParent = nullptr;
       bool          mDone = false;
    };
@@ -34,7 +34,7 @@ namespace Langulus::Flow::Inner
    /// This is achieved by pushing branch contents into an Entangled element, 
    /// that has a reference to a shared Entanglement object owned by the flow 
    ///                                                                        
-   struct Entangled {
+   struct Temporal::Entangled {
       LANGULUS_CONVERTS_TO(Text);
 
       // A reference to a shared boolean flag                           
@@ -76,4 +76,4 @@ namespace Langulus::Flow::Inner
       }
    };
 
-} // namespace Langulus::Flow::Inner
+} // namespace Langulus::Flow

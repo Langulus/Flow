@@ -116,7 +116,7 @@ bool Temporal::DumpInner(const Many& data, bool newline, bool& first) {
          DumpSeparator(data, newline or tooLong, first);
          DumpTrait(t);
       },
-      [&](const Inner::MissingFuture& p) {
+      [&](const MissingFuture& p) {
          if (p.mSuspended) {
             if (p.mContent) {
                bool unused = true;
@@ -137,7 +137,7 @@ bool Temporal::DumpInner(const Many& data, bool newline, bool& first) {
 
          DumpMissing(p);
       },
-      [&](const Inner::MissingPast& p) {
+      [&](const MissingPast& p) {
          // Write a missing past linking point                          
          DumpSeparator(data, newline or tooLong, first);
 
@@ -212,7 +212,7 @@ bool Temporal::DumpInner(const Many& data, bool newline, bool& first) {
 
 /// Dump a missing point as a hexxed address                                  
 ///   @param p - the missing point to dump                                    
-void Temporal::DumpMissing(const Inner::Missing& p) {
+void Temporal::DumpMissing(const Missing& p) {
    const auto color = p.mFilter.IsPast() ? Logger::PushDarkYellow : Logger::PushDarkGreen;
 
    if (p.mPriority) {

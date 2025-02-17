@@ -5,12 +5,22 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "Common.hpp"
 #include <Langulus/Verbs/Select.hpp>
+#include "Common.hpp"
 
 
 SCENARIO("Text capsulation in verbs", "[verbs]") {
    static Allocator::State memoryState;
+
+   static_assert(CT::Stringifiable<Verb>,
+      "Verb must be convertible to Text");
+   static_assert(CT::Convertible<Verb, Code>,
+      "Verb must be convertible to Code");
+
+   static_assert(CT::Stringifiable<Thing>,
+      "Thing must be convertible to Text");
+   static_assert(CT::Convertible<Thing, Text>,
+      "Thing must be convertible to Text");
 
    GIVEN("A templated utf8 text container") {
       Text text = "tests";

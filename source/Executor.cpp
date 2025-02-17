@@ -120,7 +120,7 @@ namespace Langulus::Flow
       }
       else if (flow.IsDense()) {
          executed = flow.ForEach(
-            [&](const Inner::Missing& missing) {
+            [&](const Temporal::Missing& missing) {
                // Nest if missing points                                
                Many local;
                if (not Execute(missing.mContent, context, local, integrate, skipVerbs, silent)) {
@@ -451,14 +451,14 @@ namespace Langulus::Flow
 
       // Integrate the verb source to environment                       
       Many localSource;
-      if (not verb.GetSource().Is<Inner::Redundant>()) {
+      if (not verb.GetSource().Is<Temporal::Redundant>()) {
          if (not Execute(verb.GetSource(), context, localSource, true, silent)) {
             if (not silent)
                FLOW_ERRORS("Error at source of: ", verb);
             return false;
          }
       }
-      else localSource = verb.GetSource().Get<Inner::Redundant>().mContent;
+      else localSource = verb.GetSource().Get<Temporal::Redundant>().mContent;
 
       if (localSource.IsInvalid())
          localSource = context;

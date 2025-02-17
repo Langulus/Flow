@@ -6,16 +6,16 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../Verb.hpp"
+#include "../Temporal.hpp"
 
 
-namespace Langulus::Flow::Inner
+namespace Langulus::Flow
 {
 
    ///                                                                        
    ///   A redundant data, that is used only as past, never executed          
    ///                                                                        
-   struct Redundant {
+   struct Temporal::Redundant {
       LANGULUS_CONVERTS_TO(Text);
 
       Many mContent;
@@ -25,4 +25,4 @@ namespace Langulus::Flow::Inner
       }
    };
 
-} // namespace Langulus::Flow::Inner
+} // namespace Langulus::Flow

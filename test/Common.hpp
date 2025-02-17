@@ -8,38 +8,143 @@
 
 /// INTENTIONALLY NOT GUARDED                                                 
 /// Include this file once in each cpp file, after all other headers          
-#ifdef TWOBLUECUBES_SINGLE_INCLUDE_CATCH_HPP_INCLUDED
-   #error Catch has been included prior to this header
-#endif
+#include <Langulus/Flow/Resolvable.hpp>
+#include <Langulus/Flow/Factory.hpp>
+#include <Langulus/Testing.hpp>
 
-#define CATCH_CONFIG_ENABLE_BENCHMARKING
+using namespace Flow;
 
-#include "Main.hpp"
-#include <catch2/catch.hpp>
 
-/// See https://github.com/catchorg/Catch2/blob/devel/docs/tostring.md        
-CATCH_TRANSLATE_EXCEPTION(::Langulus::Exception const& ex) {
-   return fmt::format("{}", ex);
-}
+/// A mockup of Langulus::Thing, for testing purposes                         
+struct Thing : Resolvable, Referenced {
+   LANGULUS(ABSTRACT) false;
+   LANGULUS(PRODUCER) Thing;
+   LANGULUS_BASES(Resolvable);
 
-namespace Catch
-{
-   template<CT::Stringifiable T>
-   struct StringMaker<T> {
-      static std::string convert(T const& value) {
-         return ::std::string {Token {static_cast<Text>(value)}};
-      }
-   };
+   Thing() : Resolvable {this} {}
 
-   /// Save catch2 from doing infinite recursions with Block types            
-   template<CT::Block T>
-   struct is_range<T> {
-      static const bool value = false;
-   };
+   template<class T>
+   Thing(const T* c) : Resolvable {c} {}
 
-}
+   virtual ~Thing() {
+      Reference(-1);
+   }
 
-using timer = Catch::Benchmark::Chronometer;
+   virtual void Update() {}
 
-template<class T>
-using uninitialized = Catch::Benchmark::storage_for<T>;
+   int mMember = 666;
+};
+
+/// A mockup of more concrete Langulus::Thing, for testing purposes           
+struct Thing2 : Thing {
+   LANGULUS_BASES(Thing);
+   Thing2() : Thing {this} {}
+
+   void Update() final {}
+
+   int mMember = 777;
+};
+
+/// A mockup of a universe component, for testing purposes                    
+struct Universe : Resolvable {
+   LANGULUS(ABSTRACT) false;
+   LANGULUS(PRODUCER) Thing;
+   LANGULUS_BASES(Resolvable);
+   Universe() : Resolvable {this} {}
+};
+
+/// A mockup of a window component, for testing purposes                      
+struct Window : Resolvable {
+   LANGULUS(ABSTRACT) false;
+   LANGULUS(PRODUCER) Thing;
+   LANGULUS_BASES(Resolvable);
+   Window() : Resolvable {this} {}
+};
+
+/// A mockup of a user component, for testing purposes                        
+struct User : Resolvable {
+   LANGULUS(ABSTRACT) false;
+   LANGULUS(PRODUCER) Thing;
+   LANGULUS_BASES(Resolvable);
+   User() : Resolvable {this} {}
+};
+
+/// A mockup of a session component, for testing purposes                     
+struct Session : Resolvable {
+   LANGULUS(ABSTRACT) false;
+   LANGULUS(PRODUCER) Thing;
+   LANGULUS_BASES(Resolvable);
+   Session() : Resolvable {this} {}
+};
+
+/// A mockup of a fraction                                                    
+/*struct Fraction : Resolvable {
+   LANGULUS(ABSTRACT) false;
+   LANGULUS(UNINSERTABLE) false;
+   LANGULUS_BASES(Resolvable);
+   Fraction() : Resolvable(MetaOf<Fraction>()) {}
+};*/
+
+struct Producible;
+
+/// A mockup of a producer                                                    
+struct Producer : Referenced {
+   TFactory<Producible>       factory1;
+   TFactoryUnique<Producible> factory2;
+
+   void Teardown() {
+      factory1.Teardown();
+      factory2.Teardown();
+   }
+};
+
+/// A mockup of a producible                                                  
+struct Producible : Referenced, ProducedFrom<Producer> {
+   Producible(Producer* producer, const Many& desc = {})
+      : ProducedFrom {producer, desc} {}
+
+   ~Producible() {
+      Logger::Special("Destroying Producible");
+   }
+
+   bool operator == (const Producible& rhs) const {
+      return mDescriptor == rhs.mDescriptor;
+   }
+
+   operator Text () const {
+      return "Producible";
+   }
+};
+
+struct ShallowProducer;
+
+/// A producer of a producer                                                  
+struct DeepProducer : Referenced {
+   TFactory<ShallowProducer> factory;
+
+   void Teardown() {
+      factory.Teardown();
+   }
+};
+
+struct TheProducible;
+
+/// A mockup of a producible                                                  
+struct ShallowProducer : Referenced, ProducedFrom<DeepProducer> {
+   TFactory<TheProducible> factory;
+
+   ShallowProducer(DeepProducer* producer, const Many& desc = {})
+      : ProducedFrom {producer, desc} {}
+
+   void Teardown() {
+      factory.Teardown();
+   }
+};
+
+/// A mockup of a producible                                                  
+struct TheProducible : Referenced, ProducedFrom<ShallowProducer> {
+   //TODO should ProducedFrom inherit virtual Referenced directly?,
+   // and so no need for ProducedFrom::Teardown method at all????
+   TheProducible(ShallowProducer* producer, const Many& desc = {})
+      : ProducedFrom {producer, desc} {}
+};

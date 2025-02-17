@@ -6,23 +6,16 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../Verb.hpp"
+#include "../Temporal.hpp"
 
 
-namespace Langulus::Flow::Inner
+namespace Langulus::Flow
 {
-
-   struct MissingPast;
-   struct MissingFuture;
-
-   using Pasts   = TMany<MissingPast*>;
-   using Futures = TMany<MissingFuture*>;
-
 
    ///                                                                        
    ///   A missing point inside a flow                                        
    ///                                                                        
-   struct Missing {
+   struct Temporal::Missing {
       LANGULUS_CONVERTS_TO(Text);
 
       // A filter for the accepted contents                             
@@ -38,11 +31,11 @@ namespace Langulus::Flow::Inner
       // Missing points under this one (in reversed order, can be OR)   
       Many mBelow;
       // Missing point above this one                                   
-      Inner::Missing* mAbove = nullptr;
+      Missing* mAbove = nullptr;
 
       Missing() = default;
-      explicit Missing(Inner::Missing*, const TMany<DMeta>&, Real priority);
-      explicit Missing(Inner::Missing*, const Many&,         Real priority);
+      explicit Missing(Missing*, const TMany<DMeta>&, Real priority);
+      explicit Missing(Missing*, const Many&,         Real priority);
 
       bool Accepts(const Many&) const;
       bool IsSatisfied() const;
@@ -63,7 +56,7 @@ namespace Langulus::Flow::Inner
    ///                                                                        
    ///   A missing past point inside a flow                                   
    ///                                                                        
-   struct MissingPast : Missing {
+   struct Temporal::MissingPast : Temporal::Missing {
       LANGULUS_BASES(Missing);
       using Missing::Missing;
       MissingPast();
@@ -75,7 +68,7 @@ namespace Langulus::Flow::Inner
    ///                                                                        
    ///   A missing future point inside a flow                                 
    ///                                                                        
-   struct MissingFuture : Missing {
+   struct Temporal::MissingFuture : Temporal::Missing {
       LANGULUS_BASES(Missing);
       using Missing::Missing;
       MissingFuture();
@@ -83,4 +76,4 @@ namespace Langulus::Flow::Inner
       void FillFuture(const Many&);
    };
 
-} // namespace Langulus::Flow::Inner
+} // namespace Langulus::Flow

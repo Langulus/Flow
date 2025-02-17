@@ -7,7 +7,6 @@
 ///                                                                           
 #include "Missing.hpp"
 #include "Redundant.hpp"
-#include "../Temporal.hpp"
 #include "../verbs/Do.inl"
 #include "../verbs/Interpret.inl"
 
@@ -24,14 +23,14 @@
 #endif
 
 using namespace Langulus::Anyness;
-using namespace Langulus::Flow::Inner;
+using namespace Langulus::Flow;
 
 
 /// Initialize a missing point by a precompiled filter                        
 ///   @param above - the missing point above this one                         
 ///   @param filter - the filter to set                                       
 ///   @param priority - the precedence of the point                           
-Missing::Missing(Inner::Missing* above, const TMany<DMeta>& filter, Real priority)
+Temporal::Missing::Missing(Missing* above, const TMany<DMeta>& filter, Real priority)
    : mFilter   {filter}
    , mPriority {priority}
    , mAbove    {above} {}
@@ -41,7 +40,7 @@ Missing::Missing(Inner::Missing* above, const TMany<DMeta>& filter, Real priorit
 ///   @param above - the missing point above this one                         
 ///   @param filter - the filter to set                                       
 ///   @param priority - the precedence of the point                           
-Missing::Missing(Inner::Missing* above, const Many& filter, Real priority)
+Temporal::Missing::Missing(Missing* above, const Many& filter, Real priority)
    : mPriority {priority}
    , mAbove    {above} {
    mFilter.GatherFrom(filter, DataState::Missing);
@@ -52,7 +51,7 @@ Missing::Missing(Inner::Missing* above, const Many& filter, Real priority)
 /// Verbs are always accepted                                                 
 ///   @param content - the content to check                                   
 ///   @return true if contents are accepted                                   
-bool Missing::Accepts(const Many& content) const {
+bool Temporal::Missing::Accepts(const Many& content) const {
    if (not mFilter or content.CastsTo<Verb, true>())
       return true;
 
@@ -66,7 +65,7 @@ bool Missing::Accepts(const Many& content) const {
 
 /// Check if the missing point has been satisfied by pushed contents          
 ///   @return true if point was satisfied                                     
-bool Missing::IsSatisfied() const {
+bool Temporal::Missing::IsSatisfied() const {
    if (not mContent or not mFilter)
       return false;
 
@@ -83,7 +82,7 @@ bool Missing::IsSatisfied() const {
 /// Insert data into a past point                                             
 ///   @param content - the content to push                                    
 ///   @return true if mContent changed                                        
-void MissingPast::FillPast(const Many& content) {
+void Temporal::MissingPast::FillPast(const Many& content) {
    if (not content) {
       #if VERBOSE_MISSING_ENABLED()
          Logger::Error("Can't push empty content");
@@ -149,10 +148,10 @@ void MissingPast::FillPast(const Many& content) {
 
       return;
    }
-   else if (content.Is<Inner::Redundant>()) {
+   else if (content.Is<Redundant>()) {
       // Redundant data serves only the purpose of filling past         
       // and acts as a deep container                                   
-      content.ForEach([&](const Inner::Redundant& redundant) {
+      content.ForEach([&](const Redundant& redundant) {
          FillPast(redundant.mContent);
       });
    }
@@ -192,7 +191,7 @@ void MissingPast::FillPast(const Many& content) {
 ///   @attention assumes 'content' has been Temporal::Compiled previously     
 ///   @param content - the content to push                                    
 ///   @return true if mContent changed                                        
-void MissingFuture::FillFuture(const Many& content) {
+void Temporal::MissingFuture::FillFuture(const Many& content) {
    if (not content) {
       #if VERBOSE_MISSING_ENABLED()
          Logger::Error("Can't push empty content");
@@ -258,7 +257,7 @@ void MissingFuture::FillFuture(const Many& content) {
 
       // Contents were modified, remap futures below                    
       mBelow = {};
-      Inner::Missing::RemapFutures(*this, mContent);
+      Missing::RemapFutures(*this, mContent);
       return;
    }
 
@@ -319,12 +318,12 @@ void MissingFuture::FillFuture(const Many& content) {
    // Contents were modified in a way that can introduce new            
    // futures below, so remap those                                     
    mBelow = {};
-   Inner::Missing::RemapFutures(*this, mContent);
+   Missing::RemapFutures(*this, mContent);
 }
 
 /// Just a helper function for logging                                        
 template<class T>
-decltype(auto) Missing::VerboseLinking(const T& what, const MissingFuture& context) {
+decltype(auto) Temporal::Missing::VerboseLinking(const T& what, const MissingFuture& context) {
    #if VERBOSE_MISSING_ENABLED()
       if constexpr (CT::Same<T, Trait>) {
          Logger::Verbose("Linking trait ");
@@ -338,7 +337,7 @@ decltype(auto) Missing::VerboseLinking(const T& what, const MissingFuture& conte
          Logger::Verbose("Linking verb ");
          Temporal::DumpVerb(what);
       }
-      else if constexpr (CT::DerivedFrom<T, Inner::Missing>) {
+      else if constexpr (CT::DerivedFrom<T, Missing>) {
          Logger::Verbose("Linking point ");
          Temporal::DumpMissing(what);
       }
@@ -362,7 +361,7 @@ decltype(auto) Missing::VerboseLinking(const T& what, const MissingFuture& conte
 ///   @param scope - the scope to link                                        
 ///   @param context - the future point we're using as past context           
 ///   @return the linked equivalent to the provided scope                     
-Many Missing::Link(const Many& scope, const MissingFuture& context) const {
+Many Temporal::Missing::Link(const Many& scope, const MissingFuture& context) const {
    Many result;
    if (scope.IsOr())
       result.MakeOr();
@@ -410,7 +409,7 @@ Many Missing::Link(const Many& scope, const MissingFuture& context) const {
             verb.GetVerbState()
          ).SetSource(Abandon(source));
       },
-      [&](const Inner::MissingPast& past) {
+      [&](const MissingPast& past) {
          // Replace a missing past point with provided context          
          const auto tab = VerboseLinking(past, context);
          if (mPriority > past.mPriority) {
@@ -421,7 +420,7 @@ Many Missing::Link(const Many& scope, const MissingFuture& context) const {
          }
 
          if (past.mFilter) {
-            Inner::MissingPast pastShallowCopy;
+            MissingPast pastShallowCopy;
             pastShallowCopy.mFilter = past.mFilter;
             pastShallowCopy.FillPast(context.mContent);
             result << Abandon(pastShallowCopy.mContent);
@@ -433,7 +432,7 @@ Many Missing::Link(const Many& scope, const MissingFuture& context) const {
             auto& mutableContext = const_cast<MissingFuture&>(context);
             mutableContext.mPriority = past.mPriority;
             // Insert as redundant so that it doesn't clog the log      
-            result << Inner::Redundant {mutableContext.mContent};
+            result << Redundant {mutableContext.mContent};
          }
          else {
             // Nothing to link with                                     
@@ -456,7 +455,7 @@ Many Missing::Link(const Many& scope, const MissingFuture& context) const {
 ///   @param context - the future point to search below                       
 ///   @param stack - used for nesting deep contents                           
 ///   @return the hierarchy of future points below the context                
-void Missing::RemapFutures(MissingFuture& context, const Many& stack) {
+void Temporal::Missing::RemapFutures(MissingFuture& context, const Many& stack) {
    if (not stack or stack.IsSparse())
       return;           // No point in scanning sparse stacks - they're 
                         // never linked with                            
@@ -487,9 +486,9 @@ void Missing::RemapFutures(MissingFuture& context, const Many& stack) {
          RemapFutures(context, verb.GetArgument());
          RemapFutures(context, verb.GetSource());
       },
-      [&](const Inner::MissingFuture& below_const) {
+      [&](const MissingFuture& below_const) {
          // Nest/register missing future points                         
-         auto& below = const_cast<Inner::MissingFuture&>(below_const);
+         auto& below = const_cast<MissingFuture&>(below_const);
          below.mSuspended = false;
          below.mAbove = &context;
          below.mBelow = {};
@@ -498,7 +497,7 @@ void Missing::RemapFutures(MissingFuture& context, const Many& stack) {
          if (below.mPriority == context.mPriority and below.mBelow) {
             // More missing futures below, suspend this one             
             below.mSuspended = true;
-            below.mBelow.ForEachDeep([&](Inner::MissingFuture& next) {
+            below.mBelow.ForEachDeep([&](MissingFuture& next) {
                next.mAbove = &context;
                context.mBelow << &next;
             });
@@ -509,7 +508,7 @@ void Missing::RemapFutures(MissingFuture& context, const Many& stack) {
 }
 
 /// Log the missing point                                                     
-Missing::operator Text() const {
+Temporal::Missing::operator Text() const {
    Text result;
 
    if (mSuspended) {
@@ -536,11 +535,11 @@ Missing::operator Text() const {
 }
 
 /// Default past point                                                        
-MissingPast::MissingPast() {
+Temporal::MissingPast::MissingPast() {
    mFilter.MakePast();
 }
 
 /// Default future point                                                      
-MissingFuture::MissingFuture() {
+Temporal::MissingFuture::MissingFuture() {
    mFilter.MakeFuture();
 }

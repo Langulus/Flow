@@ -216,31 +216,31 @@ bool Temporal::Update(Time dt, Many& sideffects) {
 
    // Execute flows that occur periodically                             
    for (auto pair : mFrequencyStack) {
-      pair.mValue.mNow += dt;
-      auto ticks = pair.mValue.GetUptime().Seconds() / mRatePeriod.Seconds();
+      pair.GetValue().mNow += dt;
+      auto ticks = pair.GetValue().GetUptime().Seconds() / mRatePeriod.Seconds();
 
-      while (ticks >= pair.mKey) {
+      while (ticks >= pair.GetKey()) {
          // Time to execute the periodic flow                           
-         pair.mValue.Reset();
-         pair.mValue.Update({}, sideffects);
-         ticks -= pair.mKey;
+         pair.GetValue().Reset();
+         pair.GetValue().Update({}, sideffects);
+         ticks -= pair.GetKey();
       }
 
       // Make sure any leftover time is returned to the periodic flow   
-      pair.mValue.mNow = pair.mValue.mStart + mRatePeriod * ticks;
+      pair.GetValue().mNow = pair.GetValue().mStart + mRatePeriod * ticks;
    }
 
    // Execute flows that occur after a given point in time              
    const auto ticks = GetUptime().Seconds() / mTimePeriod.Seconds();
    for (auto pair : mTimeStack) {
-      if (pair.mKey > ticks) {
+      if (pair.GetKey() > ticks) {
          // The time stack is sorted, so no point in continuing         
          break;
       }
 
       // Always update all time points before the tick count            
       // They might have periodic flows inside                          
-      pair.mValue.Update(dt, sideffects);
+      pair.GetValue().Update(dt, sideffects);
    }
 
    return true;
@@ -254,26 +254,26 @@ void Temporal::Merge(const Temporal& other) {
 
    // Merge time stacks                                                 
    for (auto pair : other.mTimeStack) {
-      auto found = mTimeStack.FindIt(pair.mKey);
+      auto found = mTimeStack.FindIt(pair.GetKey());
       if (not found) {
          // New time point required                                     
-         mTimeStack.Insert(pair.mKey, this);
-         found = mTimeStack.FindIt(pair.mKey);
+         mTimeStack.Insert(pair.GetKey(), this);
+         found = mTimeStack.FindIt(pair.GetKey());
       }
 
-      found.GetValue().Merge(pair.mValue);
+      found.GetValue().Merge(pair.GetValue());
    };
 
    // Merge frequency stacks                                            
    for (auto pair : other.mFrequencyStack) {
-      auto found = mFrequencyStack.FindIt(pair.mKey);
+      auto found = mFrequencyStack.FindIt(pair.GetKey());
       if (not found) {
          // New time point required                                     
-         mFrequencyStack.Insert(pair.mKey, this);
-         found = mFrequencyStack.FindIt(pair.mKey);
+         mFrequencyStack.Insert(pair.GetKey(), this);
+         found = mFrequencyStack.FindIt(pair.GetKey());
       }
 
-      found.GetValue().Merge(pair.mValue);
+      found.GetValue().Merge(pair.GetValue());
    };
 }
 

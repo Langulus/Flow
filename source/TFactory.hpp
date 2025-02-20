@@ -7,27 +7,11 @@
 ///                                                                           
 #pragma once
 #include "Common.hpp"
-//#include <Langulus/Anyness/Neat.hpp>
 #include <Langulus/Anyness/THive.hpp>
 
 
 namespace Langulus::Flow
 {
-
-   /// Usage styles for TFactory                                              
-   enum class FactoryUsage {
-      Default,		// Default factories aggregate duplicated items       
-      Unique		// Unique factories never duplicate items (a set)     
-   };
-
-   /// Concept for determining if a type is producible from a factory         
-   /// The type must have a producer defined, not be abstract, be dense, and  
-   /// be referencable                                                        
-   template<class...T>
-   concept FactoryProducible = ((CT::Producible<T>
-         and not CT::Abstract<T> and CT::Dense<T> and CT::Referencable<T>)
-      and ...);
-
 
    ///                                                                        
    ///   Factory container                                                    
@@ -93,43 +77,5 @@ namespace Langulus::Flow
 
    template<class T>
    using TFactoryUnique = TFactory<T, FactoryUsage::Unique>;
-
-
-   ///                                                                        
-   ///   An element, that is factory produced (used as CRTP)                  
-   ///                                                                        
-   /// Saves the descriptor by which the item was made with, in order to      
-   /// compare creation requests                                              
-   ///   @attention mDescriptor can contain anything (including Thing         
-   ///      references) and is known to cause circular dependencies. That's   
-   ///      why ProducedFrom::Teardown has to be called as a first-stage      
-   ///      destruction, usually in a custom Reference(int) routine.          
-   ///                                                                        
-   template<class T>
-   class ProducedFrom {
-      LANGULUS(PRODUCER) T;
-
-   protected:
-      template<class, FactoryUsage>
-      friend class TFactory;
-
-      // The descriptor used for hashing and element identification     
-      Many mDescriptor;
-      // The producer of the element                                    
-      Ref<T> mProducer;
-
-   public:
-      ProducedFrom(const ProducedFrom&) = delete;
-      ProducedFrom(ProducedFrom&&);
-      ProducedFrom(T* = nullptr, const Many& = {});
-
-      template<template<class> class S>
-      ProducedFrom(S<ProducedFrom>&&) requires CT::Intent<S<ProducedFrom>>;
-
-      auto GetDescriptor() const noexcept -> const Many&;
-      Hash GetHash() const noexcept;
-      auto GetProducer() const noexcept -> const Ref<T>&;
-      void TeardownInner();
-   };
 
 } // namespace Langulus::Flow

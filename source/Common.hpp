@@ -56,5 +56,11 @@ namespace Langulus::Flow
       return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
    }
 
+   /// Usage styles for TFactory                                              
+   enum class FactoryUsage {
+      Default,		// Default factories aggregate duplicated items       
+      Unique		// Unique factories never duplicate items (a set)     
+   };
+
 } // namespace Langulus::Flow
 

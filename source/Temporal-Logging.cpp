@@ -22,9 +22,10 @@ namespace {
 /// Dump the contents of the flow to the log in a pretty, colorized and       
 /// easily readable way                                                       
 void Temporal::Dump() const {
-   auto tab = Logger::VerboseTab(*this, ": DUMPING CONTENTS...");
+   Logger::Verbose(*this, Logger::PushPurple, ": DUMPING CONTENTS...");
 
    if (mPriorityStack) {
+      auto tab = Logger::Section(Logger::PushPurple, "At start:");
       bool first = true;
       DumpInner(mPriorityStack, true, first);
    }
@@ -35,7 +36,7 @@ void Temporal::Dump() const {
    }
 
    for (auto pair : mFrequencyStack) {
-      auto tab = Logger::Section(Logger::PushBlue, "At rate ", pair.GetKey(), ":");
+      auto tab = Logger::Section(Logger::PushPurple, "At rate ", pair.GetKey(), ":");
       pair.GetValue().Dump();
    }
 }

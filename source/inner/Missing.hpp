@@ -73,7 +73,8 @@ namespace Langulus::Flow
       using Missing::Missing;
       MissingFuture();
 
-      void FillFuture(const Many&);
+      void FillFuture(const Many&, Temporal&);
+      void Commit(const Many&, Temporal&);
    };
 
 } // namespace Langulus::Flow

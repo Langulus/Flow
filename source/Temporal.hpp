@@ -117,7 +117,7 @@ namespace Langulus::Flow
 
    protected:
       LANGULUS_API(FLOW) static Many Compile(const Many&, Real priority = 0);
-      LANGULUS_API(FLOW) static bool PushFutures(const Many&, MissingFuture&, const Ref<Entanglement>&) noexcept;
+      LANGULUS_API(FLOW) /*static*/ bool PushFutures(const Many&, MissingFuture&, const Ref<Entanglement>&) noexcept;
 
       LANGULUS_API(FLOW) void Link(const Many&, const Ref<Entanglement>&);
       LANGULUS_API(FLOW) void LinkRelative(const Many&, const Verb&, const Ref<Entanglement>&);

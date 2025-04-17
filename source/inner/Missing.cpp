@@ -191,7 +191,7 @@ void Temporal::MissingPast::FillPast(const Many& content) {
 ///   @attention assumes 'content' has been Temporal::Compiled previously     
 ///   @param content - the content to push                                    
 ///   @return true if mContent changed                                        
-void Temporal::MissingFuture::FillFuture(const Many& content) {
+void Temporal::MissingFuture::FillFuture(const Many& content, Temporal& flow) {
    if (not content) {
       #if VERBOSE_MISSING_ENABLED()
          Logger::Error("Can't push empty content");
@@ -211,7 +211,7 @@ void Temporal::MissingFuture::FillFuture(const Many& content) {
          bool atLeastOneSuccess = false;
          content.ForEach([&](const Many& subcontent) {
             try {
-               fork.FillFuture(subcontent);
+               fork.FillFuture(subcontent, flow);
                atLeastOneSuccess = true;
             }
             catch (...) {}
@@ -225,7 +225,7 @@ void Temporal::MissingFuture::FillFuture(const Many& content) {
       else if (content.IsDense()) {
          // Just nest-push                                              
          content.ForEach([&](const Many& subcontent) {
-            FillFuture(subcontent);
+            FillFuture(subcontent, flow);
          });
       }
       else {
@@ -264,8 +264,9 @@ void Temporal::MissingFuture::FillFuture(const Many& content) {
    //                                                                   
    // If reached, we're pushing flat data                               
    // Fill any missing past points in the contents we're filling with   
-   // If past fails to be satisfied with the current context, move      
-   // to the one above and repeat until satisfied or nothing left above 
+   // If past fails to be satisfied within the current context, this    
+   // function will throw and you're responsible of trying futures      
+   // above this one - repeat until satisfied or nothing left above     
    Many linked;
    MissingFuture* context = this;
    while (context) {
@@ -286,17 +287,6 @@ void Temporal::MissingFuture::FillFuture(const Many& content) {
       LANGULUS_THROW(Link, "None of the hierarchical past was satisfactory");
    }
 
-   // A handy lambda to commit any changes to the current mContent      
-   const auto commit = [&](Many& a) {
-      if (a.IsSparse()) {
-         // Avoid duplications if new content is sparse                 
-         // No need to remap futures below, because sparse contents     
-         // never link with anything                                    
-         mContent <<= Abandon(a);
-      }
-      else mContent << Abandon(a);
-   };
-
    if (mFilter) {
       // Filters are available, interpret contents as requested         
       Verbs::Interpret interpreter {mFilter};
@@ -304,7 +294,7 @@ void Temporal::MissingFuture::FillFuture(const Many& content) {
       if (DispatchDeep(linked, interpreter) and output) {
          VERBOSE_MISSING_POINT(Logger::Green, 
             "Satisfying filter by interpreting ", linked, " as ", output);
-         commit(output);
+         Commit(output, flow);
       }
       else if (not mContent) {
          #if VERBOSE_MISSING_ENABLED()
@@ -313,13 +303,80 @@ void Temporal::MissingFuture::FillFuture(const Many& content) {
             LANGULUS_THROW(Link, "Unsatisfied filter");
       }
    }
-   else commit(linked);
+   else Commit(linked, flow);
 
    // Contents were modified in a way that can introduce new            
    // futures below, so remap those                                     
    mBelow = {};
    Missing::RemapFutures(*this, mContent);
 }
+
+/// After a scope has been compiled, linked, and all that jazz, it comes      
+/// the time to push in the stacks. If there are verbs that have non-default  
+/// frequency or time point, they will be directed towards the frequency and  
+/// time stacks. All else gets inserted in contents of this missing future    
+/// point. It is important this dispatch is done at this final step, because  
+/// rated/timed verbs still have to be linked with the relevant future point  
+///   @param linked - the compiled & linked scope to insert                   
+///   @param flow - the flow to use when inserting rated/timed verbs          
+void Temporal::MissingFuture::Commit(const Many& linked, Temporal& flow) {
+   LANGULUS_ASSUME(DevAssumes, not linked.IsDeep(),
+      "Can't commit a deep scope here");
+   LANGULUS_ASSUME(DevAssumes, not linked.IsOr(),
+      "Can't commit branches here");
+
+   if (linked.IsSparse()) {
+      // Avoid duplications if new content is sparse                    
+      // No need to remap futures below, because sparse contents        
+      // never link with anything                                       
+      mContent <<= linked;
+   }
+   else if (linked.Is<Verb>()) {
+      //TODO what about rated/timed constructs?
+      linked.ForEach([&](const Verb& v) {
+         const auto time = v.GetTime();
+         const auto rate = v.GetRate();
+         TMany<Verb> local = v;
+
+         if (time) {
+            // Verb is timed, forward it to the time stack              
+            local[0].SetTime(0);
+            auto found = flow.mTimeStack.FindIt(time);
+            if (not found) {
+               flow.mTimeStack.Insert(time, flow);
+               found = flow.mTimeStack.FindIt(time);
+            }
+
+            LANGULUS_ASSUME(DevAssumes, found->mFuture,
+               "Invalid future");
+            found->mFuture->Commit(local, found.GetValue());
+
+            //found.GetValue().LinkRelative(local, v, entanglement);
+         }
+         else if (rate) {
+            // Verb is rated, forward it to the frequency stack         
+            local[0].SetRate(0);
+            auto found = flow.mFrequencyStack.FindIt(rate);
+            if (not found) {
+               flow.mFrequencyStack.Insert(rate, flow);
+               found = flow.mFrequencyStack.FindIt(rate);
+            }
+
+            LANGULUS_ASSUME(DevAssumes, found->mFuture,
+               "Invalid future");
+            found->mFuture->Commit(local, found.GetValue());
+
+            /*LANGULUS_ASSERT(
+               found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
+               Flow, "Couldn't push to future"
+            );*/
+         }
+         else mContent << local;
+      });
+   }
+   else mContent << linked;
+}
+
 
 /// Just a helper function for logging                                        
 template<class T>

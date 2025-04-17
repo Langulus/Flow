@@ -476,9 +476,16 @@ void Temporal::Link(const Many& scope, const Ref<Entanglement>& entanglementAbov
             // "Do" verbs act as context/mass/rate/time setters         
             // Don't push them, but use them to set environment for     
             // any sub-verbs                                            
+            if (v.GetSource()) {
+               LANGULUS_ASSERT(
+                  PushFutures(v.GetSource(), *mFuture, entanglement),
+                  Flow, "Couldn't push to future"
+               );
+            }
+
             LinkRelative(v.GetArgument(), v, entanglement);
          }
-         else if (v.GetTime()) {
+         /*else if (v.GetTime()) {
             // Verb is timed, forward it to the time stack              
             TMany<Verb> local = v;
             local[0].SetTime(0);
@@ -508,7 +515,7 @@ void Temporal::Link(const Many& scope, const Ref<Entanglement>& entanglementAbov
                found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
                Flow, "Couldn't push to future"
             );
-         }
+         }*/
          else {
             // Forward it to the priority stack                         
             TMany<Verb> local = v;
@@ -562,7 +569,7 @@ void Temporal::LinkRelative(
 
          // Forward to future point in appropriate stack, according to  
          // the override verb                                           
-         if (override.GetTime()) {
+         /*if (override.GetTime()) {
             // Trait is timed, forward it to the time stack             
             auto found = mTimeStack.FindIt(override.GetTime());
             if (not found) {
@@ -592,20 +599,20 @@ void Temporal::LinkRelative(
                Flow, "Couldn't push to future"
             );
          }
-         else {
+         else {*/
             // Forward it to the priority stack                         
             LANGULUS_ASSERT(
                PushFutures(local, *mFuture, entanglement),
                Flow, "Couldn't push to future"
             );
-         }
+         //}
       },
       [&](const Construct& c) {
          TMany<Construct> local = c;
 
          // Forward to future point in appropriate stack,               
          // according to the override verb                              
-         if (override.GetTime()) {
+         /*if (override.GetTime()) {
             // Trait is timed, forward it to the time stack             
             auto found = mTimeStack.FindIt(override.GetTime());
             if (not found) {
@@ -635,13 +642,13 @@ void Temporal::LinkRelative(
                Flow, "Couldn't push to future"
             );
          }
-         else {
+         else {*/
             // Forward it to the priority stack                         
             LANGULUS_ASSERT(
                PushFutures(local, *mFuture, entanglement),
                Flow, "Couldn't push to future"
             );
-         }
+         //}
       },
       [&](const Verb& v) {
          // Multiply verb energy and merge contexts                     
@@ -651,9 +658,16 @@ void Temporal::LinkRelative(
             // "Do" verbs act as context/mass/rate/time setters         
             // Don't push them, but use them to set environment for     
             // any sub-verbs                                            
+            if (v.GetSource()) {
+               LANGULUS_ASSERT(
+                  PushFutures(v.GetSource(), *mFuture, entanglement),
+                  Flow, "Couldn't push to future"
+               );
+            }
+
             LinkRelative(v.GetArgument(), localOverride, entanglement);
          }
-         else if (localOverride.GetTime()) {
+         /*else if (localOverride.GetTime()) {
             // Verb is timed, forward it to the time stack              
             const auto time = localOverride.GetTime();
             TMany<Verb> local = v;
@@ -672,8 +686,8 @@ void Temporal::LinkRelative(
             const auto rate = localOverride.GetRate();
             TMany<Verb> local = v;
             local[0].SetRate(0);
-            if (not local[0].GetSource()) //TODO check if this is allowed - no other branch seems to override source
-               local[0].SetSource(localOverride.GetSource());
+            //if (not local[0].GetSource()) //TODO check if this is allowed - no other branch seems to override source
+            //   local[0].SetSource(localOverride.GetSource());
 
             auto found = mFrequencyStack.FindIt(rate);
             if (not found) {
@@ -687,11 +701,11 @@ void Temporal::LinkRelative(
                found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
                Flow, "Couldn't push to future"
             );
-         }
+         }*/
          else {
             // Forward it to the priority stack                         
             // Collapse all verb charges at this point                  
-            TMany<Verb> local = v;
+            /*TMany<Verb> local = v;
             local[0].SetMass(localOverride.GetMass());
             local[0].SetPriority(localOverride.GetPriority());
 
@@ -702,8 +716,8 @@ void Temporal::LinkRelative(
                   PushFutures(override.GetSource(), *mFuture, entanglement),
                   Flow, "Couldn't push to future"
                );
-            }
-
+            }*/
+            TMany<Verb> local = localOverride;
             LANGULUS_ASSERT(
                PushFutures(local, *mFuture, entanglement),
                Flow, "Couldn't push to future"
@@ -723,14 +737,13 @@ void Temporal::LinkRelative(
 ///   @return true if scope was linked successfully, either in the provided   
 ///      'future', or in any of the futures below it                          
 bool Temporal::PushFutures(
-   const Many& scope,
-   MissingFuture& future,
+   const Many& scope, MissingFuture& future,
    const Ref<Entanglement>& entanglementAbove
 ) noexcept {
    bool atLeastOneSuccess = false;
    try {
       // Try to link here                                               
-      future.FillFuture(scope);
+      future.FillFuture(scope, *this);
       atLeastOneSuccess = true;
    }
    catch (...) {}

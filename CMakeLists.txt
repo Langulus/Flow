@@ -11,7 +11,7 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
    include(LangulusUtilities.cmake)
-   fetch_langulus_module(Anyness GIT_TAG wip)
+   fetch_langulus_module(Annies GIT_TAG wip)
 endif()
 
 file(GLOB_RECURSE
@@ -25,8 +25,8 @@ add_langulus_library(LangulusFlow
    SOURCES  $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:$<TARGET_OBJECTS:LangulusLogger>>
             $<TARGET_OBJECTS:LangulusRTTI>
             $<$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>:$<TARGET_OBJECTS:LangulusFractalloc>>
-            $<$<BOOL:${LANGULUS_OPTION_PROFILING}>:$<TARGET_OBJECTS:LangulusProfiler>>
-            $<TARGET_OBJECTS:LangulusAnyness>
+            $<$<BOOL:${LANGULUS_OPTION_PROFILING}>:$<TARGET_OBJECTS:LangulusPercist>>
+            $<TARGET_OBJECTS:LangulusAnnies>
             ${LANGULUS_FLOW_SOURCES}
 )
 
@@ -34,8 +34,8 @@ target_include_directories(LangulusFlow
    PUBLIC   $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:$<TARGET_PROPERTY:LangulusLogger,INTERFACE_INCLUDE_DIRECTORIES>>
             $<TARGET_PROPERTY:LangulusRTTI,INTERFACE_INCLUDE_DIRECTORIES>
             $<$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>:$<TARGET_PROPERTY:LangulusFractalloc,INTERFACE_INCLUDE_DIRECTORIES>>
-            $<$<BOOL:${LANGULUS_OPTION_PROFILING}>:$<TARGET_PROPERTY:LangulusProfiler,INTERFACE_INCLUDE_DIRECTORIES>>
-            $<TARGET_PROPERTY:LangulusAnyness,INTERFACE_INCLUDE_DIRECTORIES>
+            $<$<BOOL:${LANGULUS_OPTION_PROFILING}>:$<TARGET_PROPERTY:LangulusPercist,INTERFACE_INCLUDE_DIRECTORIES>>
+            $<TARGET_PROPERTY:LangulusAnnies,INTERFACE_INCLUDE_DIRECTORIES>
             include
 )
 
@@ -48,7 +48,7 @@ target_compile_definitions(LangulusFlow
    PRIVATE  LANGULUS_EXPORT_ALL
 )
 
-if(LANGULUS_TESTING)
+if(LANGULUS_OPTION_TESTING)
    enable_testing()
    add_subdirectory(test)
 endif()

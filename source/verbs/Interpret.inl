@@ -11,13 +11,13 @@
 #include "Create.hpp"
 #include "Do.hpp"
 
-#include <Langulus/Anyness/Many.hpp>
-#include <Langulus/Anyness/Map.hpp>
-#include <Langulus/Anyness/Set.hpp>
-#include <Langulus/Anyness/Pair.hpp>
-#include <Langulus/Anyness/Own.hpp>
-#include <Langulus/Anyness/Ref.hpp>
-#include <Langulus/Anyness/Neat.hpp>
+#include <Langulus/Annies/Many.hpp>
+#include <Langulus/Annies/Map.hpp>
+#include <Langulus/Annies/Set.hpp>
+#include <Langulus/Annies/Pair.hpp>
+#include <Langulus/Annies/Own.hpp>
+#include <Langulus/Annies/Ref.hpp>
+#include <Langulus/Annies/Neat.hpp>
 
 #if 0
    #define VERBOSE_CONVERSION(...) Logger::Verbose(__VA_ARGS__)
@@ -192,7 +192,7 @@ namespace fmt
       auto format(T const& element, CONTEXT& ctx) const {
          using namespace ::Langulus;
 
-         const auto asText = Verbs::Interpret::To<Anyness::Text>(element);
+         const auto asText = Verbs::Interpret::To<Annies::Text>(element);
          return fmt::format_to(ctx.out(), "{}",
             static_cast<Logger::TextView>(asText));
       }
@@ -223,17 +223,17 @@ namespace fmt
    /// Extend FMT to be capable of logging Neat                               
    ///                                                                        
    template<>
-   struct formatter<Langulus::Anyness::Neat> {
+   struct formatter<Langulus::Annies::Neat> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
          return ctx.begin();
       }
 
       template<class CONTEXT> LANGULUS(INLINED)
-      auto format(Langulus::Anyness::Neat const& element, CONTEXT& ctx) const {
+      auto format(Langulus::Annies::Neat const& element, CONTEXT& ctx) const {
          using namespace ::Langulus;
 
-         const auto asText = Verbs::Interpret::To<Anyness::Text>(element);
+         const auto asText = Verbs::Interpret::To<Annies::Text>(element);
          return fmt::format_to(ctx.out(), "{}",
             static_cast<Logger::TextView>(asText));
       }
@@ -243,17 +243,17 @@ namespace fmt
    /// Extend FMT to be capable of logging Construct                          
    ///                                                                        
    template<>
-   struct formatter<Langulus::Anyness::Construct> {
+   struct formatter<Langulus::Annies::Construct> {
       template<class CONTEXT>
       constexpr auto parse(CONTEXT& ctx) {
          return ctx.begin();
       }
 
       template<class CONTEXT> LANGULUS(INLINED)
-      auto format(Langulus::Anyness::Construct const& element, CONTEXT& ctx) const {
+      auto format(Langulus::Annies::Construct const& element, CONTEXT& ctx) const {
          using namespace ::Langulus;
 
-         const auto asText = Verbs::Interpret::To<Anyness::Text>(element);
+         const auto asText = Verbs::Interpret::To<Annies::Text>(element);
          return fmt::format_to(ctx.out(), "{}",
             static_cast<Logger::TextView>(asText));
       }
@@ -275,7 +275,7 @@ namespace fmt
 
          return fmt::format_to(ctx.out(), "{}({})",
             element.GetTrait().GetToken(),
-            static_cast<const Anyness::Many&>(element)
+            static_cast<const Annies::Many&>(element)
          );
       }
    };
@@ -342,10 +342,10 @@ namespace fmt
 } // namespace fmt
 
 
-namespace Langulus::Anyness
+namespace Langulus::Annies
 {
 
-   /// Define the otherwise undefined Langulus::Anyness::Block::AsCast        
+   /// Define the otherwise undefined Langulus::Annies::Block::AsCast        
    /// to use the interpret verb pipeline for runtime conversion              
    ///   @tparam T - the type to convert to                                   
    ///   @tparam FATAL_FAILURE - true to throw on failure, otherwise          
@@ -399,6 +399,6 @@ namespace Langulus::Anyness
       }
    }
    
-} // namespace Langulus::Anyness
+} // namespace Langulus::Annies
 
 #undef VERBOSE_CONVERSION

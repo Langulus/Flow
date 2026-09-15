@@ -24,7 +24,7 @@ LANGULUS_EXCEPTION(Link);
 namespace Langulus::Flow
 {
 
-   using namespace Anyness;
+   using namespace Annies;
    using RTTI::VMeta;
    using RTTI::TMeta;
    using RTTI::DMeta;

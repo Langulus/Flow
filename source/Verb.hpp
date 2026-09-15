@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Common.hpp"
-#include <Langulus/Anyness/Verb.hpp>
+#include <Langulus/Annies/Verb.hpp>
 
 
 namespace Langulus::Flow

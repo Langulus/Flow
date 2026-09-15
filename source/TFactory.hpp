@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Common.hpp"
-#include <Langulus/Anyness/THive.hpp>
+#include <Langulus/Annies/THive.hpp>
 
 
 namespace Langulus::Flow
@@ -28,10 +28,10 @@ namespace Langulus::Flow
    /// with the same descriptor twice.                                        
    ///                                                                        
    template<class T, FactoryUsage USAGE = FactoryUsage::Default>
-   class TFactory : public Anyness::THive<T> {
+   class TFactory : public Annies::THive<T> {
    public:
       LANGULUS(TYPED) T;
-      using Base = Anyness::THive<T>;
+      using Base = Annies::THive<T>;
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
       static constexpr bool IsNotUnique = not IsUnique;
 

@@ -301,7 +301,7 @@ void Temporal::DumpVerb(const A::Verb& v) {
 ///   @param c - the construct to dump                                        
 void Temporal::DumpConstruct(const Construct& c) {
    // Can we fit the construct on a single line?                        
-   const auto serv = Verbs::Interpret::To<Anyness::Text>(c);
+   const auto serv = Verbs::Interpret::To<Annies::Text>(c);
    const auto separated = serv.GetCount() > CarryOverLimit;
 
    // Write the type, charge, and open the scope                        
@@ -325,7 +325,7 @@ void Temporal::DumpConstruct(const Construct& c) {
 ///   @param t - the trait to dump                                            
 void Temporal::DumpTrait(const Trait& t) {
    // Can we fit the trait on a single line?                            
-   const auto serv = Verbs::Interpret::To<Anyness::Text>(t);
+   const auto serv = Verbs::Interpret::To<Annies::Text>(t);
    const auto separated = serv.GetCount() > CarryOverLimit;
 
    // Write the trait and open the scope                                

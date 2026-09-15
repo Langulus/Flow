@@ -105,7 +105,7 @@ namespace Langulus::Flow
 namespace Langulus
 {
 
-   Anyness::Text IdentityOf(const auto&);
-   Anyness::Text IdentityOf(const Token&, const auto&);
+   Annies::Text IdentityOf(const auto&);
+   Annies::Text IdentityOf(const Token&, const auto&);
 
 } // namespace Langulus

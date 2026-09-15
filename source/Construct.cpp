@@ -9,7 +9,7 @@
 #include "verbs/Do.inl"
 #include "verbs/Create.inl"
 #include "verbs/Select.inl"
-#include <Langulus/Anyness/Construct.hpp>
+#include <Langulus/Annies/Construct.hpp>
 
 #if 0
    #define VERBOSE_CONSTRUCT(...) Logger::Verbose(__VA_ARGS__)
@@ -18,7 +18,7 @@
 #endif
 
 
-namespace Langulus::Anyness
+namespace Langulus::Annies
 {
 
    /// Attempt to create construct statically if possible                     
@@ -47,4 +47,4 @@ namespace Langulus::Anyness
       return false;
    }
 
-} // namespace Langulus::Anyness
+} // namespace Langulus::Annies

@@ -21,21 +21,21 @@ namespace Langulus
    ///   @param instance - the instance to stringify                          
    ///   @return text containing the generated identity                       
    LANGULUS(INLINED)
-   Anyness::Text IdentityOf(const Token& token, const auto& instance) {
-      using Anyness::Text;
+   Annies::Text IdentityOf(const Token& token, const auto& instance) {
+      using Annies::Text;
       Text result;
       result += token;
       result += Text::Operator::OpenScope;
       #if not LANGULUS(PARANOID) and LANGULUS(DEBUG)
          // Feel like getting doxxed? Directly dump the memory address  
-         result += Anyness::Text {
+         result += Annies::Text {
             fmt::format("{:02X}",
                reinterpret_cast<intptr_t>(&DenseCast(instance))
             )
          };
       #else
          // Obfuscate the pointer, by hashing it                        
-         result += Anyness::Text {
+         result += Annies::Text {
             fmt::format("{:02X}", HashOf(&DenseCast(instance)).mHash)
          };
       #endif
@@ -48,7 +48,7 @@ namespace Langulus
    ///   @param instance - the instance to stringify                          
    ///   @return text containing the generated identity                       
    LANGULUS(INLINED)
-   Anyness::Text IdentityOf(const auto& instance) {
+   Annies::Text IdentityOf(const auto& instance) {
       auto token = MetaOf<Decay<decltype(instance)>>()
          ->GetShortestUnambiguousToken();
       return IdentityOf(token, instance);

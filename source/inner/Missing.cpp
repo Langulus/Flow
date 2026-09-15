@@ -22,7 +22,7 @@
    #define VERBOSE_FUTURE(...)            LANGULUS(NOOP)
 #endif
 
-using namespace Langulus::Anyness;
+using namespace Langulus::Annies;
 using namespace Langulus::Flow;
 
 

@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../TVerb.hpp"
-#include <Langulus/Anyness/Trait.hpp>
+#include <Langulus/Annies/Trait.hpp>
 
 
 namespace Langulus::Verbs

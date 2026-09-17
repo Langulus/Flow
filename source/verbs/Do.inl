@@ -15,7 +15,7 @@ namespace Langulus::Verbs
 
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Dense T, CT::Data...A>
+   template<CT::Dense T, CT::NotVoid...A>
    constexpr bool Do::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Do(v); };
@@ -25,7 +25,7 @@ namespace Langulus::Verbs
 
    /// Get the verb functor for the given type and arguments                  
    ///   @return the function, or nullptr if not available                    
-   template<CT::Dense T, CT::Data...A>
+   template<CT::Dense T, CT::NotVoid...A>
    constexpr auto Do::Of() noexcept {
       if constexpr (CT::Constant<T>) {
          return [](const void* context, Flow::Verb& verb, A...args) {
@@ -111,7 +111,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb to execute                                    
    ///   @return the number of successful executions                          
    template<bool DISPATCH, bool DEFAULT, bool FALLBACK>
-   Count Execute(CT::Data auto& context, CT::VerbBased auto& verb) {
+   Count Execute(CT::NotVoid auto& context, CT::VerbBased auto& verb) {
       using T = Deref<decltype(context)>;
 
       // Always reset verb progress prior to execution                  

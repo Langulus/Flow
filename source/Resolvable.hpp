@@ -84,13 +84,13 @@ namespace Langulus::Flow
       #endif
 
       template<CT::Trait>
-      bool GetTrait(CT::Data auto&) const;
-      bool GetValue(CT::Data auto&) const;
+      bool GetTrait(CT::NotVoid auto&) const;
+      bool GetValue(CT::NotVoid auto&) const;
 
       template<CT::Trait, bool DIRECT = false>
-      bool SetTrait(CT::Data auto&&);
+      bool SetTrait(CT::NotVoid auto&&);
       template<bool DIRECT = false>
-      bool SetValue(CT::Data auto&&);
+      bool SetValue(CT::NotVoid auto&&);
 
       // All inheritances of Resolvable will become convertible to Text 
       // and will share the reflected conversions list, but with one    

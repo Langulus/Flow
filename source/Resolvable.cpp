@@ -14,7 +14,7 @@ namespace Langulus::Flow
    /// Get the class name token                                               
    ///   @return the token                                                    
    Token Resolvable::GetToken() const IF_UNSAFE(noexcept) {
-      LANGULUS_ASSUME(DevAssumes, mClassType, "Bad resolvable type");
+      LglsAssumeDev(mClassType, "Bad resolvable type");
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          return mClassType->GetShortestUnambiguousToken();
       #else
@@ -26,7 +26,7 @@ namespace Langulus::Flow
    ///   @param type - the type to check for                                  
    ///   @return true if this context can be dynamically interpreted to type  
    bool Resolvable::CastsTo(DMeta type) const IF_UNSAFE(noexcept) {
-      LANGULUS_ASSUME(DevAssumes, mClassType,
+      LglsAssumeDev(mClassType,
          "Bad resolvable type");
       return mClassType->CastsTo(type);
    }

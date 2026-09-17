@@ -27,9 +27,9 @@ namespace Langulus::Verbs
       using TVerb::TVerb;
       using TVerb::operator ==;
 
-      template<CT::Dense, CT::Data...>
+      template<CT::Dense, CT::NotVoid...>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense, CT::Data...>
+      template<CT::Dense, CT::NotVoid...>
       static constexpr auto Of() noexcept;
 
       template<CT::Decayed TO, CT::Decayed FROM>
@@ -45,7 +45,7 @@ namespace Langulus::Verbs
    ///   Statically optimized interpret verb                                  
    ///   @tparam AS - what are we converting to?                              
    ///                                                                        
-   template<CT::Data AS>
+   template<CT::NotVoid AS>
    struct InterpretAs : Interpret {
       LANGULUS_BASES(Interpret);
       using Interpret::Interpret;

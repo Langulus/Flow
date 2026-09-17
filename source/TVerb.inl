@@ -28,7 +28,7 @@ namespace Langulus::Flow
 
    /// Generic constructor                                                    
    ///   @param other - the verb/argument and intent to construct with        
-   TEMPLATE() template<CT::Data T1, CT::Data...TN>
+   TEMPLATE() template<CT::NotVoid T1, CT::NotVoid...TN>
    requires CT::VerbMakable<T1, TN...> LANGULUS(INLINED)
    TME()::TVerb(T1&& t1, TN&&...tn)
       : Verb {Forward<T1>(t1), Forward<TN>(tn)...} {
@@ -79,19 +79,19 @@ namespace Langulus::Flow
       return Verb::operator Text();
    }
 
-   TEMPLATE() template<CT::Data T1, CT::Data...TN>
+   TEMPLATE() template<CT::NotVoid T1, CT::NotVoid...TN>
    requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    VERB& TME()::SetSource(T1&& t1, TN&&...tn) {
       return Verb::SetSource<VERB>(Forward<T1>(t1), Forward<TN>(tn)...);
    }
       
-   TEMPLATE() template<CT::Data T1, CT::Data...TN>
+   TEMPLATE() template<CT::NotVoid T1, CT::NotVoid...TN>
    requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    VERB& TME()::SetArgument(T1&& t1, TN&&...tn) {
       return Verb::SetArgument<VERB>(Forward<T1>(t1), Forward<TN>(tn)...);
    }
       
-   TEMPLATE() template<CT::Data T1, CT::Data...TN>
+   TEMPLATE() template<CT::NotVoid T1, CT::NotVoid...TN>
    requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    VERB& TME()::SetOutput(T1&& t1, TN&&...tn) {
       return Verb::SetOutput<VERB>(Forward<T1>(t1), Forward<TN>(tn)...);

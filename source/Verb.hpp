@@ -36,7 +36,7 @@ namespace Langulus::Flow
       Verb(const Verb&) = default;
       Verb(Verb&&) = default;
 
-      template<CT::Data T1, CT::Data...TN> requires CT::VerbMakable<T1, TN...>
+      template<CT::NotVoid T1, CT::NotVoid...TN> requires CT::VerbMakable<T1, TN...>
       Verb(T1&&, TN&&...);
 
       template<CT::Verb>
@@ -56,15 +56,15 @@ namespace Langulus::Flow
 
       Verb& operator = (CT::VerbAssignable auto&&);
 
-      template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TN>
+      template<CT::VerbBased THIS = Verb, CT::NotVoid T1, CT::NotVoid...TN>
       requires CT::UnfoldInsertable<T1, TN...>
       THIS& SetSource(T1&&, TN&&...);
       
-      template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TN>
+      template<CT::VerbBased THIS = Verb, CT::NotVoid T1, CT::NotVoid...TN>
       requires CT::UnfoldInsertable<T1, TN...>
       THIS& SetArgument(T1&&, TN&&...);
       
-      template<CT::VerbBased THIS = Verb, CT::Data T1, CT::Data...TN>
+      template<CT::VerbBased THIS = Verb, CT::NotVoid T1, CT::NotVoid...TN>
       requires CT::UnfoldInsertable<T1, TN...>
       THIS& SetOutput(T1&&, TN&&...);
 

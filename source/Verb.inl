@@ -16,7 +16,7 @@ namespace Langulus::Flow
 
    /// Generic constructor                                                    
    ///   @param other - the verb/argument and intent to construct with        
-   template<CT::Data T1, CT::Data...TN>
+   template<CT::NotVoid T1, CT::NotVoid...TN>
    requires CT::VerbMakable<T1, TN...> LANGULUS(INLINED)
    Verb::Verb(T1&& t1, TN&&...tn) {
       if constexpr (sizeof...(TN) == 0 and not CT::Array<T1>) {
@@ -349,7 +349,7 @@ namespace Langulus::Flow
    /// Set the verb's source                                                  
    ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
-   template<CT::VerbBased THIS, CT::Data T1, CT::Data...TN>
+   template<CT::VerbBased THIS, CT::NotVoid T1, CT::NotVoid...TN>
    requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    THIS& Verb::SetSource(T1&& t1, TN&&...tn) {
       mSource = Many {Forward<T1>(t1), Forward<TN>(tn)...};
@@ -362,7 +362,7 @@ namespace Langulus::Flow
    /// Set the verb's argument                                                
    ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
-   template<CT::VerbBased THIS, CT::Data T1, CT::Data...TN>
+   template<CT::VerbBased THIS, CT::NotVoid T1, CT::NotVoid...TN>
    requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    THIS& Verb::SetArgument(T1&& t1, TN&&...tn) {
       Many::operator = (Many {Forward<T1>(t1), Forward<TN>(tn)...});
@@ -375,7 +375,7 @@ namespace Langulus::Flow
    /// Set the verb's output                                                  
    ///   @param t1, tail...  - the values to assign                           
    ///   @return a reference to self                                          
-   template<CT::VerbBased THIS, CT::Data T1, CT::Data...TN>
+   template<CT::VerbBased THIS, CT::NotVoid T1, CT::NotVoid...TN>
    requires CT::UnfoldInsertable<T1, TN...> LANGULUS(INLINED)
    THIS& Verb::SetOutput(T1&& t1, TN&&...tn) {
       mOutput = Many {Forward<T1>(t1), Forward<TN>(tn)...};

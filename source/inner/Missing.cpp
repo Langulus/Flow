@@ -320,9 +320,9 @@ void Temporal::MissingFuture::FillFuture(const Many& content, Temporal& flow) {
 ///   @param linked - the compiled & linked scope to insert                   
 ///   @param flow - the flow to use when inserting rated/timed verbs          
 void Temporal::MissingFuture::Commit(const Many& linked, Temporal& flow) {
-   LANGULUS_ASSUME(DevAssumes, not linked.IsDeep(),
+   LglsAssumeDev(not linked.IsDeep(),
       "Can't commit a deep scope here");
-   LANGULUS_ASSUME(DevAssumes, not linked.IsOr(),
+   LglsAssumeDev(not linked.IsOr(),
       "Can't commit branches here");
 
    if (linked.IsSparse()) {
@@ -347,7 +347,7 @@ void Temporal::MissingFuture::Commit(const Many& linked, Temporal& flow) {
                found = flow.mTimeStack.FindIt(time);
             }
 
-            LANGULUS_ASSUME(DevAssumes, found->mFuture,
+            LglsAssumeDev(found->mFuture,
                "Invalid future");
             found->mFuture->Commit(local, found.GetValue());
 
@@ -362,7 +362,7 @@ void Temporal::MissingFuture::Commit(const Many& linked, Temporal& flow) {
                found = flow.mFrequencyStack.FindIt(rate);
             }
 
-            LANGULUS_ASSUME(DevAssumes, found->mFuture,
+            LglsAssumeDev(found->mFuture,
                "Invalid future");
             found->mFuture->Commit(local, found.GetValue());
 

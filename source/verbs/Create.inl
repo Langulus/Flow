@@ -27,7 +27,7 @@ namespace Langulus::Verbs
 
    /// Check if the verb is available in a type, and with given arguments     
    ///   @return true if verb is available in T with arguments A...           
-   template<CT::Dense T, CT::Data...A>
+   template<CT::Dense T, CT::NotVoid...A>
    constexpr bool Create::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Create(v); };
@@ -37,7 +37,7 @@ namespace Langulus::Verbs
 
    /// Get the verb functor for the given type and arguments                  
    ///   @return the function, or nullptr if not available                    
-   template<CT::Dense T, CT::Data...A>
+   template<CT::Dense T, CT::NotVoid...A>
    constexpr auto Create::Of() noexcept {
       if constexpr (CT::Constant<T>) {
          return [](const void* context, Flow::Verb& verb, A...args) {

@@ -31,7 +31,7 @@ namespace Langulus::Verbs
    
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Dense T, CT::Data...A>
+   template<CT::Dense T, CT::NotVoid...A>
    constexpr bool Interpret::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Interpret(v); };
@@ -41,7 +41,7 @@ namespace Langulus::Verbs
 
    /// Get the verb functor for the given type and arguments                  
    ///   @return the function, or nullptr if not available                    
-   template<CT::Dense T, CT::Data...A>
+   template<CT::Dense T, CT::NotVoid...A>
    constexpr auto Interpret::Of() noexcept {
       if constexpr (CT::Constant<T>) {
          return [](const void* context, Flow::Verb& verb, A...args) {
@@ -87,7 +87,7 @@ namespace Langulus::Verbs
 
    /// Specialized interpret verb default construction adds the TO type as    
    /// an argument automatically                                              
-   template<CT::Data TO>
+   template<CT::NotVoid TO>
    InterpretAs<TO>::InterpretAs() {
       static_assert(sizeof(InterpretAs) == sizeof(A::Verb));
       SetArgument(MetaOf<TO>());
@@ -98,7 +98,7 @@ namespace Langulus::Verbs
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
-   template<CT::Data TO>
+   template<CT::NotVoid TO>
    bool InterpretAs<TO>::ExecuteDefault(const Many& context, Verb& verb) {
       if constexpr (CT::Serial<TO>) {
          // Serialze                                                    
@@ -351,7 +351,7 @@ namespace Langulus::Annies
    ///   @tparam FATAL_FAILURE - true to throw on failure, otherwise          
    ///                           return a default-initialized T on fail       
    ///   @return the first element, converted to T                            
-   template<class TYPE> template<CT::Data T, bool FATAL_FAILURE>
+   template<class TYPE> template<CT::NotVoid T, bool FATAL_FAILURE>
    T Block<TYPE>::AsCast(const CT::Index auto index) const {
       if (IsEmpty()) {
          if constexpr (FATAL_FAILURE)

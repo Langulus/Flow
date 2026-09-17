@@ -67,9 +67,9 @@ namespace Langulus::Flow
    template<class T>
    Resolvable::Resolvable(const T* type) IF_UNSAFE(noexcept)
       : mClassType {MetaDataOf<T>()} {
-      LANGULUS_ASSUME(DevAssumes, mClassType,
+      LglsAssumeDev(mClassType,
          "Bad resolvable type");
-      LANGULUS_ASSUME(DevAssumes, mClassType->mOrigin,
+      LglsAssumeDev(mClassType->mOrigin,
          "Resolvable type is incomplete");
       mClassPointer = type;
    }
@@ -84,7 +84,7 @@ namespace Langulus::Flow
    /// Check if context interprets as a static type                           
    ///   @tparam T - the type to check for                                    
    ///   @return true if this context can be dynamically interpreted as T     
-   template<CT::Data T> LANGULUS(INLINED)
+   template<CT::NotVoid T> LANGULUS(INLINED)
    bool Resolvable::CastsTo() const {
       return mClassType->template CastsTo<T>();
    }
@@ -92,7 +92,7 @@ namespace Langulus::Flow
    /// Check if context is an exact static type                               
    ///   @tparam T - the type to check for                                    
    ///   @return true if this context can be dynamically interpreted as T     
-   template<CT::Data T> LANGULUS(INLINED)
+   template<CT::NotVoid T> LANGULUS(INLINED)
    bool Resolvable::Is() const {
       return mClassType->template Is<T>();
    }
@@ -151,7 +151,7 @@ namespace Langulus::Flow
    ///   @param data - [out] the data to set                                  
    ///   @return true if trait was found, and data was set                    
    template<CT::Trait T> LANGULUS(INLINED)
-   bool Resolvable::GetTrait(CT::Data auto& data) const {
+   bool Resolvable::GetTrait(CT::NotVoid auto& data) const {
       using D = Deref<decltype(data)>;
       auto member = mClassType->GetMember(MetaOf<T>());
       if (member) {
@@ -168,7 +168,7 @@ namespace Langulus::Flow
    ///   @param data - [out] the data to set                                  
    ///   @return true if trait was found, and data was set                    
    LANGULUS(INLINED)
-   bool Resolvable::GetValue(CT::Data auto& data) const {
+   bool Resolvable::GetValue(CT::NotVoid auto& data) const {
       using D = Deref<decltype(data)>;
       auto member = mClassType->GetMember({}, MetaDataOf<D>());
       if (member) {
@@ -187,7 +187,7 @@ namespace Langulus::Flow
    ///   @param data - [out] the data to move                                 
    ///   @return true if trait was found and overwritten                      
    template<CT::Trait T, bool DIRECT> LANGULUS(INLINED)
-   bool Resolvable::SetTrait(CT::Data auto&& data) {
+   bool Resolvable::SetTrait(CT::NotVoid auto&& data) {
       using D = Deref<decltype(data)>;
       if constexpr (DIRECT) {
          auto member = mClassType->GetMember(MetaOf<T>());
@@ -210,7 +210,7 @@ namespace Langulus::Flow
    ///   @param data - [out] the data to move                                 
    ///   @return true if data was found and overwritten                       
    template<bool DIRECT> LANGULUS(INLINED)
-   bool Resolvable::SetValue(CT::Data auto&& data) {
+   bool Resolvable::SetValue(CT::NotVoid auto&& data) {
       using D = Deref<decltype(data)>;
       if constexpr (DIRECT) {
          auto member = mClassType->GetMember({}, MetaDataOf<D>());

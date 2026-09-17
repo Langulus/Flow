@@ -419,7 +419,7 @@ Many Temporal::Compile(const Many& scope, Real priority) {
 ///   @param scope - the scope to link and insert                             
 ///   @param entanglementAbove - an optional entanglement from above scope    
 void Temporal::Link(const Many& scope, const Ref<Entanglement>& entanglementAbove) {
-   LANGULUS_ASSUME(DevAssumes, mFuture, "Invalid future");
+   LglsAssumeDev(mFuture, "Invalid future");
 
    // Every time we push an OR scope we create an entanglement          
    Ref<Entanglement> entanglement;
@@ -509,7 +509,7 @@ void Temporal::Link(const Many& scope, const Ref<Entanglement>& entanglementAbov
                found = mFrequencyStack.FindIt(v.GetRate());
             }
 
-            LANGULUS_ASSUME(DevAssumes, found.GetValue().mFuture,
+            LglsAssumeDev(found.GetValue().mFuture,
                "Invalid future");
             LANGULUS_ASSERT(
                found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
@@ -544,7 +544,7 @@ void Temporal::LinkRelative(
    const Verb& override,
    const Ref<Entanglement>& entanglementAbove
 ) {
-   LANGULUS_ASSUME(DevAssumes, mFuture, "Invalid future");
+   LglsAssumeDev(mFuture, "Invalid future");
 
    // Every time we push an OR scope we create an entanglement          
    Ref<Entanglement> entanglement;
@@ -577,7 +577,7 @@ void Temporal::LinkRelative(
                found = mTimeStack.FindIt(override.GetTime());
             }
 
-            LANGULUS_ASSUME(DevAssumes, found.GetValue().mFuture,
+            LglsAssumeDev(found.GetValue().mFuture,
                "Invalid future");
             LANGULUS_ASSERT(
                found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
@@ -592,7 +592,7 @@ void Temporal::LinkRelative(
                found = mFrequencyStack.FindIt(override.GetRate());
             }
 
-            LANGULUS_ASSUME(DevAssumes, found.GetValue().mFuture,
+            LglsAssumeDev(found.GetValue().mFuture,
                "Invalid future");
             LANGULUS_ASSERT(
                found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
@@ -620,7 +620,7 @@ void Temporal::LinkRelative(
                found = mTimeStack.FindIt(override.GetTime());
             }
 
-            LANGULUS_ASSUME(DevAssumes, found.GetValue().mFuture,
+            LglsAssumeDev(found.GetValue().mFuture,
                "Invalid future");
             LANGULUS_ASSERT(
                found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
@@ -635,7 +635,7 @@ void Temporal::LinkRelative(
                found = mFrequencyStack.FindIt(override.GetRate());
             }
 
-            LANGULUS_ASSUME(DevAssumes, found.GetValue().mFuture,
+            LglsAssumeDev(found.GetValue().mFuture,
                "Invalid future");
             LANGULUS_ASSERT(
                found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
@@ -695,7 +695,7 @@ void Temporal::LinkRelative(
                found = mFrequencyStack.FindIt(rate);
             }
 
-            LANGULUS_ASSUME(DevAssumes, found.GetValue().mFuture,
+            LglsAssumeDev(found.GetValue().mFuture,
                "Invalid future");
             LANGULUS_ASSERT(
                found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),

@@ -28,7 +28,7 @@ namespace Langulus::Flow
       TVerb(const TVerb&);
       TVerb(TVerb&&);
 
-      template<CT::Data T1, CT::Data...TN> requires CT::VerbMakable<T1, TN...>
+      template<CT::NotVoid T1, CT::NotVoid...TN> requires CT::VerbMakable<T1, TN...>
       TVerb(T1&&, TN&&...);
 
       static VERB From(const Charge& = {}, VerbState = {});
@@ -49,15 +49,15 @@ namespace Langulus::Flow
       ///                                                                     
       ///   Assignment                                                        
       ///                                                                     
-      template<CT::Data T1, CT::Data...TN>
+      template<CT::NotVoid T1, CT::NotVoid...TN>
       requires CT::UnfoldInsertable<T1, TN...>
       VERB& SetSource(T1&&, TN&&...);
       
-      template<CT::Data T1, CT::Data...TN>
+      template<CT::NotVoid T1, CT::NotVoid...TN>
       requires CT::UnfoldInsertable<T1, TN...>
       VERB& SetArgument(T1&&, TN&&...);
       
-      template<CT::Data T1, CT::Data...TN>
+      template<CT::NotVoid T1, CT::NotVoid...TN>
       requires CT::UnfoldInsertable<T1, TN...>
       VERB& SetOutput(T1&&, TN&&...);
 

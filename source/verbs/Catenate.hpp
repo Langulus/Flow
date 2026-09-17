@@ -30,9 +30,9 @@ namespace Langulus::Verbs
       using TVerb::TVerb;
       using TVerb::operator ==;
 
-      template<CT::Dense, CT::Data...>
+      template<CT::Dense, CT::NotVoid...>
       static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense, CT::Data...>
+      template<CT::Dense, CT::NotVoid...>
       static constexpr auto Of() noexcept;
 
       static bool ExecuteIn(CT::Dense auto&, Verb&);

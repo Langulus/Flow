@@ -104,7 +104,7 @@ namespace Langulus::Flow
 
       LANGULUS_API(FLOW) void Merge(const Temporal&);
 
-      template<CT::Data...TN> requires (sizeof...(TN) >= 1)
+      template<CT::NotVoid...TN> requires (sizeof...(TN) >= 1)
       Many Push(TN&&...tn) {
          Many result;
          (result.SmartPush(IndexBack, PushInner(Forward<TN>(tn))), ...);

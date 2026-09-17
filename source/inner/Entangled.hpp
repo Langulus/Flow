@@ -52,7 +52,7 @@ namespace Langulus::Flow
          : mDone           {done}
          , mTrueContent    {Forward<Many>(ontrue)}
          , mFalseContent   {Forward<Many>(onfalse)} {
-         LANGULUS_ASSUME(DevAssumes, done, "Invalid entanglement handle");
+         LglsAssumeDev(done, "Invalid entanglement handle");
       }
 
       /// Just stringify the contents                                         

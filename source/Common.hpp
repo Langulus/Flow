@@ -14,9 +14,6 @@
    #define LANGULUS_API_FLOW() LANGULUS_IMPORT()
 #endif
 
-LANGULUS_EXCEPTION(Flow);
-LANGULUS_EXCEPTION(Link);
-
 /// Make the rest of the code aware, that Langulus::Flow has been included    
 #define LANGULUS_LIBRARY_FLOW() 1
 
@@ -29,7 +26,7 @@ namespace Langulus::Flow
    using RTTI::TMeta;
    using RTTI::DMeta;
    using RTTI::CMeta;
-   using RTTI::AMeta;
+   //using RTTI::AMeta;
 
 
    ///                                                                        

@@ -8,10 +8,13 @@
 #pragma once
 #include "Common.hpp"
 
+namespace Langulus::Annies
+{
+   class Many;
+}
 
 namespace Langulus::Flow
 {
-
    ///                                                                        
    /// Tools for executing containers as flows                                
    ///                                                                        
@@ -29,5 +32,4 @@ namespace Langulus::Flow
    bool ExecuteVerb(Many&, Verb&, bool silent = false);
    LANGULUS_API(FLOW)
    bool IntegrateVerb(Many&, Verb&, bool silent = false);
-
-} // namespace Langulus::Flow
+}

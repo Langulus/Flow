@@ -80,8 +80,8 @@ namespace Langulus::Flow
 
       LANGULUS_API(FLOW) Many Parse(bool optimize = true) const;
 
-      LANGULUS_API(FLOW) Code RightOf(Offset) const IF_UNSAFE(noexcept);
-      LANGULUS_API(FLOW) Code LeftOf(Offset) const IF_UNSAFE(noexcept);
+      LANGULUS_API(FLOW) Code RightOf(size_t) const IF_UNSAFE(noexcept);
+      LANGULUS_API(FLOW) Code LeftOf(size_t) const IF_UNSAFE(noexcept);
       LANGULUS_API(FLOW) bool StartsWithSpecial() const noexcept;
       LANGULUS_API(FLOW) bool StartsWithSkippable() const noexcept;
       LANGULUS_API(FLOW) bool EndsWithSkippable() const noexcept;
@@ -89,7 +89,7 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) bool EndsWithLetter() const noexcept;
       LANGULUS_API(FLOW) bool StartsWithDigit() const noexcept;
       LANGULUS_API(FLOW) bool EndsWithDigit() const noexcept;
-      LANGULUS_API(FLOW) bool StartsWithOperator(Offset) const noexcept;
+      LANGULUS_API(FLOW) bool StartsWithOperator(size_t) const noexcept;
 
       ///                                                                     
       ///   Concatenation                                                     
@@ -110,24 +110,24 @@ namespace Langulus::Flow
       /// Parser for unknown expressions                                      
       /// An unknown-expressions will be scanned to figure what it contains   
       struct LANGULUS_API(FLOW) UnknownParser {
-         static Offset Parse(const Code&, Many&, Real, bool optimize);
+         static size_t Parse(const Code&, Many&, Real, bool optimize);
       };
 
       /// Parser for keyword expressions                                      
       /// A key-expression is any expression that begins with a letter        
       struct LANGULUS_API(FLOW) KeywordParser {
-         static Offset Parse(const Code&, Many&, bool allowCharge = true);
+         static size_t Parse(const Code&, Many&, bool allowCharge = true);
          static bool Peek(const Code&) noexcept;
          static Token Isolate(const Code&) noexcept;
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            static AMeta Disambiguate(Offset, const Code&, const Token&);
+            static AMeta Disambiguate(size_t, const Code&, const Token&);
          #endif
       };
 
       /// Parser for skipping expressions                                     
       /// A skip-expression is any that begins with escapes, tabs, or spaces  
       struct LANGULUS_API(FLOW) SkippedParser {
-         static Offset Parse(const Code&);
+         static size_t Parse(const Code&);
          static bool Peek(const Code&) noexcept;
       };
 
@@ -135,7 +135,7 @@ namespace Langulus::Flow
       /// A num-expression is any that begins with a digit, a minus           
       /// followed by a digit, or a dot followed by a digit                   
       struct LANGULUS_API(FLOW) NumberParser {
-         static Offset Parse(const Code&, Many&);
+         static size_t Parse(const Code&, Many&);
          static bool Peek(const Code&) noexcept;
       };
 
@@ -143,18 +143,18 @@ namespace Langulus::Flow
       /// An op-expression is one matching the built-in ones, or one matching 
       /// one in reflected verb database, where LHS is not DMeta or VMeta     
       struct LANGULUS_API(FLOW) OperatorParser {
-         static Offset Parse(Operator, const Code&, Many&, Real, bool optimize);
+         static size_t Parse(Operator, const Code&, Many&, Real, bool optimize);
          static Operator PeekBuiltin(const Code&) noexcept;
          static Operator Peek(const Code&) noexcept;
          static Token Isolate(const Code&) noexcept;
 
       private:
-         static Offset ParseContent(Code::Operator, const Code&, Many&, bool optimize);
-         static Offset ParseString(Code::Operator, const Code&, Many&);
-         static Offset ParseBytes(const Code&, Many&);
-         static Offset ParseKeyword(Code::Operator, const Code&, Many&);
-         static Offset ParsePhase(Code::Operator, Many&);
-         static Offset ParseReflected(Verb&, const Code&, Many&, bool optimize);
+         static size_t ParseContent(Code::Operator, const Code&, Many&, bool optimize);
+         static size_t ParseString(Code::Operator, const Code&, Many&);
+         static size_t ParseBytes(const Code&, Many&);
+         static size_t ParseKeyword(Code::Operator, const Code&, Many&);
+         static size_t ParsePhase(Code::Operator, Many&);
+         static size_t ParseReflected(Verb&, const Code&, Many&, bool optimize);
 
          static void InsertContent(Many&, Many&);
       };
@@ -162,7 +162,7 @@ namespace Langulus::Flow
       /// Parser for chargers                                                 
       /// A charge-expression is any operator *^@! after a DMeta or VMeta     
       struct LANGULUS_API(FLOW) ChargeParser {
-         static Offset Parse(const Code&, Charge&);
+         static size_t Parse(const Code&, Charge&);
          static Operator Peek(const Code&) noexcept;
       };
    };

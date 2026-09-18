@@ -13,12 +13,12 @@
 namespace Langulus
 {
    
-   /// Count digits in real numbers                                           
+   /// size_t digits in real numbers                                           
    /// The dot in the real number is considered a digit, too                  
    /// Credit goes to http://stackoverflow.com/questions/1489830              
    ///   @param x - real number to count digits of                            
    template<CT::Integer T> LANGULUS(INLINED)
-   constexpr Count CountDigits(T x) noexcept {
+   constexpr size_t CountDigits(T x) noexcept {
       if constexpr (CT::UnsignedInteger8<T>)
          return (x < 10u ? 1 : (x < 100u ? 2 : 3));
       else if constexpr (CT::SignedInteger8<T>)
@@ -72,10 +72,10 @@ namespace Langulus
       else static_assert(false, "Unimplemented integer");
    }
 
-   /// Count digits in integer numbers                                        
+   /// size_t digits in integer numbers                                        
    ///   @param x - integer number to count digits of                         
    template<CT::Real T> LANGULUS(INLINED)
-   constexpr Count CountDigits(T x) noexcept {
+   constexpr size_t CountDigits(T x) noexcept {
       T floored;
       T fraction {::std::abs(::std::modf(x, &floored))};
       if (fraction == 0)
@@ -83,14 +83,14 @@ namespace Langulus
 
       floored = ::std::abs(floored);
       T limit {1};
-      Count fract_numbers {};
+      size_t fract_numbers {};
       while (fraction < limit and limit < T {1000}) {
          fraction *= T {10};
          limit *= T {10};
          ++fract_numbers;
       }
 
-      return CountDigits(static_cast<uint64_t>(floored)) + fract_numbers + Count {1};
+      return CountDigits(static_cast<uint64_t>(floored)) + fract_numbers + size_t {1};
    }
 
    /// Concatenate two numbers                                                

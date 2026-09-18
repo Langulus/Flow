@@ -91,12 +91,12 @@ namespace Langulus::Verbs
             // Create                                                   
             // First allocate and default-initialize the results        
             auto created = Many::FromMeta(construct.GetType());
-            created.New(Count(construct.GetCharge().mMass));
+            created.New(size_t(construct.GetCharge().mMass));
             auto& arguments = construct.GetDescriptor();
 
             // Then forward the constructors to each element            
             if (arguments) {
-               for (Count i = 0; i < created.GetCount(); ++i) {
+               for (size_t i = 0; i < created.GetCount(); ++i) {
                   Many element = created.GetElement(i);
 
                   // First attempt delegating                           
@@ -143,7 +143,7 @@ namespace Langulus::Verbs
 
          // Charged creation of a type                                  
          const auto type = descriptor.GetType();
-         const auto count = static_cast<Count>(descriptor.GetCharge().mMass * verb.GetMass());
+         const auto count = static_cast<size_t>(descriptor.GetCharge().mMass * verb.GetMass());
          auto result = Many::FromMeta(type);
 
          if (type->mDescriptorConstructor and descriptor.GetDescriptor()) {
@@ -221,15 +221,15 @@ namespace Langulus::Verbs
    ///   @param data - the data to set to                                     
    ///   @return true if at least one member in one element was set           
    inline void Create::SetMembers(Many& context, const Many& data) {
-      TUnorderedMap<TMeta, Count> satisfiedTraits;
-      TUnorderedMap<DMeta, Count> satisfiedData;
+      TUnorderedMap<TMeta, size_t> satisfiedTraits;
+      TUnorderedMap<DMeta, size_t> satisfiedData;
 
       data.ForEachDeep([&](const Many& group) {
          VERBOSE_CREATION("Manually initializing ", context, " with ", Logger::Cyan, group);
 
          // Search for similar data in the current context              
          // in an attempt to overwrite member variables and such        
-         for (Count i = 0; i < group.GetCount(); ++i) {
+         for (size_t i = 0; i < group.GetCount(); ++i) {
             Many element = group.GetElementResolved(i);
             if (element.Is<Trait>()) {
                // Search for the trait                                  
@@ -253,7 +253,7 @@ namespace Langulus::Verbs
                      if (sati)
                         ++satisfiedTraits.GetValue(sati);
                      else
-                        satisfiedTraits.Insert(meta, Count {1});
+                        satisfiedTraits.Insert(meta, size_t {1});
 
                      VERBOSE_CREATION(Logger::Yellow, "Initialized ", 
                         selector.GetOutput(), " (", index, ")");
@@ -295,7 +295,7 @@ namespace Langulus::Verbs
                   if (sati)
                      ++satisfiedData.GetValue(sati);
                   else
-                     satisfiedData.Insert(meta, Count {1});
+                     satisfiedData.Insert(meta, size_t {1});
 
                   VERBOSE_CREATION(Logger::Yellow,
                      "Initialized ", selector.GetOutput(), " (", index, ")");

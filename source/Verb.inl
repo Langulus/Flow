@@ -518,7 +518,7 @@ namespace Langulus::Flow
    ///   @param output - the output container                                 
    ///   @return the number of successes for the verb                         
    template<bool OR> LANGULUS(INLINED)
-   Count Verb::CompleteDispatch(const Count successes, Abandoned<Many>&& output) {
+   size_t Verb::CompleteDispatch(const size_t successes, Abandoned<Many>&& output) {
       // Set output                                                     
       mSuccesses = successes;
       if (mSuccesses)

@@ -103,7 +103,7 @@ namespace Langulus::Flow
       const Many& flow, Many& context, Many& output,
       const bool integrate, bool& skipVerbs, const bool silent
    ) {
-      Count executed = 0;
+      size_t executed = 0;
       if (flow.IsDeep() and flow.IsDense()) {
          executed = flow.ForEach([&](const Many& block) {
             // Nest if deep                                             
@@ -299,7 +299,7 @@ namespace Langulus::Flow
       const Many& flow, Many& context, Many& output,
       const bool integrate, bool& skipVerbs, const bool silent
    ) {
-      Count executed = 0;
+      size_t executed = 0;
       bool localSkipVerbs = false;
 
       if (flow.IsDeep() and flow.IsDense()) {

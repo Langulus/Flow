@@ -9,8 +9,8 @@
 #include <Langulus/Verbs/Interpret.hpp>
 #include "Common.hpp"
 
-constexpr Count SerialBlock = sizeof(Count) * 2 + sizeof(DataState);
-constexpr Count SerialTrait = sizeof(Count) + SerialBlock;
+constexpr size_t SerialBlock = sizeof(size_t) * 2 + sizeof(DataState);
+constexpr size_t SerialTrait = sizeof(size_t) + SerialBlock;
 
 
 SCENARIO("Serialization", "[serialization]") {
@@ -85,9 +85,9 @@ SCENARIO("Serialization", "[serialization]") {
          const auto requiredSize =
             SerialBlock
             + txtToken
-            + texts[0].GetCount() + sizeof(Count)
-            + texts[1].GetCount() + sizeof(Count)
-            + texts[2].GetCount() + sizeof(Count);
+            + texts[0].GetCount() + sizeof(size_t)
+            + texts[1].GetCount() + sizeof(size_t)
+            + texts[2].GetCount() + sizeof(size_t);
          REQUIRE(serialized.GetCount() == requiredSize);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -108,9 +108,9 @@ SCENARIO("Serialization", "[serialization]") {
          const auto requiredSize =
             SerialBlock + SerialTrait*3
             + traitToken + nameToken*3 + txtToken*3
-            + texts[0].GetCount() + sizeof(Count)
-            + texts[1].GetCount() + sizeof(Count)
-            + texts[2].GetCount() + sizeof(Count);
+            + texts[0].GetCount() + sizeof(size_t)
+            + texts[1].GetCount() + sizeof(size_t)
+            + texts[2].GetCount() + sizeof(size_t);
          REQUIRE(serialized.GetCount() == requiredSize);
 
 			#if LANGULUS_FEATURE(MANAGED_REFLECTION)

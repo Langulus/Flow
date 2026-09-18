@@ -47,21 +47,21 @@ namespace Langulus::Flow
 {
 
    template<bool DISPATCH, bool DEFAULT, bool FALLBACK>
-   Count Execute(CT::NotVoid auto&, CT::VerbBased auto&);
+   size_t Execute(CT::NotVoid auto&, CT::VerbBased auto&);
 
    /*template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class...BASES>
-   Count ExecuteInBases(CT::NotVoid auto&, CT::VerbBased auto&, Types<BASES...>);
+   size_t ExecuteInBases(CT::NotVoid auto&, CT::VerbBased auto&, Types<BASES...>);
 
    namespace Inner
    {
       template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class BASE>
-      Count ExecuteInBases(CT::NotVoid auto&, CT::VerbBased auto&);
+      size_t ExecuteInBases(CT::NotVoid auto&, CT::VerbBased auto&);
    }*/
 
    template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true>
-   Count DispatchFlat(CT::Deep auto&, CT::VerbBased auto&);
+   size_t DispatchFlat(CT::Deep auto&, CT::VerbBased auto&);
 
    template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true>
-   Count DispatchDeep(CT::Deep auto&, CT::VerbBased auto&);
+   size_t DispatchDeep(CT::Deep auto&, CT::VerbBased auto&);
 
 } // namespace Langulus::Flow

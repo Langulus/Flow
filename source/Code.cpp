@@ -134,7 +134,7 @@ namespace Langulus::Flow
    /// Check if the code container begins with an operator                    
    ///   @param i - the operator to check for                                 
    ///   @return true if the operator matches                                 
-   bool Code::StartsWithOperator(Offset i) const noexcept {
+   bool Code::StartsWithOperator(size_t i) const noexcept {
       const Code token {static_cast<Operator>(i)};
       if (not token or GetCount() < token.GetCount())
          return false;
@@ -232,9 +232,9 @@ namespace Langulus::Flow
    ///   @param precedence - the last parsed operation precedence             
    ///   @param optimize - whether to attempt executing at compile-time       
    ///   @return number of parsed characters from input                       
-   Offset Code::UnknownParser::Parse(const Code& input, Many& lhs, Real precedence, bool optimize) {
+   size_t Code::UnknownParser::Parse(const Code& input, Many& lhs, Real precedence, bool optimize) {
       Many rhs;
-      Offset progress = 0;
+      size_t progress = 0;
       VERBOSE_TAB("Parsing unknown");
       #if ENABLE_VERBOSE()
          if (lhs.IsValid())
@@ -244,7 +244,7 @@ namespace Langulus::Flow
       while (progress < input.GetCount()) {
          // Scan input until end                                        
          Code relevant = input.RightOf(progress);
-         Offset localProgress = 0;
+         size_t localProgress = 0;
          Operator op;
 
          if (relevant[0] == '\0')
@@ -285,8 +285,8 @@ namespace Langulus::Flow
    /// Parse a skippable, no content produced                                 
    ///   @param input - code that starts with a skippable character           
    ///   @return number of parsed characters                                  
-   Offset Code::SkippedParser::Parse(const Code& input) {
-      Offset progress = 0;
+   size_t Code::SkippedParser::Parse(const Code& input) {
+      size_t progress = 0;
       while (progress < input.GetCount()) {
          const auto relevant = input.RightOf(progress);
          const auto asview = Token {relevant};
@@ -336,7 +336,7 @@ namespace Langulus::Flow
    ///   @param input - the code to peek into                                 
    ///   @return the isolated keyword token                                   
    Token Code::KeywordParser::Isolate(const Code& input) noexcept {
-      Offset progress = 0;
+      size_t progress = 0;
       while (progress < input.GetCount()) {
          const auto c = input[progress];
          if (not IsKeywordSymbol(c))
@@ -356,9 +356,9 @@ namespace Langulus::Flow
    ///   @param lhs - [in/out] parsed content goes here (lhs)                 
    ///   @param allowCharge - whether to parse charge (internal use)          
    ///   @return number of parsed characters                                  
-   Offset Code::KeywordParser::Parse(const Code& input, Many& lhs, bool allowCharge) {
+   size_t Code::KeywordParser::Parse(const Code& input, Many& lhs, bool allowCharge) {
       // Isolate the keyword                                            
-      Offset progress = 0;
+      size_t progress = 0;
       const auto keyword = Isolate(input);
       if (keyword.empty())
          PRETTY_ERROR("No keyword parsed");
@@ -416,7 +416,7 @@ namespace Langulus::Flow
    ///   @param keyword - the keyword we'll be disambiguating                 
    ///   @return the disambiguated definition                                 
    AMeta Code::KeywordParser::Disambiguate(
-      const Offset progress, const Code& input, const Token& keyword
+      const size_t progress, const Code& input, const Token& keyword
    ) {
       try
       {
@@ -440,9 +440,9 @@ namespace Langulus::Flow
    ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] parsed content goes here (lhs)                 
    ///   @return number of parsed characters                                  
-   Offset Code::NumberParser::Parse(const Code& input, Many& lhs) {
+   size_t Code::NumberParser::Parse(const Code& input, Many& lhs) {
       Real rhs = 0;
-      Offset progress = 0;
+      size_t progress = 0;
       VERBOSE_TAB("Parsing number");
 
    #if LANGULUS_COMPILER(WASM)
@@ -471,7 +471,7 @@ namespace Langulus::Flow
    ///   @param input - the code to peek into                                 
    ///   @return true if input begins with an operators                       
    Code::Operator Code::OperatorParser::PeekBuiltin(const Code& input) noexcept {
-      for (Offset i = 0; i < Operator::OpCounter; ++i) {
+      for (size_t i = 0; i < Operator::OpCounter; ++i) {
          if (not SerializationRules::Operators[i].mCharge and input.StartsWithOperator(i))
             return Operator(i);
       }
@@ -516,7 +516,7 @@ namespace Langulus::Flow
 
       // Isolate an operator separated by spaces/letters/digits, or     
       // built-in operators, such as '(', '"', etc.                     
-      Offset progress = 0;
+      size_t progress = 0;
       while (progress < input.GetCount()) {
          const auto relevant = input.RightOf(progress);
          if (KeywordParser::Peek(relevant)
@@ -542,10 +542,10 @@ namespace Langulus::Flow
    ///   @param priority - the priority of the last parsed element            
    ///   @param optimize - the priority of the last parsed element            
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::Parse(
+   size_t Code::OperatorParser::Parse(
       Operator op, const Code& input, Many& lhs, Real priority, bool optimize
    ) {
-      Offset progress = 0;
+      size_t progress = 0;
       if (op < Operator::NoOperator) {
          // Skip the operator, we already know it                       
          progress += SerializationRules::Operators[op].mToken.size();
@@ -638,10 +638,10 @@ namespace Langulus::Flow
    ///   @param lhs - [in/out] parsed content goes here (lhs)                 
    ///   @param optimize - attempt compile-time execution                     
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseContent(
+   size_t Code::OperatorParser::ParseContent(
       Code::Operator, const Code& input, Many& lhs, bool optimize
    ) {
-      Offset progress = 0;
+      size_t progress = 0;
 
       // Can define contents for one element at a time                  
       if (lhs.GetCount() > 1)
@@ -769,11 +769,11 @@ namespace Langulus::Flow
    ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] parsed content goes here (lhs)                 
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseString(
+   size_t Code::OperatorParser::ParseString(
       const Code::Operator op, const Code& input, Many& lhs
    ) {
-      Offset progress = 0;
-      Offset depth = 1;
+      size_t progress = 0;
+      size_t depth = 1;
       while (progress < input.GetCount()) {
          // Collect all characters in scope, essentially gobbling them  
          // up into a text container until matching token is reached    
@@ -840,8 +840,8 @@ namespace Langulus::Flow
    ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] here goes the byte sequence                    
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseBytes(const Code& input, Many& lhs) {
-      Offset progress = 0;
+   size_t Code::OperatorParser::ParseBytes(const Code& input, Many& lhs) {
+      size_t progress = 0;
       while (progress < input.GetCount()) {
          const auto c = input[progress];
          if (IsDigit(c)) {
@@ -889,7 +889,7 @@ namespace Langulus::Flow
    ///   @param op - the phase operator                                       
    ///   @param lhs - [in/out] phased content goes here                       
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParsePhase(const Code::Operator op, Many& lhs) {
+   size_t Code::OperatorParser::ParsePhase(const Code::Operator op, Many& lhs) {
       if (op == Operator::Past)
          lhs.MakePast();
       else
@@ -902,10 +902,10 @@ namespace Langulus::Flow
    ///   @param input - the code to parse                                     
    ///   @param lhs - [in/out] selected idea goes here                        
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseKeyword(
+   size_t Code::OperatorParser::ParseKeyword(
       const Code::Operator op, const Code& input, Many& lhs
    ) {
-      Offset progress = 0;
+      size_t progress = 0;
       if (SkippedParser::Peek(input)) {
          PRETTY_ERROR(
             "Syntax error - # and ## should be followed "
@@ -983,10 +983,10 @@ namespace Langulus::Flow
    ///   @param lhs - [in/out] result of the operator goes here               
    ///   @param optimize - whether or not to attempt executing at compile-time
    ///   @return number of parsed characters                                  
-   Offset Code::OperatorParser::ParseReflected(
+   size_t Code::OperatorParser::ParseReflected(
       Verb& op, const Code& input, Many& lhs, bool optimize
    ) {
-      Offset progress = 0;
+      size_t progress = 0;
       Code relevant = input;
 
       // Parse charge if any                                            
@@ -1070,7 +1070,7 @@ namespace Langulus::Flow
       }
 
       // Find the charge operator                                       
-      for (Offset i = 0; i < Operator::OpCounter; ++i) {
+      for (size_t i = 0; i < Operator::OpCounter; ++i) {
          if (SerializationRules::Operators[i].mCharge
          and relevant.StartsWithOperator(i))
             return Operator(i);
@@ -1083,8 +1083,8 @@ namespace Langulus::Flow
    ///   @param input - the code to parse                                     
    ///   @param charge - [out] parsed charge goes here                        
    ///   @return number of parsed characters                                  
-   Offset Code::ChargeParser::Parse(const Code& input, Charge& charge) {
-      Offset progress = 0;
+   size_t Code::ChargeParser::Parse(const Code& input, Charge& charge) {
+      size_t progress = 0;
       VERBOSE_TAB("Parsing charge");
 
       while (progress < input.GetCount()) {
@@ -1101,7 +1101,7 @@ namespace Langulus::Flow
 
          // Find the charge operator                                    
          auto op = Operator::NoOperator;
-         for (Offset i = 0; i < Operator::OpCounter; ++i) {
+         for (size_t i = 0; i < Operator::OpCounter; ++i) {
             if (SerializationRules::Operators[i].mCharge
             and relevant.StartsWithOperator(i)) {
                op = Operator(i);

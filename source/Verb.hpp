@@ -160,7 +160,7 @@ namespace Langulus::Flow
       explicit operator Code() const;
 
       template<bool OR>
-      Count CompleteDispatch(Count, Abandoned<Many>&&);
+      size_t CompleteDispatch(size_t, Abandoned<Many>&&);
 
       ///                                                                     
       ///   Flow                                                              

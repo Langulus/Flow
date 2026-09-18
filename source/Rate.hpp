@@ -80,29 +80,29 @@ namespace Langulus::Flow
       );
 
       // Rates that are considered shader stages, mapped to ShaderStage 
-      static constexpr Offset StagesBegin = Enum::Vertex;
-      static constexpr Offset StagesEnd = Enum::Counter;
-      static constexpr Count  StagesCount = StagesEnd - StagesBegin;
+      static constexpr size_t StagesBegin = Enum::Vertex;
+      static constexpr size_t StagesEnd = Enum::Counter;
+      static constexpr size_t  StagesCount = StagesEnd - StagesBegin;
 
       // Rates that are considered uniforms                             
-      static constexpr Offset UniformBegin = Enum::Tick;
-      static constexpr Offset UniformEnd = StagesBegin;
-      static constexpr Count  UniformCount = UniformEnd - UniformBegin;
+      static constexpr size_t UniformBegin = Enum::Tick;
+      static constexpr size_t UniformEnd = StagesBegin;
+      static constexpr size_t  UniformCount = UniformEnd - UniformBegin;
 
       // Rates that are considered inputs                               
-      static constexpr Offset InputBegin = UniformBegin;
-      static constexpr Offset InputEnd = StagesEnd;
-      static constexpr Count  InputCount = InputEnd - InputBegin;
+      static constexpr size_t InputBegin = UniformBegin;
+      static constexpr size_t InputEnd = StagesEnd;
+      static constexpr size_t  InputCount = InputEnd - InputBegin;
 
       // Rates that are considered static                               
-      static constexpr Offset StaticUniformBegin = UniformBegin;
-      static constexpr Offset StaticUniformEnd = Enum::Camera;
-      static constexpr Count  StaticUniformCount = StaticUniformEnd - StaticUniformBegin;
+      static constexpr size_t StaticUniformBegin = UniformBegin;
+      static constexpr size_t StaticUniformEnd = Enum::Camera;
+      static constexpr size_t  StaticUniformCount = StaticUniformEnd - StaticUniformBegin;
 
       // Rates that are considered dynamic                              
-      static constexpr Offset DynamicUniformBegin = StaticUniformEnd;
-      static constexpr Offset DynamicUniformEnd = UniformEnd;
-      static constexpr Count  DynamicUniformCount = DynamicUniformEnd - DynamicUniformBegin;
+      static constexpr size_t DynamicUniformBegin = StaticUniformEnd;
+      static constexpr size_t DynamicUniformEnd = UniformEnd;
+      static constexpr size_t  DynamicUniformCount = DynamicUniformEnd - DynamicUniformBegin;
 
    public:
       constexpr RefreshRate() noexcept = default;
@@ -115,10 +115,10 @@ namespace Langulus::Flow
       constexpr bool IsAttribute() const noexcept;
       constexpr bool IsInput() const noexcept;
       constexpr bool IsShaderStage() const noexcept;
-      constexpr auto GetInputIndex() const -> Offset;
-      constexpr auto GetStaticUniformIndex() const -> Offset;
-      constexpr auto GetDynamicUniformIndex() const -> Offset;
-      constexpr auto GetStageIndex() const -> Offset;
+      constexpr auto GetInputIndex() const -> size_t;
+      constexpr auto GetStaticUniformIndex() const -> size_t;
+      constexpr auto GetDynamicUniformIndex() const -> size_t;
+      constexpr auto GetStageIndex() const -> size_t;
 
       constexpr operator Enum () const noexcept {
          return static_cast<Enum>(mMode);

@@ -251,7 +251,7 @@ namespace Langulus::Verbs
          }
          else for (auto& idx : indices) {
             // Retrieve specified abilities by index                    
-            Count counter = 0;
+            size_t counter = 0;
             for (auto& ability : type->mAbilities) {
                if (counter == idx.GetOffset()) {
                   selectedVerbs << &ability.second;

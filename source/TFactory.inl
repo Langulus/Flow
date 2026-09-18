@@ -84,7 +84,7 @@ namespace Langulus::Flow
          " cells used in ", Base::mFrames.GetCount(), " frames): "
       );
 
-      Count counter = 0;
+      size_t counter = 0;
       for (auto& item : *this) {
          Logger::Info(counter++, "] ", item, ", ",
             item.GetReferences(), " references");

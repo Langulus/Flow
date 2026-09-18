@@ -111,7 +111,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb to execute                                    
    ///   @return the number of successful executions                          
    template<bool DISPATCH, bool DEFAULT, bool FALLBACK>
-   Count Execute(CT::NotVoid auto& context, CT::VerbBased auto& verb) {
+   size_t Execute(CT::NotVoid auto& context, CT::VerbBased auto& verb) {
       using T = Deref<decltype(context)>;
 
       // Always reset verb progress prior to execution                  
@@ -190,7 +190,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb to send over                                  
    ///   @return the number of successful executions                          
    template<bool RESOLVE, bool DISPATCH, bool DEFAULT>
-   Count DispatchFlat(CT::Deep auto& context, CT::VerbBased auto& verb) {
+   size_t DispatchFlat(CT::Deep auto& context, CT::VerbBased auto& verb) {
       /*if (not context or verb.IsMonocast()) {
          if (context.IsInvalid()) {
             // Context is empty and doesn't have any relevant states,   
@@ -219,11 +219,11 @@ namespace Langulus::Flow
          return verb.GetSuccesses();
       }
 
-      Count successCount = 0;
+      size_t successCount = 0;
       auto output = Many::FromState(context);
 
       // Iterate elements in the current context                        
-      for (Count i = 0; i < context.GetCount(); ++i) {
+      for (size_t i = 0; i < context.GetCount(); ++i) {
          //verb.SetSource(context.GetElement(i));
          auto ith = context.GetElement(i);
          if constexpr (RESOLVE)
@@ -267,7 +267,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb to execute                                    
    ///   @return the number of successful executions                          
    template<bool RESOLVE, bool DISPATCH, bool DEFAULT>
-   Count DispatchDeep(CT::Deep auto& context, CT::VerbBased auto& verb) {
+   size_t DispatchDeep(CT::Deep auto& context, CT::VerbBased auto& verb) {
       /*if (not context or verb.IsMonocast()) {
          if (context.IsInvalid()) {
             // Context is empty and doesn't have any relevant states,   
@@ -299,9 +299,9 @@ namespace Langulus::Flow
       if (context.IsDeep()) {
          // Nest if context is deep                                     
          // There is no escape from this scope                          
-         Count successCount = 0;
+         size_t successCount = 0;
          auto output = Many::FromState(context);
-         for (Count i = 0; i < context.GetCount(); ++i) {
+         for (size_t i = 0; i < context.GetCount(); ++i) {
             DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(
                context.template Get<Many>(i), verb);
 
@@ -325,9 +325,9 @@ namespace Langulus::Flow
          // Nest if context is trait                                    
          // Traits are considered deep only when executing in them      
          // There is no escape from this scope                          
-         Count successCount = 0;
+         size_t successCount = 0;
          auto output = Many::FromState(context);
-         for (Count i = 0; i < context.GetCount(); ++i) {
+         for (size_t i = 0; i < context.GetCount(); ++i) {
             auto& t = context.template Get<Trait>(i);
             if constexpr (CT::Constant<decltype(context)>) {
                DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(

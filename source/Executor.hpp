@@ -10,7 +10,7 @@
 
 namespace Langulus::Annies
 {
-   class Many;
+   struct Many;
 }
 
 namespace Langulus::Flow

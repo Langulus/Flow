@@ -58,7 +58,7 @@ namespace Langulus::Flow
       using CTTI_Named = Yes<"Code">;
       using CTTI_Files = Yes<"flow">;
       using CTTI_Bases = Annies::Text;
-      using Operator = Serial::Operator;
+      using Operator   = Serial::Operator;
 
       using Annies::Text::Text;
 
@@ -169,10 +169,3 @@ namespace Langulus
    /// Convenience operator for code string literals                          
    auto operator ""_code(const char*, ::std::size_t) -> Flow::Code;
 }
-
-LANGULUS_DEFINE_CONSTANT(Yes,     true,    "Yes",     "The true boolean value");
-LANGULUS_DEFINE_CONSTANT(True,    true,    "True",    "The true boolean value");
-LANGULUS_DEFINE_CONSTANT(No,      false,   "No",      "The false boolean value");
-LANGULUS_DEFINE_CONSTANT(False,   false,   "False",   "The false boolean value");
-LANGULUS_DEFINE_CONSTANT(Null,    nullptr, "Null",    "Nothing, literally");
-LANGULUS_DEFINE_CONSTANT(Nothing, nullptr, "Nothing", "Nothing, literally");

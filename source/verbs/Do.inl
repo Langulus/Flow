@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "Do.hpp"
-#include "../TVerb.inl"
 
 
 namespace Langulus::Verbs

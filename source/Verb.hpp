@@ -178,4 +178,4 @@ namespace Langulus::Flow
    using Script = TMany<Verb>;
 }
 
-LANGULUS_MORPHISM(Langulus::Flow::Verb, Langulus::Flow::Code, Langulus::Annies::Text);
+//LANGULUS_MORPHISM(Langulus::Flow::Verb, Langulus::Flow::Code, Langulus::Annies::Text);

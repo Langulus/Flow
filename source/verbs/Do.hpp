@@ -6,26 +6,49 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../TVerb.hpp"
+#include <Langulus/TVerb.hpp>
+#include <Langulus/Many.hpp>
+#include "Langulus/CT/Executable.hpp"
+#include "Langulus/CT/Deep.hpp"
 
 
 namespace Langulus::Verbs
 {
+   struct Do;
+}
 
-   using namespace Flow;
+namespace Langulus::CTTI
+{
+   /// External definition required prior to defining Verbs::Do               
+   /// in order to avoid incompleteness.                                      
+   template<>
+   struct DefineVerb<Verbs::Do> : NamedVerb<"Do", "Undo"> {};
+}
 
-
+namespace Langulus::Verbs
+{
    ///                                                                        
-   ///   Do/Undo verb                                                         
-   /// Used as a runtime dispatcher of composite types                        
-   ///                                                                        
-   struct Do : TVerb<Do> {
-      LANGULUS(POSITIVE_VERB) "Do";
-      LANGULUS(NEGATIVE_VERB) "Undo";
-      LANGULUS(INFO) "Used as a runtime dispatcher of composite types";
+   /// MARK: Do/Undo                                                          
+   ///   Serves as a level of indirection between context and verb.           
+   /// When added as an ability to a thing, that thing can now route all      
+   /// verbs through itself, before executing them (or not). It basically     
+   /// states that the entity has the ability to "do things differently".     
+   /// Useful for implementing dispatchers, debuggers, interpreters of entire 
+   /// flows, etc.                                                            
+   ///   For example, in the game Mindmaze, the maze is essentially           
+   /// an interpreter that converts a script into a maze. Different verbs     
+   /// do completely different things in that context - they attach hallways, 
+   /// rooms, place stuff in the rooms, etc. All events that happen to a      
+   /// maze object go through the maze's Do ability and get interpreted       
+   /// accordingly to the local rules.                                        
+   ///   @attention this verb goes through all branches without doing         
+   ///      any short-circuiting.                                             
+   struct Do : Annies::TVerb<Do> {
+      using CTTI_DefineVerb = NamedVerb<"Do", "Undo">;
+      using CTTI_Info       = Yes<"An indirection between context and flow. Not short-circuited.">;
 
       using TVerb::TVerb;
-      using TVerb::operator ==;
+      //using TVerb::operator ==;
 
       template<CT::Dense, CT::NotVoid...>
       static constexpr bool AvailableFor() noexcept;
@@ -39,29 +62,16 @@ namespace Langulus::Verbs
 
       static Do In(auto&&, auto&&);
    };
-
-} // namespace Langulus::Verbs
-
+}
 
 namespace Langulus::Flow
 {
-
    template<bool DISPATCH, bool DEFAULT, bool FALLBACK>
-   size_t Execute(CT::NotVoid auto&, CT::VerbBased auto&);
-
-   /*template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class...BASES>
-   size_t ExecuteInBases(CT::NotVoid auto&, CT::VerbBased auto&, Types<BASES...>);
-
-   namespace Inner
-   {
-      template<bool DISPATCH, bool DEFAULT, bool FALLBACK, class BASE>
-      size_t ExecuteInBases(CT::NotVoid auto&, CT::VerbBased auto&);
-   }*/
+   size_t Execute(CT::NotVoid auto&, CT::Executable auto&);
 
    template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true>
-   size_t DispatchFlat(CT::Deep auto&, CT::VerbBased auto&);
+   size_t DispatchFlat(CT::Deep auto&, CT::Executable auto&);
 
    template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true>
-   size_t DispatchDeep(CT::Deep auto&, CT::VerbBased auto&);
-
-} // namespace Langulus::Flow
+   size_t DispatchDeep(CT::Deep auto&, CT::Executable auto&);
+}

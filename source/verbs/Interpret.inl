@@ -6,18 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../TVerb.inl"
 #include "Interpret.hpp"
-#include "Create.hpp"
-#include "Do.hpp"
-
-#include <Langulus/Many.hpp>
-#include <Langulus/Map.hpp>
-#include <Langulus/Set.hpp>
-#include <Langulus/Pair.hpp>
-#include <Langulus/TOwn.hpp>
-#include <Langulus/TRef.hpp>
-#include <Langulus/Neat.hpp>
 
 #if 0
    #define VERBOSE_CONVERSION(...) Logger::Verbose(__VA_ARGS__)

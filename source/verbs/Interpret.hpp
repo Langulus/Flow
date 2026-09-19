@@ -6,23 +6,32 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../TVerb.hpp"
+#include <Langulus/TVerb.hpp>
+#include <Langulus/Many.hpp>
 
 
 namespace Langulus::Verbs
 {
+   struct Interpret;
+}
 
-   using namespace Flow;
+namespace Langulus::CTTI
+{
+   /// External definition required prior to defining Verbs::Interpret        
+   /// in order to avoid incompleteness.                                      
+   template<>
+   struct DefineVerb<Verbs::Interpret> : NamedVerb<"Interpret"> {};
+}
 
-
+namespace Langulus::Verbs
+{
    ///                                                                        
    ///   Interpret                                                            
    /// Performs conversion                                                    
    ///                                                                        
-   struct Interpret : TVerb<Interpret> {
-      LANGULUS(VERB) "Interpret";
-      LANGULUS(OPERATOR) " => ";
-      LANGULUS(INFO) "Performs conversion";
+   struct Interpret : Annies::TVerb<Interpret> {
+      using CTTI_DefineVerbOp = NamedOperator<" => ">;
+      using CTTI_Info         = Yes<"Performs conversion">;
 
       using TVerb::TVerb;
       using TVerb::operator ==;
@@ -39,20 +48,4 @@ namespace Langulus::Verbs
 
       static bool ExecuteDefault(const Many&, Verb&);
    };
-   
-
-   ///                                                                        
-   ///   Statically optimized interpret verb                                  
-   ///   @tparam AS - what are we converting to?                              
-   ///                                                                        
-   template<CT::NotVoid AS>
-   struct InterpretAs : Interpret {
-      LANGULUS_BASES(Interpret);
-      using Interpret::Interpret;
-      using Type = AS;
-
-      InterpretAs();
-      static bool ExecuteDefault(const Many&, Verb&);
-   };
-
-} // namespace Langulus::Verbs
+}

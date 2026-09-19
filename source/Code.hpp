@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Executor.hpp"
-#include <Langulus/Annies/Text.hpp>
+#include <Langulus/Text.hpp>
 
 
 namespace Langulus::Flow
@@ -19,7 +19,6 @@ namespace Langulus::CT
 {
    namespace Inner
    {
-   
       /// Workaround, because of MSVC ICEs introduced in 19.40.33811.0        
       /// Hopefully it will be resolved by them one day                       
       template<class T>
@@ -38,8 +37,7 @@ namespace Langulus::CT
       template<class...T>
       concept CodifiableByConstructor = requires (const T&...a) {
          ((::Langulus::Flow::Code {a}), ...); };
-
-   } // namespace Langulus::CT::Inner
+   }
 
    /// A codifiable type is one that has either an implicit or explicit       
    /// cast operator to Code type, or can be used to explicitly initialize a  
@@ -47,41 +45,26 @@ namespace Langulus::CT
    template<class...T>
    concept Codifiable = ((Inner::CodifiableByOperator<T>
         or Inner::CodifiableByConstructor<T>) and ...);
-
-} // namespace Langulus::CT
+}
 
 namespace Langulus::Flow
 {
-
    ///                                                                        
    ///   Langulus code container, parser, serializer and deserializer         
    ///                                                                        
-   struct Code : A::Code {
-      LANGULUS(NAME) "Code";
-      LANGULUS(FILES) "flow";
-      LANGULUS(ACT_AS) Code;
-      LANGULUS_BASES(A::Code);
+   struct Code : Annies::Text {
+      using CTTI_Named = Yes<"Code">;
+      using CTTI_Files = Yes<"flow">;
+      using CTTI_Bases = Annies::Text;
+      using Operator = Serial::Operator;
 
-      /// The presence of this structure makes Code a serializer              
-      struct SerializationRules : Text::SerializationRules {
-         // Code serializer can't be lossy - it's isomorphic            
-         static constexpr bool CriticalFailure = true;
-         static constexpr bool SkipElements = false;
-      };
+      using Annies::Text::Text;
 
-      using Operator = SerializationRules::Operator;
-
-      using A::Code::Code;
-
-      template<CT::BuiltinNumber T> requires (not CT::Character<T>)
-      explicit Code(const T&);
-
-      using A::Code::operator ==;
+      explicit Code(CT::Number auto const&);
 
       LANGULUS_API(FLOW) Many Parse(bool optimize = true) const;
-
-      LANGULUS_API(FLOW) Code RightOf(size_t) const IF_UNSAFE(noexcept);
-      LANGULUS_API(FLOW) Code LeftOf(size_t) const IF_UNSAFE(noexcept);
+      LANGULUS_API(FLOW) Code RightOf(size_t) const assumptious;
+      LANGULUS_API(FLOW) Code LeftOf(size_t) const assumptious;
       LANGULUS_API(FLOW) bool StartsWithSpecial() const noexcept;
       LANGULUS_API(FLOW) bool StartsWithSkippable() const noexcept;
       LANGULUS_API(FLOW) bool EndsWithSkippable() const noexcept;
@@ -110,24 +93,24 @@ namespace Langulus::Flow
       /// Parser for unknown expressions                                      
       /// An unknown-expressions will be scanned to figure what it contains   
       struct LANGULUS_API(FLOW) UnknownParser {
-         static size_t Parse(const Code&, Many&, Real, bool optimize);
+         static auto Parse(const Code&, Many&, Real, bool optimize) -> size_t;
       };
 
       /// Parser for keyword expressions                                      
       /// A key-expression is any expression that begins with a letter        
       struct LANGULUS_API(FLOW) KeywordParser {
-         static size_t Parse(const Code&, Many&, bool allowCharge = true);
+         static auto Parse(const Code&, Many&, bool allowCharge = true) -> size_t;
          static bool Peek(const Code&) noexcept;
-         static Token Isolate(const Code&) noexcept;
+         static auto Isolate(const Code&) noexcept -> Token;
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            static AMeta Disambiguate(size_t, const Code&, const Token&);
+            static auto Disambiguate(size_t, const Code&, const Token&) -> AMeta;
          #endif
       };
 
       /// Parser for skipping expressions                                     
       /// A skip-expression is any that begins with escapes, tabs, or spaces  
       struct LANGULUS_API(FLOW) SkippedParser {
-         static size_t Parse(const Code&);
+         static auto Parse(const Code&) -> size_t;
          static bool Peek(const Code&) noexcept;
       };
 
@@ -135,7 +118,7 @@ namespace Langulus::Flow
       /// A num-expression is any that begins with a digit, a minus           
       /// followed by a digit, or a dot followed by a digit                   
       struct LANGULUS_API(FLOW) NumberParser {
-         static size_t Parse(const Code&, Many&);
+         static auto Parse(const Code&, Many&) -> size_t;
          static bool Peek(const Code&) noexcept;
       };
 
@@ -143,18 +126,18 @@ namespace Langulus::Flow
       /// An op-expression is one matching the built-in ones, or one matching 
       /// one in reflected verb database, where LHS is not DMeta or VMeta     
       struct LANGULUS_API(FLOW) OperatorParser {
-         static size_t Parse(Operator, const Code&, Many&, Real, bool optimize);
-         static Operator PeekBuiltin(const Code&) noexcept;
-         static Operator Peek(const Code&) noexcept;
-         static Token Isolate(const Code&) noexcept;
+         static auto Parse(Operator, const Code&, Many&, Real, bool optimize) -> size_t;
+         static auto PeekBuiltin(const Code&) noexcept -> Operator;
+         static auto Peek(const Code&) noexcept -> Operator;
+         static auto Isolate(const Code&) noexcept -> Token;
 
       private:
-         static size_t ParseContent(Code::Operator, const Code&, Many&, bool optimize);
-         static size_t ParseString(Code::Operator, const Code&, Many&);
-         static size_t ParseBytes(const Code&, Many&);
-         static size_t ParseKeyword(Code::Operator, const Code&, Many&);
-         static size_t ParsePhase(Code::Operator, Many&);
-         static size_t ParseReflected(Verb&, const Code&, Many&, bool optimize);
+         static auto ParseContent(Operator, const Code&, Many&, bool optimize) -> size_t;
+         static auto ParseString(Operator, const Code&, Many&) -> size_t;
+         static auto ParseBytes(const Code&, Many&) -> size_t;
+         static auto ParseKeyword(Operator, const Code&, Many&) -> size_t;
+         static auto ParsePhase(Operator, Many&) -> size_t;
+         static auto ParseReflected(Verb&, const Code&, Many&, bool optimize) -> size_t;
 
          static void InsertContent(Many&, Many&);
       };
@@ -162,17 +145,27 @@ namespace Langulus::Flow
       /// Parser for chargers                                                 
       /// A charge-expression is any operator *^@! after a DMeta or VMeta     
       struct LANGULUS_API(FLOW) ChargeParser {
-         static size_t Parse(const Code&, Charge&);
-         static Operator Peek(const Code&) noexcept;
+         static auto Parse(const Code&, Charge&) -> size_t;
+         static auto Peek(const Code&) noexcept -> Operator;
       };
    };
+}
 
-} // namespace Langulus::Flow
+namespace Langulus::CTTI
+{
+   /// The presence of this structure makes Code a CT::Serializer             
+   template<>
+   struct Serializer<Flow::Code> : Serializer<Annies::Text> {
+      // Code serializer can't be lossy - it's isomorphic               
+      static constexpr bool CriticalFailure = true;
+      static constexpr bool SkipElements = false;
+   };
+}
 
 namespace Langulus
 {
    /// Convenience operator for code string literals                          
-   Flow::Code operator ""_code(const char*, ::std::size_t);
+   auto operator ""_code(const char*, ::std::size_t) -> Flow::Code;
 }
 
 LANGULUS_DEFINE_CONSTANT(Yes,     true,    "Yes",     "The true boolean value");

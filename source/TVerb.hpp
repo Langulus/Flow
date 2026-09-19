@@ -17,8 +17,7 @@ namespace Langulus::Flow
    ///                                                                        
    template<class VERB>
    struct TVerb : Verb {
-      LANGULUS_BASES(Verb);
-
+      using CTTI_Bases = Verb;
       using VerbType = VERB;
 
       ///                                                                     

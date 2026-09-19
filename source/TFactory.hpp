@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Common.hpp"
-#include <Langulus/Annies/THive.hpp>
+#include <Langulus/THive.hpp>
 
 
 namespace Langulus::Flow

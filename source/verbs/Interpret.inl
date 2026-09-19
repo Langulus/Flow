@@ -11,13 +11,13 @@
 #include "Create.hpp"
 #include "Do.hpp"
 
-#include <Langulus/Annies/Many.hpp>
-#include <Langulus/Annies/Map.hpp>
-#include <Langulus/Annies/Set.hpp>
-#include <Langulus/Annies/Pair.hpp>
-#include <Langulus/Annies/Own.hpp>
-#include <Langulus/Annies/Ref.hpp>
-#include <Langulus/Annies/Neat.hpp>
+#include <Langulus/Many.hpp>
+#include <Langulus/Map.hpp>
+#include <Langulus/Set.hpp>
+#include <Langulus/Pair.hpp>
+#include <Langulus/TOwn.hpp>
+#include <Langulus/TRef.hpp>
+#include <Langulus/Neat.hpp>
 
 #if 0
    #define VERBOSE_CONVERSION(...) Logger::Verbose(__VA_ARGS__)

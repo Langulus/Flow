@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Common.hpp"
-#include <Langulus/Annies/Neat.hpp>
+#include <Langulus/Neat.hpp>
 #include <chrono>
 #include <thread>
 #include <fmt/chrono.h>

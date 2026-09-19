@@ -11,7 +11,7 @@
 #include "Associate.inl"
 #include "Select.inl"
 #include "Interpret.inl"
-#include <Langulus/Annies/TMap.hpp>
+#include <Langulus/TMap.hpp>
 
 #if 0
    #define VERBOSE_CREATION(...) Logger::Verbose(__VA_ARGS__)

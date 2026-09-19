@@ -7,8 +7,8 @@
 ///                                                                           
 #pragma once
 #include "Common.hpp"
-#include <Langulus/Annies/Many.hpp>
-#include <Langulus/Annies/Ref.hpp>
+#include <Langulus/Many.hpp>
+#include <Langulus/TRef.hpp>
 
 
 namespace Langulus::Flow

@@ -7,12 +7,12 @@
 ///                                                                           
 #pragma once
 #include "Common.hpp"
-#include <Langulus/Annies/Verb.hpp>
+#include "Langulus/CT/Convertible.hpp"
+#include <Langulus/Verb.hpp>
 
 
 namespace Langulus::Flow
 {
-
    struct Code;
 
 
@@ -24,10 +24,9 @@ namespace Langulus::Flow
    /// theory found on verbs, so this is the natural name for such thing      
    ///                                                                        
    struct Verb : A::Verb {
-      LANGULUS(NAME) "Verb";
-      LANGULUS(ACT_AS) Verb;
-      LANGULUS_CONVERTS_TO(Code, Text);
-      LANGULUS_BASES(A::Verb);
+      using CTTI_Named = Yes<"Verb">;
+      using CTTI_ReflectAs = Verb;
+      using CTTI_Bases = A::Verb;
 
       ///                                                                     
       ///   Construction                                                      
@@ -160,7 +159,7 @@ namespace Langulus::Flow
       explicit operator Code() const;
 
       template<bool OR>
-      size_t CompleteDispatch(size_t, Abandoned<Many>&&);
+      size_t CompleteDispatch(size_t, Abandon<Many>&&);
 
       ///                                                                     
       ///   Flow                                                              
@@ -177,5 +176,6 @@ namespace Langulus::Flow
 
    /// A handy container for verbs                                            
    using Script = TMany<Verb>;
+}
 
-} // namespace Langulus::Flow
+LANGULUS_MORPHISM(Langulus::Flow::Verb, Langulus::Flow::Code, Langulus::Annies::Text);

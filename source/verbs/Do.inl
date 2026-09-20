@@ -7,14 +7,14 @@
 ///                                                                           
 #pragma once
 #include "Do.hpp"
+#include <Langulus/Tag.hpp>
 
 
 namespace Langulus::Verbs
 {
-
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Dense T, CT::NotVoid...A>
+   /*template<CT::Dense T, CT::NotVoid...A>
    constexpr bool Do::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Do(v); };
@@ -38,65 +38,33 @@ namespace Langulus::Verbs
             typedContext->Do(verb, args...);
          };
       }
-   }
+   }*/
 
    /// Execute the do/undo verb in a specific context                         
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb has been satisfied                              
-   bool Do::ExecuteIn(CT::Dense auto& context, Verb& verb) {
+   /*bool Do::ExecuteIn(CT::Dense auto& context, Verb& verb) {
       using T = Deref<decltype(context)>;
       static_assert(Do::AvailableFor<T>(),
          "Verb is not available for this context, this shouldn't be reached by flow");
       context.Do(verb);
       return verb.IsDone();
-   }
-
-   /// Default do/undo in an immutable context                                
-   ///   @param context - the block to execute in                             
-   ///   @param verb - do/undo verb                                           
-   inline bool Do::ExecuteDefault(const Many&, Verb&) {
-      //TODO
-      return true;
-   }
-
-   /// Default do/undo in a mutable context                                   
-   ///   @param context - the block to execute in                             
-   ///   @param verb - do/undo verb                                           
-   inline bool Do::ExecuteDefault(Many&, Verb&) {
-      //TODO
-      return true;
-   }
-
-   /// Stateless execution                                                    
-   ///   @param verb - the do/undo verb                                       
-   ///   @return true if verb was satisfied                                   
-   inline bool Do::ExecuteStateless(Verb& verb) {
-      if (not verb)
-         return false;
-
-      //TODO execute
-      return true;
-   }
+   }*/
 
    /// Wrap anything in a Do verb, executing stuff in a specific context      
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb/flow to execute                               
    ///   @return the Do verb                                                  
-   inline Do Do::In(auto&& context, auto&& verb) {
-      using CS = IntentOf<decltype(context)>;
-      using VS = IntentOf<decltype(verb)>;
-      Do v = VS::Nest(verb);
-      v.SetSource(CS::Nest(context));
-      return Abandon(v);
-   }
-
-} // namespace Langulus::Verbs
-
+   /*inline Do Do::In(auto&& context, auto&& verb) {
+      Do v = FWDIntent(verb);
+      v.context = FWDIntent(context);
+      return v;
+   }*/
+}
 
 namespace Langulus::Flow
 {
-
    /// Invoke a single verb on a single context                               
    ///   @tparam DISPATCH - whether or not to use context's dispatcher, if    
    ///      any is statically available or reflected. This is mainly used for 
@@ -109,14 +77,12 @@ namespace Langulus::Flow
    ///   @param context - the context in which to execute in                  
    ///   @param verb - the verb to execute                                    
    ///   @return the number of successful executions                          
-   template<bool DISPATCH, bool DEFAULT, bool FALLBACK>
-   size_t Execute(CT::NotVoid auto& context, CT::VerbBased auto& verb) {
-      using T = Deref<decltype(context)>;
-
+   template<bool DISPATCH, bool DEFAULT, bool FALLBACK, CT::NotVoid T>
+   size_t Execute(T& context, CT::Executable auto& verb) {
       // Always reset verb progress prior to execution                  
       verb.Undo();
 
-      if constexpr (not FALLBACK and DISPATCH and CT::Dispatcher<T>) {
+      if constexpr (not FALLBACK and DISPATCH and requires { context.Do(verb); }) {
          // Custom reflected dispatcher is available                    
          // It's your responsibility to implement it adequately         
          // Keep in mind, that once you declare a custom Do for your    
@@ -129,9 +95,9 @@ namespace Langulus::Flow
          if constexpr (FALLBACK) {
             // Execute the default verb                                 
             if (context.IsValid())
-               Verb::GenericExecuteDefault(context, verb);
+               GenericExecuteDefault(context, verb);
             else
-               Verb::GenericExecuteStateless(verb);
+               GenericExecuteStateless(verb);
          }
          else if constexpr (DISPATCH) {
             // Context might have a dispatcher                          
@@ -144,19 +110,19 @@ namespace Langulus::Flow
                      if (meta->mDispatcherConstant)
                         meta->mDispatcherConstant(context.GetRaw(), verb);
                      else
-                        Verb::GenericExecuteIn(context, verb);
+                        GenericExecuteIn(context, verb);
                   }
                   else if (meta->mDispatcherConstant)
                      meta->mDispatcherConstant(context.GetRaw(), verb);
                   else if (meta->mDispatcherMutable)
                      meta->mDispatcherMutable(context.GetRaw(), verb);
                   else
-                     Verb::GenericExecuteIn(context, verb);
+                     GenericExecuteIn(context, verb);
                }
             }
-            else Verb::GenericExecuteIn(context, verb);
+            else GenericExecuteIn(context, verb);
          }
-         else Verb::GenericExecuteIn(context, verb);
+         else GenericExecuteIn(context, verb);
 
          if (verb.IsDone())
             return verb.GetSuccesses();
@@ -189,7 +155,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb to send over                                  
    ///   @return the number of successful executions                          
    template<bool RESOLVE, bool DISPATCH, bool DEFAULT>
-   size_t DispatchFlat(CT::Deep auto& context, CT::VerbBased auto& verb) {
+   size_t DispatchFlat(CT::Deep auto& context, CT::Executable auto& verb) {
       /*if (not context or verb.IsMonocast()) {
          if (context.IsInvalid()) {
             // Context is empty and doesn't have any relevant states,   
@@ -219,7 +185,7 @@ namespace Langulus::Flow
       }
 
       size_t successCount = 0;
-      auto output = Many::FromState(context);
+      auto output = Many::CopyStates(context);
 
       // Iterate elements in the current context                        
       for (size_t i = 0; i < context.GetCount(); ++i) {
@@ -236,7 +202,7 @@ namespace Langulus::Flow
          if (verb.IsDone()) {
             if (verb.GetOutput()) {
                // Cache output, conserving the context hierarchy        
-               output.SmartPush(IndexBack, Langulus::Move(verb.GetOutput()));
+               output.SmartPush(Index::Back, Langulus::Move(verb.GetOutput()));
             }
 
             ++successCount;
@@ -266,7 +232,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb to execute                                    
    ///   @return the number of successful executions                          
    template<bool RESOLVE, bool DISPATCH, bool DEFAULT>
-   size_t DispatchDeep(CT::Deep auto& context, CT::VerbBased auto& verb) {
+   size_t DispatchDeep(CT::Deep auto& context, CT::Executable auto& verb) {
       /*if (not context or verb.IsMonocast()) {
          if (context.IsInvalid()) {
             // Context is empty and doesn't have any relevant states,   
@@ -299,7 +265,7 @@ namespace Langulus::Flow
          // Nest if context is deep                                     
          // There is no escape from this scope                          
          size_t successCount = 0;
-         auto output = Many::FromState(context);
+         auto output = Many::CopyStates(context);
          for (size_t i = 0; i < context.GetCount(); ++i) {
             DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(
                context.template Get<Many>(i), verb);
@@ -307,7 +273,7 @@ namespace Langulus::Flow
             if (verb.IsDone()) {
                if (verb.GetOutput()) {
                   // Cache output, conserving the context hierarchy     
-                  output.SmartPush(IndexBack, Langulus::Move(verb.GetOutput()));
+                  output.SmartPush(Index::Back, Langulus::Move(verb.GetOutput()));
                }
 
                ++successCount;
@@ -320,14 +286,14 @@ namespace Langulus::Flow
          else
             return verb.template CompleteDispatch<false>(successCount, Abandon(output));
       }
-      else if (context.template Is<Trait>()) {
+      else if (context.template Is<Tag>()) {
          // Nest if context is trait                                    
          // Traits are considered deep only when executing in them      
          // There is no escape from this scope                          
          size_t successCount = 0;
-         auto output = Many::FromState(context);
+         auto output = Many::CopyStates(context);
          for (size_t i = 0; i < context.GetCount(); ++i) {
-            auto& t = context.template Get<Trait>(i);
+            auto& t = context.template Get<Tag>(i);
             if constexpr (CT::Constant<decltype(context)>) {
                DispatchDeep<RESOLVE, DISPATCH, DEFAULT>(
                   static_cast<const Many&>(t), verb);
@@ -340,7 +306,7 @@ namespace Langulus::Flow
             if (verb.IsDone()) {
                if (verb.GetOutput()) {
                   // Cache output, conserving the context hierarchy     
-                  output.SmartPush(IndexBack, Langulus::Move(verb.GetOutput()));
+                  output.SmartPush(Index::Back, Langulus::Move(verb.GetOutput()));
                }
 
                ++successCount;
@@ -359,5 +325,4 @@ namespace Langulus::Flow
       // default verbs, eventually                                      
       return DispatchFlat<RESOLVE, DISPATCH, DEFAULT>(context, verb);
    }
-
-} // namespace Langulus::Flow
+}

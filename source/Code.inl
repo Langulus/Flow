@@ -15,16 +15,16 @@ namespace Langulus::Flow
    /// Convert a number type to text                                          
    /// Notice that this constructor explicitly avoids character types         
    ///   @param number - the number to stringify                              
-   template<CT::BuiltinNumber T> requires (not CT::Character<T>)
+   /*template<CT::BuiltinNumber T> requires (not CT::Character<T>)
    LANGULUS(INLINED) Code::Code(const T& number)
-      : Code {Text::FromNumber(number)} {}
+      : Code {Text::FromNumber(number)} {}*/
 
    /// Remove elements from the left side of Code code                        
    ///   @param offset - the number of elements to discard from the front     
    ///   @return a shallow-copied container with the correct offset           
-   LANGULUS(INLINED)
+   /*LANGULUS(INLINED)
    Code Code::RightOf(size_t offset) const IF_UNSAFE(noexcept) {
-      return offset < mCount ? Text::Select(offset) : Code {};
+      return offset < GetCount() ? Text::Select(offset) : Code {};
    }
 
    /// Remove elements from the right side of Code code                       
@@ -33,21 +33,21 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    Code Code::LeftOf(size_t offset) const IF_UNSAFE(noexcept) {
       return offset > 0 ? Text::Select(0, offset) : Code {};
-   }
+   }*/
 
    /// Check if the Code container begins with special elements, such as      
    /// special characters or escape sequences, like colors                    
    ///   @return true if the first symbol is special                          
-   LANGULUS(INLINED)
+   /*LANGULUS(INLINED)
    bool Code::StartsWithSpecial() const noexcept {
       const auto& letter = (*this)[0];
       return letter > 0 and letter < 32;
-   }
+   }*/
 
    /// Check if the Code container begins with skippable elements, such as    
    /// tabs or spaces, comment blocks, or special character sequences (TODO)  
    ///   @return true if the first symbol is skippable                        
-   LANGULUS(INLINED)
+   /*LANGULUS(INLINED)
    bool Code::StartsWithSkippable() const noexcept {
       if (IsEmpty())
          return false;
@@ -58,60 +58,63 @@ namespace Langulus::Flow
 
       const auto asview = Token {*this};
       return asview.starts_with("//") or asview.starts_with("/*");
-   }
+   }*/
 
    /// Check if the Code container begins with skippable elements             
    ///   @return true if the first symbol is a spacer                         
-   LANGULUS(INLINED)
+   /*LANGULUS(INLINED)
    bool Code::EndsWithSkippable() const noexcept {
-      return *last() > 0 and *last() <= 32;
-   }
+      if (IsEmpty())
+         return false;
+      const auto last = *GetAt(-1);
+      return last > 0 and last <= 32;
+   }*/
 
    /// Check if the Code code container begins with a letter or underscore    
    ///   @return true if the first symbol is a letter/underscore              
-   LANGULUS(INLINED)
+   /*LANGULUS(INLINED)
    bool Code::StartsWithLetter() const noexcept {
       const auto c = (*this)[0];
       return IsAlpha(c) or c == '_';
-   }
+   }*/
 
    /// Check if the Code code container ends with a letter or underscore      
    ///   @return true if the last symbol is a letter/underscore               
-   LANGULUS(INLINED)
+   /*LANGULUS(INLINED)
    bool Code::EndsWithLetter() const noexcept {
       const auto c = last();
       return IsAlpha(*c) or *c == '_';
-   }
+   }*/
 
    /// Check if the Code code container begins with a number                  
    ///   @return true if the first symbol is a number                         
-   LANGULUS(INLINED)
+   /*LANGULUS(INLINED)
    bool Code::StartsWithDigit() const noexcept {
       return IsDigit((*this)[0]);
-   }
+   }*/
 
    /// Check if the Code code container ends with a number                    
    ///   @return true if the last symbol is a number                          
-   LANGULUS(INLINED)
+   /*LANGULUS(INLINED)
    bool Code::EndsWithDigit() const noexcept {
       return IsDigit(*last());
-   }
+   }*/
    
    /// Concatenate two text containers                                        
    ///   @param rhs - right hand side                                         
    ///   @return the concatenated text container                              
-   template<class T> requires CT::Codifiable<Deint<T>> LANGULUS(INLINED)
+   /*template<class T> requires CT::Codifiable<Deint<T>> LANGULUS(INLINED)
    Code Code::operator + (T&& rhs) const {
       return Text::ConcatInner<Code>(Forward<T>(rhs));
-   }
+   }*/
 
    /// Concatenate (destructively) text containers                            
    ///   @param rhs - right hand side                                         
    ///   @return a reference to this container                                
-   template<class T> requires CT::Codifiable<Deint<T>> LANGULUS(INLINED)
+   /*template<class T> requires CT::Codifiable<Deint<T>> LANGULUS(INLINED)
    Code& Code::operator += (T&& rhs) {
       return Text::ConcatRelativeInner<Code>(Forward<T>(rhs));
-   }
+   }*/
 
 } // namespace Langulus::Flow
 

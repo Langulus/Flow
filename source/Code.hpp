@@ -62,31 +62,31 @@ namespace Langulus::Flow
 
       using Annies::Text::Text;
 
-      explicit Code(CT::Number auto const&);
+      //explicit Code(CT::Number auto const&);
 
       LANGULUS_API(FLOW) Many Parse(bool optimize = true) const;
-      LANGULUS_API(FLOW) Code RightOf(size_t) const assumptious;
-      LANGULUS_API(FLOW) Code LeftOf(size_t) const assumptious;
-      LANGULUS_API(FLOW) bool StartsWithSpecial() const noexcept;
+      //LANGULUS_API(FLOW) Code RightOf(size_t) const assumptious;
+      //LANGULUS_API(FLOW) Code LeftOf(size_t) const assumptious;
+      /*LANGULUS_API(FLOW) bool StartsWithSpecial() const noexcept;
       LANGULUS_API(FLOW) bool StartsWithSkippable() const noexcept;
       LANGULUS_API(FLOW) bool EndsWithSkippable() const noexcept;
       LANGULUS_API(FLOW) bool StartsWithLetter() const noexcept;
       LANGULUS_API(FLOW) bool EndsWithLetter() const noexcept;
       LANGULUS_API(FLOW) bool StartsWithDigit() const noexcept;
       LANGULUS_API(FLOW) bool EndsWithDigit() const noexcept;
-      LANGULUS_API(FLOW) bool StartsWithOperator(size_t) const noexcept;
+      LANGULUS_API(FLOW) bool StartsWithOperator(size_t) const noexcept;*/
 
       ///                                                                     
       ///   Concatenation                                                     
       ///                                                                     
-      template<class T> requires CT::Codifiable<Deint<T>>
+      /*template<class T> requires CT::Codifiable<Deint<T>>
       Code operator + (T&&) const;
 
       template<class T> requires CT::Codifiable<Deint<T>>
       Code& operator += (T&&);
 
       template<class T>
-      Code& TypeSuffix();
+      Code& TypeSuffix();*/
 
       LANGULUS_API(FLOW) static bool IsReserved(const Text&);
       LANGULUS_API(FLOW) static bool IsValidKeyword(const Text&);

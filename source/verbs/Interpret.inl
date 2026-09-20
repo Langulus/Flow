@@ -7,9 +7,10 @@
 ///                                                                           
 #pragma once
 #include "Interpret.hpp"
+#include <Langulus/TMany.hpp>
 
 #if 0
-   #define VERBOSE_CONVERSION(...) Logger::Verbose(__VA_ARGS__)
+   #define VERBOSE_CONVERSION(...) Logger::Verbose(__VA_ARGS__)//TODO use the new macros
 #else
    #define VERBOSE_CONVERSION(...) LANGULUS(NOOP)
 #endif
@@ -20,7 +21,7 @@ namespace Langulus::Verbs
    
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Dense T, CT::NotVoid...A>
+   /*template<CT::Dense T, CT::NotVoid...A>
    constexpr bool Interpret::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Interpret(v); };
@@ -44,20 +45,20 @@ namespace Langulus::Verbs
             typedContext->Interpret(verb, args...);
          };
       }
-   }
+   }*/
 
    /// Execute the interpretation verb in a specific context                  
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb has been satisfied                              
-   template<CT::Dense T>
+   /*template<CT::Dense T>
    bool Interpret::ExecuteIn(T& context, Verb& verb) {
       static_assert(Interpret::AvailableFor<T>(),
          "Verb is not available for this context"
          "(this shouldn't be reached by flow)");
       context.Interpret(verb);
       return verb.IsDone();
-   }
+   }*/
 
    /// Execute the default verb in an immutable context                       
    /// It simply invokes Block::Convert and relies on reflected converters    
@@ -65,9 +66,9 @@ namespace Langulus::Verbs
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
    inline bool Interpret::ExecuteDefault(const Many& context, Verb& verb) {
-      verb.ForEach([&](DMeta to) {
-         auto result = Many::FromMeta(to);
-         if (context.Convert(result))
+      verb.ForEach([&](RTTI::DMeta to) {
+         auto result = Many::Typed(to);
+         if (context.ConvertTo(result))
             verb << Abandon(result);
       });
 
@@ -76,7 +77,7 @@ namespace Langulus::Verbs
 
    /// Specialized interpret verb default construction adds the TO type as    
    /// an argument automatically                                              
-   template<CT::NotVoid TO>
+   /*template<CT::NotVoid TO>
    InterpretAs<TO>::InterpretAs() {
       static_assert(sizeof(InterpretAs) == sizeof(A::Verb));
       SetArgument(MetaOf<TO>());
@@ -107,231 +108,53 @@ namespace Langulus::Verbs
       }
 
       return false;
-   }
+   }*/
 
    /// Statically optimized interpret verb                                    
    ///   @tparam TO - what are we converting to?                              
    ///   @param from - what to convert                                        
    ///   @return the converted                                                
-   template<CT::Decayed TO, CT::Decayed FROM>
+   template<CT::Decayed TO, CT::Decayed FROM> requires (not Same<TO, FROM>)
    TO Interpret::To(const FROM& from) {
-      if constexpr (CT::Similar<TO, FROM>) {
+      /*if constexpr (Same<TO, FROM>) {
          // Types are already the same                                  
          return from;
       }
-      else if constexpr (CT::Serial<FROM> and not CT::Serial<TO>) {
+      else*/ if constexpr (CT::Serializer<FROM> and not CT::Serializer<TO>) {
          // Deserialize                                                 
          TO result;
-         (void) from.Deserialize(result);
+         (void) Langulus::Deserialize(from, result);
          return Abandon(result);
       }
-      else if constexpr (CT::Serial<TO> and not CT::Serial<FROM>) {
+      else if constexpr (CT::Serializer<TO> and not CT::Serializer<FROM>) {
          // Serialize                                                   
          TO result;
-         if constexpr (CT::Block<FROM>)
-            (void) from.Serialize(result);
-         else
-            (void) MakeBlock<TMany<FROM>>(from).Serialize(result);
+         (void) Langulus::Serialize(from, result);
          return Abandon(result);
-      }
-      else if constexpr (CT::Convertible<FROM, TO> and not CT::Deep<FROM>) {
-         // Just regular conversion with source not being a container   
-         if constexpr (requires { TO (static_cast<TO>(from)); })
-            return TO (static_cast<TO>(from));
-         else if constexpr (requires { TO (from); })
-            return TO (from);
-         else if constexpr (requires (TO& r) { r = static_cast<TO>(from); }) {
-            TO result;
-            return (result = static_cast<TO>(from));
-         }
-         else if constexpr (requires (TO& r) { r = from; }) {
-            TO result;
-            return (result = from);
-         }
-         else static_assert(false, "Unhandled conversion route for non-deep");
       }
       else if constexpr (CT::Deep<FROM>) {
          // We're converting a container to something else              
-         Conditional<CT::Deep<TO>, TO, TMany<TO>> result;
-         (void) from.Convert(result);
-         if constexpr (CT::Deep<TO>)
+         if constexpr (CT::Deep<TO>) {
+            TO result;
+            from.Convert(result);
             return Abandon(result);
-         else
-            return result[0];
+         }
+         else {
+            TMany<TO> result;
+            from.Convert(result);
+            return *result;
+         }
+      }
+      else if constexpr (CT::Convertible<FROM, TO>) {
+         // Just regular conversion with source not being a container   
+         return Langulus::Convert<TO>(from);
       }
       else static_assert(false, "Interpretation impossible");
    }
 
 } // namespace Langulus::Verbs
 
-namespace fmt
-{
-
-   ///                                                                        
-   /// Extend FMT to be capable of logging anything CT::Deep                  
-   ///                                                                        
-   template<Langulus::CT::Deep T>
-   struct formatter<T> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT> LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) const {
-         using namespace ::Langulus;
-
-         const auto asText = Verbs::Interpret::To<Annies::Text>(element);
-         return fmt::format_to(ctx.out(), "{}",
-            static_cast<Logger::TextView>(asText));
-      }
-   };
-
-   ///                                                                        
-   /// Extend FMT to be capable of logging any pair                           
-   ///                                                                        
-   template<Langulus::CT::Pair T>
-   struct formatter<T> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT> LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) const {
-         using namespace ::Langulus;
-
-         return fmt::vformat_to(ctx.out(), "Pair({}, {})",
-            DenseCast(element.mKey),
-            DenseCast(element.mValue)
-         );
-      }
-   };
-   
-   ///                                                                        
-   /// Extend FMT to be capable of logging Neat                               
-   ///                                                                        
-   template<>
-   struct formatter<Langulus::Annies::Neat> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT> LANGULUS(INLINED)
-      auto format(Langulus::Annies::Neat const& element, CONTEXT& ctx) const {
-         using namespace ::Langulus;
-
-         const auto asText = Verbs::Interpret::To<Annies::Text>(element);
-         return fmt::format_to(ctx.out(), "{}",
-            static_cast<Logger::TextView>(asText));
-      }
-   };
-    
-   ///                                                                        
-   /// Extend FMT to be capable of logging Construct                          
-   ///                                                                        
-   template<>
-   struct formatter<Langulus::Annies::Construct> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT> LANGULUS(INLINED)
-      auto format(Langulus::Annies::Construct const& element, CONTEXT& ctx) const {
-         using namespace ::Langulus;
-
-         const auto asText = Verbs::Interpret::To<Annies::Text>(element);
-         return fmt::format_to(ctx.out(), "{}",
-            static_cast<Logger::TextView>(asText));
-      }
-   };
-
-   ///                                                                        
-   /// Extend FMT to be capable of logging any trait                          
-   ///                                                                        
-   template<Langulus::CT::TraitBased T>
-   struct formatter<T> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT> LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) const {
-         using namespace ::Langulus;
-
-         return fmt::format_to(ctx.out(), "{}({})",
-            element.GetTrait().GetToken(),
-            static_cast<const Annies::Many&>(element)
-         );
-      }
-   };
-
-   ///                                                                        
-   /// Extend FMT to be capable of logging any map                            
-   ///                                                                        
-   template<Langulus::CT::Map T>
-   struct formatter<T> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT> LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) const {
-         using namespace ::Langulus;
-
-         fmt::format_to(ctx.out(), "Map(");
-         bool first = true;
-         for (auto pair : element) {
-            if (not first)
-               fmt::format_to(ctx.out(), ", ");
-            first = false;
-
-            fmt::format_to(ctx.out(), "({}, {})",
-               DenseCast(pair.mKey),
-               DenseCast(pair.mValue)
-            );
-         }
-
-         return fmt::format_to(ctx.out(), ")");
-      }
-   };
-
-   ///                                                                        
-   /// Extend FMT to be capable of logging any set                            
-   ///                                                                        
-   template<Langulus::CT::Set T>
-   struct formatter<T> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
-
-      template<class CONTEXT> LANGULUS(INLINED)
-      auto format(T const& element, CONTEXT& ctx) const {
-         using namespace ::Langulus;
-
-         fmt::format_to(ctx.out(), "Set(");
-         bool first = true;
-         for (auto key : element) {
-            if (not first)
-               fmt::format_to(ctx.out(), ", ");
-
-            first = false;
-            fmt::format_to(ctx.out(), "{}", DenseCast(key));
-         }
-
-         return fmt::format_to(ctx.out(), ")");
-      }
-   };
-
-} // namespace fmt
-
-
-namespace Langulus::Annies
+/*namespace Langulus::Annies
 {
 
    /// Define the otherwise undefined Langulus::Annies::Block::AsCast        
@@ -388,6 +211,6 @@ namespace Langulus::Annies
       }
    }
    
-} // namespace Langulus::Annies
+}*/ // namespace Langulus::Annies
 
 #undef VERBOSE_CONVERSION

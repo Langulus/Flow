@@ -552,8 +552,11 @@ namespace Langulus::Flow
       if constexpr (not CT::Deep<T> and CT::Verb<V>) {
          // Always prefer statically optimized routine when available   
          // Literally zero ability searching overhead!                  
-         if constexpr (V::template AvailableFor<T>())
-            return V::ExecuteIn(context, verb);
+         if constexpr (V::template AvailableFor<T>()) {
+            //return V::ExecuteIn(context, verb);
+            context.Select(verb);
+            return verb.IsDone();
+         }
          return false;
       }
       else {

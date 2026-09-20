@@ -21,7 +21,7 @@ namespace Langulus::Verbs
 
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Dense T, CT::NotVoid...A>
+   /*template<CT::Dense T, CT::NotVoid...A>
    constexpr bool Interact::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Interact(v); };
@@ -45,13 +45,13 @@ namespace Langulus::Verbs
             typedContext->Interact(verb, args...);
          };
       }
-   }
+   }*/
       
    /// Execute the interact verb in a specific context                        
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb has been satisfied                              
-   bool Interact::ExecuteIn(CT::Dense auto& context, Verb& verb) {
+   /*bool Interact::ExecuteIn(CT::Dense auto& context, Verb& verb) {
       static_assert(
          Interact::AvailableFor<Deref<decltype(context)>>(),
          "Verb is not available for this context, "
@@ -59,7 +59,7 @@ namespace Langulus::Verbs
       );
       context.Interact(verb);
       return verb.IsDone();
-   }
+   }*/
 
 } // namespace Langulus::Verbs
 

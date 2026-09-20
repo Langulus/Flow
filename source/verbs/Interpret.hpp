@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include <Langulus/TVerb.hpp>
-#include <Langulus/Many.hpp>
 
 
 namespace Langulus::Verbs
@@ -36,15 +35,15 @@ namespace Langulus::Verbs
       using TVerb::TVerb;
       using TVerb::operator ==;
 
-      template<CT::Dense, CT::NotVoid...>
+      /*template<CT::Dense, CT::NotVoid...>
       static constexpr bool AvailableFor() noexcept;
       template<CT::Dense, CT::NotVoid...>
-      static constexpr auto Of() noexcept;
+      static constexpr auto Of() noexcept;*/
 
-      template<CT::Decayed TO, CT::Decayed FROM>
+      template<CT::Decayed TO, CT::Decayed FROM> requires (not Same<TO, FROM>)
       static TO To(const FROM&);
 
-      static bool ExecuteIn(CT::Dense auto&, Verb&);
+      //static bool ExecuteIn(CT::Dense auto&, Verb&);
 
       static bool ExecuteDefault(const Many&, Verb&);
    };

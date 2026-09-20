@@ -23,7 +23,7 @@ namespace Langulus::Verbs
 
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Dense T, CT::NotVoid...A>
+   /*template<CT::Dense T, CT::NotVoid...A>
    constexpr bool Select::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Select(v); };
@@ -47,19 +47,19 @@ namespace Langulus::Verbs
             typedContext->Select(verb, args...);
          };
       }
-   }
+   }*/
 
    /// Execute the selection verb in a specific context                       
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb has been satisfied                              
-   template<CT::Dense T>
+   /*template<CT::Dense T>
    bool Select::ExecuteIn(T& context, Verb& verb) {
       static_assert(Select::AvailableFor<T>(),
          "Verb is not available for this context, this shouldn't be reached by flow");
       context.Select(verb);
       return verb.IsDone();
-   }
+   }*/
 
    /// Stateless selection, for selecting some global entities, like the      
    /// logger, for example                                                    

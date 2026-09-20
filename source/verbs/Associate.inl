@@ -21,7 +21,7 @@ namespace Langulus::Verbs
 
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Dense T, CT::NotVoid...A>
+   /*template<CT::Dense T, CT::NotVoid...A>
    constexpr bool Associate::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Associate(v); };
@@ -45,13 +45,13 @@ namespace Langulus::Verbs
             typedContext->Associate(verb, args...);
          };
       }
-   }
+   }*/
 
    /// Execute the association/dissociation verb in a specific context        
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb has been satisfied                              
-   bool Associate::ExecuteIn(CT::Dense auto& context, Verb& verb) {
+   /*bool Associate::ExecuteIn(CT::Dense auto& context, Verb& verb) {
       static_assert(
          Associate::AvailableFor<Deref<decltype(context)>>(),
          "Verb is not available for this context, "
@@ -59,13 +59,13 @@ namespace Langulus::Verbs
       );
       context.Associate(verb);
       return verb.IsDone();
-   }
+   }*/
 
    /// Execute the default verb in a context                                  
    ///   @param lhs - the context to execute in                               
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
-   inline bool Associate::ExecuteDefault(Many& lhs, Verb& verb) {
+   /*inline bool Associate::ExecuteDefault(Many& lhs, Verb& verb) {
       const auto& rhs = verb.GetArgument();
 
       if (lhs.IsConstant() or lhs.GetCount() != rhs.GetCount())
@@ -91,8 +91,44 @@ namespace Langulus::Verbs
       // Just make sure it goes to output                               
       verb << lhs;
       return true;
-   }
+   }*/
 
 } // namespace Langulus::Verbs
+
+namespace Langulus::CTTI
+{
+   LglsImplementAbilitiesFor(Many) {
+      using Can = Verbs::Associate;
+
+      bool Default(Many& lhs, Verb& verb) {
+         const Many& rhs = verb.GetArgument();
+   
+         if (lhs.IsConstant() or lhs.GetCount() != rhs.GetCount())
+            // Can't overwrite a constant context                          
+            return false;
+         else if (lhs.IsMissing() or rhs.IsMissing())
+            // Can't associate missing stuff                               
+            return false;
+         else if (lhs.IsExecutable() or rhs.IsExecutable())
+            // Can't associate unexecuted verbs                            
+            return false;
+         else if (not lhs.IsExact(rhs.GetType()))
+            // Can't associate unrelated types                             
+            return false;
+   
+         // Attempt directly refering, if possible                         
+         // This will happen only if types are exactly the same            
+         // This is a default (fallback) routine, let's keep things simple 
+         try { lhs.AssignAbsorb(Refer(rhs)); }
+         catch (...) { return false; }
+   
+         // At this point, context has a copy of verb's argument           
+         // Just make sure it goes to output                               
+         verb << lhs;
+         return true;
+      }
+   };
+}
+
 
 #undef VERBOSE_ASSOCIATE

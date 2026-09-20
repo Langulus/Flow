@@ -6,8 +6,15 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../TVerb.hpp"
+#include <Langulus/TVerb.hpp>
 
+
+///                                                                        
+///   Create/Destroy verb                                                  
+/// Used for allocating new elements. If the type you're creating has      
+/// a producer, you need to execute the verb in the correct context        
+///                                                                        
+LANGULUS_DEFINE_VERB(Do, Undo, "An indirection between context and flow. Not short-circuited.");
 
 namespace Langulus::Verbs
 {
@@ -33,12 +40,12 @@ namespace Langulus::Verbs
       using TVerb::TVerb;
       using TVerb::operator ==;
 
-      template<CT::Dense, CT::NotVoid...>
+      /*template<CT::Dense, CT::NotVoid...>
       static constexpr bool AvailableFor() noexcept;
       template<CT::Dense, CT::NotVoid...>
       static constexpr auto Of() noexcept;
 
-      static bool ExecuteIn(CT::Dense auto&, Verb&);
+      static bool ExecuteIn(CT::Dense auto&, Verb&);*/
 
       static bool ExecuteDefault(Many&, Verb&);
       static bool ExecuteStateless(Verb&);

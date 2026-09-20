@@ -113,7 +113,7 @@ namespace Langulus::Verbs
 
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Dense T, CT::NotVoid...A>
+   /*template<CT::Dense T, CT::NotVoid...A>
    constexpr bool Catenate::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Catenate(v); };
@@ -137,18 +137,18 @@ namespace Langulus::Verbs
             typedContext->Catenate(verb, args...);
          };
       }
-   }
+   }*/
 
    /// Execute the catenation/splitting verb in a specific context            
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb has been satisfied                              
-   bool Catenate::ExecuteIn(CT::Dense auto& context, Verb& verb) {
+   /*bool Catenate::ExecuteIn(CT::Dense auto& context, Verb& verb) {
       static_assert(Catenate::AvailableFor<Deref<decltype(context)>>(),
          "Verb is not available for this context, this shouldn't be reached by flow");
       context.Catenate(verb);
       return verb.IsDone();
-   }
+   }*/
 
    /// Default catenation/splitting in an immutable context                   
    /// Produces a shallow copy of the catenated context and arguments         

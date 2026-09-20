@@ -27,7 +27,7 @@ namespace Langulus::Verbs
 
    /// Check if the verb is available in a type, and with given arguments     
    ///   @return true if verb is available in T with arguments A...           
-   template<CT::Dense T, CT::NotVoid...A>
+   /*template<CT::Dense T, CT::NotVoid...A>
    constexpr bool Create::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0)
          return requires (T& t, Verb& v) { t.Create(v); };
@@ -51,20 +51,20 @@ namespace Langulus::Verbs
             typedContext->Create(verb, args...);
          };
       }
-   }
+   }*/
 
    /// Execute creation verb in a specific context                            
    ///   @param context - the producer                                        
    ///   @param verb - the creation/destruction verb                          
    ///   @return true if verb was satisfied                                   
-   template<CT::Dense T>
+   /*template<CT::Dense T>
    bool Create::ExecuteIn(T& context, Verb& verb) {
       static_assert(Create::AvailableFor<T>(),
          "Verb is not available for this context, "
          "this shouldn't be reached by flow");
       context.Create(verb);
       return verb.IsDone();
-   }
+   }*/
 
    /// Default creation/destruction in a context                              
    ///   @param context - the producer                                        

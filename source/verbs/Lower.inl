@@ -15,7 +15,7 @@ namespace Langulus::Verbs
 
    /// Compile-time check if a verb is implemented in the provided type       
    ///   @return true if verb is available                                    
-   template<CT::Dense T, CT::NotVoid...A>
+   /*template<CT::Dense T, CT::NotVoid...A>
    constexpr bool Lower::AvailableFor() noexcept {
       if constexpr (sizeof...(A) == 0) {
          return requires (const T& t, Verb& v) { t.Compare(v); }
@@ -47,19 +47,19 @@ namespace Langulus::Verbs
             typedContext->Lower(verb, args...);
          };
       }
-   }
+   }*/
 
    /// Execute the comparison verb in a specific context                      
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb to execute                                    
    ///   @return true if verb has been satisfied                              
-   template<CT::Dense T>
+   /*template<CT::Dense T>
    bool Lower::ExecuteIn(T& context, Verb& verb) {
       static_assert(Lower::AvailableFor<T>(),
          "Verb is not available for this context, this shouldn't be reached by flow");
       context.Lower(verb);
       return verb.IsDone();
-   }
+   }*/
 
    /// Execute the default verb in an immutable context                       
    /// Returns immutable results                                              

@@ -5,12 +5,12 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "Time.inl"
-#include "Code.inl"
-#include "Resolvable.inl"
+#include <Langulus/Time.inl>
+#include <Langulus/Code.inl>
+#include <Langulus/Resolvable.inl>
+#include <Langulus/Temporal.hpp>
 #include "inner/Missing.hpp"
 #include "inner/Entangled.hpp"
-#include "Temporal.hpp"
 
 using namespace Langulus::Flow;
 

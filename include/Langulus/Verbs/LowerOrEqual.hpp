@@ -6,4 +6,39 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/verbs/LowerOrEqual.inl"
+#include <Langulus/TVerb.hpp>
+
+
+namespace Langulus::Verbs
+{
+
+   using namespace Flow;
+
+
+   ///                                                                        
+   ///   Lower-or-equal verb                                                  
+   /// Compares for source being less or equal than argument, and returns     
+   /// source if so                                                           
+   ///                                                                        
+   struct LowerOrEqual : TVerb<LowerOrEqual> {
+      LANGULUS(VERB) "LowerOrEqual";
+      LANGULUS(OPERATOR) " <= ";
+      LANGULUS(PRECEDENCE) 3;
+      LANGULUS(INFO)
+         "Compares for source being less or equal than argument, "
+         "and returns source if so";
+
+      using TVerb::TVerb;
+      using TVerb::operator ==;
+
+      /*template<CT::Dense, CT::NotVoid...>
+      static constexpr bool AvailableFor() noexcept;
+      template<CT::Dense, CT::NotVoid...>
+      static constexpr auto Of() noexcept;
+
+      static bool ExecuteIn(CT::Dense auto&, Verb&);*/
+
+      static bool ExecuteDefault(const Many&, Verb&);
+   };
+
+} // namespace Langulus::Verbs

@@ -6,41 +6,23 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "Common.hpp"
-#include <Langulus/Neat.hpp>
+#include <Langulus/CT/Number.hpp>
 #include <chrono>
-#include <thread>
 #include <fmt/chrono.h>
 
 
 namespace Langulus
 {
    using namespace ::std::literals::chrono_literals;
-
-   namespace A
-   {
-
-      /// An abstract clock                                                   
-      struct Clock {
-         LANGULUS(ABSTRACT) true;
-      };
-
-      /// An abstract time                                                    
-      struct Time {
-         LANGULUS(ABSTRACT) true;
-      };
-
-   } // namespace Langulus::A
-
    using StdClock = ::std::chrono::steady_clock;
+
 
    ///                                                                        
    ///   A time point                                                         
    ///                                                                        
-   struct TimePoint : A::Time, StdClock::time_point {
-      LANGULUS(ABSTRACT) false;
-      LANGULUS(POD) true;
-      LANGULUS_BASES(A::Time);
+   struct TimePoint : StdClock::time_point {
+      using CTTI_POD  = Yup;
+      using CTTI_Time = Yup;
 
       using Base = time_point;
       using Base::time_point;
@@ -55,10 +37,9 @@ namespace Langulus
    ///                                                                        
    ///   A time duration (difference between two time points)                 
    ///                                                                        
-   struct Time : A::Time, StdClock::duration {
-      LANGULUS(ABSTRACT) false;
-      LANGULUS(POD) true;
-      LANGULUS_BASES(A::Time);
+   struct Time : StdClock::duration {
+      using CTTI_POD  = Yup;
+      using CTTI_Time = Yup;
 
       using Base = duration;
       using Base::duration;
@@ -85,7 +66,7 @@ namespace Langulus
 
       constexpr explicit operator bool() const noexcept;
 
-      template<CT::BuiltinNumber T = Real>
+      template<CT::Number T = Real>
       T Seconds() const noexcept;
 
       Time operator + (auto&& rhs) const {
@@ -101,77 +82,15 @@ namespace Langulus
 
 
    ///                                                                        
-   ///   A steady clock used to aquire TimePoint(s)                           
+   ///   A steady clock used to acquire TimePoint(s)                          
    ///                                                                        
-   class SteadyClock : public A::Clock, private StdClock {
-      LANGULUS_BASES(A::Clock);
+   class SteadyClock : private StdClock {
       static TimePoint Now() noexcept;
    };
-
-   namespace CT
-   {
-
-      template<class T>
-      concept Time = SameAsOneOf<T, ::Langulus::TimePoint, ::Langulus::Time>;
-
-   } // namespace Langulus::CT
-
-
-   ///                                                                        
-   /// Manages the framerate by measuring delta-time and sleeping             
-   ///                                                                        
-   template<int FRAMES_PER_SECOND = 60>
-   struct Framerate {
-      static constexpr int FramesPerSecond = FRAMES_PER_SECOND;
-
-   protected:
-      using dsec    = ::std::chrono::duration<double>;
-      using seconds = ::std::chrono::seconds;
-
-      const Time mInvFpsLimit;
-      TimePoint mBegin;
-      TimePoint mEnd;
-      TimePoint mPrevTime;
-      Time      mDeltaTime;
-
-   public:
-      Framerate()
-         : mInvFpsLimit {::std::chrono::round<StdClock::duration>(dsec {1. / FramesPerSecond})}
-         , mBegin       {SteadyClock::Now()}
-         , mEnd         {mBegin + mInvFpsLimit}
-         , mPrevTime    {mBegin} {}
-
-      /// Get the time between ticks                                          
-      ///   @return the time period between ticks                             
-      Time GetDeltaTime() {
-         return mDeltaTime;
-      }
-
-      /// Call this from your main loop                                       
-      ///   @attention this may make the current thread sleep!                
-      void Tick() {
-         const auto now = SteadyClock::Now();
-         if (now <= mPrevTime)
-            return;
-
-         mDeltaTime = now - mPrevTime;
-         mPrevTime = now;
-
-         if (now < mEnd) {
-            // We've finished early - sleep for the rest of the time    
-            ::std::this_thread::sleep_until(mEnd);
-         }
-
-         mBegin = mEnd;
-         mEnd = mBegin + mInvFpsLimit;
-      }
-   };
-
-} // namespace Langulus
+}
 
 namespace fmt
 {
-
    ///                                                                        
    /// Extend FMT to be capable of logging Flow::Time                         
    ///                                                                        
@@ -188,5 +107,4 @@ namespace fmt
             static_cast<const Langulus::Time::Base&>(element));
       }
    };
-
-} // namespace fmt
+}

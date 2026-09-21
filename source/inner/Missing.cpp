@@ -7,8 +7,8 @@
 ///                                                                           
 #include "Missing.hpp"
 #include "Redundant.hpp"
-#include "../verbs/Do.inl"
-#include "../verbs/Interpret.inl"
+#include <Langulus/Verbs/Do.hpp>
+#include <Langulus/Verbs/Interpret.hpp>
 
 #if 1
    #define VERBOSE_MISSING_ENABLED() 1
@@ -22,7 +22,6 @@
    #define VERBOSE_FUTURE(...)            LANGULUS(NOOP)
 #endif
 
-using namespace Langulus::Annies;
 using namespace Langulus::Flow;
 
 
@@ -30,7 +29,7 @@ using namespace Langulus::Flow;
 ///   @param above - the missing point above this one                         
 ///   @param filter - the filter to set                                       
 ///   @param priority - the precedence of the point                           
-Temporal::Missing::Missing(Missing* above, const TMany<DMeta>& filter, Real priority)
+Missing::Missing(Missing* above, const TMany<DMeta>& filter, Real priority)
    : mFilter   {filter}
    , mPriority {priority}
    , mAbove    {above} {}
@@ -40,7 +39,7 @@ Temporal::Missing::Missing(Missing* above, const TMany<DMeta>& filter, Real prio
 ///   @param above - the missing point above this one                         
 ///   @param filter - the filter to set                                       
 ///   @param priority - the precedence of the point                           
-Temporal::Missing::Missing(Missing* above, const Many& filter, Real priority)
+Missing::Missing(Missing* above, const Many& filter, Real priority)
    : mPriority {priority}
    , mAbove    {above} {
    mFilter.GatherFrom(filter, DataState::Missing);
@@ -51,7 +50,7 @@ Temporal::Missing::Missing(Missing* above, const Many& filter, Real priority)
 /// Verbs are always accepted                                                 
 ///   @param content - the content to check                                   
 ///   @return true if contents are accepted                                   
-bool Temporal::Missing::Accepts(const Many& content) const {
+bool Missing::Accepts(const Many& content) const {
    if (not mFilter or content.CastsTo<Verb, true>())
       return true;
 
@@ -65,7 +64,7 @@ bool Temporal::Missing::Accepts(const Many& content) const {
 
 /// Check if the missing point has been satisfied by pushed contents          
 ///   @return true if point was satisfied                                     
-bool Temporal::Missing::IsSatisfied() const {
+bool Missing::IsSatisfied() const {
    if (not mContent or not mFilter)
       return false;
 
@@ -82,22 +81,22 @@ bool Temporal::Missing::IsSatisfied() const {
 /// Insert data into a past point                                             
 ///   @param content - the content to push                                    
 ///   @return true if mContent changed                                        
-void Temporal::MissingPast::FillPast(const Many& content) {
+void MissingPast::FillPast(const Many& content) {
    if (not content) {
       #if VERBOSE_MISSING_ENABLED()
          Logger::Error("Can't push empty content");
       #endif
-      LANGULUS_THROW(Link, "Can't push empty content");
+      throw Exception("Can't push empty content");
    }
 
    if (content.IsDeep()) {
       // Always nest deep contents, we must filter each part and        
       // make sure branches are correctly inserted in forks             
-      if (content.IsOr() and content.IsDense()) {
+      if (content.IsOr() and not content.IsSparse()) {
          // We're building a fork, we should take special care to       
          // preserve the hierarchy of the branches                      
          MissingPast fork {this, mFilter, mPriority};
-         fork.mContent.MakeOr();
+         fork.mContent.EnableOr();
             
          bool atLeastOneSuccess = false;
          content.ForEach([&](const Many& subcontent) {
@@ -109,11 +108,11 @@ void Temporal::MissingPast::FillPast(const Many& content) {
          });
 
          if (not atLeastOneSuccess)
-            LANGULUS_THROW(Link, "All branches failed the push");
+            throw Exception("All branches failed the push");
 
-         mContent.SmartPush(IndexBack, Abandon(fork.mContent));
+         mContent.Compose(Abandon(fork.mContent));
       }
-      else if (content.IsDense()) {
+      else if (not content.IsSparse()) {
          // Just nest-push                                              
          content.ForEach([&](const Many& subcontent) {
             FillPast(subcontent);
@@ -143,12 +142,12 @@ void Temporal::MissingPast::FillPast(const Many& content) {
          });
 
          if (not atLeastOneSuccess)
-            LANGULUS_THROW(Link, "Nothing was pushed");
+            throw Exception("Nothing was pushed");
       }
 
       return;
    }
-   else if (content.Is<Redundant>()) {
+   else if (content.template Is<Redundant>()) {
       // Redundant data serves only the purpose of filling past         
       // and acts as a deep container                                   
       content.ForEach([&](const Redundant& redundant) {
@@ -179,7 +178,7 @@ void Temporal::MissingPast::FillPast(const Many& content) {
          #if VERBOSE_MISSING_ENABLED()
             Logger::Error("Unsatisfied filter: ", mFilter);
          #endif
-            LANGULUS_THROW(Link, "Unsatisfied filter");
+            throw Exception("Unsatisfied filter");
       }
    }
    //else commit(content);
@@ -191,22 +190,22 @@ void Temporal::MissingPast::FillPast(const Many& content) {
 ///   @attention assumes 'content' has been Temporal::Compiled previously     
 ///   @param content - the content to push                                    
 ///   @return true if mContent changed                                        
-void Temporal::MissingFuture::FillFuture(const Many& content, Temporal& flow) {
+void MissingFuture::FillFuture(const Many& content, Temporal& flow) {
    if (not content) {
       #if VERBOSE_MISSING_ENABLED()
          Logger::Error("Can't push empty content");
       #endif
-      LANGULUS_THROW(Link, "Can't push empty content");
+      throw Exception("Can't push empty content");
    }
 
    if (content.IsDeep()) {
       // Always nest deep contents, we must filter each part and        
       // make sure branches are correctly inserted in forks             
-      if (content.IsOr() and content.IsDense()) {
+      if (content.IsOr() and not content.IsSparse()) {
          // We're building a fork, we should take special care to       
          // preserve the hierarchy of the branches                      
          MissingFuture fork {this, mFilter, mPriority};
-         fork.mContent.MakeOr();
+         fork.mContent.EnableOr();
             
          bool atLeastOneSuccess = false;
          content.ForEach([&](const Many& subcontent) {
@@ -218,11 +217,11 @@ void Temporal::MissingFuture::FillFuture(const Many& content, Temporal& flow) {
          });
 
          if (not atLeastOneSuccess)
-            LANGULUS_THROW(Link, "All branches failed the push");
+            throw Exception("All branches failed the push");
 
-         mContent.SmartPush(IndexBack, Abandon(fork.mContent));
+         mContent.Compose(Abandon(fork.mContent));
       }
-      else if (content.IsDense()) {
+      else if (not content.IsSparse()) {
          // Just nest-push                                              
          content.ForEach([&](const Many& subcontent) {
             FillFuture(subcontent, flow);
@@ -252,7 +251,7 @@ void Temporal::MissingFuture::FillFuture(const Many& content, Temporal& flow) {
          });
 
          if (not atLeastOneSuccess)
-            LANGULUS_THROW(Link, "Nothing was pushed");
+            throw Exception("Nothing was pushed");
       }
 
       // Contents were modified, remap futures below                    
@@ -284,7 +283,7 @@ void Temporal::MissingFuture::FillFuture(const Many& content, Temporal& flow) {
       #if VERBOSE_MISSING_ENABLED()
          Logger::Error("None of the hierarchical past was satisfactory");
       #endif
-      LANGULUS_THROW(Link, "None of the hierarchical past was satisfactory");
+      throw Exception("None of the hierarchical past was satisfactory");
    }
 
    if (mFilter) {
@@ -300,7 +299,7 @@ void Temporal::MissingFuture::FillFuture(const Many& content, Temporal& flow) {
          #if VERBOSE_MISSING_ENABLED()
             Logger::Error("Unsatisfied filter: ", mFilter);
          #endif
-            LANGULUS_THROW(Link, "Unsatisfied filter");
+            throw Exception("Unsatisfied filter");
       }
    }
    else Commit(linked, flow);
@@ -319,7 +318,7 @@ void Temporal::MissingFuture::FillFuture(const Many& content, Temporal& flow) {
 /// rated/timed verbs still have to be linked with the relevant future point  
 ///   @param linked - the compiled & linked scope to insert                   
 ///   @param flow - the flow to use when inserting rated/timed verbs          
-void Temporal::MissingFuture::Commit(const Many& linked, Temporal& flow) {
+void MissingFuture::Commit(const Many& linked, Temporal& flow) {
    LglsAssumeDev(not linked.IsDeep(),
       "Can't commit a deep scope here");
    LglsAssumeDev(not linked.IsOr(),
@@ -331,8 +330,8 @@ void Temporal::MissingFuture::Commit(const Many& linked, Temporal& flow) {
       // never link with anything                                       
       mContent <<= linked;
    }
-   else if (linked.Is<Verb>()) {
-      //TODO what about rated/timed constructs?
+   else if (linked.template Is<Verb>()) {
+      //TODO what about rated/timed recipes?
       linked.ForEach([&](const Verb& v) {
          const auto time = v.GetTime();
          const auto rate = v.GetRate();
@@ -380,7 +379,7 @@ void Temporal::MissingFuture::Commit(const Many& linked, Temporal& flow) {
 
 /// Just a helper function for logging                                        
 template<class T>
-decltype(auto) Temporal::Missing::VerboseLinking(const T& what, const MissingFuture& context) {
+decltype(auto) Missing::VerboseLinking(const T& what, const MissingFuture& context) {
    #if VERBOSE_MISSING_ENABLED()
       if constexpr (CT::Same<T, Trait>) {
          Logger::Verbose("Linking trait ");
@@ -418,7 +417,7 @@ decltype(auto) Temporal::Missing::VerboseLinking(const T& what, const MissingFut
 ///   @param scope - the scope to link                                        
 ///   @param context - the future point we're using as past context           
 ///   @return the linked equivalent to the provided scope                     
-Many Temporal::Missing::Link(const Many& scope, const MissingFuture& context) const {
+Many Missing::Link(const Many& scope, const MissingFuture& context) const {
    Many result;
    if (scope.IsOr())
       result.MakeOr();
@@ -512,7 +511,7 @@ Many Temporal::Missing::Link(const Many& scope, const MissingFuture& context) co
 ///   @param context - the future point to search below                       
 ///   @param stack - used for nesting deep contents                           
 ///   @return the hierarchy of future points below the context                
-void Temporal::Missing::RemapFutures(MissingFuture& context, const Many& stack) {
+void Missing::RemapFutures(MissingFuture& context, const Many& stack) {
    if (not stack or stack.IsSparse())
       return;           // No point in scanning sparse stacks - they're 
                         // never linked with                            
@@ -565,7 +564,7 @@ void Temporal::Missing::RemapFutures(MissingFuture& context, const Many& stack) 
 }
 
 /// Log the missing point                                                     
-Temporal::Missing::operator Text() const {
+Missing::operator Text() const {
    Text result;
 
    if (mSuspended) {
@@ -592,11 +591,11 @@ Temporal::Missing::operator Text() const {
 }
 
 /// Default past point                                                        
-Temporal::MissingPast::MissingPast() {
+MissingPast::MissingPast() {
    mFilter.MakePast();
 }
 
 /// Default future point                                                      
-Temporal::MissingFuture::MissingFuture() {
+MissingFuture::MissingFuture() {
    mFilter.MakeFuture();
 }

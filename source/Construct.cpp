@@ -5,10 +5,10 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "verbs/Interpret.inl"
-#include "verbs/Do.inl"
-#include "verbs/Create.inl"
-#include "verbs/Select.inl"
+/*#include <Langulus/Verbs/Interpret.inl>
+#include <Langulus/Verbs/Do.inl>
+#include <Langulus/Verbs/Create.inl>
+#include <Langulus/Verbs/Select.inl>
 #include <Langulus/Construct.hpp>
 
 #if 0
@@ -19,7 +19,7 @@
 
 
 namespace Langulus::Annies
-{
+{*/
 
    /// Attempt to create construct statically if possible                     
    /// If not possible, simply propagate the construct                        
@@ -31,7 +31,7 @@ namespace Langulus::Annies
    //or, like, creating an integer in the context of something that will never allow zero
    //there results should also be probably paired with the producer that made them, so that
    //a solver can differentiate between them, and trust ones that are relevant
-   bool Construct::StaticCreation(Many& output) const {
+   /*bool Construct::StaticCreation(Many& output) const {
       if (mType->mProducerRetriever)
          return false;
 
@@ -47,4 +47,4 @@ namespace Langulus::Annies
       return false;
    }
 
-} // namespace Langulus::Annies
+}*/ // namespace Langulus::Annies

@@ -6,4 +6,35 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/verbs/Interact.inl"
+#include <Langulus/TVerb.hpp>
+
+
+namespace Langulus::Verbs
+{
+
+   using namespace Flow;
+
+
+   ///                                                                        
+   ///   Interact                                                             
+   /// Used for processing user events, such as mouse movement, keyboard,     
+   /// joystick and any other input                                           
+   ///                                                                        
+   struct Interact : TVerb<Interact> {
+      LANGULUS(VERB) "Interact";
+      LANGULUS(INFO) 
+         "Used for processing user events, such as mouse movement, "
+         "keyboard, joystick and any other input";
+
+      using TVerb::TVerb;
+      using TVerb::operator ==;
+
+      /*template<CT::Dense, CT::NotVoid...>
+      static constexpr bool AvailableFor() noexcept;
+      template<CT::Dense, CT::NotVoid...>
+      static constexpr auto Of() noexcept;
+
+      static bool ExecuteIn(CT::Dense auto&, Verb&);*/
+   };
+
+} // namespace Langulus::Verbs

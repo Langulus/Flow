@@ -6,4 +6,40 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/verbs/Catenate.inl"
+#include <Langulus/TVerb.hpp>
+
+
+namespace Langulus::Verbs
+{
+
+   using namespace Flow;
+
+
+   ///                                                                        
+   ///   Catenate/Split verb                                                  
+   /// Catenates anything catenable, or split stuff apart using a mask        
+   ///                                                                        
+   struct Catenate : TVerb<Catenate> {
+      LANGULUS(POSITIVE_VERB) "Catenate";
+      LANGULUS(NEGATIVE_VERB) "Split";
+      LANGULUS(POSITIVE_OPERATOR) " >< ";
+      LANGULUS(NEGATIVE_OPERATOR) " <> ";
+      LANGULUS(PRECEDENCE) 7;
+      LANGULUS(INFO) "Catenates, or splits stuff apart";
+
+      using TVerb::TVerb;
+      using TVerb::operator ==;
+
+      /*template<CT::Dense, CT::NotVoid...>
+      static constexpr bool AvailableFor() noexcept;
+      template<CT::Dense, CT::NotVoid...>
+      static constexpr auto Of() noexcept;
+
+      static bool ExecuteIn(CT::Dense auto&, Verb&);*/
+
+      static bool ExecuteDefault(Many const&, Verb&);
+      static bool ExecuteDefault(Many&, Verb&);
+      static bool ExecuteStateless(Verb&);
+   };
+
+} // namespace Langulus::Verbs

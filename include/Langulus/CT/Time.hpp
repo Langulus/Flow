@@ -6,13 +6,16 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include <Langulus/TVerb.hpp>
+#include <Langulus/Typenav.hpp>
 
 
-///                                                                           
-/// MARK: Interpret                                                           
-///   Performs conversion                                                     
-///                                                                           
-LANGULUS_DEFINE_OPERATOR(Interpret, Interpret, " => ", " => ", 0,
-   "Performs conversion"
-);
+namespace Langulus::CTTI
+{
+   /// Extends T by marking it as temporal. Examples:                         
+   /// 1) template<> struct Time<YourType> {};                                
+   /// 2) struct YourType { using CTTI_Time = Yup; };                         
+   template<class T>
+   struct Time;
+}
+
+LANGULUS_CTTI_CONCEPT_DECVQ(Time);

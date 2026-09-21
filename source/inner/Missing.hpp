@@ -6,18 +6,24 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../Temporal.hpp"
+#include "Langulus/CT/Convertible.hpp"
+#include <Langulus/Text.hpp>
+#include <Langulus/Many.hpp>
+#include <Langulus/TMany.hpp>
 
 
 namespace Langulus::Flow
 {
+   using RTTI::DMeta;
+   struct Temporal;
+   struct MissingPast;
+   struct MissingFuture;
 
+   
    ///                                                                        
    ///   A missing point inside a flow                                        
    ///                                                                        
-   struct Temporal::Missing {
-      LANGULUS_CONVERTS_TO(Text);
-
+   struct Missing {
       // A filter for the accepted contents                             
       TMany<DMeta> mFilter;
       // The contents that have been linked to this missing point       
@@ -56,8 +62,7 @@ namespace Langulus::Flow
    ///                                                                        
    ///   A missing past point inside a flow                                   
    ///                                                                        
-   struct Temporal::MissingPast : Temporal::Missing {
-      LANGULUS_BASES(Missing);
+   struct MissingPast : Missing {
       using Missing::Missing;
       MissingPast();
 
@@ -68,13 +73,15 @@ namespace Langulus::Flow
    ///                                                                        
    ///   A missing future point inside a flow                                 
    ///                                                                        
-   struct Temporal::MissingFuture : Temporal::Missing {
-      LANGULUS_BASES(Missing);
+   struct MissingFuture : Missing {
       using Missing::Missing;
       MissingFuture();
 
       void FillFuture(const Many&, Temporal&);
       void Commit(const Many&, Temporal&);
    };
+}
 
-} // namespace Langulus::Flow
+LANGULUS_MORPHISM(Flow::Missing, Annies::Text);
+LANGULUS_MORPHISM(Flow::MissingPast, Annies::Text);
+LANGULUS_MORPHISM(Flow::MissingFuture, Annies::Text);

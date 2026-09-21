@@ -5,23 +5,23 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "Code.inl"
-#include "Temporal.hpp"
-#include "Time.hpp"
+#include <Langulus/Time.inl>
+#include <Langulus/Code.inl>
+#include <Langulus/Temporal.hpp>
 
-#include "verbs/Do.inl"
-#include "verbs/Select.inl"
-#include "verbs/Associate.inl"
-#include "verbs/Create.inl"
-#include "verbs/Catenate.inl"
-#include "verbs/Conjunct.inl"
-#include "verbs/Interpret.inl"
-#include "verbs/Compare.inl"
-#include "verbs/Equal.inl"
-#include "verbs/Lower.inl"
-#include "verbs/LowerOrEqual.inl"
-#include "verbs/Greater.inl"
-#include "verbs/GreaterOrEqual.inl"
+#include <Langulus/Verbs/Do.hpp>
+#include <Langulus/Verbs/Select.hpp>
+#include <Langulus/Verbs/Associate.hpp>
+#include <Langulus/Verbs/Create.hpp>
+#include <Langulus/Verbs/Catenate.hpp>
+#include <Langulus/Verbs/Conjunct.hpp>
+#include <Langulus/Verbs/Interpret.hpp>
+#include <Langulus/Verbs/Compare.hpp>
+#include <Langulus/Verbs/Equal.hpp>
+#include <Langulus/Verbs/Lower.hpp>
+#include <Langulus/Verbs/LowerOrEqual.hpp>
+#include <Langulus/Verbs/Greater.hpp>
+#include <Langulus/Verbs/GreaterOrEqual.hpp>
 
 #if LANGULUS_COMPILER(WASM)
    #include <string>

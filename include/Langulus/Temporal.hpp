@@ -9,16 +9,25 @@
 #include "Code.hpp"
 #include "Time.hpp"
 #include <Langulus/TMap.hpp>
+#include <Langulus/TMany.hpp>
+#include <Langulus/TRef.hpp>
 
 
 namespace Langulus::Flow
 {
+   struct Missing;
+   struct MissingFuture;
+   struct MissingPast;
+   struct Entangled;
+   struct Entanglement;
+   struct Redundant;
+
 
    ///                                                                        
    ///   Temporal flow                                                        
    ///                                                                        
-   ///   Gives temporality to anything, by providing a time gradient.         
-   ///   Can be used to select time points and temporal context.              
+   ///   Gives temporality to anything, by providing a time gradient. Can be  
+   /// used to select time points and temporal context.                       
    ///   It registers all executed verbs and automatically executes them on   
    /// update, if periodic or delayed. It has buckets for verbs that occur at 
    /// specific time and/or period. An analogy for a flow is a git repository 
@@ -33,19 +42,8 @@ namespace Langulus::Flow
    /// that actively seeks the past and future inputs for suitable data to    
    /// complete your scripts at runtime.                                      
    ///                                                                        
-   class Temporal final {
-   public:
-      LANGULUS_CONVERTS_TO(Code, Text);
-
-      struct Missing;
-      struct MissingFuture;
-      struct MissingPast;
-      struct Entangled;
-      struct Entanglement;
-      struct Redundant;
-
-      using Time = Langulus::Time;
-      using Pasts = TMany<MissingPast*>;
+   struct Temporal final {
+      using Pasts   = TMany<MissingPast*>;
       using Futures = TMany<MissingFuture*>;
 
    private:
@@ -73,13 +71,13 @@ namespace Langulus::Flow
 
       // Verb temporal stack, i.e. events that happen at specific time  
       // Each unit of time is equal to one mTimePeriod                  
-      TOrderedMap<Real, Temporal> mTimeStack;
+      TMapSorted<Real, Temporal*> mTimeStack;
       // Verb frequency stack, i.e. events that happen periodically     
       // Each unit of time is equal to one mRatePeriod                  
-      TUnorderedMap<Real, Temporal> mFrequencyStack;
+      TMapUnsorted<Real, Temporal*> mFrequencyStack;
 
       // An array of entanglement points                                
-      TMany<Ref<Entanglement>> mEntanglements;
+      TMany<Entanglement*> mEntanglements;
 
    public:
       LANGULUS_API(FLOW) Temporal();
@@ -107,7 +105,7 @@ namespace Langulus::Flow
       template<CT::NotVoid...TN> requires (sizeof...(TN) >= 1)
       Many Push(TN&&...tn) {
          Many result;
-         (result.SmartPush(IndexBack, PushInner(Forward<TN>(tn))), ...);
+         (result.Compose(PushInner(Forward<TN>(tn))), ...);
          return result;
       }
 
@@ -127,9 +125,8 @@ namespace Langulus::Flow
       static bool DumpInner(const Many&, bool newline, bool& first);
       static void DumpSeparator(const Many&, bool newline, bool& first);
       static void DumpMissing(const Missing&);
-      static void DumpVerb(const A::Verb&);
-      static void DumpTrait(const Trait&);
+      static void DumpVerb(const Verb&);
+      static void DumpTrait(const Tag&);
       static void DumpConstruct(const Construct&);
    };
-
-} // namespace Langulus::Flow
+}

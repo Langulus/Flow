@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include <Langulus/MetaOf.hpp>
+#include <Langulus/Core.hpp>
 
 #if defined(LANGULUS_EXPORT_ALL) || defined(LANGULUS_EXPORT_FLOW)
    #define LANGULUS_API_FLOW() LANGULUS_EXPORT()
@@ -20,14 +20,12 @@
 
 namespace Langulus::Flow
 {
-
-   using namespace Annies;
+   /*using namespace Annies;
    using RTTI::VMeta;
    using RTTI::TMeta;
    using RTTI::DMeta;
-   using RTTI::CMeta;
+   using RTTI::CMeta;*/
    //using RTTI::AMeta;
-
 
    ///                                                                        
    ///   Bits for seek functions                                              
@@ -58,6 +56,4 @@ namespace Langulus::Flow
       Default,		// Default factories aggregate duplicated items       
       Unique		// Unique factories never duplicate items (a set)     
    };
-
-} // namespace Langulus::Flow
-
+}

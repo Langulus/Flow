@@ -5,10 +5,10 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "Time.inl"
-#include "Code.inl"
-#include "Resolvable.inl"
-#include "Temporal.hpp"
+#include <Langulus/Time.inl>
+#include <Langulus/Code.inl>
+#include <Langulus/Resolvable.inl>
+#include <Langulus/Temporal.hpp>
 #include "inner/Missing.hpp"
 #include "inner/Entangled.hpp"
 #include "inner/Redundant.hpp"

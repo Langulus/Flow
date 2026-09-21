@@ -6,4 +6,37 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/verbs/Equal.inl"
+#include <Langulus/TVerb.hpp>
+
+
+namespace Langulus::Verbs
+{
+
+   using namespace Flow;
+
+
+   ///                                                                        
+   ///   Equals verb                                                          
+   /// Compares for equality, returns source if equal to argument             
+   ///                                                                        
+   struct Equal : TVerb<Equal> {
+      LANGULUS(VERB) "Equal";
+      LANGULUS(OPERATOR) " == ";
+      LANGULUS(PRECEDENCE) 3;
+      LANGULUS(INFO)
+         "Compares for equality, returns source if equal to argument";
+
+      using TVerb::TVerb;
+      using TVerb::operator ==;
+
+      /*template<CT::Dense, CT::NotVoid...>
+      static constexpr bool AvailableFor() noexcept;
+      template<CT::Dense, CT::NotVoid...>
+      static constexpr auto Of() noexcept;
+
+      static bool ExecuteIn(CT::Dense auto&, Verb&);*/
+
+      static bool ExecuteDefault(const Many&, Verb&);
+   };
+
+} // namespace Langulus::Verbs

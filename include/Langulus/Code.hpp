@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "Executor.hpp"
+//#include "Executor.hpp"
 #include <Langulus/Text.hpp>
 #include <Langulus/Many.hpp>
 #include <Langulus/CT/Charged.hpp>

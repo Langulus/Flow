@@ -6,12 +6,9 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "Common.hpp"
+#include <Langulus/Flow/Export.hpp>
+#include <Langulus/Many.hpp>
 
-namespace Langulus::Annies
-{
-   struct Many;
-}
 
 namespace Langulus::Flow
 {

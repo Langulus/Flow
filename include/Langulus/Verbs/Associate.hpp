@@ -6,4 +6,15 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/verbs/Associate.inl"
+#include <Langulus/TVerb.hpp>
+
+
+///                                                                           
+/// MARK: Associate/Disassociate verb                                         
+///   Either performs a shallow copy, or excites/inhibits associations,       
+/// depending on the context's complexity                                     
+///                                                                           
+LANGULUS_DEFINE_OPERATOR(Associate, Disassociate, " = ", " ~ ", 2,
+   "Either performs a shallow copy, or aggregates associations, "
+   "depending on the context's complexity"
+);

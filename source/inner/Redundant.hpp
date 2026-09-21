@@ -6,23 +6,22 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../Temporal.hpp"
+#include <Langulus/Text.hpp>
+#include <Langulus/Many.hpp>
 
 
 namespace Langulus::Flow
 {
-
    ///                                                                        
    ///   A redundant data, that is used only as past, never executed          
    ///                                                                        
-   struct Temporal::Redundant {
-      LANGULUS_CONVERTS_TO(Text);
-
+   struct Redundant {
       Many mContent;
 
       operator Text() const {
-         return "";
+         return "";//TODO?
       }
    };
+}
 
-} // namespace Langulus::Flow
+LANGULUS_MORPHISM(Flow::Redundant, Annies::Text);

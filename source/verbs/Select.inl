@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Select.hpp"
-#include "../TVerb.inl"
+#include <Langulus/TMany.hpp>
 
 #if 0
    #define VERBOSE_SELECT(...)      Logger::Verbose(__VA_ARGS__)
@@ -17,6 +17,123 @@
    #define VERBOSE_SELECT_TAB(...)  LANGULUS(NOOP)
 #endif
 
+namespace Langulus::CTTI
+{
+   LglsImplementAbilitiesFor(Many) {
+      using Can = Verbs::Select;
+
+      /// Stateless selection, for selecting some global entities, like the   
+      /// logger, for example.                                                
+      ///   @param verb selection verb                                        
+      ///   @return true if verb has been satisfied                           
+         bool Stateless(Verb& verb) {
+         verb.ForEachDeep([&](TMeta t) {
+            if (t->Is<Traits::Logger>())
+               verb << &Logger::Instance;
+         });
+         return verb.IsDone();
+      }
+
+      /// Execute the default verb in a mutable context.                      
+      /// Returns mutable results.                                            
+      ///   @param lhs the context to execute in                              
+      ///   @param verb selection verb                                        
+      ///   @return true if verb has been satisfied                           
+      bool Default(Many& lhs, Verb& verb) {
+         return InnerSelect<true>(lhs, verb);
+      }
+
+      /// Execute the default verb in an immutable context.                   
+      /// Returns immutable results.                                          
+      ///   @param lhs the context to execute in                              
+      ///   @param verb selection verb                                        
+      ///   @return true if verb has been satisfied                           
+      bool Default(Many const& lhs, Verb& verb) {
+         return InnerSelect<false>(const_cast<Many&>(lhs), verb);
+      }
+
+   private:
+      /// Default selection logic for members and abilities                   
+      ///   @tparam MUTABLE - whether or not selection is constant            
+      ///   @param context the context to execute in                          
+      ///   @param verb selection verb                                        
+      ///   @return true if verb has been satisfied                           
+      template<bool MUTABLE>
+      bool DefaultSelect(Many& context, Verb& verb) {
+         VERBOSE_SELECT_TAB("Default select: ", verb);
+         if (verb.IsMissing() or context.IsMissing()) {
+            VERBOSE_SELECT("Can't select using missing argument/context");
+            return false;
+         }
+         else if (not context) {
+            VERBOSE_SELECT("Can't select in empty context");
+            return false;
+         }
+
+         TMany<Index> indices;
+         indices.GatherFrom(verb.GetArgument());
+         bool containsOnlyIndices = not indices.IsEmpty();
+
+         TMany<Trait> selectedTraits;
+         TMany<const RTTI::Ability*> selectedAbilities;
+
+         // Scan verb argument for anything but indices                    
+         verb.ForEachDeep([&](const Many& group) {
+            // Skip indices - they were gathered before the loop           
+            if (group.Is<Index>())
+               return;
+
+            group.ForEach(
+               [&](const Construct& construct) {
+                  VERBOSE_SELECT("Selecting construct: ", construct.GetDescriptor());
+                  containsOnlyIndices = false;
+                  auto nested = verb.Fork(construct.GetDescriptor());
+                  ExecuteDefault(context, nested);
+                  verb << Abandon(nested.GetOutput());
+               },
+               [&](const Trait& trait) {
+                  VERBOSE_SELECT("Selecting trait: ", trait);
+                  containsOnlyIndices = false;
+                  auto tmeta = trait.GetTrait();
+                  if (tmeta)
+                     PerIndex<MUTABLE>(context, selectedTraits, tmeta, tmeta, indices);
+                  else
+                     PerIndex<MUTABLE>(context, selectedTraits, tmeta, trait.GetType(), indices);
+               },
+               [&](TMeta tmeta) {
+                  VERBOSE_SELECT("Selecting trait: ", tmeta);
+                  containsOnlyIndices = false;
+                  PerIndex<MUTABLE>(context, selectedTraits, tmeta, tmeta, indices);
+               },
+               [&](DMeta dmeta) {
+                  VERBOSE_SELECT("Selecting data: ", dmeta);
+                  containsOnlyIndices = false;
+                  SelectByMeta<MUTABLE>(indices, dmeta, context, selectedTraits, selectedAbilities);
+               }
+            );
+         });
+
+         if (containsOnlyIndices) {
+            // Try selecting via indices only                              
+            // This is allowed only if no metas were found in the argument 
+            VERBOSE_SELECT("Selecting via indices only: ", indices);
+            PerIndex<MUTABLE>(context, selectedTraits, TMeta {}, DMeta {}, indices);
+         }
+
+         // Output results if any, satisfying the verb                     
+         for (auto& trait : selectedTraits)
+            verb << static_cast<Many&>(trait);
+
+         verb << selectedAbilities;
+
+         if (verb.IsDone())
+            VERBOSE_SELECT(Logger::Green, "Selected: ", verb.GetOutput());
+         else
+            VERBOSE_SELECT(Logger::Red, "Nothing was selected");
+         return verb.IsDone();
+      }
+   };
+}
 
 namespace Langulus::Verbs
 {
@@ -61,24 +178,13 @@ namespace Langulus::Verbs
       return verb.IsDone();
    }*/
 
-   /// Stateless selection, for selecting some global entities, like the      
-   /// logger, for example                                                    
-   ///   @param verb - selection verb                                         
-   ///   @return true if verb has been satisfied                              
-   inline bool Select::ExecuteStateless(Verb& verb) {
-      verb.ForEachDeep([&](TMeta t) {
-         if (t->Is<Traits::Logger>())
-            verb << &Logger::Instance;
-      });
-      return verb.IsDone();
-   }
 
    /// Execute the default verb in an immutable context                       
    /// Returns immutable results                                              
    ///   @param context - the context to execute in                           
    ///   @param verb - the verb instance to execute                           
    ///   @return true if execution was a success                              
-   inline bool Select::ExecuteDefault(const Many& context, Verb& verb) {
+   /*inline bool Select::ExecuteDefault(const Many& context, Verb& verb) {
       return DefaultSelect<false>(const_cast<Many&>(context), verb);
    }
 
@@ -89,87 +195,9 @@ namespace Langulus::Verbs
    ///   @return true if execution was a success                              
    inline bool Select::ExecuteDefault(Many& context, Verb& verb) {
       return DefaultSelect<true>(context, verb);
-   }
+   }*/
 
-   /// Default selection logic for members and abilities                      
-   ///   @tparam MUTABLE - whether or not selection is constant               
-   ///   @param context - the context to execute in                           
-   ///   @param verb - the verb instance to execute                           
-   ///   @return true if execution was a success                              
-   template<bool MUTABLE>
-   bool Select::DefaultSelect(Many& context, Verb& verb) {
-      VERBOSE_SELECT_TAB("Default select: ", verb);
-      if (verb.IsMissing() or context.IsMissing()) {
-         VERBOSE_SELECT("Can't select using missing argument/context");
-         return false;
-      }
-      else if (not context) {
-         VERBOSE_SELECT("Can't select in empty context");
-         return false;
-      }
-
-      TMany<Index> indices;
-      indices.GatherFrom(verb.GetArgument());
-      bool containsOnlyIndices = not indices.IsEmpty();
-
-      TMany<Trait> selectedTraits;
-      TMany<const RTTI::Ability*> selectedAbilities;
-
-      // Scan verb argument for anything but indices                    
-      verb.ForEachDeep([&](const Many& group) {
-         // Skip indices - they were gathered before the loop           
-         if (group.Is<Index>())
-            return;
-
-         group.ForEach(
-            [&](const Construct& construct) {
-               VERBOSE_SELECT("Selecting construct: ", construct.GetDescriptor());
-               containsOnlyIndices = false;
-               auto nested = verb.Fork(construct.GetDescriptor());
-               ExecuteDefault(context, nested);
-               verb << Abandon(nested.GetOutput());
-            },
-            [&](const Trait& trait) {
-               VERBOSE_SELECT("Selecting trait: ", trait);
-               containsOnlyIndices = false;
-               auto tmeta = trait.GetTrait();
-               if (tmeta)
-                  PerIndex<MUTABLE>(context, selectedTraits, tmeta, tmeta, indices);
-               else
-                  PerIndex<MUTABLE>(context, selectedTraits, tmeta, trait.GetType(), indices);
-            },
-            [&](TMeta tmeta) {
-               VERBOSE_SELECT("Selecting trait: ", tmeta);
-               containsOnlyIndices = false;
-               PerIndex<MUTABLE>(context, selectedTraits, tmeta, tmeta, indices);
-            },
-            [&](DMeta dmeta) {
-               VERBOSE_SELECT("Selecting data: ", dmeta);
-               containsOnlyIndices = false;
-               SelectByMeta<MUTABLE>(indices, dmeta, context, selectedTraits, selectedAbilities);
-            }
-         );
-      });
-
-      if (containsOnlyIndices) {
-         // Try selecting via indices only                              
-         // This is allowed only if no metas were found in the argument 
-         VERBOSE_SELECT("Selecting via indices only: ", indices);
-         PerIndex<MUTABLE>(context, selectedTraits, TMeta {}, DMeta {}, indices);
-      }
-
-      // Output results if any, satisfying the verb                     
-      for (auto& trait : selectedTraits)
-         verb << static_cast<Many&>(trait);
-
-      verb << selectedAbilities;
-
-      if (verb.IsDone())
-         VERBOSE_SELECT(Logger::Green, "Selected: ", verb.GetOutput());
-      else
-         VERBOSE_SELECT(Logger::Red, "Nothing was selected");
-      return verb.IsDone();
-   }
+   
 
    /// Select members by providing either meta data or meta trait             
    ///   @tparam MUTABLE - whether or not selection will be mutable           

@@ -6,41 +6,15 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../TVerb.hpp"
+#include <Langulus/TVerb.hpp>
 
 
-namespace Langulus::Verbs
-{
-
-   using namespace Flow;
-
-
-   ///                                                                        
-   ///   Associate/Disassociate verb                                          
-   /// Either performs a shallow copy, or excites/inhibits associations,      
-   /// depending on the context's complexity                                  
-   ///                                                                        
-   struct Associate : TVerb<Associate> {
-      LANGULUS(POSITIVE_VERB) "Associate";
-      LANGULUS(NEGATIVE_VERB) "Disassociate";
-      LANGULUS(POSITIVE_OPERATOR) " = ";
-      LANGULUS(NEGATIVE_OPERATOR) " ~ ";
-      LANGULUS(PRECEDENCE) 2;
-      LANGULUS(INFO)
-         "Either performs a shallow copy, or aggregates associations, "
-         "depending on the context's complexity";
-
-      using TVerb::TVerb;
-      using TVerb::operator ==;
-
-      /*template<CT::Dense, CT::NotVoid...>
-      static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense, CT::NotVoid...>
-      static constexpr auto Of() noexcept;
-
-      static bool ExecuteIn(CT::Dense auto&, Verb&);*/
-
-      static bool ExecuteDefault(Many&, Verb&);
-   };
-
-} // namespace Langulus::Verbs
+///                                                                           
+/// MARK: Associate/Disassociate verb                                         
+///   Either performs a shallow copy, or excites/inhibits associations,       
+/// depending on the context's complexity                                     
+///                                                                           
+LANGULUS_DEFINE_OPERATOR(Associate, Disassociate, " = ", " ~ ", 2,
+   "Either performs a shallow copy, or aggregates associations, "
+   "depending on the context's complexity"
+);

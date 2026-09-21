@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "Interact.hpp"
-#include "../TVerb.inl"
 
 #if 0
    #define VERBOSE_INTERACT(...) Logger::Verbose(__VA_ARGS__)

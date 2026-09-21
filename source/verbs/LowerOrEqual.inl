@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "LowerOrEqual.hpp"
-#include "../TVerb.inl"
 
 
 namespace Langulus::Verbs

@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "Lower.hpp"
-#include "../TVerb.inl"
 
 
 namespace Langulus::Verbs

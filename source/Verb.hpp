@@ -21,8 +21,7 @@ namespace Langulus::Flow
    ///                                                                        
    /// It's practically a single call to the framework, or a single statement 
    /// in a code flow. Langulus is based around natural language processing   
-   /// theory found on verbs, so this is the natural name for such thing      
-   ///                                                                        
+   /// theory found on verbs, so this is the natural name for such thing.     
    struct Verb : A::Verb {
       using CTTI_Named = Yes<"Verb">;
       using CTTI_ReflectAs = Verb;

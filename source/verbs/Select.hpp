@@ -6,11 +6,21 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../TVerb.hpp"
+#include <Langulus/TVerb.hpp>
 #include <Langulus/Tag.hpp>
 
 
-namespace Langulus::Verbs
+///                                                                           
+/// MARK: Select/Deselect verb                                                
+///   Used to focus on a part of a context, or access members.                
+/// Narrows or broadens a context.                                            
+///                                                                           
+LANGULUS_DEFINE_OPERATOR(Select, Deselect, ".", "..", 100,
+   "Used to focus on a part of a context, or access members. "
+   "Narrows or broadens a context."
+);
+
+/*namespace Langulus::Verbs
 {
 
    using namespace Flow;
@@ -30,7 +40,7 @@ namespace Langulus::Verbs
          "Used to focus on a part of a container, or access members";
 
       using TVerb::TVerb;
-      using TVerb::operator ==;
+      using TVerb::operator ==;*/
 
       /*template<CT::Dense, CT::NotVoid...>
       static constexpr bool AvailableFor() noexcept;
@@ -39,7 +49,7 @@ namespace Langulus::Verbs
 
       static bool ExecuteIn(CT::Dense auto&, Verb&);*/
 
-      static bool ExecuteDefault(const Many&, Verb&);
+      /*static bool ExecuteDefault(const Many&, Verb&);
       static bool ExecuteDefault(Many&, Verb&);
       static bool ExecuteStateless(Verb&);
 
@@ -52,4 +62,4 @@ namespace Langulus::Verbs
       static bool SelectByMeta(const TMany<Index>&, DMeta, Many&, TMany<Trait>&, TMany<const RTTI::Ability*>&);
    };
 
-} // namespace Langulus::Verbs
+}*/ // namespace Langulus::Verbs

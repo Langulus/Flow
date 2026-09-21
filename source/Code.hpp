@@ -7,9 +7,10 @@
 ///                                                                           
 #pragma once
 #include "Executor.hpp"
-#include "Langulus/RTTI/Definition.hpp"
 #include <Langulus/Text.hpp>
+#include <Langulus/Many.hpp>
 #include <Langulus/CT/Charged.hpp>
+#include "Langulus/RTTI/Definition.hpp"
 
 
 namespace Langulus::Flow
@@ -54,13 +55,20 @@ namespace Langulus::Flow
    ///                                                                        
    ///   Langulus code container, parser, serializer and deserializer         
    ///                                                                        
-   struct Code : Annies::Text {
-      using CTTI_Named = Yes<"Code">;
-      using CTTI_Files = Yes<"flow">;
-      using CTTI_Bases = Annies::Text;
-      using Operator   = Serial::Operator;
+   struct Code : Text {
+      //using CTTI_ReflectAs = Code;
+      //using CTTI_Named     = Yes<"Code">;
+      using CTTI_Files     = Yes<"flow">;
+      using CTTI_Bases     = Text;
+      using Operator       = Serial::Operator;
 
-      using Annies::Text::Text;
+      using Text::Text;
+
+      /// Construction from any kind of text that is an Annies container     
+      template<CT::Text T> requires CT::Container<T>
+      constexpr Code(T&& text) {
+         this->Absorb(LglsFwd(text));
+      }
 
       //explicit Code(CT::Number auto const&);
 
@@ -166,6 +174,13 @@ namespace Langulus::CTTI
 
 namespace Langulus
 {
-   /// Convenience operator for code string literals                          
-   auto operator ""_code(const char*, ::std::size_t) -> Flow::Code;
+   /// Make a code literal                                                    
+   auto operator ""_code(const char* text, size_t size) -> Flow::Code {
+      return Flow::Code(Flow::Text::FromText(text, size));
+   }
+
+   /// Make a code literal and parse it                                       
+   auto operator ""_parse(const char* text, size_t size) -> Many {
+      return Flow::Code(Annies::Text::FromText(text, size)).Parse();
+   }
 }

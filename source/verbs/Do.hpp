@@ -10,6 +10,7 @@
 #include "Langulus/CT/Executable.hpp"
 #include "Langulus/CT/Deep.hpp"
 
+
 ///                                                                           
 /// MARK: Do/Undo                                                             
 ///   Serves as a level of indirection between context and verb.              

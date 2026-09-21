@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "Code.inl"
-#include "Verb.hpp"
 #include "Temporal.hpp"
 #include "Time.hpp"
 
@@ -27,8 +26,6 @@
 #if LANGULUS_COMPILER(WASM)
    #include <string>
 #endif
-
-LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
 
 #define ENABLE_VERBOSE() 0
 

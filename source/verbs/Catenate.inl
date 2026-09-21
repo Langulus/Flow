@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "Catenate.hpp"
-#include "../TVerb.inl"
 
 
 namespace Langulus

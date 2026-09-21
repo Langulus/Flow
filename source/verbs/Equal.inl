@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "Equal.hpp"
-#include "../TVerb.inl"
 
 
 namespace Langulus::Verbs

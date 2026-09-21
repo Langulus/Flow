@@ -56,9 +56,9 @@ namespace Langulus::Flow
       if (letter > 0 and letter <= 32)
          return true;
 
-      const auto asview = Token {*this};
-      return asview.starts_with("//") or asview.starts_with("/*");
-   }*/
+      const auto asview = Token {*this};*/
+      //return asview.starts_with("//") or asview.starts_with("/*");
+   /*}*/
 
    /// Check if the Code container begins with skippable elements             
    ///   @return true if the first symbol is a spacer                         
@@ -117,20 +117,3 @@ namespace Langulus::Flow
    }*/
 
 } // namespace Langulus::Flow
-
-namespace Langulus
-{
-
-   /// Make a code literal                                                    
-   LANGULUS(INLINED)
-   Flow::Code operator ""_code(const char* text, ::std::size_t size) {
-      return Annies::Text::From(text, size);
-   }
-
-   /// Make a code literal and parse it                                       
-   LANGULUS(INLINED)
-   auto operator ""_parse(const char* text, ::std::size_t size) {
-      return Flow::Code(Annies::Text::From(text, size)).Parse();
-   }
-
-} // namespace Langulus

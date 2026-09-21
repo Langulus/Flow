@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "Associate.hpp"
-#include "../TVerb.inl"
 
 #if 0
    #define VERBOSE_ASSOCIATE(...) Logger::Verbose(__VA_ARGS__)
@@ -104,26 +103,25 @@ namespace Langulus::CTTI
          const Many& rhs = verb.GetArgument();
    
          if (lhs.IsConstant() or lhs.GetCount() != rhs.GetCount())
-            // Can't overwrite a constant context                          
+            // Can't overwrite a constant context                       
             return false;
          else if (lhs.IsMissing() or rhs.IsMissing())
-            // Can't associate missing stuff                               
+            // Can't associate missing stuff                            
             return false;
          else if (lhs.IsExecutable() or rhs.IsExecutable())
-            // Can't associate unexecuted verbs                            
+            // Can't associate unexecuted verbs                         
             return false;
          else if (not lhs.IsExact(rhs.GetType()))
-            // Can't associate unrelated types                             
+            // Can't associate unrelated types                          
             return false;
    
-         // Attempt directly refering, if possible                         
-         // This will happen only if types are exactly the same            
-         // This is a default (fallback) routine, let's keep things simple 
+         // Attempt directly refering if possible.                      
+         // This will succeed only if types are exactly the same.       
          try { lhs.AssignAbsorb(Refer(rhs)); }
          catch (...) { return false; }
    
-         // At this point, context has a copy of verb's argument           
-         // Just make sure it goes to output                               
+         // At this point, context has a copy of verb's argument.       
+         // Just make sure it goes to output.                           
          verb << lhs;
          return true;
       }

@@ -9,18 +9,22 @@
 #include <Langulus/TVerb.hpp>
 
 
-///                                                                        
-///   Create/Destroy verb                                                  
-/// Used for allocating new elements. If the type you're creating has      
-/// a producer, you need to execute the verb in the correct context        
-///                                                                        
-LANGULUS_DEFINE_VERB(Do, Undo, "An indirection between context and flow. Not short-circuited.");
+///                                                                           
+/// MARK: Create/Destroy verb                                                 
+///   Used for allocating new elements. If the type you're creating has       
+/// a producer, you need to execute the verb in the correct context           
+///                                                                           
+LANGULUS_DEFINE_VERB(Create, Destroy,
+   "Used for allocating new elements of any kind. "
+   "If the type you're creating has a producer, "
+   "you need to have that producer in the current context. "
+   "That producer will be created automatically for you, "
+   "if context allows for it"
+);
 
-namespace Langulus::Verbs
+/*namespace Langulus::Verbs
 {
-
    using namespace Flow;
-
 
    ///                                                                        
    ///   Create/Destroy verb                                                  
@@ -32,13 +36,10 @@ namespace Langulus::Verbs
       LANGULUS(NEGATIVE_VERB) "Destroy";
       LANGULUS(PRECEDENCE) 1000;
       LANGULUS(INFO)
-         "Used for allocating new elements. "
-         "If the type you're creating has   a producer, "
-         "you need to execute the verb in a matching producer, "
-         "or that producer will be created automatically for you, if possible";
+         ;
 
       using TVerb::TVerb;
-      using TVerb::operator ==;
+      using TVerb::operator ==;*/
 
       /*template<CT::Dense, CT::NotVoid...>
       static constexpr bool AvailableFor() noexcept;
@@ -47,11 +48,11 @@ namespace Langulus::Verbs
 
       static bool ExecuteIn(CT::Dense auto&, Verb&);*/
 
-      static bool ExecuteDefault(Many&, Verb&);
+      /*static bool ExecuteDefault(Many&, Verb&);
       static bool ExecuteStateless(Verb&);
 
    protected:
       static void SetMembers(Many&, const Many&);
    };
 
-} // namespace Langulus::Verbs
+}*/ // namespace Langulus::Verbs

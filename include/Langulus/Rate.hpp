@@ -6,12 +6,12 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "Common.hpp"
+#include <Langulus/Utils/Literal.hpp>
+#include <Langulus/Utils/Values.hpp>
 
 
-namespace Langulus::Flow
+namespace Langulus
 {
-
    ///                                                                        
    ///   Refresh rates                                                        
    ///                                                                        
@@ -19,14 +19,12 @@ namespace Langulus::Flow
    /// Many of these rates map onto shader stages                             
    ///                                                                        
    struct RefreshRate {
-      LANGULUS(POD) true;
-      LANGULUS(NULLIFIABLE) true;
-      LANGULUS(NAME) "Rate";
-      LANGULUS(INFO) "Refresh rate";
+      using CTTI_POD       = Yup;
+      using CTTI_Nullable  = Yup;
+      using CTTI_Named     = Yes<"Rate">;
+      using CTTI_Info      = Yes<"Refresh rate">;
 
-      using Type = uint8_t;
-
-      enum Enum : Type {
+      enum Enum : uint8_t {
          Auto = 0,         // Automatically determined refresh rate,    
                            // based on traits and context               
 
@@ -59,9 +57,10 @@ namespace Langulus::Flow
          Counter,
       };
 
+      using Type = ::std::underlying_type_t<Enum>;
       Type mMode = Auto;
 
-      LANGULUS_NAMED_VALUES(
+      using CTTI_Values = Values<
          Auto,
          None,
          Tick,
@@ -77,32 +76,32 @@ namespace Langulus::Flow
          TessCtrl,
          TessEval,
          Pixel
-      );
+      >;
 
       // Rates that are considered shader stages, mapped to ShaderStage 
       static constexpr size_t StagesBegin = Enum::Vertex;
       static constexpr size_t StagesEnd = Enum::Counter;
-      static constexpr size_t  StagesCount = StagesEnd - StagesBegin;
+      static constexpr size_t StagesCount = StagesEnd - StagesBegin;
 
       // Rates that are considered uniforms                             
       static constexpr size_t UniformBegin = Enum::Tick;
       static constexpr size_t UniformEnd = StagesBegin;
-      static constexpr size_t  UniformCount = UniformEnd - UniformBegin;
+      static constexpr size_t UniformCount = UniformEnd - UniformBegin;
 
       // Rates that are considered inputs                               
       static constexpr size_t InputBegin = UniformBegin;
       static constexpr size_t InputEnd = StagesEnd;
-      static constexpr size_t  InputCount = InputEnd - InputBegin;
+      static constexpr size_t InputCount = InputEnd - InputBegin;
 
       // Rates that are considered static                               
       static constexpr size_t StaticUniformBegin = UniformBegin;
       static constexpr size_t StaticUniformEnd = Enum::Camera;
-      static constexpr size_t  StaticUniformCount = StaticUniformEnd - StaticUniformBegin;
+      static constexpr size_t StaticUniformCount = StaticUniformEnd - StaticUniformBegin;
 
       // Rates that are considered dynamic                              
       static constexpr size_t DynamicUniformBegin = StaticUniformEnd;
       static constexpr size_t DynamicUniformEnd = UniformEnd;
-      static constexpr size_t  DynamicUniformCount = DynamicUniformEnd - DynamicUniformBegin;
+      static constexpr size_t DynamicUniformCount = DynamicUniformEnd - DynamicUniformBegin;
 
    public:
       constexpr RefreshRate() noexcept = default;
@@ -124,5 +123,4 @@ namespace Langulus::Flow
          return static_cast<Enum>(mMode);
       }
    };
-
-} // namespace Langulus::Flow
+}

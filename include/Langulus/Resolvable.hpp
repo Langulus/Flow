@@ -6,24 +6,17 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-//#include "Verb.hpp"
 #include "Temporal.hpp"
 
 
 namespace Langulus::Flow
 {
-
    ///                                                                        
    ///   Abstract context                                                     
    ///                                                                        
    /// Holds a reflected class type and context state                         
    ///                                                                        
-#if LANGULUS_COMPILER(MSVC)
-   #pragma warning(suppress: 4275)
    struct LANGULUS_API(FLOW) Resolvable {
-#else
-   struct LANGULUS_API(FLOW) Resolvable {
-#endif
       LANGULUS(ABSTRACT) true;
       LANGULUS_CONVERTS_TO(Text);
 
@@ -99,13 +92,10 @@ namespace Langulus::Flow
 
       Text Self() const;
    };
-   
-} // namespace Langulus::Flow
+}
 
 namespace Langulus
 {
-
    Annies::Text IdentityOf(const auto&);
    Annies::Text IdentityOf(const Token&, const auto&);
-
-} // namespace Langulus
+}

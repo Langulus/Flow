@@ -6,19 +6,18 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../Temporal.hpp"
+#include "Langulus/CT/Convertible.hpp"
+#include <Langulus/Temporal.hpp>
 
 
 namespace Langulus::Flow
 {
-
-
    ///                                                                        
    ///   Entanglement definition                                              
    ///                                                                        
-   struct Temporal::Entanglement {
+   struct Entanglement {
       Entanglement* mParent = nullptr;
-      bool          mDone = false;
+      bool          mDone   = false;
    };
 
    ///                                                                        
@@ -34,9 +33,7 @@ namespace Langulus::Flow
    /// This is achieved by pushing branch contents into an Entangled element, 
    /// that has a reference to a shared Entanglement object owned by the flow 
    ///                                                                        
-   struct Temporal::Entangled {
-      LANGULUS_CONVERTS_TO(Text);
-
+   struct Entangled {
       // A reference to a shared boolean flag                           
       Ref<Entanglement> mDone;
       // Contents when mDone is true                                    
@@ -75,5 +72,6 @@ namespace Langulus::Flow
          return IsActive() ? mTrueContent : mFalseContent;
       }
    };
+}
 
-} // namespace Langulus::Flow
+LANGULUS_MORPHISM(Flow::Entangled, Annies::Text);

@@ -6,13 +6,14 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "Common.hpp"
 #include <Langulus/THive.hpp>
+#include <Langulus/TMap.hpp>
+#include <Langulus/TMany.hpp>
+#include "Producible.hpp"
 
 
 namespace Langulus::Flow
 {
-
    ///                                                                        
    ///   Factory container                                                    
    ///                                                                        
@@ -30,7 +31,6 @@ namespace Langulus::Flow
    template<class T, FactoryUsage USAGE = FactoryUsage::Default>
    class TFactory : public Annies::THive<T> {
    public:
-      LANGULUS(TYPED) T;
       using Base = Annies::THive<T>;
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
       static constexpr bool IsNotUnique = not IsUnique;
@@ -39,7 +39,7 @@ namespace Langulus::Flow
       using typename Base::Cell;
 
       // A hash map for fast retrieval of elements                      
-      TUnorderedMap<Hash, TMany<Cell*>> mHashmap;
+      TMapUnsorted<Hash, TMany<Cell*>> mHashmap;
 
       auto Produce(auto*, const Many&) -> T*;
       void CreateInner(auto*, Verb&, int, const Many& = {});
@@ -77,5 +77,6 @@ namespace Langulus::Flow
 
    template<class T>
    using TFactoryUnique = TFactory<T, FactoryUsage::Unique>;
+}
 
-} // namespace Langulus::Flow
+#include "Factory.inl"

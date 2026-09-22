@@ -26,30 +26,30 @@ using namespace Langulus::Flow;
 
 
 /// Initialize a missing point by a precompiled filter                        
-///   @param above - the missing point above this one                         
-///   @param filter - the filter to set                                       
-///   @param priority - the precedence of the point                           
+///   @param above the missing point above this one                           
+///   @param filter the filter to set                                         
+///   @param priority the precedence of the point                             
 Missing::Missing(Missing* above, const TMany<DMeta>& filter, Real priority)
    : mFilter   {filter}
    , mPriority {priority}
    , mAbove    {above} {}
 
-/// Initialize a missing point by a filter, will be precompiled               
-/// i.e. all meta data definitions will be gathered                           
-///   @param above - the missing point above this one                         
-///   @param filter - the filter to set                                       
-///   @param priority - the precedence of the point                           
+/// Initialize a missing point by a filter, which will be precompiled.        
+/// In other words: all meta data definitions will be extracted.              
+///   @param above the missing point above this one                           
+///   @param filter the filter to set                                         
+///   @param priority the precedence of the point                             
 Missing::Missing(Missing* above, const Many& filter, Real priority)
    : mPriority {priority}
    , mAbove    {above} {
-   mFilter.GatherFrom(filter, DataState::Missing);
+   mFilter.GatherFrom(filter, [](Many const& i) { return i.IsMissing(); });
    mFilter.SetState(filter.GetState());
 }
 
-/// Check if immediate contents are accepted by the filter of this point      
-/// Verbs are always accepted                                                 
-///   @param content - the content to check                                   
-///   @return true if contents are accepted                                   
+/// Check if immediate contents are accepted by the filter of this point.     
+/// Verbs are always accepted.                                                
+///   @param content the content to check                                     
+///   @return true if contents are acceptable                                 
 bool Missing::Accepts(const Many& content) const {
    if (not mFilter or content.CastsTo<Verb, true>())
       return true;

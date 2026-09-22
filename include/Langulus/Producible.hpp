@@ -6,13 +6,21 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "Common.hpp"
 #include <Langulus/Many.hpp>
 #include <Langulus/TRef.hpp>
 
 
 namespace Langulus::Flow
 {
+   /// Usage styles for TFactory                                              
+   enum class FactoryUsage {
+      Default,		// Default factories aggregate duplicated items       
+      Unique		// Unique factories never duplicate items (a set)     
+   };
+
+   template<class, FactoryUsage>
+   class TFactory;
+
 
    ///                                                                        
    ///   An element, that is factory produced (used as CRTP)                  
@@ -25,8 +33,8 @@ namespace Langulus::Flow
    ///      destruction, usually in a custom Reference(int) routine.          
    ///                                                                        
    template<class T>
-   class ProducedFrom {
-      LANGULUS(PRODUCER) T;
+   struct ProducedFrom {
+      using CTTI_Producer = T;
 
    protected:
       template<class, FactoryUsage>
@@ -50,5 +58,4 @@ namespace Langulus::Flow
       auto GetProducer() const noexcept -> const Ref<T>&;
       void TeardownInner();
    };
-
-} // namespace Langulus::Flow
+}

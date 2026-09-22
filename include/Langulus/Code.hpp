@@ -11,6 +11,7 @@
 #include <Langulus/Many.hpp>
 #include <Langulus/CT/Charged.hpp>
 #include "Langulus/RTTI/Definition.hpp"
+#include "FLow/Export.hpp"
 
 
 namespace Langulus::Flow
@@ -56,11 +57,9 @@ namespace Langulus::Flow
    ///   Langulus code container, parser, serializer and deserializer         
    ///                                                                        
    struct Code : Text {
-      //using CTTI_ReflectAs = Code;
-      //using CTTI_Named     = Yes<"Code">;
-      using CTTI_Files     = Yes<"flow">;
-      using CTTI_Bases     = Text;
-      using Operator       = Serial::Operator;
+      using CTTI_Files = Yes<"flow">;
+      using CTTI_Bases = Text;
+      using Operator   = Serial::Operator;
 
       using Text::Text;
 

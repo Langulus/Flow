@@ -16,8 +16,7 @@ namespace Langulus
    constexpr TimePoint::TimePoint() noexcept
       : time_point {min()} {
       using Representation = typename Base::rep;
-      static_assert(sizeof(Representation) == sizeof(TimePoint),
-         "Size mismatch");
+      static_assert(sizeof(Representation) == sizeof(TimePoint), "Size mismatch");
    }
 
    /// Copy-construction                                                      

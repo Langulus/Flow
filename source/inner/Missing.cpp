@@ -51,7 +51,7 @@ Missing::Missing(Missing* above, const Many& filter, Real priority)
 ///   @param content the content to check                                     
 ///   @return true if contents are acceptable                                 
 bool Missing::Accepts(const Many& content) const {
-   if (not mFilter or content.CastsTo<Verb, true>())
+   if (not mFilter or content.template Is<Verb>())
       return true;
 
    for (auto type : mFilter) {

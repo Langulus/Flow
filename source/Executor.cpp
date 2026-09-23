@@ -6,13 +6,15 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "Executor.hpp"
+#include "inner/Missing.hpp"
+#include "inner/Redundant.hpp"
+
 #include <Langulus/Verbs/Do.hpp>
 #include <Langulus/Verbs/Interpret.hpp>
 #include <Langulus/Verbs/Create.hpp>
 #include "Langulus/Except.hpp"
 #include "Langulus/Tag.hpp"
-#include "inner/Missing.hpp"
-#include "inner/Redundant.hpp"
+#include "Langulus/Recipe.hpp"
 
 #if 0
    #define VERBOSE(...)      Logger::Verbose(__VA_ARGS__)
@@ -150,7 +152,7 @@ namespace Langulus::Flow
                      LglsError("Tag AND failure: "/*, flow*/);
                }
 
-               output.Compose(Tag::From(tag.GetTrait(), Abandon(local)));
+               output.Compose(Tag::From(tag, Abandon(local)));
             },
             [&](const Recipe& recipe) {
                // Nest if recipes, but retain each recipe               
@@ -228,7 +230,7 @@ namespace Langulus::Flow
                output.SmartPush(IndexBack, Abandon(local));*/
                TODO();
             },
-            [&](const A::Verb& constVerb) {
+            [&](const Verb& constVerb) {
                // Execute verbs                                         
                if (skipVerbs)
                   return Loop::Break;

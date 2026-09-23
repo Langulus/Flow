@@ -7,6 +7,7 @@
 ///                                                                           
 #include "Missing.hpp"
 #include "Redundant.hpp"
+#include <Langulus/Temporal.hpp>
 #include <Langulus/Verbs/Do.hpp>
 #include <Langulus/Verbs/Interpret.hpp>
 
@@ -55,7 +56,7 @@ bool Missing::Accepts(const Many& content) const {
       return true;
 
    for (auto type : mFilter) {
-      if (content.template CastsToMeta<true>(type))
+      if (content.CastsTo(type, 1, true))
          return true;
    }
 
@@ -131,7 +132,7 @@ void MissingPast::FillPast(const Many& content) {
             }
             else if (subcontent.GetType()) {
                for (const auto& type : mFilter) {
-                  if (not subcontent.GetType()->CastsTo<false>(type))
+                  if (not subcontent.CastsTo(type))
                      continue;
 
                   mContent <<= &subcontent;
@@ -240,7 +241,7 @@ void MissingFuture::FillFuture(const Many& content, Temporal& flow) {
             }
             else if (subcontent.GetType()) {
                for (const auto& type : mFilter) {
-                  if (not subcontent.GetType()->CastsTo<false>(type))
+                  if (not subcontent.CastsTo(type))
                      continue;
 
                   mContent <<= &subcontent;

@@ -120,16 +120,16 @@ namespace Langulus::Flow
          "Producer isn't related to the reflected one");
 
       verb.ForEachDeep(
-         [&](const Construct& construct) {
+         [&](const Recipe& recipe) {
             // For each construct...                                    
-            if (not MetaOf<T>()->CastsTo(construct.GetType()))
+            if (not MetaOf<T>()->CastsTo(recipe.GetTarget()))
                return;
             
             auto count = static_cast<int>(
-               ::std::floor(construct.GetCharge().mMass * verb.GetMass())
+               ::std::floor(recipe.GetCharge().mMass * verb.GetMass())
             );
 
-            CreateInner(producer, verb, count, construct.GetDescriptor());
+            CreateInner(producer, verb, count, recipe.GetDescriptor());
          },
          [&](const DMeta& type) {
             // For each type...                                         
@@ -260,9 +260,9 @@ namespace Langulus::Flow
    void FACTORY()::Select(Verb& verb) {
       // For each construct or meta compatible with the factory         
       verb.ForEachDeep(
-         [&](const Construct& construct) {
+         [&](const Recipe& recipe) {
             // For each construct...                                    
-            if (not MetaDataOf<T>()->CastsTo(construct.GetType()))
+            if (not MetaDataOf<T>()->CastsTo(recipe.GetTarget()))
                return;
 
             TODO();

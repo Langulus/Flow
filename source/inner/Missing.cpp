@@ -448,14 +448,14 @@ Many Missing::Link(const Many& scope, const MissingFuture& context) const {
          const auto tab = VerboseLinking(trait, context);
          result << Trait::From(trait.GetTrait(), Link(trait, context));
       },
-      [&](const Construct& construct) {
+      [&](const Recipe& recipe) {
          // Link a construct                                            
-         const auto tab = VerboseLinking(construct, context);
-         result << Construct {
-            construct.GetType(), Link(construct.GetDescriptor(), context)
+         const auto tab = VerboseLinking(recipe, context);
+         result << Recipe {
+            recipe.GetTarget(), Link(recipe.GetDescriptor(), context)
          };
       },
-      [&](const A::Verb& verb) {
+      [&](const Verb& verb) {
          // Link a verb                                                 
          const auto tab = VerboseLinking(verb, context);
          auto source = Link(verb.GetSource(), context);

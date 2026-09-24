@@ -9,9 +9,10 @@
 //#include "Executor.hpp"
 #include <Langulus/Text.hpp>
 #include <Langulus/Many.hpp>
+#include <Langulus/Verb.hpp>
 #include <Langulus/CT/Charged.hpp>
 #include "Langulus/RTTI/Definition.hpp"
-#include "FLow/Export.hpp"
+#include "Flow/Export.hpp"
 
 
 namespace Langulus::Flow
@@ -175,7 +176,7 @@ namespace Langulus
 {
    /// Make a code literal                                                    
    auto operator ""_code(const char* text, size_t size) -> Flow::Code {
-      return Flow::Code(Flow::Text::FromText(text, size));
+      return Flow::Code(Annies::Text::FromText(text, size));
    }
 
    /// Make a code literal and parse it                                       

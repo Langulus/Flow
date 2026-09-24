@@ -385,15 +385,15 @@ Many Temporal::Compile(const Many& scope, Real priority) {
             Compile(subscope, priority)
          );
       },
-      [&](const Construct& subscope) {
+      [&](const Recipe& subscope) {
          // Compile constructs                                          
-         result << Construct {
-            subscope.GetType(),
+         result << Recipe {
+            subscope.GetTarget(),
             Compile(subscope.GetDescriptor(), priority),
             subscope.GetCharge()
          };
       },
-      [&](const A::Verb& subscope) {
+      [&](const Verb& subscope) {
          // Compile verbs                                               
          auto v = Verb::FromMeta(
             subscope.GetVerb(),

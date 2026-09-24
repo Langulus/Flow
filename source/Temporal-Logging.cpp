@@ -299,19 +299,19 @@ void Temporal::DumpVerb(const A::Verb& v) {
 
 /// Dump a construct                                                          
 ///   @param c - the construct to dump                                        
-void Temporal::DumpConstruct(const Construct& c) {
+void Temporal::DumpConstruct(const Recipe& recipe) {
    // Can we fit the construct on a single line?                        
-   const auto serv = Verbs::Interpret::To<Annies::Text>(c);
+   const auto serv = Verbs::Interpret::To<Annies::Text>(recipe);
    const auto separated = serv.GetCount() > CarryOverLimit;
 
    // Write the type, charge, and open the scope                        
-   Logger::Append(c.GetType(), c.GetCharge(), '(');
+   Logger::Append(recipe.GetTarget(), recipe.GetCharge(), '(');
    if (separated)
       Logger::Append(Logger::Tab);
 
    // Write the descriptor contents                                     
    bool unused = true;
-   DumpInner(c.GetDescriptor(), separated, unused);
+   DumpInner(recipe.GetDescriptor(), separated, unused);
 
    // Close the scope                                                   
    if (separated) {

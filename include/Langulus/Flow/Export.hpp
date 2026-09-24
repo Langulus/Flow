@@ -20,13 +20,6 @@
 
 namespace Langulus::Flow
 {
-   /*using namespace Annies;
-   using RTTI::VMeta;
-   using RTTI::TMeta;
-   using RTTI::DMeta;
-   using RTTI::CMeta;*/
-   //using RTTI::AMeta;
-
    ///                                                                        
    ///   Bits for seek functions                                              
    ///                                                                        
@@ -50,5 +43,4 @@ namespace Langulus::Flow
    constexpr bool operator & (const Seek& lhs, const Seek& rhs) {
       return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
    }
-
 }

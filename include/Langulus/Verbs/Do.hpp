@@ -7,8 +7,8 @@
 ///                                                                           
 #pragma once
 #include <Langulus/TVerb.hpp>
-#include "Langulus/CT/Executable.hpp"
-#include "Langulus/CT/Deep.hpp"
+//#include "Langulus/CT/Executable.hpp"
+//#include "Langulus/CT/Deep.hpp"
 
 
 ///                                                                           
@@ -31,43 +31,3 @@ LANGULUS_DEFINE_VERB(Do, Undo, 0,
    "An indirection between context and flow. "
    "Not short-circuited."
 );
-
-/*namespace Langulus::Verbs
-{
-   struct Do : Annies::TVerb<Do> {
-      using CTTI_DefineVerb = NamedVerb<"Do", "Undo">;
-      using CTTI_Info       = Yes<"An indirection between context and flow. Not short-circuited.">;
-
-      using TVerb::TVerb;*/
-      //using TVerb::operator ==;
-
-      /*template<CT::Dense, CT::NotVoid...>
-      static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense, CT::NotVoid...>
-      static constexpr auto Of() noexcept;
-
-      static bool ExecuteIn(CT::Dense auto&, Verb&);*/
-      /*static bool ExecuteDefault(Many const&, Verb&);
-      static bool ExecuteDefault(Many&, Verb&);
-      static bool ExecuteStateless(Verb&);
-
-      static Do In(auto&&, auto&&);
-   };
-}*/
-
-namespace Langulus::Flow
-{
-   static bool GenericExecuteIn(CT::Dense auto&, CT::Executable auto&);
-   static bool GenericExecuteDefault(Many const&, CT::Executable auto&);
-   static bool GenericExecuteDefault(Many&, CT::Executable auto&);
-   static bool GenericExecuteStateless(CT::Executable auto&);
-
-   template<bool DISPATCH, bool DEFAULT, bool FALLBACK>
-   size_t Execute(CT::NotVoid auto&, CT::Executable auto&);
-
-   template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true>
-   size_t DispatchFlat(CT::Deep auto&, CT::Executable auto&);
-
-   template<bool RESOLVE = true, bool DISPATCH = true, bool DEFAULT = true>
-   size_t DispatchDeep(CT::Deep auto&, CT::Executable auto&);
-}

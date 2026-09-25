@@ -9,7 +9,7 @@
 //#include "Executor.hpp"
 #include <Langulus/Text.hpp>
 #include <Langulus/Many.hpp>
-#include <Langulus/Verb.hpp>
+#include <Langulus/TVerb.hpp>
 #include <Langulus/CT/Charged.hpp>
 #include "Langulus/RTTI/Definition.hpp"
 #include "Flow/Export.hpp"

@@ -11,7 +11,7 @@
 #include <Langulus/TMap.hpp>
 #include <Langulus/TMany.hpp>
 #include <Langulus/TRef.hpp>
-#include <Langulus/Tag.hpp>
+#include <Langulus/TTag.hpp>
 #include <Langulus/Recipe.hpp>
 
 
@@ -128,7 +128,7 @@ namespace Langulus::Flow
       static void DumpSeparator(const Many&, bool newline, bool& first);
       static void DumpMissing(const Missing&);
       static void DumpVerb(const Verb&);
-      static void DumpTrait(const Tag&);
+      static void DumpTag(const Tag&);
       static void DumpRecipe(const Recipe&);
    };
 }

@@ -8,7 +8,7 @@
 #pragma once
 #include <Langulus/Flow/Export.hpp>
 #include <Langulus/Many.hpp>
-#include <Langulus/Verb.hpp>
+#include <Langulus/TVerb.hpp>
 
 
 namespace Langulus::Flow

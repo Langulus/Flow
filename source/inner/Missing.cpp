@@ -168,9 +168,9 @@ void MissingPast::FillPast(const Many& content) {
 
    if (mFilter) {
       // Filters are available, interpret source as requested           
-      Verbs::Interpret interpreter {mFilter};
-      auto& output = interpreter.GetOutput();
-      if (DispatchDeep(content, interpreter) and output) {
+      Verbs::Interpret interpret {mFilter};
+      auto& output = interpret.GetOutput();
+      if (Verbs::Do(interpret).In(content).Run() and output) {
          VERBOSE_MISSING_POINT(Logger::Green, 
             "Satisfying filter by interpreting ", content, " as ", output);
          commit(output);
@@ -382,15 +382,15 @@ void MissingFuture::Commit(const Many& linked, Temporal& flow) {
 template<class T>
 decltype(auto) Missing::VerboseLinking(const T& what, const MissingFuture& context) {
    #if VERBOSE_MISSING_ENABLED()
-      if constexpr (CT::Same<T, Trait>) {
-         Logger::Verbose("Linking trait ");
-         Temporal::DumpTrait(what);
+      if constexpr (CT::Same<T, Tag>) {
+         Logger::Verbose("Linking tag ");
+         Temporal::DumpTag(what);
       }
-      else if constexpr (CT::Same<T, Construct>) {
-         Logger::Verbose("Linking construct ");
-         Temporal::DumpConstruct(what);
+      else if constexpr (CT::Same<T, Recipe>) {
+         Logger::Verbose("Linking recipe ");
+         Temporal::DumpRecipe(what);
       }
-      else if constexpr (CT::Same<T, A::Verb>) {
+      else if constexpr (CT::Same<T, Verb>) {
          Logger::Verbose("Linking verb ");
          Temporal::DumpVerb(what);
       }
@@ -443,28 +443,21 @@ Many Missing::Link(const Many& scope, const MissingFuture& context) const {
 
    // Link all missing past points in the provided scope using context  
    const auto found = scope.ForEach(
-      [&](const Trait& trait) {
-         // Link a trait                                                
-         const auto tab = VerboseLinking(trait, context);
-         result << Trait::From(trait.GetTrait(), Link(trait, context));
+      [&](const Tag& tag) {
+         // Link a tag                                                  
+         const auto tab = VerboseLinking(tag, context);
+         result << Tag::From(tag, Link(tag, context));
       },
       [&](const Recipe& recipe) {
          // Link a construct                                            
          const auto tab = VerboseLinking(recipe, context);
-         result << Recipe {
-            recipe.GetTarget(), Link(recipe.GetDescriptor(), context)
-         };
+         result << Recipe::From(recipe, Link(recipe.GetDescriptor(), context));
       },
       [&](const Verb& verb) {
          // Link a verb                                                 
          const auto tab = VerboseLinking(verb, context);
          auto source = Link(verb.GetSource(), context);
-         result << Verb::FromMeta(
-            verb.GetVerb(), 
-            Link(verb.GetArgument(), context),
-            verb.GetCharge(), 
-            verb.GetVerbState()
-         ).SetSource(Abandon(source));
+         result << Verb::From(verb, Link(verb.GetArgument(), context)).SetSource(Abandon(source));
       },
       [&](const MissingPast& past) {
          // Replace a missing past point with provided context          
@@ -473,7 +466,7 @@ Many Missing::Link(const Many& scope, const MissingFuture& context) const {
             #if VERBOSE_MISSING_ENABLED()
                Logger::Error("Skipped because of precedence");
             #endif
-            LANGULUS_THROW(Link, "Skipped because of precedence");
+            throw Exception("Skipped because of precedence");
          }
 
          if (past.mFilter) {
@@ -496,7 +489,7 @@ Many Missing::Link(const Many& scope, const MissingFuture& context) const {
             #if VERBOSE_MISSING_ENABLED()
                Logger::Error("Nothing to link with - context is empty");
             #endif
-            LANGULUS_THROW(Link, "Nothing to link with");
+            throw Exception("Nothing to link with");
          }
       }
    );
@@ -530,15 +523,15 @@ void Missing::RemapFutures(MissingFuture& context, const Many& stack) {
 
    // Flat if reached                                                   
    stack.ForEachRev(
-      [&](const Trait& trait) {
+      [&](const Tag& tag) {
          // Nest inside traits                                          
-         RemapFutures(context, static_cast<const Many&>(trait));
+         RemapFutures(context, tag.GetData());
       },
-      [&](const Construct& con) {
+      [&](const Recipe& recipe) {
          // Nest inside constructs                                      
-         RemapFutures(context, con.GetDescriptor());
+         RemapFutures(context, recipe.GetDescriptor());
       },
-      [&](const A::Verb& verb) {
+      [&](const Verb& verb) {
          // Nest inside verbs                                           
          RemapFutures(context, verb.GetArgument());
          RemapFutures(context, verb.GetSource());

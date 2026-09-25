@@ -13,7 +13,7 @@
 #include <Langulus/Verbs/Interpret.hpp>
 #include <Langulus/Verbs/Create.hpp>
 #include "Langulus/Except.hpp"
-#include "Langulus/Tag.hpp"
+#include "Langulus/TTag.hpp"
 #include "Langulus/Recipe.hpp"
 
 #if 0
@@ -30,39 +30,39 @@ using namespace Langulus;
 using namespace Langulus::Flow;
 
 
-/// Nested AND/OR scope execution with output                              
-///   @param flow - the flow to execute                                    
-///   @param context - the environment in which scope will be executed     
-///   @param output - [out] verb result will be pushed here                
-///   @param integrate - execution happens in two styles:                  
-///      1. integration - everything not executed will still be pushed to  
-///         output, preserving the hierarchy. useful when integrating verbs
-///      2. not integration - only unexecuted verbs will push to output,   
-///         useful for collecting side-effects when updating               
-///   @param silent - whether or not to silence logging, in case we're     
-///      executing at compile-time, for example                            
-///   @return true of no errors occured                                    
-bool Execute(
+/// Nested AND/OR scope execution with output                                 
+///   @param flow - the flow to execute                                       
+///   @param context - the environment in which scope will be executed        
+///   @param output - [out] verb result will be pushed here                   
+///   @param integrate - execution happens in two styles:                     
+///      1. integration - everything not executed will still be pushed to     
+///         output, preserving the hierarchy. useful when integrating verbs   
+///      2. not integration - only unexecuted verbs will push to output,      
+///         useful for collecting side-effects when updating                  
+///   @param silent - whether or not to silence logging, in case we're        
+///      executing at compile-time, for example                               
+///   @return true of no errors occured                                       
+/*bool Execute(
    const Many& flow, Many& context, Many& output,
    const bool integrate, const bool silent
 ) {
    bool skipVerbs = false;
    return Execute(flow, context, output, integrate, skipVerbs, silent);
-}
+}*/
 
-/// Nested AND/OR scope execution with output                              
-///   @param flow - the flow to execute                                    
-///   @param context - the environment in which scope will be executed     
-///   @param output - [out] verb result will be pushed here                
-///   @param integrate - execution happens in two styles:                  
-///      1. integration - everything not executed will still be pushed to  
-///         output, preserving the hierarchy. useful when integrating verbs
-///      2. not integration - only unexecuted verbs will push to output,   
-///         useful for collecting side-effects when updating               
-///   @param skipVerbs - [in/out] whether to skip verbs after OR success   
-///   @param silent - whether or not to silence logging, in case we're     
-///      executing at compile-time, for example                            
-///   @return true of no errors occured                                    
+/// Nested AND/OR scope execution with output                                 
+///   @param flow - the flow to execute                                       
+///   @param context - the environment in which scope will be executed        
+///   @param output - [out] verb result will be pushed here                   
+///   @param integrate - execution happens in two styles:                     
+///      1. integration - everything not executed will still be pushed to     
+///         output, preserving the hierarchy. useful when integrating verbs   
+///      2. not integration - only unexecuted verbs will push to output,      
+///         useful for collecting side-effects when updating                  
+///   @param skipVerbs - [in/out] whether to skip verbs after OR success      
+///   @param silent - whether or not to silence logging, in case we're        
+///      executing at compile-time, for example                               
+///   @return true of no errors occured                                       
 bool Execute(
    const Many& flow, Many& context, Many& output,
    const bool integrate, bool& skipVerbs, const bool silent
@@ -81,7 +81,7 @@ bool Execute(
             ExecuteAND(flow, context, results, integrate, skipVerbs, silent);
       }
       catch (...) {
-         // Execution failed                                         
+         // Execution failed                                            
          return false;
       }
    }
@@ -90,19 +90,19 @@ bool Execute(
    return true;
 }
 
-/// Nested AND scope execution                                             
-///   @param flow - the flow to execute                                    
-///   @param context - the environment in which scope will be executed     
-///   @param output - [out] verb result will be pushed here                
-///   @param integrate - execution happens in two styles:                  
-///      1. integration - everything not executed will still be pushed to  
-///         output, preserving the hierarchy. useful when integrating verbs
-///      2. not integration - only unexecuted verbs will push to output,   
-///         useful for collecting side-effects when updating               
-///   @param skipVerbs - [in/out] whether to skip verbs after OR success   
-///   @param silent - whether or not to silence logging, in case we're     
-///      executing at compile-time, for example                            
-///   @return true of no errors occured                                    
+/// Nested AND scope execution                                                
+///   @param flow - the flow to execute                                       
+///   @param context - the environment in which scope will be executed        
+///   @param output - [out] verb result will be pushed here                   
+///   @param integrate - execution happens in two styles:                     
+///      1. integration - everything not executed will still be pushed to     
+///         output, preserving the hierarchy. useful when integrating verbs   
+///      2. not integration - only unexecuted verbs will push to output,      
+///         useful for collecting side-effects when updating                  
+///   @param skipVerbs - [in/out] whether to skip verbs after OR success      
+///   @param silent - whether or not to silence logging, in case we're        
+///      executing at compile-time, for example                               
+///   @return true of no errors occured                                       
 bool ExecuteAND(
    const Many& flow, Many& context, Many& output,
    const bool integrate, bool& skipVerbs, const bool silent
@@ -110,7 +110,7 @@ bool ExecuteAND(
    size_t executed = 0;
    if (flow.IsDeep() and not flow.IsSparse()) {
       executed = flow.ForEach([&](const Many& block) {
-         // Nest if deep                                             
+         // Nest if deep                                                
          Many local;
          if (not Execute(block, context, local, integrate, skipVerbs, silent)) {
             if (silent)
@@ -125,7 +125,7 @@ bool ExecuteAND(
    else if (not flow.IsSparse()) {
       executed = flow.ForEach(
          [&](const Missing& missing) {
-            // Nest if missing points                                
+            // Nest if missing points                                   
             Many local;
             if (not Execute(missing.mContent, context, local, integrate, skipVerbs, silent)) {
                if (silent)
@@ -137,9 +137,9 @@ bool ExecuteAND(
             output.Compose(Abandon(local));
          },
          [&](const Tag& tag) {
-            // Nest if traits, but retain each trait                 
+            // Nest if traits, but retain each trait                    
             if (tag.IsMissing()) {
-               // Never touch missing stuff, only propagate it       
+               // Never touch missing stuff, only propagate it          
                output.Compose(tag);
                return;
             }
@@ -155,7 +155,7 @@ bool ExecuteAND(
             output.Compose(Tag::From(tag, Abandon(local)));
          },
          [&](const Recipe& recipe) {
-            // Nest if recipes, but retain each recipe               
+            // Nest if recipes, but retain each recipe                  
             VERBOSE("Executing recipe: ", recipe);
 
             Many local;
@@ -168,9 +168,9 @@ bool ExecuteAND(
 
             auto solved = Recipe::From(recipe, Abandon(local));
 
-            // We can attempt an implicit Verbs::Create to make      
-            // the data at compile-time. Allowed only if no producer 
-            // was specified and if construct is not flow-dependent. 
+            // We can attempt an implicit Verbs::Create to make         
+            // the data at compile-time. Allowed only if no producer    
+            // was specified and if construct is not flow-dependent.    
             if (not recipe.GetTarget().GetProducer() /*and not recipe.GetCharge().IsFlowDependent()*/) {
                Verbs::Create creator {&solved};
                if (Verb::GenericExecuteStateless(creator)) {
@@ -179,7 +179,7 @@ bool ExecuteAND(
                }
             }
             
-            // Otherwise just propagate                              
+            // Otherwise just propagate                                 
             output.Compose(Abandon(solved));
          },
          [&](const Neat& neat) {
@@ -240,12 +240,7 @@ bool ExecuteAND(
 
             // Shallow-copy the verb to make it mutable              
             // Also resets its output                                
-            auto verb = Verb::FromMeta(
-               constVerb.GetVerb(),
-               constVerb.GetArgument(),
-               constVerb,
-               constVerb.GetVerbState()
-            );
+            auto verb = Verb::From(constVerb, constVerb.GetArgument());
             verb.SetSource(constVerb.GetSource());
 
             if (verb.IsMissing()) {
@@ -394,12 +389,7 @@ bool ExecuteOR(
 
             // Shallow-copy the verb to make it mutable              
             // Also resets its output                                
-            auto verb = Verb::FromMeta(
-               constVerb.GetVerb(),
-               constVerb.GetArgument(),
-               constVerb
-            );
-
+            auto verb = Verb::From(constVerb, constVerb.GetArgument());
             if (verb.IsMissing()) {
                if (integrate) {
                   output.Compose(verb);
@@ -497,10 +487,8 @@ bool ExecuteVerb(Many& context, Verb& verb, const bool silent) {
       // Just making sure that the integrated argument & source are  
       // propagated to the verb's output                             
       if (not verb.GetOutput()) {
-         if (verb)
-            verb << Move(verb.GetArgument());
-         else
-            verb << Move(verb.GetSource());
+         if (verb)   verb << Move(verb.GetArgument());
+         else        verb << Move(verb.GetSource());
       }
 
       return true;

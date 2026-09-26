@@ -8,7 +8,7 @@
 #include <Langulus/Resolvable.inl>
 
 
-namespace Langulus::Flow
+/*namespace Langulus::Flow
 {
 
    /// Get the class name token                                               
@@ -126,4 +126,4 @@ namespace Langulus::Flow
    }
 #endif
 
-} // namespace Langulus::Flow
+}*/ // namespace Langulus::Flow

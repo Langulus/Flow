@@ -291,7 +291,7 @@ void MissingFuture::FillFuture(const Many& content, Temporal& flow) {
       // Filters are available, interpret contents as requested         
       Verbs::Interpret interpreter {mFilter};
       auto& output = interpreter.GetOutput();
-      if (DispatchDeep(linked, interpreter) and output) {
+      if (interpreter.In(linked).Run() and output) {
          VERBOSE_MISSING_POINT(Logger::Green, 
             "Satisfying filter by interpreting ", linked, " as ", output);
          Commit(output, flow);
@@ -341,10 +341,10 @@ void MissingFuture::Commit(const Many& linked, Temporal& flow) {
          if (time) {
             // Verb is timed, forward it to the time stack              
             local[0].SetTime(0);
-            auto found = flow.mTimeStack.FindIt(time);
+            auto found = flow.mTimeStack.Find(time);
             if (not found) {
                flow.mTimeStack.Insert(time, flow);
-               found = flow.mTimeStack.FindIt(time);
+               found = flow.mTimeStack.Find(time);
             }
 
             LglsAssumeDev(found->mFuture,

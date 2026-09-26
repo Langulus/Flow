@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "Resolvable.hpp"
+/*#include "Resolvable.hpp"
 #include "Verbs/Do.hpp"
 #include "Verbs/Associate.hpp"
 #include "Verbs/Interpret.hpp"
@@ -225,4 +225,4 @@ namespace Langulus::Flow
       }
    }
 
-} // namespace Langulus::Flow
+}*/ // namespace Langulus::Flow

@@ -47,16 +47,16 @@ namespace Langulus::Flow
       ///   @param onfalse - false path branch contents                       
       Entangled(Entanglement* done, Many&& ontrue, Many&& onfalse)
          : mDone           {done}
-         , mTrueContent    {Forward<Many>(ontrue)}
-         , mFalseContent   {Forward<Many>(onfalse)} {
+         , mTrueContent    {LglsFwd(ontrue)}
+         , mFalseContent   {LglsFwd(onfalse)} {
          LglsAssumeDev(done, "Invalid entanglement handle");
       }
 
       /// Just stringify the contents                                         
       explicit operator Text() const {
          Text result;
-         if (IsActive())  mTrueContent.Serialize(result);
-         else            mFalseContent.Serialize(result);
+         if (IsActive())   Serialize(mTrueContent,  result);
+         else              Serialize(mFalseContent, result);
          return result;
       }
 

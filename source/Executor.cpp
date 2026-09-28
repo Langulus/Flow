@@ -63,7 +63,7 @@ using namespace Langulus::Flow;
 ///   @param silent - whether or not to silence logging, in case we're        
 ///      executing at compile-time, for example                               
 ///   @return true of no errors occured                                       
-bool Execute(
+bool Langulus::Flow::Execute(
    const Many& flow, Many& context, Many& output,
    const bool integrate, bool& skipVerbs, const bool silent
 ) {

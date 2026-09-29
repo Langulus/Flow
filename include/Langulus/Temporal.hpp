@@ -26,7 +26,7 @@ namespace Langulus::Flow
 
 
    ///                                                                        
-   ///   Temporal flow                                                        
+   /// MARK: Temporal flow                                                    
    ///                                                                        
    ///   Gives temporality to anything, by providing a time gradient. Can be  
    /// used to select time points and temporal context.                       
@@ -82,9 +82,9 @@ namespace Langulus::Flow
       TMany<Entanglement*> mEntanglements;
 
    public:
+      LANGULUS_API(FLOW) Temporal();
       LANGULUS_API(FLOW) Temporal(Temporal*);
 
-      LANGULUS_API(FLOW) Temporal() = default;
       LANGULUS_API(FLOW) Temporal(Temporal&&) noexcept = default;
       LANGULUS_API(FLOW) Temporal(const Temporal&) noexcept = default;
       LANGULUS_API(FLOW) ~Temporal() = default;

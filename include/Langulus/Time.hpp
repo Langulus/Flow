@@ -92,7 +92,7 @@ namespace Langulus
 namespace fmt
 {
    ///                                                                        
-   /// Extend FMT to be capable of logging Flow::Time                         
+   /// Extend FMT to be capable of logging Langulus::Time                     
    ///                                                                        
    template<>
    struct formatter<Langulus::Time> {

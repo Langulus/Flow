@@ -72,7 +72,8 @@ void Temporal::DumpSeparator(const Many& data, bool newline, bool& first) {
 /// Inner nested dumper                                                       
 ///   @return true if stuff was dumped on a new line                          
 bool Temporal::DumpInner(const Many& data, bool newline, bool& first) {
-   Text serial; data.Serialize(serial);
+   Text serial;
+   Langulus::Serialize(data, serial);
    const bool tooLong = serial.GetCount() > CarryOverLimit;
 
    if (data.IsDeep()) {
@@ -110,13 +111,13 @@ bool Temporal::DumpInner(const Many& data, bool newline, bool& first) {
          DumpSeparator(data, newline or tooLong, first);
          DumpVerb(v);
       },
-      [&](const Construct& c) {
+      [&](const Recipe& r) {
          DumpSeparator(data, newline or tooLong, first);
-         DumpConstruct(c);
+         DumpRecipe(r);
       },
-      [&](const Trait& t) {
+      [&](const Tag& t) {
          DumpSeparator(data, newline or tooLong, first);
-         DumpTrait(t);
+         DumpTag(t);
       },
       [&](const MissingFuture& p) {
          if (p.mSuspended) {
@@ -151,7 +152,7 @@ bool Temporal::DumpInner(const Many& data, bool newline, bool& first) {
 
          DumpMissing(p);
       },
-      [&](const AMeta& meta) {
+      [&](RTTI::Inner::Definition const* meta) {
          // Write meta definition                                       
          DumpSeparator(data, newline or tooLong, first);
 

@@ -30,7 +30,7 @@ using namespace Langulus::Flow;
 ///   @param environment - the initial flow environment                       
 Temporal::Temporal() {
    mPriorityStack << MissingFuture {};
-   mFuture = mPriorityStack.Get<MissingFuture*>();
+   mFuture = mPriorityStack.As<MissingFuture*>();
 }
 
 /// Construct as a sub-flow                                                   
@@ -39,65 +39,7 @@ Temporal::Temporal() {
 Temporal::Temporal(Temporal* parent)
    : mParent {parent} {
    mPriorityStack << MissingFuture {};
-   mFuture = mPriorityStack.Get<MissingFuture*>();
-}
-
-Temporal::Temporal(Temporal&& other) noexcept
-   : mParent         {::std::move(other.mParent)}
-   , mStart          {::std::move(other.mStart)}
-   , mNow            {::std::move(other.mNow)}
-   , mPrevTime       {::std::move(other.mPrevTime)}
-   , mTimePeriod     {::std::move(other.mTimePeriod)}
-   , mRatePeriod     {::std::move(other.mRatePeriod)}
-   , mPriorityStack  {::std::move(other.mPriorityStack)}
-   , mFuture         {::std::move(other.mFuture)}
-   , mTimeStack      {::std::move(other.mTimeStack)}
-   , mFrequencyStack {::std::move(other.mFrequencyStack)}
-   , mEntanglements  {::std::move(other.mEntanglements)} {}
-
-Temporal::Temporal(const Temporal& other) noexcept
-   : mParent         {other.mParent}
-   , mStart          {other.mStart}
-   , mNow            {other.mNow}
-   , mPrevTime       {other.mPrevTime}
-   , mTimePeriod     {other.mTimePeriod}
-   , mRatePeriod     {other.mRatePeriod}
-   , mPriorityStack  {other.mPriorityStack}
-   , mFuture         {other.mFuture}
-   , mTimeStack      {other.mTimeStack}
-   , mFrequencyStack {other.mFrequencyStack}
-   , mEntanglements  {other.mEntanglements} {}
-
-Temporal::~Temporal() {}
-
-Temporal& Temporal::operator = (Temporal&& rhs) noexcept {
-   mParent         = ::std::move(rhs.mParent);
-   mStart          = ::std::move(rhs.mStart);
-   mNow            = ::std::move(rhs.mNow);
-   mPrevTime       = ::std::move(rhs.mPrevTime);
-   mTimePeriod     = ::std::move(rhs.mTimePeriod);
-   mRatePeriod     = ::std::move(rhs.mRatePeriod);
-   mPriorityStack  = ::std::move(rhs.mPriorityStack);
-   mFuture         = ::std::move(rhs.mFuture);
-   mTimeStack      = ::std::move(rhs.mTimeStack);
-   mFrequencyStack = ::std::move(rhs.mFrequencyStack);
-   mEntanglements  = ::std::move(rhs.mEntanglements);
-   return *this;
-}
-
-Temporal& Temporal::operator = (const Temporal& rhs) noexcept {
-   mParent         = rhs.mParent;
-   mStart          = rhs.mStart;
-   mNow            = rhs.mNow;
-   mPrevTime       = rhs.mPrevTime;
-   mTimePeriod     = rhs.mTimePeriod;
-   mRatePeriod     = rhs.mRatePeriod;
-   mPriorityStack  = rhs.mPriorityStack;
-   mFuture         = rhs.mFuture;
-   mTimeStack      = rhs.mTimeStack;
-   mFrequencyStack = rhs.mFrequencyStack;
-   mEntanglements  = rhs.mEntanglements;
-   return *this;
+   mFuture = mPriorityStack.As<MissingFuture*>();
 }
 
 /// Serialize temporal as Code                                                

@@ -10,7 +10,7 @@
 
 
 ///                                                                           
-/// MARK: Associate/Disassociate verb                                         
+/// MARK: Associate/Disassociate                                              
 ///   Either performs a shallow copy, or excites/inhibits associations,       
 /// depending on the context's complexity                                     
 ///                                                                           

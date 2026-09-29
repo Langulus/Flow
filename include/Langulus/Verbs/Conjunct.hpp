@@ -9,39 +9,12 @@
 #include <Langulus/TVerb.hpp>
 
 
-namespace Langulus::Verbs
-{
-
-   using namespace Flow;
-
-
-   ///                                                                        
-   ///   Conjunct/Disjunct verb                                               
-   /// Either combines LHS and RHS as one AND container, or separates them    
-   /// as one OR container - does only shallow copying                        
-   ///                                                                        
-   struct Conjunct : TVerb<Conjunct> {
-      LANGULUS(POSITIVE_VERB) "Conjunct";
-      LANGULUS(NEGATIVE_VERB) "Disjunct";
-      LANGULUS(POSITIVE_OPERATOR) ", ";
-      LANGULUS(NEGATIVE_OPERATOR) " or ";
-      LANGULUS(PRECEDENCE) 1;
-      LANGULUS(INFO)
-         "Either combines LHS and RHS as one AND container, or separates them "
-         "as one OR container (does only shallow copying)";
-
-      using TVerb::TVerb;
-      using TVerb::operator ==;
-
-      /*template<CT::Dense, CT::NotVoid...>
-      static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense, CT::NotVoid...>
-      static constexpr auto Of() noexcept;
-
-      static bool ExecuteIn(CT::Dense auto&, Verb&);*/
-
-      static bool ExecuteDefault(const Many&, Verb&);
-      static bool ExecuteStateless(Verb&);
-   };
-
-} // namespace Langulus::Verbs
+///                                                                           
+/// MARK: Conjunct/Disjunct                                                   
+///   Either combines LHS and RHS as one AND container, or separates them     
+/// as one OR container. Does only shallow copying.                           
+///                                                                           
+LANGULUS_DEFINE_OPERATOR(Conjunct, Disjunct, ", ", " or ", 1,
+   "Either combines LHS and RHS as one AND container, or separates them "
+   "as one OR container (does only shallow copying)"
+);

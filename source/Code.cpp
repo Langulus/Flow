@@ -58,33 +58,32 @@
 
 namespace Langulus::Flow
 {
-
    /// Parse code                                                             
    ///   @param optimize - whether or not to precompile                       
    ///   @returned the parsed flow                                            
    Many Code::Parse(bool optimize) const {
       // Make sure that all default traits are registered before parsing
-      (void)MetaOf<Traits::Logger>();
-      (void)MetaOf<Traits::Count>();
-      (void)MetaOf<Traits::Name>();
-      (void)MetaOf<Traits::Path>();
-      (void)MetaOf<Traits::Data>();
-      (void)MetaOf<Traits::Index>();
-      (void)MetaOf<Traits::Context>();
-      (void)MetaOf<Traits::Trait>();
-      (void)MetaOf<Traits::State>();
-      (void)MetaOf<Traits::Child>();
-      (void)MetaOf<Traits::Parent>();
-      (void)MetaOf<Traits::Clipboard>();
-      (void)MetaOf<Traits::Color>();
-      (void)MetaOf<Traits::Min>();
-      (void)MetaOf<Traits::Max>();
-      (void)MetaOf<Traits::Input>();
-      (void)MetaOf<Traits::Output>();
-      (void)MetaOf<Traits::Mass>();
-      (void)MetaOf<Traits::Rate>();
-      (void)MetaOf<Traits::Time>();
-      (void)MetaOf<Traits::Priority>();
+      (void)MetaOf<Tags::Logger>();
+      (void)MetaOf<Tags::Count>();
+      (void)MetaOf<Tags::Name>();
+      (void)MetaOf<Tags::Path>();
+      (void)MetaOf<Tags::Data>();
+      (void)MetaOf<Tags::Index>();
+      (void)MetaOf<Tags::Context>();
+      (void)MetaOf<Tags::Trait>();
+      (void)MetaOf<Tags::State>();
+      (void)MetaOf<Tags::Child>();
+      (void)MetaOf<Tags::Parent>();
+      (void)MetaOf<Tags::Clipboard>();
+      (void)MetaOf<Tags::Color>();
+      (void)MetaOf<Tags::Min>();
+      (void)MetaOf<Tags::Max>();
+      (void)MetaOf<Tags::Input>();
+      (void)MetaOf<Tags::Output>();
+      (void)MetaOf<Tags::Mass>();
+      (void)MetaOf<Tags::Rate>();
+      (void)MetaOf<Tags::Time>();
+      (void)MetaOf<Tags::Priority>();
 
       // Make sure that all default types are registered before parsing 
       (void)MetaOf<Index>();
@@ -93,12 +92,12 @@ namespace Langulus::Flow
       (void)MetaOf<Code>();
 
       // Make sure that all default constants are registered            
-      (void)MetaOf<Constants::Yes>();
+      /*(void)MetaOf<Constants::Yes>();
       (void)MetaOf<Constants::No>();
       (void)MetaOf<Constants::True>();
       (void)MetaOf<Constants::False>();
       (void)MetaOf<Constants::Null>();
-      (void)MetaOf<Constants::Nothing>();
+      (void)MetaOf<Constants::Nothing>();*/
 
       // Make sure that all default verbs are registered before parsing 
       (void)MetaOf<Verbs::Do>();
@@ -1173,5 +1172,4 @@ namespace Langulus::Flow
       VERBOSE("Charge parsed: ", charge);
       return progress;
    }
-
-} // namespace Langulus::Flow
+}

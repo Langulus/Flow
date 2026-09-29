@@ -14,7 +14,8 @@
 
 using namespace Langulus::Flow;
 
-namespace {
+namespace
+{
    constexpr int CarryOverLimit = 100;
 }
 

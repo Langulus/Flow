@@ -33,12 +33,12 @@ void Temporal::Dump() const {
 
    for (auto pair : mTimeStack) {
       auto tab = Logger::Section(Logger::PushPurple, "At time ", pair.GetKey(), ":");
-      pair.GetValue().Dump();
+      pair.GetVal().Dump();
    }
 
    for (auto pair : mFrequencyStack) {
       auto tab = Logger::Section(Logger::PushPurple, "At rate ", pair.GetKey(), ":");
-      pair.GetValue().Dump();
+      pair.GetVal().Dump();
    }
 }
 

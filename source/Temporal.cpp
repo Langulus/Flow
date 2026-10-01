@@ -7,7 +7,7 @@
 ///                                                                           
 #include <Langulus/Time.inl>
 #include <Langulus/Code.inl>
-#include <Langulus/Resolvable.inl>
+#include <Langulus/Neat.hpp>
 #include <Langulus/Temporal.hpp>
 #include "inner/Missing.hpp"
 #include "inner/Entangled.hpp"

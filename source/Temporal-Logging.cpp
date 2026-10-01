@@ -7,7 +7,7 @@
 ///                                                                           
 #include <Langulus/Time.inl>
 #include <Langulus/Code.inl>
-#include <Langulus/Resolvable.inl>
+//#include <Langulus/Resolvable.inl>
 #include <Langulus/Temporal.hpp>
 #include "inner/Missing.hpp"
 #include "inner/Entangled.hpp"
@@ -156,25 +156,25 @@ bool Temporal::DumpInner(Many const& data, bool newline, bool& first) {
          // Write meta definition                                       
          DumpSeparator(data, newline or tooLong, first);
 
-         auto dmeta = static_cast<DMeta>(meta);
+         auto dmeta = dynamic_cast<RTTI::DefinitionData const*>(meta);
          if (dmeta) {
             Logger::Append(dmeta);
             return;
          }
 
-         auto tmeta = static_cast<TMeta>(meta);
+         auto tmeta = dynamic_cast<RTTI::DefinitionTag const*>(meta);
          if (tmeta) {
             Logger::Append(Logger::PushPurple, tmeta, Logger::Pop);
             return;
          }
 
-         auto cmeta = static_cast<CMeta>(meta);
+         auto cmeta = dynamic_cast<RTTI::DefinitionConst const*>(meta);
          if (cmeta) {
             Logger::Append(Logger::PushYellow, cmeta, Logger::Pop);
             return;
          }
 
-         auto vmeta = static_cast<VMeta>(meta);
+         auto vmeta = dynamic_cast<RTTI::DefinitionVerb const*>(meta);
          if (vmeta) {
             Logger::Append(Logger::PushBlue, vmeta, Logger::Pop);
             return;

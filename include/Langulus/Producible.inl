@@ -30,14 +30,14 @@ namespace Langulus::Flow
    ///   @param producer - the item's producer                                
    ///   @param descriptor - the item's neat descriptor                       
    template<class T> LANGULUS(INLINED)
-   ProducedFrom<T>::ProducedFrom(T* producer, const Many& descriptor)
+   ProducedFrom<T>::ProducedFrom(T* producer, Many const& descriptor)
       : mDescriptor {descriptor}
       , mProducer   {producer} {}
 
    /// Get the normalized descriptor of the produced item                     
    ///   @return the normalized descriptor                                    
    template<class T> LANGULUS(INLINED)
-   auto ProducedFrom<T>::GetDescriptor() const noexcept -> const Many& {
+   auto ProducedFrom<T>::GetDescriptor() const noexcept -> Many const& {
       return mDescriptor;
    }
 

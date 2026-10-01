@@ -41,10 +41,10 @@ namespace Langulus::Flow
       // A hash map for fast retrieval of elements                      
       TMapUnsorted<Hash, TMany<Cell*>> mHashmap;
 
-      auto Produce(auto*, const Many&) -> T*;
-      void CreateInner(auto*, Verb&, int, const Many& = {});
+      auto Produce(auto*, Many const&) -> T*;
+      void CreateInner(auto*, Verb&, int, Many const& = {});
       void Destroy(Cell*);
-      auto FindInner(const Many&) const -> Cell*;
+      auto FindInner(Many const&) const -> Cell*;
 
    public:
       /// Factories can't be default-, move- or copy-constructed              
@@ -61,11 +61,11 @@ namespace Langulus::Flow
 
       void Reset();
       void Create(auto*, Verb&);
-      auto CreateOne(auto*, const Many&) -> T*;
+      auto CreateOne(auto*, Many const&) -> T*;
       template<class...ARG>
       auto Emplace(ARG&&...) -> T* requires IsNotUnique;
       void Select(Verb&);
-      auto Find(const Many&) const -> const T*;
+      auto Find(Many const&) const -> const T*;
       void Teardown();
 
       IF_SAFE(void Dump() const);

@@ -68,7 +68,7 @@ namespace Langulus::Flow
 
       /// Get the branch contents                                             
       ///   @return the contents                                              
-      auto GetContent() const noexcept -> const Many& {
+      auto GetContent() const noexcept -> Many const& {
          return IsActive() ? mTrueContent : mFalseContent;
       }
    };

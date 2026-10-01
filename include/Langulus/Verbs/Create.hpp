@@ -52,7 +52,7 @@ LANGULUS_DEFINE_VERB(Create, Destroy, 1000,
       static bool ExecuteStateless(Verb&);
 
    protected:
-      static void SetMembers(Many&, const Many&);
+      static void SetMembers(Many&, Many const&);
    };
 
 }*/ // namespace Langulus::Verbs

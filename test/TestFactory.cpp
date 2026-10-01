@@ -28,7 +28,7 @@ SCENARIO("Test factories on the stack", "[factory]") {
          const auto descriptor = Construct::From<Producible>();
          Verbs::Create creator {descriptor};
          const Producible prototype {&producer, descriptor.GetDescriptor()};
-         const Many normalized {};
+         Many const normalized {};
          const auto hash = normalized.GetHash();
 
 			factory.Create(&producer, creator);
@@ -98,7 +98,7 @@ SCENARIO("Test factories on the stack", "[factory]") {
 			factory.Create(&producer, creator);
 			auto out2 = creator.GetOutput();
 
-			const Many normalized {};
+			Many const normalized {};
 			const auto hash = normalized.GetHash();
 
 			REQUIRE(creator.IsDone());
@@ -234,7 +234,7 @@ SCENARIO("Test factories on the heap", "[factory]") {
          const auto descriptor = Construct::From<Producible>();
          Verbs::Create creator {descriptor};
          const Producible prototype {&producer, descriptor.GetDescriptor()};
-         const Many normalized {};
+         Many const normalized {};
          const auto hash = normalized.GetHash();
 
 			factory.Create(&producer, creator);
@@ -306,7 +306,7 @@ SCENARIO("Test factories on the heap", "[factory]") {
 			factory.Create(&producer, creator);
 			auto out2 = creator.GetOutput();
 
-			const Many normalized {};
+			Many const normalized {};
 			const auto hash = normalized.GetHash();
 
 			REQUIRE(creator.IsDone());

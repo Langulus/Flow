@@ -45,10 +45,12 @@ namespace Langulus::Flow
    /// complete your scripts at runtime.                                      
    ///                                                                        
    struct Temporal final {
-      using Pasts   = TMany<MissingPast*>;
-      using Futures = TMany<MissingFuture*>;
+      //using Pasts   = TMany<MissingPast*>;
+      //using Futures = TMany<MissingFuture*>;
 
-   private:
+   protected:
+      friend struct MissingFuture;
+
       // Parent flow                                                    
       Temporal* mParent {};
       // The time at which this flow started                            
@@ -116,16 +118,16 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) void Dump() const;
 
    protected:
-      LANGULUS_API(FLOW) static Many Compile(const Many&, Real priority = 0);
-      LANGULUS_API(FLOW) /*static*/ bool PushFutures(const Many&, MissingFuture&, const Ref<Entanglement>&) noexcept;
+      LANGULUS_API(FLOW) static Many Compile(Many const&, Real priority = 0);
+      LANGULUS_API(FLOW) /*static*/ bool PushFutures(Many const&, MissingFuture&, const Ref<Entanglement>&) noexcept;
 
-      LANGULUS_API(FLOW) void Link(const Many&, const Ref<Entanglement>&);
-      LANGULUS_API(FLOW) void LinkRelative(const Many&, const Verb&, const Ref<Entanglement>&);
+      LANGULUS_API(FLOW) void Link(Many const&, const Ref<Entanglement>&);
+      LANGULUS_API(FLOW) void LinkRelative(Many const&, const Verb&, const Ref<Entanglement>&);
       LANGULUS_API(FLOW) Many PushInner(Many);
 
       void ResetInner(Many&);
-      static bool DumpInner(const Many&, bool newline, bool& first);
-      static void DumpSeparator(const Many&, bool newline, bool& first);
+      static bool DumpInner(Many const&, bool newline, bool& first);
+      static void DumpSeparator(Many const&, bool newline, bool& first);
       static void DumpMissing(const Missing&);
       static void DumpVerb(const Verb&);
       static void DumpTag(const Tag&);

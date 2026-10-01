@@ -48,12 +48,12 @@ namespace Langulus::Flow
    public:
       ProducedFrom(const ProducedFrom&) = delete;
       ProducedFrom(ProducedFrom&&);
-      ProducedFrom(T* = nullptr, const Many& = {});
+      ProducedFrom(T* = nullptr, Many const& = {});
 
       template<template<class> class S>
       ProducedFrom(S<ProducedFrom>&&) requires CT::Intent<S<ProducedFrom>>;
 
-      auto GetDescriptor() const noexcept -> const Many&;
+      auto GetDescriptor() const noexcept -> Many const&;
       Hash GetHash() const noexcept;
       auto GetProducer() const noexcept -> const Ref<T>&;
       void TeardownInner();

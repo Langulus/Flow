@@ -33,18 +33,18 @@ void Temporal::Dump() const {
 
    for (auto pair : mTimeStack) {
       auto tab = Logger::Section(Logger::PushPurple, "At time ", pair.GetKey(), ":");
-      pair.GetVal().Dump();
+      pair.GetVal()->Dump();
    }
 
    for (auto pair : mFrequencyStack) {
       auto tab = Logger::Section(Logger::PushPurple, "At rate ", pair.GetKey(), ":");
-      pair.GetVal().Dump();
+      pair.GetVal()->Dump();
    }
 }
 
 /// Dump a separator, that depends on AND/OR data container, newline, and     
 /// whether it's the first element                                            
-void Temporal::DumpSeparator(const Many& data, bool newline, bool& first) {
+void Temporal::DumpSeparator(Many const& data, bool newline, bool& first) {
    if (not first) {
       if (data.IsOr()) {
          if (newline)
@@ -71,14 +71,14 @@ void Temporal::DumpSeparator(const Many& data, bool newline, bool& first) {
 
 /// Inner nested dumper                                                       
 ///   @return true if stuff was dumped on a new line                          
-bool Temporal::DumpInner(const Many& data, bool newline, bool& first) {
+bool Temporal::DumpInner(Many const& data, bool newline, bool& first) {
    Text serial;
    Langulus::Serialize(data, serial);
    const bool tooLong = serial.GetCount() > CarryOverLimit;
 
    if (data.IsDeep()) {
       // Nest                                                           
-      data.ForEach([&](const Many& group) {
+      data.ForEach([&](Many const& group) {
          if (group.IsOr()) {
             DumpSeparator(data, newline or tooLong, first);
             Logger::Append(Logger::PushDarkYellow, '(', Logger::Pop);
@@ -86,7 +86,7 @@ bool Temporal::DumpInner(const Many& data, bool newline, bool& first) {
                Logger::Append(Logger::Tab);
 
             bool inner = true;
-            group.ForEachElement([&](const Many& subgroup) {
+            group.ForEachElement([&](Many const& subgroup) {
                DumpSeparator(group, tooLong, inner);
                bool unused = true;
                DumpInner(subgroup, false, unused);
@@ -203,7 +203,7 @@ bool Temporal::DumpInner(const Many& data, bool newline, bool& first) {
             Logger::Append(Logger::PushGreen, data, Logger::Pop);
       }
       else {
-         data.ForEachElement([&](const Many& element) {
+         data.ForEachElement([&](Many const& element) {
             DumpSeparator(data, newline or tooLong, first);
             Logger::Append(element);
          });
@@ -229,7 +229,7 @@ void Temporal::DumpMissing(const Missing& p) {
 
 /// Dump a verb                                                               
 ///   @param v - the verb to dump                                             
-void Temporal::DumpVerb(const A::Verb& v) {
+void Temporal::DumpVerb(const Verb& v) {
    using Rules = typename Text::SerializationRules;
 
    // Can we fit the verb on a single line?                             
@@ -299,9 +299,9 @@ void Temporal::DumpVerb(const A::Verb& v) {
    }
 }
 
-/// Dump a construct                                                          
-///   @param c - the construct to dump                                        
-void Temporal::DumpConstruct(const Recipe& recipe) {
+/// Dump a recipe                                                          
+///   @param c - the recipe to dump                                        
+void Temporal::DumpRecipe(const Recipe& recipe) {
    // Can we fit the construct on a single line?                        
    const auto serv = Verbs::Interpret::To<Annies::Text>(recipe);
    const auto separated = serv.GetCount() > CarryOverLimit;
@@ -325,7 +325,7 @@ void Temporal::DumpConstruct(const Recipe& recipe) {
 
 /// Dump a trait                                                              
 ///   @param t - the trait to dump                                            
-void Temporal::DumpTrait(const Trait& t) {
+void Temporal::DumpTrait(const Tag& t) {
    // Can we fit the trait on a single line?                            
    const auto serv = Verbs::Interpret::To<Annies::Text>(t);
    const auto separated = serv.GetCount() > CarryOverLimit;
@@ -337,7 +337,7 @@ void Temporal::DumpTrait(const Trait& t) {
 
    // Write the trait contents                                          
    bool unused = true;
-   DumpInner(static_cast<const Many&>(t), separated, unused);
+   DumpInner(static_cast<Many const&>(t), separated, unused);
 
    // Close the scope                                                   
    if (separated) {

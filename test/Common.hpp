@@ -101,7 +101,7 @@ struct Producer : Referenced {
 
 /// A mockup of a producible                                                  
 struct Producible : Referenced, ProducedFrom<Producer> {
-   Producible(Producer* producer, const Many& desc = {})
+   Producible(Producer* producer, Many const& desc = {})
       : ProducedFrom {producer, desc} {}
 
    ~Producible() {
@@ -134,7 +134,7 @@ struct TheProducible;
 struct ShallowProducer : Referenced, ProducedFrom<DeepProducer> {
    TFactory<TheProducible> factory;
 
-   ShallowProducer(DeepProducer* producer, const Many& desc = {})
+   ShallowProducer(DeepProducer* producer, Many const& desc = {})
       : ProducedFrom {producer, desc} {}
 
    void Teardown() {
@@ -146,6 +146,6 @@ struct ShallowProducer : Referenced, ProducedFrom<DeepProducer> {
 struct TheProducible : Referenced, ProducedFrom<ShallowProducer> {
    //TODO should ProducedFrom inherit virtual Referenced directly?,
    // and so no need for ProducedFrom::Teardown method at all????
-   TheProducible(ShallowProducer* producer, const Many& desc = {})
+   TheProducible(ShallowProducer* producer, Many const& desc = {})
       : ProducedFrom {producer, desc} {}
 };

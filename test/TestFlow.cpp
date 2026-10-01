@@ -25,7 +25,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script with line comments") {
       const auto code = "//some comment\n`plural` associate index::many //same line comment with no new line"_code;
-      const Many required = Verbs::Associate {IndexMany}
+      Many const required = Verbs::Associate {IndexMany}
          .SetSource("plural");
 
       WHEN("Parsed") {
@@ -37,7 +37,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    
    GIVEN("The script with /**/ comments") {
       const auto code = "/*some comment*/`plural` /*inbetween*/ associate index::many /*bad comment at the end"_code;
-      const Many required = Verbs::Associate {IndexMany}
+      Many const required = Verbs::Associate {IndexMany}
          .SetSource("plural");
 
       WHEN("Parsed") {
@@ -49,7 +49,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    
    GIVEN("The script: `plural` associate index::many") {
       const auto code = "`plural` associate index::many"_code;
-      const Many required = Verbs::Associate {IndexMany}
+      Many const required = Verbs::Associate {IndexMany}
          .SetSource("plural");
 
       WHEN("Parsed") {
@@ -61,7 +61,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: `plural` associate(index::many)") {
       const auto code = "`plural` associate(index::many)"_code;
-      const Many required = Verbs::Associate {IndexMany}
+      Many const required = Verbs::Associate {IndexMany}
          .SetSource("plural");
 
       WHEN("Parsed") {
@@ -73,7 +73,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: (`plural`) associate (index::many)") {
       const auto code = "(`plural`) associate (index::many)"_code;
-      const Many required = Verbs::Associate {IndexMany}
+      Many const required = Verbs::Associate {IndexMany}
          .SetSource("plural");
 
       WHEN("Parsed") {
@@ -85,7 +85,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: (`plural`) associate (index::many)") {
       const auto code = "(`plural`) associate index::many"_code;
-      const Many required = Verbs::Associate {IndexMany}
+      Many const required = Verbs::Associate {IndexMany}
          .SetSource("plural");
 
       WHEN("Parsed") {
@@ -97,7 +97,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: `plural` = index::many") {
       const auto code = "`plural` = index::many"_code;
-      const Many required = Verbs::Associate {IndexMany}
+      Many const required = Verbs::Associate {IndexMany}
          .SetSource("plural");
 
       WHEN("Parsed") {
@@ -109,7 +109,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: `plural` = (index::many)") {
       const auto code = "`plural` = (index::many)"_code;
-      const Many required = Verbs::Associate {IndexMany}
+      Many const required = Verbs::Associate {IndexMany}
          .SetSource("plural");
 
       WHEN("Parsed") {
@@ -121,7 +121,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: (`plural`) = (index::many)") {
       const auto code = "(`plural`) = (index::many)"_code;
-      const Many required = Verbs::Associate {IndexMany}
+      Many const required = Verbs::Associate {IndexMany}
          .SetSource("plural");
 
       WHEN("Parsed") {
@@ -133,7 +133,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: (`plural`) = index::many") {
       const auto code = "(`plural`) = index::many"_code;
-      const Many required = Verbs::Associate {IndexMany}
+      Many const required = Verbs::Associate {IndexMany}
          .SetSource("plural");
 
       WHEN("Parsed") {
@@ -145,7 +145,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: `thing` associate { Entity(past?, future?) }") {
       const auto code = "`thing` associate { Entity(past?, future?) }"_code;
-      const Many required = Verbs::Associate {" Entity(past?, future?) "_code}
+      Many const required = Verbs::Associate {" Entity(past?, future?) "_code}
          .SetSource("thing");
 
       WHEN("Parsed") {
@@ -157,7 +157,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: `things` associate(\"thing\", `plural`)") {
       const auto code = "`things` associate(\"thing\", `plural`)"_code;
-      const Many required = Verbs::Associate {"thing", "plural"}
+      Many const required = Verbs::Associate {"thing", "plural"}
          .SetSource("things");
 
       WHEN("Parsed") {
@@ -169,7 +169,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: `things` = (\"thing\", `plural`)") {
       const auto code = "`things` = (\"thing\", `plural`)"_code;
-      const Many required = Verbs::Associate {"thing", "plural"}
+      Many const required = Verbs::Associate {"thing", "plural"}
          .SetSource("things");
 
       WHEN("Parsed") {
@@ -187,7 +187,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
          "and"
       };
       argument.MakeOr();
-      const Many required = Verbs::Associate {argument}
+      Many const required = Verbs::Associate {argument}
          .SetSource(',');
 
       WHEN("Parsed") {
@@ -200,7 +200,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    GIVEN("The script: Create!-1(Verb(?, ??))") {
       const Code code = "Create!-1(Verb(?, ??))";
       TMany<Many> package {Many::Past(), Many::Future()};
-      const Many required = Verbs::Create {Many {Verb {package}}}
+      Many const required = Verbs::Create {Many {Verb {package}}}
          .SetPriority(-1);
 
       WHEN("Parsed") {
@@ -216,7 +216,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       source << MetaOf<A::Number>();
       Many argument = Many::Future();
       argument << MetaOf<A::Number>();
-      const Many required = Verbs::Catenate {argument}
+      Many const required = Verbs::Catenate {argument}
          .SetSource(source);
 
       WHEN("Parsed") {
@@ -228,9 +228,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: `is` = (? = ??)") {
       const Code code = "`is` = (? = ??)";
-      const Many package = Verbs::Associate {Many::Future()}
+      Many const package = Verbs::Associate {Many::Future()}
          .SetSource(Many::Past());
-      const Many required = Verbs::Associate {package}
+      Many const required = Verbs::Associate {package}
          .SetSource("is"_text);
 
       WHEN("Parsed") {
@@ -242,9 +242,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: .Context = .Verb.??") {
       const Code code = ".Context = .Verb.??";
-      const Many package = Verbs::Select {Many::Future()}
+      Many const package = Verbs::Select {Many::Future()}
          .SetSource(Verbs::Select {MetaOf<Verb>()});
-      const Many required = Verbs::Associate {package}
+      Many const required = Verbs::Associate {package}
          .SetSource(Verbs::Select {MetaOf<Traits::Context>()});
 
       WHEN("Parsed") {
@@ -266,7 +266,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
          << MetaOf<Construct>();
 
       const Code code = "Create!-1(Verb(?(Number,DMeta,Construct), ??(Number,DMeta,Construct)))";
-      const Many required = Verbs::Create {
+      Many const required = Verbs::Create {
          Many {Verb {a1, a2}}
       }.SetPriority(-1);
 
@@ -279,7 +279,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ? create Thing(User)") {
       const Code code = "? create Thing(User)";
-      const Many required = Verbs::Create {
+      Many const required = Verbs::Create {
          Construct::From<Thing>(MetaOf<User>())
       }.SetSource(Many::Past());
 
@@ -316,7 +316,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ?.Thing(User).??") {
       const Code code = "?.Thing(User).??";
-      const Many required = Verbs::Select {Many::Future()}
+      Many const required = Verbs::Select {Many::Future()}
          .SetSource(
             Verbs::Select {
                Construct::From<Thing>(MetaOf<User>())
@@ -332,7 +332,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: Traits::Name") {
       const Code code = "Traits::Name";
-      const Many required = MetaOf<Traits::Name>();
+      Many const required = MetaOf<Traits::Name>();
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -343,7 +343,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ? = ??") {
       const Code code = "? = ??";
-      const Many required = Verbs::Associate {Many::Future()}
+      Many const required = Verbs::Associate {Many::Future()}
          .SetSource(Many::Past());
 
       WHEN("Parsed") {
@@ -380,7 +380,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: ? create ??") {
       const Code code = "? create ??";
-      const Many required = Verbs::Create {Many::Future()}
+      Many const required = Verbs::Create {Many::Future()}
          .SetSource(Many::Past());
 
       WHEN("Parsed") {
@@ -392,7 +392,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: single") {
       const Code code = "single";
-      const Many required = IndexSingle;
+      Many const required = IndexSingle;
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -403,7 +403,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: Thing(Universe, Window, Temporal)") {
       const Code code = "Thing(Universe, Window, Temporal)";
-      const Many required = Construct::From<Thing>(
+      Many const required = Construct::From<Thing>(
          MetaOf<Universe>(),
          MetaOf<Window>(),
          MetaOf<Temporal>()
@@ -420,7 +420,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      const Many required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(Many::Past());
 
       WHEN("Parsed") {
@@ -434,7 +434,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create @ 1 ! 2 ^ 3 * 5 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      const Many required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(1_real).SetPriority(2_real).SetRate(3_real).SetMass(5_real);
 
@@ -449,7 +449,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create @ 1.66 ! 2.11 ^ 3.22 * 5.33 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      const Many required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(1.66_real).SetPriority(2.11_real).SetRate(3.22_real).SetMass(5.33_real);
 
@@ -464,7 +464,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create@0.2!0.1^0.3*0.4 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      const Many required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(0.2_real).SetPriority(0.1_real).SetRate(0.3_real).SetMass(0.4_real);
 
@@ -479,7 +479,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create@1!2^3*4 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      const Many required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(1_real).SetPriority(2_real).SetRate(3_real).SetMass(4_real);
 
@@ -494,7 +494,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create@1.66!2.22^0.04*0.05 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      const Many required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(1.66_real).SetPriority(2.22_real).SetRate(0.04_real).SetMass(0.05_real);
 
@@ -509,7 +509,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create@0.2!0.3^0.4*0.5 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      const Many required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(0.2_real).SetPriority(0.3_real).SetRate(0.4_real).SetMass(0.5_real);
 
@@ -524,7 +524,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create@-0.2!-0.3^-0.4*-0.5 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      const Many required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(-0.2_real).SetPriority(-0.3_real).SetRate(-0.4_real).SetMass(-0.5_real);
 
@@ -537,22 +537,22 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: Input(`test`, 6, true)") {
       const Code code = "Input(`test`, 6, true)";
-      const Many required = Traits::Input {"test", 6_real, true};
+      Many const required = Traits::Input {"test", 6_real, true};
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
          DumpResults(code, parsed, required);
          REQUIRE(parsed == required);
          REQUIRE(parsed.GetCount() == 1);
-         REQUIRE(parsed.IsExact<Trait>());
-         REQUIRE(parsed.Get<Trait>().IsExact<Many>());
-         REQUIRE(parsed.Get<Trait>().GetCount() == 3);
-         REQUIRE(parsed.Get<Trait>().Get<Many>(0).IsExact<Text>());
-         REQUIRE(parsed.Get<Trait>().Get<Many>(1).IsExact<Real>());
-         REQUIRE(parsed.Get<Trait>().Get<Many>(2).IsExact<bool>());
-         REQUIRE(parsed.Get<Trait>().Get<Many>(0) == "test");
-         REQUIRE(parsed.Get<Trait>().Get<Many>(1) == 6_real);
-         REQUIRE(parsed.Get<Trait>().Get<Many>(2) == true);
+         REQUIRE(parsed.IsExact<Tag>());
+         REQUIRE(parsed.Get<Tag>().IsExact<Many>());
+         REQUIRE(parsed.Get<Tag>().GetCount() == 3);
+         REQUIRE(parsed.Get<Tag>().Get<Many>(0).IsExact<Text>());
+         REQUIRE(parsed.Get<Tag>().Get<Many>(1).IsExact<Real>());
+         REQUIRE(parsed.Get<Tag>().Get<Many>(2).IsExact<bool>());
+         REQUIRE(parsed.Get<Tag>().Get<Many>(0) == "test");
+         REQUIRE(parsed.Get<Tag>().Get<Many>(1) == 6_real);
+         REQUIRE(parsed.Get<Tag>().Get<Many>(2) == true);
       }
    }
 

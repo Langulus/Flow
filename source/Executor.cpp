@@ -98,7 +98,7 @@ bool ExecuteAND(
    LglsAssumeDev(not flow.IsSparse(), "Can't execute sparse flows");
    size_t executed = 0;
    if (flow.IsDeep()) {
-      executed = flow.ForEach([&](const Many& block) {
+      executed = flow.ForEach([&](Many const& block) {
          // Nest if deep                                                
          Many local;
          if (not Flow::Execute(block, environment, local, integrate, skipVerbs, silent)) {
@@ -275,7 +275,7 @@ bool ExecuteOR(
    bool localSkipVerbs = false;
 
    if (flow.IsDeep()) {
-      executed = flow.ForEach([&](const Many& block) {
+      executed = flow.ForEach([&](Many const& block) {
          // Nest if deep                                             
          Many local;
          if (Flow::Execute(block, environment, local, integrate, localSkipVerbs, silent)) {
@@ -416,7 +416,7 @@ bool Flow::IntegrateVerb(Many const& environment, Verb& verb, const bool silent)
          return false;
       }
    }
-   else localSource = verb.GetSource().Get<Redundant>().mContent;
+   else localSource = verb.GetSource().As<Redundant>().mContent;
 
    if (not localSource.IsValid())
       localSource = environment;

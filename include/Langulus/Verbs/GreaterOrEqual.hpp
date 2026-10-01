@@ -38,7 +38,7 @@ namespace Langulus::Verbs
 
       static bool ExecuteIn(CT::Dense auto&, Verb&);*/
 
-      static bool ExecuteDefault(const Many&, Verb&);
+      static bool ExecuteDefault(Many const&, Verb&);
    };
 
 } // namespace Langulus::Verbs

@@ -49,7 +49,7 @@ LANGULUS_DEFINE_OPERATOR(Select, Deselect, ".", "..", 100,
 
       static bool ExecuteIn(CT::Dense auto&, Verb&);*/
 
-      /*static bool ExecuteDefault(const Many&, Verb&);
+      /*static bool ExecuteDefault(Many const&, Verb&);
       static bool ExecuteDefault(Many&, Verb&);
       static bool ExecuteStateless(Verb&);
 
@@ -57,9 +57,9 @@ LANGULUS_DEFINE_OPERATOR(Select, Deselect, ".", "..", 100,
       template<bool MUTABLE>
       static bool DefaultSelect(Many&, Verb&);
       template<bool MUTABLE>
-      static bool PerIndex(Many&, TMany<Trait>&, TMeta, CT::Meta auto, const TMany<Index>&);
+      static bool PerIndex(Many&, TMany<Tag>&, TMeta, CT::Meta auto, const TMany<Index>&);
       template<bool MUTABLE>
-      static bool SelectByMeta(const TMany<Index>&, DMeta, Many&, TMany<Trait>&, TMany<const RTTI::Ability*>&);
+      static bool SelectByMeta(const TMany<Index>&, DMeta, Many&, TMany<Tag>&, TMany<const RTTI::Ability*>&);
    };
 
 }*/ // namespace Langulus::Verbs

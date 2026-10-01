@@ -96,7 +96,7 @@ namespace Langulus::Flow
    ///   @param descriptor - the normalized descriptor for the element        
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE() LANGULUS(INLINED)
-   auto FACTORY()::FindInner(const Many& descriptor) const -> Cell* {
+   auto FACTORY()::FindInner(Many const& descriptor) const -> Cell* {
       VERBOSE_FACTORY(NameOf<TFactory>(), " seeking for ", descriptor);
       const auto hash = descriptor.GetHash();
       const auto found = mHashmap.FindIt(hash);
@@ -150,7 +150,7 @@ namespace Langulus::Flow
    ///   @param descriptor - the descriptor                                   
    ///   @return the new (or reused) instance                                 
    TEMPLATE()
-   auto FACTORY()::CreateOne(auto* producer, const Many& descriptor) -> T* {
+   auto FACTORY()::CreateOne(auto* producer, Many const& descriptor) -> T* {
       static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
 
@@ -192,7 +192,7 @@ namespace Langulus::Flow
    ///   @param descriptor - element descriptor                               
    TEMPLATE()
    void FACTORY()::CreateInner(
-      auto* producer, Verb& verb, int count, const Many& descriptor
+      auto* producer, Verb& verb, int count, Many const& descriptor
    ) {
       static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
@@ -281,7 +281,7 @@ namespace Langulus::Flow
    ///   @param descriptor - descriptor to match exactly                      
    ///   @return a valid pointer if element was found                         
    TEMPLATE()
-   auto FACTORY()::Find(const Many& descriptor) const -> const T* {
+   auto FACTORY()::Find(Many const& descriptor) const -> const T* {
       const auto found = FindInner(descriptor);
       if (found)
          return &found->mData;
@@ -293,7 +293,7 @@ namespace Langulus::Flow
    ///   @param descriptor - element descriptor                               
    ///   @return the produced instance                                        
    TEMPLATE()
-   auto FACTORY()::Produce(auto* producer, const Many& descriptor) -> T* {
+   auto FACTORY()::Produce(auto* producer, Many const& descriptor) -> T* {
       static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
 

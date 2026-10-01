@@ -72,7 +72,7 @@
    /// Execute a scope in the resolved context                                
    ///   @param scope - the scope to execute                                  
    ///   @return the results of the execution                                 
-   Many Resolvable::Run(const Many& scope) {
+   Many Resolvable::Run(Many const& scope) {
       Many context {GetBlock()};
       Many output;
       if (not Execute(scope, context, output, false)) {
@@ -114,14 +114,14 @@
    /// Get the first member matching a runtime trait token                    
    ///   @param trait - the trait to search for                               
    ///   @return the static mutable memory block representing the member      
-   Block<> Resolvable::GetMember(const Token& trait) noexcept {
+   Block<> Resolvable::GetMember(Token const& trait) noexcept {
       return GetMember(RTTI::GetMetaTrait(trait));
    }
 
    /// Get the first member matching a runtime trait token (const)            
    ///   @param trait - the trait to search for                               
    ///   @return the static constant memory block representing the member     
-   Block<> Resolvable::GetMember(const Token& trait) const noexcept {
+   Block<> Resolvable::GetMember(Token const& trait) const noexcept {
       return GetMember(RTTI::GetMetaTrait(trait));
    }
 #endif

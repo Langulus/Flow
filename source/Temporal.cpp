@@ -13,7 +13,7 @@
 #include "inner/Entangled.hpp"
 #include "inner/Redundant.hpp"
 
-#if 1
+#if 1 //TODO use the custom headers
    #define VERBOSE_ENABLED() 1
    #define VERBOSE_TEMPORAL(...)       Logger::Verbose(*this, ": ", __VA_ARGS__)
    #define VERBOSE_TEMPORAL_TAB(...)   const auto tab = Logger::VerboseTab(*this, ": ", __VA_ARGS__)
@@ -43,13 +43,13 @@ Temporal::Temporal(Temporal* parent)
 }
 
 /// Serialize temporal as Code                                                
-Temporal::operator Code() const {
+/*Temporal::operator Code() const {
    return IdentityOf(this);
-}
+}*/
 
-/// Serialize temporal as debug string                                        
+/// For logging temporal instances                                            
 Temporal::operator Text() const {
-   return IdentityOf(this);
+   return Text::Mention(this);
 }
 
 /// Reset progress for the priority stack                                     
@@ -83,18 +83,18 @@ void Temporal::ResetInner(Many& scope) {
          if (entangled.mFalseContent.IsDense())
             ResetInner(entangled.mFalseContent);
       },
-      [&](Trait& trait) {
-         if (trait.IsDense())
-            ResetInner(static_cast<Many&>(trait));
+      [&](Tag& tag) {
+         if (tag.IsDense())
+            ResetInner(static_cast<Many&>(tag));
       },
-      [&](Construct& construct) {
-         ResetInner(construct.GetDescriptor());
+      [&](Recipe& recipe) {
+         ResetInner(recipe.GetDescriptor());
       },
       [&](Neat& neat) {
-         neat.ForEachTrait([this](Trait& trait) {
+         neat.ForEachTrait([this](Tag& trait) {
             ResetInner(static_cast<Many&>(trait));
          });
-         neat.ForEachConstruct([this](Construct& con) {
+         neat.ForEachConstruct([this](Recipe& con) {
             Many wrapper {con};
             ResetInner(wrapper);
          });
@@ -102,10 +102,10 @@ void Temporal::ResetInner(Many& scope) {
             ResetInner(stuff);
          });
       },
-      [&](A::Verb& constVerb) {
-         ResetInner(constVerb.GetSource());
-         ResetInner(constVerb.GetArgument());
-         constVerb.Undo();
+      [&](Verb& verb) {
+         ResetInner(verb.GetSource());
+         ResetInner(verb.GetArgument());
+         verb.Undo();
       }
    );
 }
@@ -282,7 +282,7 @@ Many Temporal::PushInner(Many scope) {
 ///   @param priority - the priority to set for any missing point created     
 ///      for the provided scope.                                              
 ///   @return the compiled scope                                              
-Many Temporal::Compile(const Many& scope, Real priority) {
+Many Temporal::Compile(Many const& scope, Real priority) {
    Many result;
    if (scope.IsOr())
       result.MakeOr();
@@ -306,13 +306,13 @@ Many Temporal::Compile(const Many& scope, Real priority) {
          // @attention any sparse element inside a flow will cause that 
          //    flow to become impure, as in, it can be affected by      
          //    external factors, and is no longer purely functional.    
-         scope.ForEach([&](const Many& subscope) {
+         scope.ForEach([&](Many const& subscope) {
             result << &subscope;
          });
       }
       else {
          // Nest dense deep scopes                                      
-         scope.ForEach([&](const Many& subscope) {
+         scope.ForEach([&](Many const& subscope) {
             result << Compile(subscope, priority);
          });
       }
@@ -320,9 +320,9 @@ Many Temporal::Compile(const Many& scope, Real priority) {
    }
 
    const auto done = scope.ForEach(
-      [&](const Trait& subscope) {
+      [&](const Tag& subscope) {
          // Compile traits                                              
-         result << Trait::From(
+         result << Tag::From(
             subscope.GetTrait(), 
             Compile(subscope, priority)
          );
@@ -360,7 +360,7 @@ Many Temporal::Compile(const Many& scope, Real priority) {
 /// Link a scope's past points to future points that are on the stack         
 ///   @param scope - the scope to link and insert                             
 ///   @param entanglementAbove - an optional entanglement from above scope    
-void Temporal::Link(const Many& scope, const Ref<Entanglement>& entanglementAbove) {
+void Temporal::Link(Many const& scope, const Ref<Entanglement>& entanglementAbove) {
    LglsAssumeDev(mFuture, "Invalid future");
 
    // Every time we push an OR scope we create an entanglement          
@@ -378,7 +378,7 @@ void Temporal::Link(const Many& scope, const Ref<Entanglement>& entanglementAbov
          // the handle. This allows for specifying contexts externally, 
          // but also makes the flow impure, because it allows it to be  
          // affected by external influence.                             
-         scope.ForEach([&](const Many& sub) {
+         scope.ForEach([&](Many const& sub) {
             LANGULUS_ASSERT(
                PushFutures(&sub, *mFuture, entanglement),
                Flow, "Couldn't push to future"
@@ -387,7 +387,7 @@ void Temporal::Link(const Many& scope, const Ref<Entanglement>& entanglementAbov
       }
       else {
          // Nest-link dense deep scope                                  
-         scope.ForEach([&](const Many& sub) {
+         scope.ForEach([&](Many const& sub) {
             Link(sub, entanglement);
          });
       }
@@ -397,9 +397,9 @@ void Temporal::Link(const Many& scope, const Ref<Entanglement>& entanglementAbov
 
    // Handle shallow scope                                              
    const auto linked = scope.ForEach(
-      [&](const Trait& t) {
+      [&](const Tag& t) {
          // Forward to all future points in the priority stack          
-         TMany<Trait> local = t;
+         TMany<Tag> local = t;
          LANGULUS_ASSERT(
             PushFutures(local, *mFuture, entanglement),
             Flow, "Couldn't push to future"
@@ -482,7 +482,7 @@ void Temporal::Link(const Many& scope, const Ref<Entanglement>& entanglementAbov
 ///   @param override - the reference verb                                    
 ///   @param entanglementAbove - an optional entanglement from above scope    
 void Temporal::LinkRelative(
-   const Many& scope,
+   Many const& scope,
    const Verb& override,
    const Ref<Entanglement>& entanglementAbove
 ) {
@@ -498,7 +498,7 @@ void Temporal::LinkRelative(
 
    if (scope.IsDeep()) {
       // Nest deep scope                                                
-      scope.ForEach([&](const Many& sub) {
+      scope.ForEach([&](Many const& sub) {
          LinkRelative(sub, override, entanglement);
       });
       return;
@@ -506,13 +506,13 @@ void Temporal::LinkRelative(
 
    // Handle shallow scope                                              
    scope.ForEach(
-      [&](const Trait& t) {
-         TMany<Trait> local = t;
+      [&](const Tag& t) {
+         TMany<Tag> local = t;
 
          // Forward to future point in appropriate stack, according to  
          // the override verb                                           
          /*if (override.GetTime()) {
-            // Trait is timed, forward it to the time stack             
+            // Tag is timed, forward it to the time stack             
             auto found = mTimeStack.FindIt(override.GetTime());
             if (not found) {
                mTimeStack.Insert(override.GetTime(), this);
@@ -555,7 +555,7 @@ void Temporal::LinkRelative(
          // Forward to future point in appropriate stack,               
          // according to the override verb                              
          /*if (override.GetTime()) {
-            // Trait is timed, forward it to the time stack             
+            // Tag is timed, forward it to the time stack             
             auto found = mTimeStack.FindIt(override.GetTime());
             if (not found) {
                mTimeStack.Insert(override.GetTime(), this);
@@ -679,7 +679,7 @@ void Temporal::LinkRelative(
 ///   @return true if scope was linked successfully, either in the provided   
 ///      'future', or in any of the futures below it                          
 bool Temporal::PushFutures(
-   const Many& scope, MissingFuture& future,
+   Many const& scope, MissingFuture& future,
    const Ref<Entanglement>& entanglementAbove
 ) noexcept {
    bool atLeastOneSuccess = false;

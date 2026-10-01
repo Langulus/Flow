@@ -644,7 +644,7 @@ namespace Langulus::Flow
    ///   @param verb - the verb instance to execute                           
    ///   @return true if verb was executed                                    
    LANGULUS(INLINED)
-   bool Verb::GenericExecuteDefault(const Many& context, CT::VerbBased auto& verb) {
+   bool Verb::GenericExecuteDefault(Many const& context, CT::VerbBased auto& verb) {
       using V = Deref<decltype(verb)>;
 
       if constexpr (CT::Verb<V>) {

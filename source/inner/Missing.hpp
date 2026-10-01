@@ -41,17 +41,17 @@ namespace Langulus::Flow
 
       Missing() = default;
       explicit Missing(Missing*, const TMany<DMeta>&, Real priority);
-      explicit Missing(Missing*, const Many&,         Real priority);
+      explicit Missing(Missing*, Many const&,         Real priority);
 
-      bool Accepts(const Many&) const;
+      bool Accepts(Many const&) const;
       bool IsSatisfied() const;
 
-      Many Link(const Many&, const MissingFuture&) const;
+      Many Link(Many const&, const MissingFuture&) const;
 
       // Needs to be implicit so that it's inherited                    
       operator Text() const;
 
-      static void RemapFutures(MissingFuture&, const Many&);
+      static void RemapFutures(MissingFuture&, Many const&);
 
    protected:
       template<class T>
@@ -66,7 +66,7 @@ namespace Langulus::Flow
       using Missing::Missing;
       MissingPast();
 
-      void FillPast(const Many&);
+      void FillPast(Many const&);
    };
 
 
@@ -77,8 +77,8 @@ namespace Langulus::Flow
       using Missing::Missing;
       MissingFuture();
 
-      void FillFuture(const Many&, Temporal&);
-      void Commit(const Many&, Temporal&);
+      void FillFuture(Many const&, Temporal&);
+      void Commit(Many const&, Temporal&);
    };
 }
 

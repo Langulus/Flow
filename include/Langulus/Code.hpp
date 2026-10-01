@@ -113,7 +113,7 @@ namespace Langulus::Flow
          static bool Peek(const Code&) noexcept;
          static auto Isolate(const Code&) noexcept -> Token;
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            static auto Disambiguate(size_t, const Code&, const Token&) -> RTTI::Inner::Definition const*;
+            static auto Disambiguate(size_t, const Code&, Token const&) -> RTTI::Inner::Definition const*;
          #endif
       };
 

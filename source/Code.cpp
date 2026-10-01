@@ -70,7 +70,7 @@ namespace Langulus::Flow
       (void)MetaOf<Tags::Data>();
       (void)MetaOf<Tags::Index>();
       (void)MetaOf<Tags::Context>();
-      (void)MetaOf<Tags::Trait>();
+      (void)MetaOf<Tags::Tag>();
       (void)MetaOf<Tags::State>();
       (void)MetaOf<Tags::Child>();
       (void)MetaOf<Tags::Parent>();
@@ -150,7 +150,7 @@ namespace Langulus::Flow
    ///   @param lhs - the left token                                          
    ///   @param rhs - the right token                                         
    ///   @return true if both loosely match                                   
-   constexpr bool CompareTokens(const Token& lhs, const Token& rhs) noexcept {
+   constexpr bool CompareTokens(Token const& lhs, Token const& rhs) noexcept {
       return (lhs.size() == rhs.size() and (
          lhs.size() == 0 or ::std::equal(lhs.begin(), lhs.end(), rhs.begin(),
             [](const char& c1, const char& c2) noexcept {
@@ -162,7 +162,7 @@ namespace Langulus::Flow
    /// Isolate an operator token                                              
    ///   @param token - the operator                                          
    ///   @return the isolated operator token                                  
-   constexpr Token IsolateOperator(const Token& token) noexcept {
+   constexpr Token IsolateOperator(Token const& token) noexcept {
       auto l = token.data();
       auto r = token.data() + token.size();
       while (l < r and *l <= 32)
@@ -176,7 +176,7 @@ namespace Langulus::Flow
    ///   @param lhs - the left operator                                       
    ///   @param rhs - the right operator                                      
    ///   @return true if both loosely match                                   
-   constexpr bool CompareOperators(const Token& lhs, const Token& rhs) noexcept {
+   constexpr bool CompareOperators(Token const& lhs, Token const& rhs) noexcept {
       return CompareTokens(IsolateOperator(lhs), IsolateOperator(rhs));
    }
 
@@ -412,7 +412,7 @@ namespace Langulus::Flow
    ///   @param keyword - the keyword we'll be disambiguating                 
    ///   @return the disambiguated definition                                 
    AMeta Code::KeywordParser::Disambiguate(
-      const size_t progress, const Code& input, const Token& keyword
+      const size_t progress, const Code& input, Token const& keyword
    ) {
       try
       {
@@ -689,9 +689,9 @@ namespace Langulus::Flow
             lhs.RemoveIndex(IndexLast);
             lhs.SmartPush(IndexBack, Verb {Move(rhs)});
          }
-         else if (meta->Is<Trait>()) {
+         else if (meta->Is<Tag>()) {
             lhs.RemoveIndex(IndexLast);
-            lhs.SmartPush(IndexBack, Trait {Move(rhs)});
+            lhs.SmartPush(IndexBack, Tag {Move(rhs)});
          }
          else {
             if (not rhs and not meta->mProducerRetriever
@@ -736,7 +736,7 @@ namespace Langulus::Flow
          const auto meta = lhs.As<TMeta>(IndexLast);
          LANGULUS_ASSERT(meta, Flow, "Bad trait id");
 
-         auto trait = Trait::From(meta, Move(rhs));
+         auto trait = Tag::From(meta, Move(rhs));
          lhs.RemoveIndex(IndexLast);
          lhs.SmartPush(IndexBack, Abandon(trait));
          VERBOSE_ALT("Constructed from TMeta: ", Logger::Cyan, lhs);

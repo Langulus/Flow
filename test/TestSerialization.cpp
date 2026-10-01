@@ -97,7 +97,7 @@ SCENARIO("Serialization", "[serialization]") {
 		}
 	}
 
-	GIVEN("A Many instance containing Trait") {
+	GIVEN("A Many instance containing Tag") {
       Many pack;
 		pack  << Traits::Name(texts[0])
 		      << Traits::Name(texts[1])

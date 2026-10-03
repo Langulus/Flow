@@ -23,10 +23,10 @@ namespace Langulus::Flow
 
 
    ///                                                                        
-   ///   An element, that is factory produced (used as CRTP)                  
+   ///   An element, that is factory produced                                 
    ///                                                                        
-   /// Saves the descriptor by which the item was made with, in order to      
-   /// compare creation requests                                              
+   /// Saves the recipe by which the item was made with, in order to compare  
+   /// creation requests.                                                     
    ///   @attention mDescriptor can contain anything (including Thing         
    ///      references) and is known to cause circular dependencies. That's   
    ///      why ProducedFrom::Teardown has to be called as a first-stage      

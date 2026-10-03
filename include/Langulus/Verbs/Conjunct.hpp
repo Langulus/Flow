@@ -11,7 +11,7 @@
 
 ///                                                                           
 /// MARK: Conjunct/Disjunct                                                   
-///   Either combines LHS and RHS as one AND container, or separates them     
+/// Either combines LHS and RHS as one AND container, or separates them       
 /// as one OR container. Does only shallow copying.                           
 ///                                                                           
 LANGULUS_DEFINE_OPERATOR(Conjunct, Disjunct, ", ", " or ", 1,

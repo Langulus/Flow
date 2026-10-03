@@ -70,29 +70,29 @@ void Temporal::Reset() {
 void Temporal::ResetInner(Many& scope) {
    scope.ForEach(
       [&](Many& m) {
-         if (m.IsDense())
+         if (not m.IsSparse())
             ResetInner(m);
       },
       [&](Missing& missing) {
-         if (missing.mContent.IsDense())
+         if (not missing.mContent.IsSparse())
             ResetInner(missing.mContent);
       },
       [&](Entangled& entangled) {
-         if (entangled.mTrueContent.IsDense())
+         if (not entangled.mTrueContent.IsSparse())
             ResetInner(entangled.mTrueContent);
-         if (entangled.mFalseContent.IsDense())
+         if (not entangled.mFalseContent.IsSparse())
             ResetInner(entangled.mFalseContent);
       },
       [&](Tag& tag) {
-         if (tag.IsDense())
-            ResetInner(static_cast<Many&>(tag));
+         if (not tag.IsSparse())
+            ResetInner(tag.GetData());
       },
       [&](Recipe& recipe) {
          ResetInner(recipe.GetDescriptor());
       },
       [&](Neat& neat) {
-         neat.ForEachTrait([this](Tag& trait) {
-            ResetInner(static_cast<Many&>(trait));
+         neat.ForEachTag([this](Tag& tag) {
+            ResetInner(tag.GetData());
          });
          neat.ForEachConstruct([this](Recipe& con) {
             Many wrapper {con};
@@ -105,7 +105,7 @@ void Temporal::ResetInner(Many& scope) {
       [&](Verb& verb) {
          ResetInner(verb.GetSource());
          ResetInner(verb.GetArgument());
-         verb.Undo();
+         verb.Clear();
       }
    );
 }

@@ -9,35 +9,11 @@
 #include <Langulus/TVerb.hpp>
 
 
-namespace Langulus::Verbs
-{
-
-   using namespace Flow;
-
-
-   ///                                                                        
-   ///   Lower verb                                                           
-   /// Compares for source being less than argument, and returns source if so 
-   ///                                                                        
-   struct Lower : TVerb<Lower> {
-      LANGULUS(VERB) "Lower";
-      LANGULUS(OPERATOR) " < ";
-      LANGULUS(PRECEDENCE) 3;
-      LANGULUS(INFO)
-         "Compares for source being less than argument, "
-         "and returns source if so";
-
-      using TVerb::TVerb;
-      using TVerb::operator ==;
-
-      /*template<CT::Dense, CT::NotVoid...>
-      static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense, CT::NotVoid...>
-      static constexpr auto Of() noexcept;
-
-      static bool ExecuteIn(CT::Dense auto&, Verb&);*/
-
-      static bool ExecuteDefault(Many const&, Verb&);
-   };
-
-} // namespace Langulus::Verbs
+///                                                                           
+/// MARK: Lower test                                                          
+/// Compares for lower, returns source if lower than argument.                
+///                                                                           
+LANGULUS_DEFINE_OPERATOR(Lower, GreaterOrEqual, " < ", " >= ", 3,
+   "Compares for source being lower than argument, "
+   "and returns source if so"
+);

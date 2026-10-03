@@ -11,7 +11,7 @@
 
 ///                                                                           
 /// MARK: Catenate/Split                                                      
-///   Catenates anything catenable, or splits stuff apart using a mask        
+/// Catenates anything catenable, or splits stuff apart using a mask          
 ///                                                                           
 LANGULUS_DEFINE_OPERATOR(Catenate, Split, " >< ", " <> ", 7,
    "Concatenates, or splits stuff apart"

@@ -19,13 +19,14 @@
 #include <Langulus/Verbs/Compare.hpp>
 #include <Langulus/Verbs/Equal.hpp>
 #include <Langulus/Verbs/Lower.hpp>
-#include <Langulus/Verbs/LowerOrEqual.hpp>
 #include <Langulus/Verbs/Greater.hpp>
-#include <Langulus/Verbs/GreaterOrEqual.hpp>
 
 #if LANGULUS_COMPILER(WASM)
    #include <string>
 #endif
+
+using namespace Langulus;
+using namespace Langulus::Flow;
 
 #define ENABLE_VERBOSE() 0
 
@@ -55,15 +56,37 @@
    #define VERBOSE_ALT(...)   LANGULUS(NOOP)
 #endif
 
+namespace
+{
+   /// Check if the code container begins with an Serial::Operator            
+   ///   @param i the operator to check for                                   
+   ///   @return true if the operator matches                                 
+   bool StartsWithOperator(Code const& code, Serial::Operator op) noexcept {
+      const Code token = op.token;
+      if (not token or code.GetCount() < token.GetCount())
+         return false;
+
+      const Code remainder = code.RightOf(token.GetCount());
+      const bool endsWithALetter = token.EndsWithLetter();
+      return token.GetCount() > 0
+         and (code.GetCount() == token.GetCount()
+            or (endsWithALetter and (
+               not     remainder.StartsWithLetter()
+               and not remainder.StartsWithDigit()))
+            or not endsWithALetter)
+         and code.MatchesLoose(token) == token.GetCount();
+   }
+}
 
 namespace Langulus::Flow
 {
    /// Parse code                                                             
-   ///   @param optimize - whether or not to precompile                       
-   ///   @returned the parsed flow                                            
+   ///   @param optimize whether or not to precompute anything that is        
+   ///      computable at compile-time.                                       
+   ///   @return the parsed flow                                              
    Many Code::Parse(bool optimize) const {
       // Make sure that all default traits are registered before parsing
-      (void)MetaOf<Tags::Logger>();
+      /*(void)MetaOf<Tags::Logger>();
       (void)MetaOf<Tags::Count>();
       (void)MetaOf<Tags::Name>();
       (void)MetaOf<Tags::Path>();
@@ -89,7 +112,7 @@ namespace Langulus::Flow
       (void)MetaOf<Index>();
       (void)MetaOf<Temporal>();
       (void)MetaOf<Time>();
-      (void)MetaOf<Code>();
+      (void)MetaOf<Code>();*/
 
       // Make sure that all default constants are registered            
       /*(void)MetaOf<Constants::Yes>();
@@ -100,7 +123,7 @@ namespace Langulus::Flow
       (void)MetaOf<Constants::Nothing>();*/
 
       // Make sure that all default verbs are registered before parsing 
-      (void)MetaOf<Verbs::Do>();
+      /*(void)MetaOf<Verbs::Do>();
       (void)MetaOf<Verbs::Select>();
       (void)MetaOf<Verbs::Associate>();
       (void)MetaOf<Verbs::Create>();
@@ -112,7 +135,7 @@ namespace Langulus::Flow
       (void)MetaOf<Verbs::Lower>();
       (void)MetaOf<Verbs::LowerOrEqual>();
       (void)MetaOf<Verbs::Greater>();
-      (void)MetaOf<Verbs::GreaterOrEqual>();
+      (void)MetaOf<Verbs::GreaterOrEqual>();*/
 
       // Parse                                                          
       Many output;
@@ -120,30 +143,11 @@ namespace Langulus::Flow
       if (parsed != GetCount()) {
          Logger::Warning("Some characters were left out at the end, while parsing code:");
          Logger::Warning("+-- ", 
-            Logger::Green, LeftOf(parsed), 
+            Logger::Green, LeftOf (parsed), 
             Logger::Red,   RightOf(parsed)
          );
       }
       return output;
-   }
-   
-   /// Check if the code container begins with an operator                    
-   ///   @param i - the operator to check for                                 
-   ///   @return true if the operator matches                                 
-   bool Code::StartsWithOperator(size_t i) const noexcept {
-      const Code token {static_cast<Operator>(i)};
-      if (not token or GetCount() < token.GetCount())
-         return false;
-
-      const Code remainder = RightOf(token.GetCount());
-      const bool endsWithALetter = token.EndsWithLetter();
-      return token.GetCount() > 0
-         and (GetCount() == token.GetCount()
-            or (endsWithALetter and (
-               not     remainder.StartsWithLetter()
-               and not remainder.StartsWithDigit()))
-            or not endsWithALetter)
-         and MatchesLoose(token) == token.GetCount();
    }
 
    /// Compare two tokens, ignoring case                                      
@@ -267,7 +271,7 @@ namespace Langulus::Flow
 
       // Input was parsed, relay content to output                      
       VERBOSE(Logger::Green, "Unknown parsed: ", rhs);
-      lhs.SmartPush(IndexBack, Abandon(rhs));
+      lhs.Compose(Abandon(rhs));
       return progress;
    }
 

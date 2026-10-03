@@ -10,11 +10,13 @@
 
 
 ///                                                                           
-/// MARK: Associate/Disassociate                                              
-/// Either performs a shallow copy, or excites/inhibits associations,         
-/// depending on the context's complexity                                     
+/// MARK: Emit/Absorb                                                         
+/// Used for emitting and absorbing events. Can be used for input events, or  
+/// any other abstract communication mechanism, as well as physical events    
+/// between entities, depending on context.                                   
 ///                                                                           
-LANGULUS_DEFINE_OPERATOR(Associate, Disassociate, " = ", " ~ ", 2,
-   "Either performs a shallow copy, or aggregates associations, "
-   "depending on the context's complexity"
+LANGULUS_DEFINE_VERB(Emit, Absorb, 0,
+   "Used for emitting and absorbing events. Can be used for input events, or "
+   "any other abstract communication mechanism, as well as physical events "
+   "between entities, depending on context"
 );

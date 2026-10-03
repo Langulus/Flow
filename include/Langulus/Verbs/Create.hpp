@@ -11,8 +11,8 @@
 
 ///                                                                           
 /// MARK: Create/Destroy verb                                                 
-///   Used for allocating new elements. If the type you're creating has       
-/// a producer, you need to execute the verb in the correct context           
+/// Used for allocating new elements. If the type you're creating has         
+/// a producer, you need to execute the verb in the appropriate context.      
 ///                                                                           
 LANGULUS_DEFINE_VERB(Create, Destroy, 1000,
    "Used for allocating new elements of any kind. "
@@ -21,38 +21,3 @@ LANGULUS_DEFINE_VERB(Create, Destroy, 1000,
    "That producer will be created automatically for you, "
    "if context allows for it"
 );
-
-/*namespace Langulus::Verbs
-{
-   using namespace Flow;
-
-   ///                                                                        
-   ///   Create/Destroy verb                                                  
-   /// Used for allocating new elements. If the type you're creating has      
-   /// a producer, you need to execute the verb in the correct context        
-   ///                                                                        
-   struct Create : TVerb<Create> {
-      LANGULUS(POSITIVE_VERB) "Create";
-      LANGULUS(NEGATIVE_VERB) "Destroy";
-      LANGULUS(PRECEDENCE) 1000;
-      LANGULUS(INFO)
-         ;
-
-      using TVerb::TVerb;
-      using TVerb::operator ==;*/
-
-      /*template<CT::Dense, CT::NotVoid...>
-      static constexpr bool AvailableFor() noexcept;
-      template<CT::Dense, CT::NotVoid...>
-      static constexpr auto Of() noexcept;
-
-      static bool ExecuteIn(CT::Dense auto&, Verb&);*/
-
-      /*static bool ExecuteDefault(Many&, Verb&);
-      static bool ExecuteStateless(Verb&);
-
-   protected:
-      static void SetMembers(Many&, Many const&);
-   };
-
-}*/ // namespace Langulus::Verbs

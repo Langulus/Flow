@@ -323,7 +323,7 @@ Many Temporal::Compile(Many const& scope, Real priority) {
       [&](const Tag& subscope) {
          // Compile traits                                              
          result << Tag::From(
-            subscope.GetTrait(), 
+            subscope.GetTag(), 
             Compile(subscope, priority)
          );
       },

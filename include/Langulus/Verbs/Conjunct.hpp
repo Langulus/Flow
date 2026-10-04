@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include <Langulus/TVerb.hpp>
+#include <Langulus/CT/Serializer.hpp>
 
 
 ///                                                                           
@@ -14,7 +15,7 @@
 /// Either combines LHS and RHS as one AND container, or separates them       
 /// as one OR container. Does only shallow copying.                           
 ///                                                                           
-LANGULUS_DEFINE_OPERATOR(Conjunct, Disjunct, ", ", " or ", 1,
+LANGULUS_DEFINE_OPERATOR(Conjunct, Disjunct, Serial::And.token, Serial::Or.token, 1,
    "Either combines LHS and RHS as one AND container, or separates them "
    "as one OR container (does only shallow copying)"
 );

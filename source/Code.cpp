@@ -21,6 +21,8 @@
 #include <Langulus/Verbs/Lower.hpp>
 #include <Langulus/Verbs/Greater.hpp>
 
+#include <Langulus/Utils/ASCII.hpp>
+
 #if LANGULUS_COMPILER(WASM)
    #include <string>
 #endif
@@ -31,20 +33,18 @@ using namespace Langulus::Flow;
 #define ENABLE_VERBOSE() 0
 
 #define VERBOSE_INNER(...) \
-      Logger::Flow("Flow::Code: ", Logger::PushCyan, __VA_ARGS__ \
-         , Logger::Pop, " at ", progress, ": " \
-         , Logger::NewLine, "+-[", Logger::PushGreen, Logger::Underline \
-         , input. LeftOf(progress).Replace('\n', "\\n"), Logger::PopAndPushWhite \
-         , input.RightOf(progress).Replace('\n', "\\n"), Logger::Pop, ']')
+   Logger::Flow("Flow::Code: ", Logger::PushCyan, __VA_ARGS__ \
+      , Logger::Pop, " at ", progress, ": " \
+      , Logger::NewLine, "+-[", Logger::PushGreen, Logger::Underline \
+      , input. LeftOf(progress).Replace('\n', "\\n"), Logger::PopAndPushWhite \
+      , input.RightOf(progress).Replace('\n', "\\n"), Logger::Pop, ']')
 
-#define PRETTY_ERROR(...) { \
-      Logger::Error("Flow::Code: ", Logger::PushDarkYellow, __VA_ARGS__ \
-         , Logger::Pop, " at ", progress, ": " \
-         , Logger::NewLine, "+-[", Logger::PushDarkYellow, Logger::Underline \
-         , input. LeftOf(progress).Replace('\n', "\\n"), Logger::Pop \
-         , input.RightOf(progress).Replace('\n', "\\n"), ']'); \
-      LANGULUS_THROW(Flow, "Parse error"); \
-   }
+#define PRETTY_ERROR(...) \
+   LglsError("Flow::Code: ", Logger::PushDarkYellow, __VA_ARGS__ \
+      , Logger::Pop, " at ", progress, ": " \
+      , Logger::NewLine, "+-[", Logger::PushDarkYellow, Logger::Underline \
+      , input. LeftOf(progress).Replace('\n', "\\n"), Logger::Pop \
+      , input.RightOf(progress).Replace('\n', "\\n"), ']');
 
 #if ENABLE_VERBOSE()
    #define VERBOSE(...)       VERBOSE_INNER(__VA_ARGS__)
@@ -58,22 +58,128 @@ using namespace Langulus::Flow;
 
 namespace
 {
-   /// Check if the code container begins with an Serial::Operator            
-   ///   @param i the operator to check for                                   
+   /// Get operator definition by ID                                          
+   constexpr ::std::string_view GetOperatorToken(Serial::Operator op) {
+      switch(op) {
+      case Serial::Operator::OpenScope       : return Serial::OpenScope       .token;
+      case Serial::Operator::CloseScope      : return Serial::CloseScope      .token;
+      case Serial::Operator::OpenScopeAlt    : return Serial::OpenScopeAlt    .token;
+      case Serial::Operator::CloseScopeAlt   : return Serial::CloseScopeAlt   .token;
+      case Serial::Operator::OpenCode        : return Serial::OpenCode        .token;
+      case Serial::Operator::CloseCode       : return Serial::CloseCode       .token;
+      case Serial::Operator::OpenComment     : return Serial::OpenComment     .token;
+      case Serial::Operator::CloseComment    : return Serial::CloseComment    .token;
+      case Serial::Operator::OpenLineComment : return Serial::OpenLineComment .token;
+      case Serial::Operator::CloseLineComment: return Serial::CloseLineComment.token;
+      case Serial::Operator::OpenString      : return Serial::OpenString      .token;
+      case Serial::Operator::CloseString     : return Serial::CloseString     .token;
+      case Serial::Operator::OpenStringAlt   : return Serial::OpenStringAlt   .token;
+      case Serial::Operator::CloseStringAlt  : return Serial::CloseStringAlt  .token;
+      case Serial::Operator::OpenCharacter   : return Serial::OpenCharacter   .token;
+      case Serial::Operator::CloseCharacter  : return Serial::CloseCharacter  .token;
+      case Serial::Operator::OpenByte        : return Serial::OpenByte        .token;
+      case Serial::Operator::CloseByte       : return Serial::CloseByte       .token;
+      case Serial::Operator::SelectIdea      : return Serial::SelectIdea      .token;
+      case Serial::Operator::SelectThing     : return Serial::SelectThing     .token;
+      case Serial::Operator::Future          : return Serial::Future          .token;
+      case Serial::Operator::Past            : return Serial::Past            .token;
+      case Serial::Operator::Null            : return Serial::Null            .token;
+      case Serial::Operator::Escape          : return Serial::Escape          .token;
+      case Serial::Operator::Mass            : return Serial::Mass            .token;
+      case Serial::Operator::Rate            : return Serial::Rate            .token;
+      case Serial::Operator::Time            : return Serial::Time            .token;
+      case Serial::Operator::Priority        : return Serial::Priority        .token;
+      case Serial::Operator::And             : return Serial::And             .token;
+      case Serial::Operator::AndUnordered    : return Serial::AndUnordered    .token;
+      case Serial::Operator::Pair            : return Serial::Pair            .token;
+      case Serial::Operator::Or              : return Serial::Or              .token;
+      default: return "<error>";
+      }
+   }
+
+   /// Check if the Code container begins with special elements, such as      
+   /// special characters or escape sequences, like colors                    
+   ///   @return true if the first symbol is special                          
+   /*bool StartsWithSpecial(Code const& code) noexcept {
+      const auto& letter = code[0];
+      return letter > 0 and letter < 32;
+   }*/
+
+   /// Check if the Code container begins with skippable elements, such as    
+   /// tabs or spaces, comment blocks, or special character sequences.        
+   ///   @return the number of skippable characters                           
+   bool StartsWithSkippable(Code const& code) noexcept {
+      if (code.IsEmpty())
+         return false;
+
+      if (*code <= 32 or *code >= 127)
+         return true;
+
+      return code.StartsWith(Serial::OpenComment.token)
+          or code.StartsWith(Serial::OpenLineComment.token);
+   }
+
+   /// Check if the Code container begins with skippable elements             
+   ///   @return true if the first symbol is a spacer                         
+   /*LANGULUS(INLINED)
+   bool Code::EndsWithSkippable() const noexcept {
+      if (IsEmpty())
+         return false;
+      const auto last = *GetAt(-1);
+      return last > 0 and last <= 32;
+   }*/
+
+   /// Check if the Code container begins with a letter or underscore         
+   ///   @return true if the first symbol is a letter/underscore              
+   bool StartsWithLetter(Code const& code) noexcept {
+      if (code.IsEmpty())
+         return false;
+
+      return IsAlphabetical(*code);
+   }
+
+   /// Check if the Code container ends with a letter or underscore           
+   ///   @return true if the last symbol is a letter/underscore               
+   bool EndsWithLetter(Code const& code) noexcept {
+      if (code.IsEmpty())
+         return false;
+
+      return IsAlphabetical(code[-1]);
+   }
+
+   /// Check if the Code container begins with a number                       
+   ///   @return true if the first symbol is a number                         
+   bool StartsWithDigit(Code const& code) noexcept {
+      if (code.IsEmpty())
+         return false;
+
+      return IsNumerical(*code);
+   }
+
+   /// Check if the Code container ends with a number                         
+   ///   @return true if the last symbol is a number                          
+   bool EndsWithDigit(Code const& code) noexcept {
+      if (code.IsEmpty())
+         return false;
+
+      return IsNumerical(code[-1]);
+   }
+
+   /// Check if the code container begins with a Serial::Operator             
    ///   @return true if the operator matches                                 
    bool StartsWithOperator(Code const& code, Serial::Operator op) noexcept {
-      const Code token = op.token;
-      if (not token or code.GetCount() < token.GetCount())
+      const Code token = GetOperatorToken(op);
+      if (code.GetCount() < token.GetCount())
          return false;
 
       const Code remainder = code.RightOf(token.GetCount());
-      const bool endsWithALetter = token.EndsWithLetter();
+      const bool endsWithLetter = EndsWithLetter(token);
       return token.GetCount() > 0
          and (code.GetCount() == token.GetCount()
-            or (endsWithALetter and (
-               not     remainder.StartsWithLetter()
-               and not remainder.StartsWithDigit()))
-            or not endsWithALetter)
+            or (endsWithLetter and (
+               not     StartsWithLetter(remainder)
+               and not StartsWithDigit(remainder)))
+            or not endsWithLetter)
          and code.MatchesLoose(token) == token.GetCount();
    }
 }
@@ -151,8 +257,8 @@ namespace Langulus::Flow
    }
 
    /// Compare two tokens, ignoring case                                      
-   ///   @param lhs - the left token                                          
-   ///   @param rhs - the right token                                         
+   ///   @param lhs the left token                                            
+   ///   @param rhs the right token                                           
    ///   @return true if both loosely match                                   
    constexpr bool CompareTokens(Token const& lhs, Token const& rhs) noexcept {
       return (lhs.size() == rhs.size() and (
@@ -164,7 +270,7 @@ namespace Langulus::Flow
    }
 
    /// Isolate an operator token                                              
-   ///   @param token - the operator                                          
+   ///   @param token the operator                                            
    ///   @return the isolated operator token                                  
    constexpr Token IsolateOperator(Token const& token) noexcept {
       auto l = token.data();
@@ -177,24 +283,24 @@ namespace Langulus::Flow
    }
 
    /// Compare two operators, ignoring case and spacing                       
-   ///   @param lhs - the left operator                                       
-   ///   @param rhs - the right operator                                      
+   ///   @param lhs the left operator                                         
+   ///   @param rhs the right operator                                        
    ///   @return true if both loosely match                                   
    constexpr bool CompareOperators(Token const& lhs, Token const& rhs) noexcept {
       return CompareTokens(IsolateOperator(lhs), IsolateOperator(rhs));
    }
 
    /// Check if a string is reserved as a keyword/operator                    
-   ///   @param text - the text to check                                      
+   ///   @param text the text to check                                        
    ///   @return true if text is reserved                                     
-   bool Code::IsReserved(const Text& text) {
-      for (auto& a : SerializationRules::Operators) {
-         if (CompareOperators(text, a.mToken))
+   bool Code::IsReserved(Text const& text) {
+      for (int i = 0; i < static_cast<int>(Serial::Operator::Last); ++i) {
+         if (CompareOperators(text, GetOperatorToken(static_cast<Serial::Operator>(i))))
             return true;
       }
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         if (not RTTI::GetAmbiguousMeta(text).empty())
+         if (not RTTI::Registry::GetAmbiguousMeta(text).empty())
             return true;
       #endif
 
@@ -203,36 +309,27 @@ namespace Langulus::Flow
 
    /// A keyword must be made of only letters and numbers, namespace operator 
    /// and/or underscores                                                     
-   ///   @param text - the text to check                                      
+   ///   @param text the text to check                                        
    ///   @return true if text is a valid Code keyword                         
-   bool IsKeywordSymbol(char a) {
-      return IsDigit(a) or IsAlpha(a) or a == ':' or a == '_';
-   }
+   /*bool IsKeywordSymbol(char a) {
+      return IsNumerical(a) or IsAlphabetical(a) or a == ':';
+   }*/
 
    /// A keyword must be made of only letters and numbers, namespace operator 
    /// and/or underscores                                                     
-   ///   @param text - the text to check                                      
+   ///   @param text the text to check                                        
    ///   @return true if text is a valid Code keyword                         
-   bool Code::IsValidKeyword(const Text& text) {
-      if (not text or not IsAlpha(text[0]))
-         return false;
-
-      for (auto a : text) {
-         if (IsKeywordSymbol(a))
-            continue;
-         return false;
-      }
-
-      return true;
+   bool Code::IsValidKeyword(Text const& text) {
+      return IsKeyword(text);
    }
 
    /// Parse any code expression, anticipate anything                         
-   ///   @param input - the code to parse                                     
-   ///   @param lhs - [in/out] parsed content goes here (lhs)                 
-   ///   @param precedence - the last parsed operation precedence             
-   ///   @param optimize - whether to attempt executing at compile-time       
+   ///   @param input the code to parse                                       
+   ///   @param lhs [in/out] parsed content goes here (lhs)                   
+   ///   @param precedence the last parsed operation precedence               
+   ///   @param optimize whether to attempt executing at compile-time         
    ///   @return number of parsed characters from input                       
-   size_t Code::UnknownParser::Parse(const Code& input, Many& lhs, Real precedence, bool optimize) {
+   size_t Code::UnknownParser::Parse(Code const& input, Many& lhs, Real precedence, bool optimize) {
       Many rhs;
       size_t progress = 0;
       VERBOSE_TAB("Parsing unknown");
@@ -251,7 +348,7 @@ namespace Langulus::Flow
             break;
          else if (SkippedParser::Peek(relevant))
             localProgress = SkippedParser::Parse(relevant);
-         else if ((op = OperatorParser::Peek(relevant)) != Operator::NoOperator)
+         else if ((op = OperatorParser::Peek(relevant)) != Operator::Noop)
             localProgress = OperatorParser::Parse(op, relevant, rhs, precedence, optimize);
          else if (KeywordParser::Peek(relevant))
             localProgress = KeywordParser::Parse(relevant, rhs);
@@ -276,33 +373,34 @@ namespace Langulus::Flow
    }
 
    /// Peek inside input, and return true if first symbol is skippable        
-   ///   @param input - the code to peek into                                 
+   ///   @param input the code to peek into                                   
    ///   @return true if input is skippable                                   
-   bool Code::SkippedParser::Peek(const Code& input) noexcept {
-      return input.StartsWithSkippable();
+   bool Code::SkippedParser::Peek(Code const& input) noexcept {
+      return StartsWithSkippable(input);
    }
 
    /// Parse a skippable, no content produced                                 
-   ///   @param input - code that starts with a skippable character           
+   ///   @param input code that starts with a skippable character             
    ///   @return number of parsed characters                                  
-   size_t Code::SkippedParser::Parse(const Code& input) {
+   size_t Code::SkippedParser::Parse(Code const& input) {
       size_t progress = 0;
       while (progress < input.GetCount()) {
          const auto relevant = input.RightOf(progress);
-         const auto asview = Token {relevant};
 
-         if (relevant[0] > 0 and relevant[0] <= 32) {
+         if (*relevant <= 32 or *relevant >= 127) {
             // Skip a single skippable character                        
             ++progress;
             continue;
          }
-         else if (asview.starts_with("//")) {
+         else if (relevant.StartsWith(GetOperatorToken(Serial::Operator::OpenLineComment))) {
             // Skip an entire line comment                              
-            while (progress < input.GetCount() and input[progress] != '\n')
+            const auto end_marker = GetOperatorToken(Serial::Operator::CloseLineComment);
+            while (progress < input.GetCount() - end_marker.size()
+            and not input.RightOf(progress).StartsWith(end_marker))
                ++progress;
             continue;
          }
-         else if (asview.starts_with("/*")) {
+         else if (relevant.StartsWith(GetOperatorToken(Serial::Operator::OpenComment))) {
             // Skip a block comment (across multiple new lines)         
             while (progress + 1 < input.GetCount() and (input[progress] != '*' or input[progress + 1] != '/'))
                ++progress;
@@ -326,16 +424,16 @@ namespace Langulus::Flow
    }
 
    /// Peek inside input, and return true if first symbol is a character      
-   ///   @param input - the code to peek into                                 
+   ///   @param input the code to peek into                                   
    ///   @return true if input is a character                                 
-   bool Code::KeywordParser::Peek(const Code& input) noexcept {
-      return input.StartsWithLetter();
+   bool Code::KeywordParser::Peek(Code const& input) noexcept {
+      return StartsWithLetter(input);
    }
    
    /// Gather all symbols of a keyword                                        
-   ///   @param input - the code to peek into                                 
+   ///   @param input the code to peek into                                   
    ///   @return the isolated keyword token                                   
-   Token Code::KeywordParser::Isolate(const Code& input) noexcept {
+   Token Code::KeywordParser::Isolate(Code const& input) noexcept {
       size_t progress = 0;
       while (progress < input.GetCount()) {
          const auto c = input[progress];
@@ -352,11 +450,11 @@ namespace Langulus::Flow
    
    /// Parse keyword for a constant, data, or trait                           
    /// Verbs are considered operators, not keywords                           
-   ///   @param input - the code to parse                                     
-   ///   @param lhs - [in/out] parsed content goes here (lhs)                 
+   ///   @param input the code to parse                                       
+   ///   @param lhs [in/out] parsed content goes here (lhs)                   
    ///   @param allowCharge - whether to parse charge (internal use)          
    ///   @return number of parsed characters                                  
-   size_t Code::KeywordParser::Parse(const Code& input, Many& lhs, bool allowCharge) {
+   size_t Code::KeywordParser::Parse(Code const& input, Many& lhs, bool allowCharge) {
       // Isolate the keyword                                            
       size_t progress = 0;
       const auto keyword = Isolate(input);
@@ -411,12 +509,12 @@ namespace Langulus::Flow
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    /// Disambiguate a keyword                                                 
-   ///   @param progress - current position in input                          
-   ///   @param input - the input code (used only for debugging)              
-   ///   @param keyword - the keyword we'll be disambiguating                 
+   ///   @param progress current position in input                            
+   ///   @param input the input code (used only for debugging)                
+   ///   @param keyword the keyword we'll be disambiguating                   
    ///   @return the disambiguated definition                                 
    AMeta Code::KeywordParser::Disambiguate(
-      const size_t progress, const Code& input, Token const& keyword
+      const size_t progress, Code const& input, Token const& keyword
    ) {
       try
       {
@@ -430,17 +528,17 @@ namespace Langulus::Flow
 
    /// Peek inside input, and return true if first symbol is a digit, or a    
    /// minus followed by a digit                                              
-   ///   @param input - the code to peek into                                 
+   ///   @param input the code to peek into                                   
    ///   @return true if input begins with a number                           
-   bool Code::NumberParser::Peek(const Code& input) noexcept {
+   bool Code::NumberParser::Peek(Code const& input) noexcept {
       return input.StartsWithDigit();
    }
 
    /// Parse an integer or real number                                        
-   ///   @param input - the code to parse                                     
-   ///   @param lhs - [in/out] parsed content goes here (lhs)                 
+   ///   @param input the code to parse                                       
+   ///   @param lhs [in/out] parsed content goes here (lhs)                   
    ///   @return number of parsed characters                                  
-   size_t Code::NumberParser::Parse(const Code& input, Many& lhs) {
+   size_t Code::NumberParser::Parse(Code const& input, Many& lhs) {
       Real rhs = 0;
       size_t progress = 0;
       VERBOSE_TAB("Parsing number");
@@ -470,7 +568,7 @@ namespace Langulus::Flow
    /// builtin operators                                                      
    ///   @param input - the code to peek into                                 
    ///   @return true if input begins with an operators                       
-   Code::Operator Code::OperatorParser::PeekBuiltin(const Code& input) noexcept {
+   Code::Operator Code::OperatorParser::PeekBuiltin(Code const& input) noexcept {
       for (size_t i = 0; i < Operator::OpCounter; ++i) {
          if (not SerializationRules::Operators[i].mCharge and input.StartsWithOperator(i))
             return Operator(i);
@@ -481,9 +579,9 @@ namespace Langulus::Flow
 
    /// Peek inside input, and return true if it begins with one of the        
    /// builtin or reflected operators                                         
-   ///   @param input - the code to peek into                                 
+   ///   @param input the code to peek into                                   
    ///   @return true if input begins with an operators                       
-   Code::Operator Code::OperatorParser::Peek(const Code& input) noexcept {
+   Code::Operator Code::OperatorParser::Peek(Code const& input) noexcept {
       if (not input)
          return Operator::NoOperator;
 
@@ -506,9 +604,9 @@ namespace Langulus::Flow
    }
 
    /// Isolate an operator                                                    
-   ///   @param input - the code to parse                                     
+   ///   @param input the code to parse                                       
    ///   @return the isolated operator                                        
-   Token Code::OperatorParser::Isolate(const Code& input) noexcept {
+   Token Code::OperatorParser::Isolate(Code const& input) noexcept {
       // These can be either a word separated by operators/spaces, or   
       // operators separated by spaces/numbers/chatacters               
       if (input.StartsWithLetter())
@@ -536,14 +634,14 @@ namespace Langulus::Flow
    /// Parse op-expression, operate on current output (lhs) and content (rhs) 
    ///   @attention skippable expressions are not handled here!               
    ///   @attention charge-expressions are not handled here!                  
-   ///   @param op - the built-in operator if any, or Reflected               
-   ///   @param input - the code to parse                                     
-   ///   @param lhs - [in/out] the operator expression will go here           
-   ///   @param priority - the priority of the last parsed element            
-   ///   @param optimize - the priority of the last parsed element            
+   ///   @param op the built-in operator if any, or Reflected                 
+   ///   @param input the code to parse                                       
+   ///   @param lhs [in/out] the operator expression will go here             
+   ///   @param priority the priority of the last parsed element              
+   ///   @param optimize the priority of the last parsed element              
    ///   @return number of parsed characters                                  
    size_t Code::OperatorParser::Parse(
-      Operator op, const Code& input, Many& lhs, Real priority, bool optimize
+      Operator op, Code const& input, Many& lhs, Real priority, bool optimize
    ) {
       size_t progress = 0;
       if (op < Operator::NoOperator) {
@@ -633,13 +731,13 @@ namespace Langulus::Flow
    }
 
    /// Parse a content scope                                                  
-   ///   @param op - the content opening operator (used for ranges)           
-   ///   @param input - the code to parse                                     
-   ///   @param lhs - [in/out] parsed content goes here (lhs)                 
-   ///   @param optimize - attempt compile-time execution                     
+   ///   @param op the content opening operator (used for ranges)             
+   ///   @param input the code to parse                                       
+   ///   @param lhs [in/out] parsed content goes here (lhs)                   
+   ///   @param optimize attempt compile-time execution                       
    ///   @return number of parsed characters                                  
    size_t Code::OperatorParser::ParseContent(
-      Code::Operator, const Code& input, Many& lhs, bool optimize
+      Code::Operator, Code const& input, Many& lhs, bool optimize
    ) {
       size_t progress = 0;
 
@@ -671,8 +769,8 @@ namespace Langulus::Flow
    /// Content is always inserted to the last element in LHS, if multiple     
    /// elements are present. If last element is a meta definition, the        
    /// definition will be replaced by the instantiated element                
-   ///   @param rhs - the content to insert                                   
-   ///   @param lhs - the place where the content will be inserted            
+   ///   @param rhs the content to insert                                     
+   ///   @param lhs the place where the content will be inserted              
    void Code::OperatorParser::InsertContent(Many& rhs, Many& lhs) {
       if (lhs.IsUntyped() or not lhs) {
          // If output is untyped, we directly push content, regardless  
@@ -765,12 +863,12 @@ namespace Langulus::Flow
    }
 
    /// String/character/code scope                                            
-   ///   @param op - the starting operator                                    
-   ///   @param input - the code to parse                                     
-   ///   @param lhs - [in/out] parsed content goes here (lhs)                 
+   ///   @param op the starting operator                                      
+   ///   @param input the code to parse                                       
+   ///   @param lhs [in/out] parsed content goes here (lhs)                   
    ///   @return number of parsed characters                                  
    size_t Code::OperatorParser::ParseString(
-      const Code::Operator op, const Code& input, Many& lhs
+      const Code::Operator op, Code const& input, Many& lhs
    ) {
       size_t progress = 0;
       size_t depth = 1;
@@ -837,10 +935,10 @@ namespace Langulus::Flow
    }
 
    /// Byte scope parser                                                      
-   ///   @param input - the code to parse                                     
-   ///   @param lhs - [in/out] here goes the byte sequence                    
+   ///   @param input the code to parse                                       
+   ///   @param lhs [in/out] here goes the byte sequence                      
    ///   @return number of parsed characters                                  
-   size_t Code::OperatorParser::ParseBytes(const Code& input, Many& lhs) {
+   size_t Code::OperatorParser::ParseBytes(Code const& input, Many& lhs) {
       size_t progress = 0;
       while (progress < input.GetCount()) {
          const auto c = input[progress];
@@ -886,8 +984,8 @@ namespace Langulus::Flow
    }
 
    /// Phase contents                                                         
-   ///   @param op - the phase operator                                       
-   ///   @param lhs - [in/out] phased content goes here                       
+   ///   @param op the phase operator                                         
+   ///   @param lhs [in/out] phased content goes here                         
    ///   @return number of parsed characters                                  
    size_t Code::OperatorParser::ParsePhase(const Code::Operator op, Many& lhs) {
       if (op == Operator::Past)
@@ -898,12 +996,12 @@ namespace Langulus::Flow
    }
    
    /// Keyword parser (for after # or ## operators)                           
-   ///   @param op - the operator                                             
-   ///   @param input - the code to parse                                     
-   ///   @param lhs - [in/out] selected idea goes here                        
+   ///   @param op the operator                                               
+   ///   @param input the code to parse                                       
+   ///   @param lhs [in/out] selected idea goes here                          
    ///   @return number of parsed characters                                  
    size_t Code::OperatorParser::ParseKeyword(
-      const Code::Operator op, const Code& input, Many& lhs
+      const Code::Operator op, Code const& input, Many& lhs
    ) {
       size_t progress = 0;
       if (SkippedParser::Peek(input)) {
@@ -978,13 +1076,13 @@ namespace Langulus::Flow
    }
 
    /// Execute a reflected verb operator                                      
-   ///   @param op - the operator to execute                                  
-   ///   @param input - the code to parse                                     
-   ///   @param lhs - [in/out] result of the operator goes here               
-   ///   @param optimize - whether or not to attempt executing at compile-time
+   ///   @param op the operator to execute                                    
+   ///   @param input the code to parse                                       
+   ///   @param lhs [in/out] result of the operator goes here                 
+   ///   @param optimize whether or not to attempt executing at compile-time  
    ///   @return number of parsed characters                                  
    size_t Code::OperatorParser::ParseReflected(
-      Verb& op, const Code& input, Many& lhs, bool optimize
+      Verb& op, Code const& input, Many& lhs, bool optimize
    ) {
       size_t progress = 0;
       Code relevant = input;
@@ -1059,9 +1157,9 @@ namespace Langulus::Flow
    
    /// Peek inside input, and return true if it begins with one of the        
    /// built-in operators for charging                                        
-   ///   @param input - the code to peek into                                 
+   ///   @param input the code to peek into                                   
    ///   @return true if input begins with an operator for charging           
-   Code::Operator Code::ChargeParser::Peek(const Code& input) noexcept {
+   Code::Operator Code::ChargeParser::Peek(Code const& input) noexcept {
       // Parse skippables if any                                        
       auto relevant = input;
       if (SkippedParser::Peek(relevant)) {
@@ -1080,10 +1178,10 @@ namespace Langulus::Flow
    }
 
    /// Parse mass/time/frequency/priority operators                           
-   ///   @param input - the code to parse                                     
-   ///   @param charge - [out] parsed charge goes here                        
+   ///   @param input the code to parse                                       
+   ///   @param charge [out] parsed charge goes here                          
    ///   @return number of parsed characters                                  
-   size_t Code::ChargeParser::Parse(const Code& input, Charge& charge) {
+   size_t Code::ChargeParser::Parse(Code const& input, Charge& charge) {
       size_t progress = 0;
       VERBOSE_TAB("Parsing charge");
 

@@ -18,8 +18,8 @@ using namespace Flow;
 
 /// A mockup of Langulus::Thing, for testing purposes                         
 struct Thing : Resolvable, Referenced {
-   LANGULUS(ABSTRACT) false;
-   LANGULUS(PRODUCER) Thing;
+   using CTTI_Abstract = No;
+   using CTTI_Producer = Thing;
    LANGULUS_BASES(Resolvable);
 
    Thing() : Resolvable {this} {}
@@ -48,39 +48,39 @@ struct Thing2 : Thing {
 
 /// A mockup of a universe component, for testing purposes                    
 struct Universe : Resolvable {
-   LANGULUS(ABSTRACT) false;
-   LANGULUS(PRODUCER) Thing;
+   using CTTI_Abstract = No;
+   using CTTI_Producer = Thing;
    LANGULUS_BASES(Resolvable);
    Universe() : Resolvable {this} {}
 };
 
 /// A mockup of a window component, for testing purposes                      
 struct Window : Resolvable {
-   LANGULUS(ABSTRACT) false;
-   LANGULUS(PRODUCER) Thing;
+   using CTTI_Abstract = No;
+   using CTTI_Producer = Thing;
    LANGULUS_BASES(Resolvable);
    Window() : Resolvable {this} {}
 };
 
 /// A mockup of a user component, for testing purposes                        
 struct User : Resolvable {
-   LANGULUS(ABSTRACT) false;
-   LANGULUS(PRODUCER) Thing;
+   using CTTI_Abstract = No;
+   using CTTI_Producer = Thing;
    LANGULUS_BASES(Resolvable);
    User() : Resolvable {this} {}
 };
 
 /// A mockup of a session component, for testing purposes                     
 struct Session : Resolvable {
-   LANGULUS(ABSTRACT) false;
-   LANGULUS(PRODUCER) Thing;
+   using CTTI_Abstract = No;
+   using CTTI_Producer = Thing;
    LANGULUS_BASES(Resolvable);
    Session() : Resolvable {this} {}
 };
 
 /// A mockup of a fraction                                                    
 /*struct Fraction : Resolvable {
-   LANGULUS(ABSTRACT) false;
+   using CTTI_Abstract = No;
    LANGULUS(UNINSERTABLE) false;
    LANGULUS_BASES(Resolvable);
    Fraction() : Resolvable(MetaOf<Fraction>()) {}

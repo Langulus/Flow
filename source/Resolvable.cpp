@@ -63,7 +63,7 @@
    /// Parse and execute a scope in the resolved context                      
    ///   @param code - the code to parse and execute                          
    ///   @return the results of the execution                                 
-   Many Resolvable::Run(const Code& code) {
+   Many Resolvable::Run(Code const& code) {
       if (not code)
          return {};
       return Run(code.Parse());

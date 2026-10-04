@@ -7,7 +7,6 @@
 ///                                                                           
 #include <Langulus/Time.inl>
 #include <Langulus/Code.inl>
-//#include <Langulus/Resolvable.inl>
 #include <Langulus/Temporal.hpp>
 #include <Langulus/MetaOf.hpp>
 #include "inner/Missing.hpp"
@@ -181,12 +180,12 @@ bool Temporal::DumpInner(Many const& data, bool newline, bool& first) {
             return;
          }
       },
-      [&](const Code& p) {
+      [&](Code const& p) {
          // Write code                                                  
          DumpSeparator(data, newline or tooLong, first);
          Logger::Append(Logger::PushDarkCyan, Logger::Invert, '{', p, '}', Logger::Pop);
       },
-      [&](const Text& p) {
+      [&](Text const& p) {
          // Write text literal                                          
          DumpSeparator(data, newline or tooLong, first);
          Logger::Append(Logger::PushRed, '`', p, '`', Logger::Pop);
@@ -231,7 +230,7 @@ void Temporal::DumpMissing(const Missing& p) {
 /// Dump a verb                                                               
 ///   @param v - the verb to dump                                             
 void Temporal::DumpVerb(const Verb& v) {
-   using Rules = typename Text::SerializationRules;
+   using Rules = CTTI::Serializer<Annies::Text>;
 
    // Can we fit the verb on a single line?                             
    const auto serv = static_cast<Text>(v);
@@ -332,7 +331,7 @@ void Temporal::DumpTrait(const Tag& t) {
    const auto separated = serv.GetCount() > CarryOverLimit;
 
    // Write the trait and open the scope                                
-   Logger::Append(Logger::PushPurple, t.GetTrait(), '(', Logger::Pop);
+   Logger::Append(Logger::PushPurple, t.GetTag(), '(', Logger::Pop);
    if (separated)
       Logger::Append(Logger::Tab);
 

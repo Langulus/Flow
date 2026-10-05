@@ -159,7 +159,7 @@ bool Temporal::Update(Time dt, Many& sideffects) {
 
    // Execute flows that occur periodically                             
    for (auto pair : mFrequencyStack) {
-      auto* innerFlow = pair.GetVal();
+      auto* innerFlow = *pair.GetVal();
       innerFlow->mNow += dt;
       auto ticks = innerFlow->GetUptime().Seconds() / mRatePeriod.Seconds();
       const auto frequency = pair.GetKey();
@@ -185,7 +185,7 @@ bool Temporal::Update(Time dt, Many& sideffects) {
 
       // Always update all time points before the tick count            
       // They might have periodic flows inside                          
-      auto* innerFlow = pair.GetVal();
+      auto* innerFlow = *pair.GetVal();
       innerFlow->Update(dt, sideffects);
    }
 
@@ -193,10 +193,10 @@ bool Temporal::Update(Time dt, Many& sideffects) {
 }
 
 /// Merge a flow                                                              
-///   @param other - the flow to merge with this one                          
+///   @param other the flow to merge with this one                            
 void Temporal::Merge(Temporal const& other) {
-   // Concatenate priority stacks                                       
-   mPriorityStack += other.mPriorityStack;
+   // Merge priority stacks                                             
+   mPriorityStack.MergeRange(other.mPriorityStack);
 
    // Merge time stacks                                                 
    for (auto pair : other.mTimeStack) {
@@ -209,7 +209,7 @@ void Temporal::Merge(Temporal const& other) {
       }
 
       auto* innerFlow = pair.GetVal();
-      found.GetVal().Merge(innerFlow);
+      found.GetVal()->Merge(innerFlow);
    };
 
    // Merge frequency stacks                                            
@@ -223,7 +223,7 @@ void Temporal::Merge(Temporal const& other) {
       }
 
       auto* innerFlow = pair.GetVal();
-      found.GetVal().Merge(innerFlow);
+      found.GetVal()->Merge(innerFlow);
    };
 }
 
@@ -249,7 +249,7 @@ void Temporal::Merge(Temporal const& other) {
 ///      from there on, they're handled conventionally, by the                
 ///      aforementioned rules in the context of that stack                    
 ///   @attention assumes argument is a valid scope                            
-///   @param scope - the scope to analyze and push                            
+///   @param scope the scope to analyze and push                              
 ///   @return true if the flow changed                                        
 Many Temporal::PushInner(Many scope) {
    Many compiled;
@@ -286,8 +286,8 @@ Many Temporal::PushInner(Many scope) {
 
 /// Compiles a scope into an intermediate form, used by the flow              
 ///   @attention assumes argument is a valid scope                            
-///   @param scope - the scope to compile                                     
-///   @param priority - the priority to set for any missing point created     
+///   @param scope the scope to compile                                       
+///   @param priority the priority to set for any missing point created       
 ///      for the provided scope.                                              
 ///   @return the compiled scope                                              
 Many Temporal::Compile(Many const& scope, Real priority) {
@@ -366,8 +366,8 @@ Many Temporal::Compile(Many const& scope, Real priority) {
 }
 
 /// Link a scope's past points to future points that are on the stack         
-///   @param scope - the scope to link and insert                             
-///   @param entanglementAbove - an optional entanglement from above scope    
+///   @param scope the scope to link and insert                               
+///   @param entanglementAbove an optional entanglement from above scope      
 void Temporal::Link(Many const& scope, Ref<Entanglement> const& entanglementAbove) {
    LglsAssumeDev(mFuture, "Invalid future");
 
@@ -387,10 +387,8 @@ void Temporal::Link(Many const& scope, Ref<Entanglement> const& entanglementAbov
          // but also makes the flow impure, because it allows it to be  
          // affected by external influence.                             
          scope.ForEach([&](Many const& sub) {
-            LANGULUS_ASSERT(
-               PushFutures(&sub, *mFuture, entanglement),
-               Flow, "Couldn't push to future"
-            );
+            LglsAssert(PushFutures(&sub, *mFuture, entanglement),
+                       "Couldn't push to future");
          });
       }
       else {
@@ -408,18 +406,14 @@ void Temporal::Link(Many const& scope, Ref<Entanglement> const& entanglementAbov
       [&](Tag const& t) {
          // Forward to all future points in the priority stack          
          TMany<Tag> local = t;
-         LANGULUS_ASSERT(
-            PushFutures(local, *mFuture, entanglement),
-            Flow, "Couldn't push to future"
-         );
+         LglsAssert(PushFutures(local, *mFuture, entanglement),
+                    "Couldn't push to future");
       },
       [&](Recipe const& c) {
          // Forward to all future points in the priority stack          
          TMany<Recipe> local = c;
-         LANGULUS_ASSERT(
-            PushFutures(local, *mFuture, entanglement),
-            Flow, "Couldn't push to future"
-         );
+         LglsAssert(PushFutures(local, *mFuture, entanglement),
+                    "Couldn't push to future");
       },
       [&](Verb const& v) {
          if (v.IsVerb<Verbs::Do>()) {
@@ -427,10 +421,8 @@ void Temporal::Link(Many const& scope, Ref<Entanglement> const& entanglementAbov
             // Don't push them, but use them to set environment for     
             // any sub-verbs                                            
             if (v.GetSource()) {
-               LANGULUS_ASSERT(
-                  PushFutures(v.GetSource(), *mFuture, entanglement),
-                  Flow, "Couldn't push to future"
-               );
+               LglsAssert(PushFutures(v.GetSource(), *mFuture, entanglement),
+                          "Couldn't push to future");
             }
 
             LinkRelative(v.GetArgument(), v, entanglement);
@@ -469,10 +461,8 @@ void Temporal::Link(Many const& scope, Ref<Entanglement> const& entanglementAbov
          else {
             // Forward it to the priority stack                         
             TMany<Verb> local = v;
-            LANGULUS_ASSERT(
-               PushFutures(local, *mFuture, entanglement),
-               Flow, "Couldn't push to future"
-            );
+            LglsAssert(PushFutures(local, *mFuture, entanglement),
+                       "Couldn't push to future");
          }
       }
    );
@@ -486,9 +476,9 @@ void Temporal::Link(Many const& scope, Ref<Entanglement> const& entanglementAbov
 
 /// Push a scope into future points already available in the flow, but do it  
 /// in a manner similar in energy to a given verb                             
-///   @param scope - the scope to push                                        
-///   @param override - the reference verb                                    
-///   @param entanglementAbove - an optional entanglement from above scope    
+///   @param scope the scope to push                                          
+///   @param override the reference verb                                      
+///   @param entanglementAbove an optional entanglement from above scope      
 void Temporal::LinkRelative(
    Many const& scope,
    Verb const& override,
@@ -551,10 +541,8 @@ void Temporal::LinkRelative(
          }
          else {*/
             // Forward it to the priority stack                         
-            LANGULUS_ASSERT(
-               PushFutures(local, *mFuture, entanglement),
-               Flow, "Couldn't push to future"
-            );
+            LglsAssert(PushFutures(local, *mFuture, entanglement),
+                       "Couldn't push to future");
          //}
       },
       [&](Recipe const& c) {
@@ -594,10 +582,8 @@ void Temporal::LinkRelative(
          }
          else {*/
             // Forward it to the priority stack                         
-            LANGULUS_ASSERT(
-               PushFutures(local, *mFuture, entanglement),
-               Flow, "Couldn't push to future"
-            );
+            LglsAssert(PushFutures(local, *mFuture, entanglement),
+                       "Couldn't push to future");
          //}
       },
       [&](Verb const& v) {
@@ -609,10 +595,8 @@ void Temporal::LinkRelative(
             // Don't push them, but use them to set environment for     
             // any sub-verbs                                            
             if (v.GetSource()) {
-               LANGULUS_ASSERT(
-                  PushFutures(v.GetSource(), *mFuture, entanglement),
-                  Flow, "Couldn't push to future"
-               );
+               LglsAssert(PushFutures(v.GetSource(), *mFuture, entanglement),
+                          "Couldn't push to future");
             }
 
             LinkRelative(v.GetArgument(), localOverride, entanglement);
@@ -668,10 +652,8 @@ void Temporal::LinkRelative(
                );
             }*/
             TMany<Verb> local = localOverride;
-            LANGULUS_ASSERT(
-               PushFutures(local, *mFuture, entanglement),
-               Flow, "Couldn't push to future"
-            );
+            LglsAssert(PushFutures(local, *mFuture, entanglement),
+                       "Couldn't push to future");
          }
       }
    );
@@ -681,9 +663,9 @@ void Temporal::LinkRelative(
 /// future points of the provided stack. But anything new could go into       
 /// old future points, as long as state and filters allows it!                
 ///   @attention assumes argument is a valid scope                            
-///   @param scope - the scope to link                                        
-///   @param future - [in/out] the future to link with                        
-///   @param entanglementAbove - an optional entanglement from above scope    
+///   @param scope the scope to link                                          
+///   @param future [in/out] the future to link with                          
+///   @param entanglementAbove an optional entanglement from above scope      
 ///   @return true if scope was linked successfully, either in the provided   
 ///      'future', or in any of the futures below it                          
 bool Temporal::PushFutures(

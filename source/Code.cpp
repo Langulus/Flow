@@ -6,9 +6,10 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include <Langulus/Time.inl>
-#include <Langulus/Code.inl>
+#include <Langulus/Code.hpp>
 #include <Langulus/Temporal.hpp>
 #include <Langulus/Any.hpp>
+#include <Langulus/Bytes.hpp>
 
 #include <Langulus/Verbs/Do.hpp>
 #include <Langulus/Verbs/Select.hpp>
@@ -223,17 +224,17 @@ namespace
    /// An op-expression is one matching the built-in ones, or one matching    
    /// one in reflected verb database, where LHS is not DMeta or VMeta        
    struct OperatorParser {
-      static auto Parse(Code::Operator, Code const&, Many&, Real, bool optimize) -> size_t;
-      static auto PeekBuiltin(Code const&) noexcept -> Code::Operator;
-      static auto Peek(Code const&) noexcept -> Code::Operator;
+      static auto Parse(Serial::Operator, Code const&, Many&, Real, bool optimize) -> size_t;
+      static auto PeekBuiltin(Code const&) noexcept -> Serial::Operator;
+      static auto Peek(Code const&) noexcept -> Serial::Operator;
       static auto Isolate(Code const&) noexcept -> Token;
 
    private:
-      static auto ParseContent(Code::Operator, Code const&, Many&, bool optimize) -> size_t;
-      static auto ParseString(Code::Operator, Code const&, Many&) -> size_t;
+      static auto ParseContent(Serial::Operator, Code const&, Many&, bool optimize) -> size_t;
+      static auto ParseString(Serial::Operator, Code const&, Many&) -> size_t;
       static auto ParseBytes(Code const&, Many&) -> size_t;
-      static auto ParseKeyword(Code::Operator, Code const&, Many&) -> size_t;
-      static auto ParsePhase(Code::Operator, Many&) -> size_t;
+      static auto ParseKeyword(Serial::Operator, Code const&, Many&) -> size_t;
+      static auto ParsePhase(Serial::Operator, Many&) -> size_t;
       static auto ParseReflected(Verb&, Code const&, Many&, bool optimize) -> size_t;
 
       static void InsertContent(Many&, Many&);
@@ -243,7 +244,7 @@ namespace
    /// A charge-expression is any operator *^@! after a DMeta or VMeta        
    struct ChargeParser {
       static auto Parse(Code const&, Charge&) -> size_t;
-      static auto Peek(Code const&) noexcept -> Code::Operator;
+      static auto Peek(Code const&) noexcept -> Serial::Operator;
    };
 }
 
@@ -405,13 +406,13 @@ size_t UnknownParser::Parse(Code const& input, Many& lhs, Real precedence, bool 
       // Scan input until end                                           
       Code relevant = input.RightOf(progress);
       size_t localProgress = 0;
-      Code::Operator op;
+      Serial::Operator op;
 
       if (relevant[0] == '\0')
          break;
       else if (SkippedParser::Peek(relevant))
          localProgress = SkippedParser::Parse(relevant);
-      else if ((op = OperatorParser::Peek(relevant)) != Code::Operator::Noop)
+      else if ((op = OperatorParser::Peek(relevant)) != Serial::Operator::Noop)
          localProgress = OperatorParser::Parse(op, relevant, rhs, precedence, optimize);
       else if (KeywordParser::Peek(relevant))
          localProgress = KeywordParser::Parse(relevant, rhs);
@@ -542,7 +543,7 @@ size_t KeywordParser::Parse(Code const& input, Many& lhs, bool allowCharge) {
    if (dmeta) {
       if (allowCharge) {
          const auto relevant = input.RightOf(progress);
-         if (ChargeParser::Peek(relevant) != Code::Operator::Noop) {
+         if (ChargeParser::Peek(relevant) != Serial::Operator::Noop) {
             // Parse charge for the keyword                             
             Charge charge;
             progress += ChargeParser::Parse(relevant, charge);
@@ -627,39 +628,37 @@ size_t NumberParser::Parse(Code const& input, Many& lhs) {
 /// built-in operators                                                        
 ///   @param input the code to peek into                                      
 ///   @return true if input begins with an operators                          
-auto OperatorParser::PeekBuiltin(Code const& input) noexcept -> Code::Operator {
-   for (int i = 0; i < int(Code::Operator::Last); ++i) {
-      if (not SerializationRules::Operators[i].mCharge and StartsWithOperator(i, input))
-         return Operator(i);
+auto OperatorParser::PeekBuiltin(Code const& input) noexcept -> Serial::Operator {
+   for (int i = 0; i < int(Serial::Operator::Last); ++i) {
+      if (i != int(Serial::Operator::Mass) and i != int(Serial::Operator::Rate)
+      and i != int(Serial::Operator::Time) and i != int(Serial::Operator::Precedence)
+      and StartsWithOperator(input, Serial::Operator(i)))
+         return Serial::Operator(i);
    }
 
-   return Code::Operator::Noop;
+   return Serial::Operator::Noop;
 }
 
 /// Peek inside input, and return true if it begins with one of the           
 /// builtin or reflected operators                                            
 ///   @param input the code to peek into                                      
 ///   @return true if input begins with an operators                          
-auto OperatorParser::Peek(Code const& input) noexcept -> Code::Operator {
+auto OperatorParser::Peek(Code const& input) noexcept -> Serial::Operator {
    if (not input)
-      return Code::Operator::Noop;
+      return Serial::Operator::Noop;
 
    const auto builtin = PeekBuiltin(input);
-   if (builtin != Code::Operator::Noop)
+   if (builtin != Serial::Operator::Noop)
       return builtin;
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       const auto word = Isolate(input);
-      auto found = RTTI::GetOperator(word);
+      auto found = RTTI::Registry::GetMetaVerbByToken(word);
       if (found)
-         return Code::Operator::ReflectedOperator;
-
-      found = RTTI::GetMetaVerb(word);
-      if (found)
-         return Code::Operator::ReflectedVerb;
+         return Serial::Operator::CustomOp;
    #endif
 
-   return Code::Operator::Noop;
+   return Serial::Operator::Noop;
 }
 
 /// Isolate an operator                                                       
@@ -667,7 +666,7 @@ auto OperatorParser::Peek(Code const& input) noexcept -> Code::Operator {
 ///   @return the isolated operator                                           
 Token OperatorParser::Isolate(Code const& input) noexcept {
    // These can be either a word separated by operators/spaces, or      
-   // operators separated by spaces/numbers/chatacters                  
+   // operators separated by spaces/numbers/characters                  
    if (StartsWithLetter(input))
       return KeywordParser::Isolate(input);
 
@@ -679,7 +678,7 @@ Token OperatorParser::Isolate(Code const& input) noexcept {
       if (KeywordParser::Peek(relevant)
       or NumberParser::Peek(relevant)
       or SkippedParser::Peek(relevant)
-      or PeekBuiltin(relevant) != Code::Operator::Noop)
+      or PeekBuiltin(relevant) != Serial::Operator::Noop)
          break;
       ++progress;
    }
@@ -693,92 +692,68 @@ Token OperatorParser::Isolate(Code const& input) noexcept {
 /// Parse op-expression, operate on current output (lhs) and content (rhs)    
 ///   @attention skippable expressions are not handled here!                  
 ///   @attention charge-expressions are not handled here!                     
-///   @param op the built-in operator if any, or Reflected                    
+///   @param op the built-in operator if any, or CustomOp                     
 ///   @param input the code to parse                                          
 ///   @param lhs [in/out] the operator expression will go here                
 ///   @param priority the priority of the last parsed element                 
 ///   @param optimize the priority of the last parsed element                 
 ///   @return number of parsed characters                                     
 size_t OperatorParser::Parse(
-   Code::Operator op, Code const& input, Many& lhs, Real priority, bool optimize
+   Serial::Operator op, Code const& input, Many& lhs, Real priority, bool optimize
 ) {
+   LglsAssumeDev(op != Serial::Operator::Noop);
    size_t progress = 0;
-   if (op < Code::Operator::Noop) {
+   if (op != Serial::Operator::CustomOp) {
       // Skip the operator, we already know it                          
-      progress += SerializationRules::Operators[op].mToken.size();
-      VERBOSE_TAB("Parsing built-in operator: [",
-         SerializationRules::Operators[op].mToken, ']');
+      const auto token = GetOperatorToken(op);
+      progress += token.size();
+      VERBOSE_TAB("Parsing built-in operator: [", token, ']');
       const Code relevant = input.RightOf(progress);
 
       // Handle built-in operators first                                
       switch (op) {
-      case Code::Operator::OpenScope:
-      case Code::Operator::OpenScopeAlt:
+      case Serial::Operator::OpenScope:
+      case Serial::Operator::OpenScopeAlt:
          return progress + ParseContent(op, relevant, lhs, optimize);
-      case Code::Operator::CloseScope:
-      case Code::Operator::CloseScopeAlt:
+      case Serial::Operator::CloseScope:
+      case Serial::Operator::CloseScopeAlt:
          return 0;
-      case Code::Operator::OpenString:
-      case Code::Operator::OpenStringAlt:
-      case Code::Operator::OpenCode:
-      case Code::Operator::OpenCharacter:
+      case Serial::Operator::OpenString:
+      case Serial::Operator::OpenStringAlt:
+      case Serial::Operator::OpenCode:
+      case Serial::Operator::OpenCharacter:
          return progress + ParseString(op, relevant, lhs);
-      case Code::Operator::OpenByte:
+      case Serial::Operator::OpenByte:
          return progress + ParseBytes(relevant, lhs);
-      case Code::Operator::Past:
-      case Code::Operator::Future:
+      case Serial::Operator::Past:
+      case Serial::Operator::Future:
          return progress + ParsePhase(op, lhs);
-      case Code::Operator::Null:
+      case Serial::Operator::Null:
          return progress + 4;
-      case Code::Operator::SelectThing:
-      case Code::Operator::SelectIdea:
+      case Serial::Operator::SelectThing:
+      case Serial::Operator::SelectIdea:
          return progress + ParseKeyword(op, relevant, lhs);
       default:
          PRETTY_ERROR("Unhandled built-in operator");
       }
    }
-   else if (op == Code::Operator::Noop) {
-      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         // Handle a reflected operator                                 
-         const auto word = Isolate(input);
-         const auto found = RTTI::GetOperator(word);
-
-         if (found->mPrecedence and priority >= found->mPrecedence) {
-            VERBOSE(Logger::Yellow,
-               "Delaying reflected operator [", found,
-               "] due to a prioritized operation");
-            return 0;
-         }
-
-         VERBOSE_TAB("Parsing reflected operator: [", word, "] (", found, ")");
-         progress += word.size();
-         auto operation = Verb::FromMeta(found);
-         if (CompareOperators(word, found->mOperatorReverse))
-            operation.SetMass(-1);
-
-         const Code relevant = input.RightOf(progress);
-         return progress + ParseReflected(operation, relevant, lhs, optimize);
-      #else
-         PRETTY_ERROR("Can't parse reflected operator, managed reflection feature is disabled");
-      #endif
-   }
    else {
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Handle a reflected verb                                     
          const auto word = Isolate(input);
-         const auto found = RTTI::GetMetaVerb(word);
+         const auto found = RTTI::VMeta(RTTI::Registry::GetMetaVerbByToken(word));
 
-         if (found->mPrecedence and priority >= found->mPrecedence) {
-            VERBOSE(Logger::Yellow,
-               "Delaying reflected operator [", found, 
-               "] due to a prioritized operation");
+         if (found.GetPrecedence() and priority >= found.GetPrecedence()) {
+            VERBOSE(Logger::Yellow, "Delaying reflected operator [", found, 
+                                    "] due to a prioritized operation");
             return 0;
          }
 
          progress += word.size();
          VERBOSE_TAB("Parsing reflected verb: [", word, "] (", found, ")");
-         auto operation = Verb::FromMeta(found);
-         if (CompareOperators(word, found->mTokenReverse))
+         auto operation = Verb::From(found);
+         if (CompareOperators(word, found.GetNegativeName())
+         or  CompareOperators(word, found.GetNegativeOperator()))
             operation.SetMass(-1);
 
          const Code relevant = input.RightOf(progress);
@@ -787,6 +762,7 @@ size_t OperatorParser::Parse(
          PRETTY_ERROR("Can't parse reflected verb, managed reflection feature is disabled");
       #endif
    }
+   return 0;
 }
 
 /// Parse a content scope                                                     
@@ -796,7 +772,7 @@ size_t OperatorParser::Parse(
 ///   @param optimize attempt compile-time execution                          
 ///   @return number of parsed characters                                     
 size_t OperatorParser::ParseContent(
-   Code::Operator, Code const& input, Many& lhs, bool optimize
+   Serial::Operator, Code const& input, Many& lhs, bool optimize
 ) {
    size_t progress = 0;
 
@@ -810,10 +786,10 @@ size_t OperatorParser::ParseContent(
 
    // Account for the closing content scope                             
    const auto remaining = input.RightOf(progress);
-   if (remaining.StartsWithOperator(Operator::CloseScope))
-      progress += SerializationRules::Operators[Operator::CloseScope].mToken.size();
-   else if (remaining.StartsWithOperator(Operator::CloseScopeAlt))
-      progress += SerializationRules::Operators[Operator::CloseScopeAlt].mToken.size();
+   if (StartsWithOperator(remaining, Serial::Operator::CloseScope))
+      progress += Serial::CloseScope.Token.size();
+   else if (StartsWithOperator(remaining, Serial::Operator::CloseScopeAlt))
+      progress += Serial::CloseScopeAlt.Token.size();
    else
       PRETTY_ERROR("Missing closing bracket");
 
@@ -831,6 +807,10 @@ size_t OperatorParser::ParseContent(
 ///   @param rhs the content to insert                                        
 ///   @param lhs the place where the content will be inserted                 
 void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
+   using RTTI::DMeta;
+   using RTTI::TMeta;
+   using RTTI::VMeta;
+
    if (not lhs.IsTyped() or not lhs) {
       // If output is untyped, we directly push content, regardless     
       // if it's filled with something or not - a scope is a scope      
@@ -838,21 +818,21 @@ void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
       const auto stateBackup = lhs.GetState();
       lhs.ResetState();
       lhs.Compose(Move(rhs));
-      lhs.AddState(stateBackup);
+      lhs.SetState(stateBackup);
       VERBOSE_ALT("Untyped content: ", Logger::Cyan, lhs);
    }
    else if (lhs.Is<DMeta>()) {
       // The content is for an uninstantiated data scope                
-      const auto meta = lhs.As<DMeta>(IndexLast);
-      LANGULUS_ASSERT(meta, Flow, "Bad data id");
+      const auto meta = lhs.AsAt<DMeta>(Index::Last);
+      LglsAssert((bool) meta, "Bad data id");
 
-      if (meta->Is<Verb>()) {
-         lhs.RemoveIndex(IndexLast);
-         lhs.SmartPush(IndexBack, Verb {Move(rhs)});
+      if (meta.Is<Verb>()) {
+         lhs.EraseAt(Index::Last);
+         lhs.Compose(Verb {Move(rhs)});
       }
-      else if (meta->Is<Tag>()) {
-         lhs.RemoveIndex(IndexLast);
-         lhs.SmartPush(IndexBack, Tag {Move(rhs)});
+      else if (meta.Is<Tag>()) {
+         lhs.EraseAt(Index::Last);
+         lhs.Compose(Tag {Move(rhs)});
       }
       else {
          if (not rhs and not meta->mProducerRetriever
@@ -861,8 +841,8 @@ void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
             Many constExpr;
             constExpr.SetType(meta);
             constExpr.New(1);
-            lhs.RemoveIndex(IndexLast);
-            lhs.SmartPush(IndexBack, Abandon(constExpr));
+            lhs.EraseAt(Index::Last);
+            lhs.Compose(Abandon(constExpr));
          }
          else {
             // Invoke the descriptor-constructor only if we have to     
@@ -870,54 +850,54 @@ void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
             Many precompiled;
             if (outputConstruct.StaticCreation(precompiled)) {
                // Precompiled successfully, append it to LHS            
-               lhs.RemoveIndex(IndexLast);
-               lhs.SmartPush(IndexBack, Abandon(precompiled));
+               lhs.EraseAt(Index::Last);
+               lhs.Compose(Abandon(precompiled));
                VERBOSE_ALT("Statically constructed from DMeta: ", Logger::Cyan, lhs);
                return;
             }
 
-            lhs.RemoveIndex(IndexLast);
-            lhs.SmartPush(IndexBack, Abandon(outputConstruct));
+            lhs.EraseAt(Index::Last);
+            lhs.Compose(Abandon(outputConstruct));
          }
       }
       VERBOSE_ALT("Constructed from DMeta: ", Logger::Cyan, lhs);
    }
    else if (lhs.Is<VMeta>()) {
       // The content is for an uninstantiated verb scope                
-      const auto meta = lhs.As<VMeta>(IndexLast);
-      LANGULUS_ASSERT(meta, Flow, "Bad verb id");
+      const auto meta = lhs.AsAt<VMeta>(Index::Last);
+      LglsAssert((bool) meta, "Bad verb id");
 
-      auto verb = Verb::FromMeta(meta, Move(rhs));
-      lhs.RemoveIndex(IndexLast);
-      lhs.SmartPush(IndexBack, Abandon(verb));
+      auto verb = Verb::From(meta, Move(rhs));
+      lhs.EraseAt(Index::Last);
+      lhs.Compose(Abandon(verb));
       VERBOSE_ALT("Constructed from VMeta: ", Logger::Cyan, lhs);
    }
    else if (lhs.Is<TMeta>()) {
       // The content is for an uninstantiated trait scope               
-      const auto meta = lhs.As<TMeta>(IndexLast);
-      LANGULUS_ASSERT(meta, Flow, "Bad trait id");
+      const auto meta = lhs.AsAt<TMeta>(Index::Last);
+      LglsAssert((bool) meta, "Bad tag id");
 
-      auto trait = Tag::From(meta, Move(rhs));
-      lhs.RemoveIndex(IndexLast);
-      lhs.SmartPush(IndexBack, Abandon(trait));
+      auto tag = Tag::From(meta, Move(rhs));
+      lhs.EraseAt(Index::Last);
+      lhs.Compose(Abandon(tag));
       VERBOSE_ALT("Constructed from TMeta: ", Logger::Cyan, lhs);
    }
    else if (lhs.Is<Verb>()) {
       // The content is for an instantiated verb scope                  
-      auto& verb = lhs.As<Verb>(IndexLast);
-      verb.GetArgument().SmartPush(IndexBack, Move(rhs));
+      auto& verb = lhs.AsAt<Verb>(Index::Last);
+      verb.Compose(Move(rhs));
       VERBOSE_ALT("Constructed from Verb ", Logger::Cyan, lhs);
    }
    else if (lhs.Is<Recipe>()) {
       // The content is for an instantiated data scope                  
-      auto& construct = lhs.As<Recipe>(IndexLast);
-      construct << Move(rhs);
+      auto& recipe = lhs.AsAt<Recipe>(Index::Last);
+      recipe << Move(rhs);
       VERBOSE_ALT("Constructed from Recipe ", Logger::Cyan, lhs);
    }
    else {
       Logger::Error("Bad scope for ", lhs, " (", lhs.GetToken(), ')');
       Logger::Error("Content to insert is: ", rhs, " (", rhs.GetToken(), ')');
-      LANGULUS_THROW(Flow, "Syntax error - bad scope");
+      throw Exception("Syntax error - bad scope");
    }
 }
 
@@ -927,7 +907,7 @@ void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
 ///   @param lhs [in/out] parsed content goes here (lhs)                      
 ///   @return number of parsed characters                                     
 size_t OperatorParser::ParseString(
-   const Code::Operator op, Code const& input, Many& lhs
+   const Serial::Operator op, Code const& input, Many& lhs
 ) {
    size_t progress = 0;
    size_t depth = 1;
@@ -937,45 +917,43 @@ size_t OperatorParser::ParseString(
       const auto relevant = input.RightOf(progress);
 
       switch (op) {
-      case Operator::OpenString:
-      case Operator::OpenStringAlt: {
+      case Serial::Operator::OpenString:
+      case Serial::Operator::OpenStringAlt: {
          // Finish up a "string" or `string`                            
          //TODO handle escapes!
-         const auto closer = op == Operator::OpenString
-            ? Operator::CloseString : Operator::CloseStringAlt;
+         const auto closer = op == Serial::Operator::OpenString
+                                 ? Serial::Operator::CloseString
+                                 : Serial::Operator::CloseStringAlt;
 
-         if (relevant.StartsWithOperator(closer)) {
-            const auto tokenSize = SerializationRules::Operators
-               [closer].mToken.size();
+         if (StartsWithOperator(relevant, closer)) {
+            const size_t tokenSize = GetOperatorToken(closer).size();
             lhs << Text {Clone(input.LeftOf(progress))};
             VERBOSE("String parsed: ", lhs);
             return tokenSize + progress;
          }
          break;
       }
-      case Operator::OpenCharacter: {
+      case Serial::Operator::OpenCharacter: {
          // Finish up a 'c'haracter                                     
          //TODO handle escapes!
-         if (relevant.StartsWithOperator(Operator::CloseCharacter)) {
-            const auto tokenSize = SerializationRules::Operators
-               [Operator::CloseCharacter].mToken.size();
+         if (StartsWithOperator(relevant, Serial::Operator::CloseCharacter)) {
+            const size_t tokenSize = Serial::CloseCharacter.Token.size();
             lhs << input[0];
             VERBOSE("Character parsed: ", lhs);
             return tokenSize + progress;
          }
          break;
       }
-      case Operator::OpenCode: {
+      case Serial::Operator::OpenCode: {
          // Finish up a {code}                                          
          // Nested code scopes are handled gracefully                   
-         if (relevant.StartsWithOperator(Operator::OpenCode))
+         if (StartsWithOperator(relevant, Serial::Operator::OpenCode))
             ++depth;
-         else if (relevant.StartsWithOperator(Operator::CloseCode)) {
+         else if (StartsWithOperator(relevant, Serial::Operator::CloseCode)) {
             --depth;
 
             if (0 == depth) {
-               const auto tokenSize = SerializationRules::Operators
-                  [Operator::CloseCode].mToken.size();
+               const size_t tokenSize = Serial::CloseCode.Token.size();
                lhs << Clone(input.LeftOf(progress));
                VERBOSE("Code parsed: ", lhs);
                return tokenSize + progress;
@@ -1001,12 +979,12 @@ size_t OperatorParser::ParseBytes(Code const& input, Many& lhs) {
    size_t progress = 0;
    while (progress < input.GetCount()) {
       const auto c = input[progress];
-      if (IsDigit(c)) {
+      if (IsNumerical(c)) {
          ++progress;
          continue;
       }
 
-      const auto lc = ::std::tolower(c);
+      const char lc = ToLowercase(c);
       if (lc >= 'a' and lc <= 'f') {
          ++progress;
          continue;
@@ -1019,14 +997,14 @@ size_t OperatorParser::ParseBytes(Code const& input, Many& lhs) {
    Bytes result;
    auto i = input.GetRaw();
    const auto iEnd = i + progress;
-   uint8_t stager {};
-   uint8_t shifter {4};
+   uint8_t stager = 0;
+   uint8_t shifter = 4;
    while (i != iEnd) {
-      stager |= uint8_t(*i - (IsDigit(*i) ? '0' : 'a')) << shifter;
+      stager |= uint8_t(*i - (IsNumerical(*i) ? '0' : 'a')) << shifter;
 
       if (shifter == 0) {
          result << Byte {stager};
-         stager = {};
+         stager = 0;
          shifter = 4;
       }
       else shifter = 0;
@@ -1046,11 +1024,11 @@ size_t OperatorParser::ParseBytes(Code const& input, Many& lhs) {
 ///   @param op the phase operator                                            
 ///   @param lhs [in/out] phased content goes here                            
 ///   @return number of parsed characters                                     
-size_t OperatorParser::ParsePhase(const Code::Operator op, Many& lhs) {
-   if (op == Operator::Past)
-      lhs.MakePast();
+size_t OperatorParser::ParsePhase(const Serial::Operator op, Many& lhs) {
+   if (op == Serial::Operator::Past)
+      lhs.EnablePast();
    else
-      lhs.MakeFuture();
+      lhs.EnableFuture();
    return 0;
 }
 
@@ -1060,14 +1038,12 @@ size_t OperatorParser::ParsePhase(const Code::Operator op, Many& lhs) {
 ///   @param lhs [in/out] selected idea goes here                             
 ///   @return number of parsed characters                                     
 size_t OperatorParser::ParseKeyword(
-   const Code::Operator op, Code const& input, Many& lhs
+   const Serial::Operator op, Code const& input, Many& lhs
 ) {
    size_t progress = 0;
    if (SkippedParser::Peek(input)) {
-      PRETTY_ERROR(
-         "Syntax error - # and ## should be followed "
-         "by either a keyword, or a scope"
-      );
+      PRETTY_ERROR("Syntax error - # and ## should be followed "
+                   "by either a keyword, or a scope");
    }
 
    // Try parsing a keyword                                             
@@ -1077,15 +1053,13 @@ size_t OperatorParser::ParseKeyword(
       // Try parsing a scope?                                           
       const auto next_op = OperatorParser::Peek(input);
       switch (next_op) {
-      case Operator::OpenScope:     case Operator::OpenScopeAlt:
-      case Operator::OpenString:    case Operator::OpenStringAlt:
-      case Operator::OpenCharacter: case Operator::OpenCode:
+      case Serial::Operator::OpenScope:     case Serial::Operator::OpenScopeAlt:
+      case Serial::Operator::OpenString:    case Serial::Operator::OpenStringAlt:
+      case Serial::Operator::OpenCharacter: case Serial::Operator::OpenCode:
          break;
       default:
-         PRETTY_ERROR(
-            "Syntax error - # and ## should be followed by "
-            "either a keyword, or a scope"
-         );
+         PRETTY_ERROR("Syntax error - # and ## should be followed by "
+                      "either a keyword, or a scope");
       }
 
       // Scoped data was found                                          
@@ -1097,7 +1071,7 @@ size_t OperatorParser::ParseKeyword(
       content << Text {Clone(keyword)};
    }
 
-   if (op == Operator::SelectIdea) {
+   if (op == Serial::Operator::SelectIdea) {
       // Implicitly create/select an idea                               
       Verbs::Select verb {Recipe::FromToken("Idea", Abandon(content))};
       verb.SetSource(Many::Past("Thing"));
@@ -1120,15 +1094,14 @@ size_t OperatorParser::ParseKeyword(
       }
       else lhs.SmartPush(IndexBack, Abandon(verb));
    }
-   else if (op == Operator::SelectThing) {
+   else if (op == Serial::Operator::SelectThing) {
       // Implicitly select an object by name                            
       Verbs::Select verb {Recipe::FromToken("Thing", Abandon(content))};
       verb.SetSource(Many::Past("Thing"));
       lhs.SmartPush(IndexBack, Abandon(verb));
    }
    else {
-      PRETTY_ERROR("Not a supported keyword operator: ",
-         SerializationRules::Operators[op].mToken);
+      PRETTY_ERROR("Not a supported keyword operator: ", GetOperatorToken(op));
    }
 
    return progress;

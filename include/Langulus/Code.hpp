@@ -61,8 +61,6 @@ namespace Langulus::Flow
       using CTTI_ReflectAs = Code;
       using CTTI_Files     = Yes<"flow">;
       using CTTI_Bases     = Text;
-      using Operator       = Serial::Operator;
-
       using Text::Text;
 
       /// Construction from any kind of text that is an Annies container     

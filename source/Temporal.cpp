@@ -9,6 +9,7 @@
 #include <Langulus/Code.inl>
 #include <Langulus/Neat.hpp>
 #include <Langulus/Temporal.hpp>
+#include <Langulus/Verbs/Do.hpp>
 #include "inner/Missing.hpp"
 #include "inner/Entangled.hpp"
 #include "inner/Redundant.hpp"
@@ -27,7 +28,6 @@ using namespace Langulus::Flow;
 
 
 /// Default constructor, add the initial missing future point                 
-///   @param environment - the initial flow environment                       
 Temporal::Temporal() {
    mPriorityStack << MissingFuture {};
    mFuture = mPriorityStack.As<MissingFuture*>();
@@ -35,17 +35,12 @@ Temporal::Temporal() {
 
 /// Construct as a sub-flow                                                   
 ///   @attention assumes parent is a valid pointer                            
-///   @param parent - the parent flow                                         
+///   @param parent the parent flow                                           
 Temporal::Temporal(Temporal* parent)
    : mParent {parent} {
    mPriorityStack << MissingFuture {};
    mFuture = mPriorityStack.As<MissingFuture*>();
 }
-
-/// Serialize temporal as Code                                                
-/*Temporal::operator Code() const {
-   return IdentityOf(this);
-}*/
 
 /// For logging temporal instances                                            
 Temporal::operator Text() const {
@@ -62,11 +57,11 @@ void Temporal::Reset() {
 
    // Reset all entanglements                                           
    for (auto b : mEntanglements)
-      b->mDone = false;
+      (*b)->mDone = false;
 }
 
 /// Reset progress for all verbs inside a scope                               
-///   @param scope - scope to reset                                           
+///   @param scope scope to reset                                             
 void Temporal::ResetInner(Many& scope) {
    scope.ForEach(
       [&](Many& m) {
@@ -84,19 +79,23 @@ void Temporal::ResetInner(Many& scope) {
             ResetInner(entangled.mFalseContent);
       },
       [&](Tag& tag) {
-         if (not tag.IsSparse())
-            ResetInner(tag.GetData());
+         if (not tag.IsSparse()) {
+            auto data = tag.GetData();
+            ResetInner(data);
+         }
       },
       [&](Recipe& recipe) {
-         ResetInner(recipe.GetDescriptor());
+         auto descriptor = recipe.GetDescriptor();
+         ResetInner(descriptor);
       },
       [&](Neat& neat) {
          neat.ForEachTag([this](Tag& tag) {
-            ResetInner(tag.GetData());
+            auto data = tag.GetData();
+            ResetInner(data);
          });
-         neat.ForEachConstruct([this](Recipe& con) {
-            Many wrapper {con};
-            ResetInner(wrapper);
+         neat.ForEachRecipe([this](Recipe& recipe) {
+            auto descriptor = recipe.GetDescriptor();
+            ResetInner(descriptor);
          });
          neat.ForEachTail([this](Many& stuff) {
             ResetInner(stuff);
@@ -104,19 +103,20 @@ void Temporal::ResetInner(Many& scope) {
       },
       [&](Verb& verb) {
          ResetInner(verb.GetSource());
-         ResetInner(verb.GetArgument());
+         auto argument = verb.GetArgument();
+         ResetInner(argument);
          verb.Clear();
       }
    );
 }
 
 /// Compare two flows                                                         
-///   @param other - the flow to compare with                                 
+///   @param other the flow to compare with                                   
 ///   @return true if both flows are the same                                 
-bool Temporal::operator == (const Temporal& other) const {
+bool Temporal::operator == (Temporal const& other) const {
    return mFrequencyStack == other.mFrequencyStack
-      and mTimeStack == other.mTimeStack
-      and mPriorityStack == other.mPriorityStack;
+      and mTimeStack      == other.mTimeStack
+      and mPriorityStack  == other.mPriorityStack;
 }
 
 /// Check if flow contains anything                                           
@@ -138,14 +138,15 @@ auto Temporal::GetDeltaTime() const -> Time {
 }
 
 /// Advance the flow - moves time forward, executes stacks                    
-///   @param dt - delta time                                                  
-///   @param sideffects - any side effects produced by executing              
+///   @param dt delta time                                                    
+///   @param sideffects any side effects produced by executing                
 ///   @return true if no exit was requested                                   
 bool Temporal::Update(Time dt, Many& sideffects) {
    if (mStart == mNow) {
       // We're at the beginning of time - execute the priority stack    
       Many unusedContext;
-      Execute(mPriorityStack, unusedContext, sideffects, false);
+      bool unusedSkip = false;
+      Flow::Execute(mPriorityStack, unusedContext, sideffects, false, unusedSkip);
    }
 
    // Avoid updating anything else, if no time had passed               
@@ -158,31 +159,34 @@ bool Temporal::Update(Time dt, Many& sideffects) {
 
    // Execute flows that occur periodically                             
    for (auto pair : mFrequencyStack) {
-      pair.GetValue().mNow += dt;
-      auto ticks = pair.GetValue().GetUptime().Seconds() / mRatePeriod.Seconds();
-
-      while (ticks >= pair.GetKey()) {
+      auto* innerFlow = pair.GetVal();
+      innerFlow->mNow += dt;
+      auto ticks = innerFlow->GetUptime().Seconds() / mRatePeriod.Seconds();
+      const auto frequency = pair.GetKey();
+      while (ticks >= frequency) {
          // Time to execute the periodic flow                           
-         pair.GetValue().Reset();
-         pair.GetValue().Update({}, sideffects);
-         ticks -= pair.GetKey();
+         innerFlow->Reset();
+         innerFlow->Update({}, sideffects);
+         ticks -= frequency;
       }
 
       // Make sure any leftover time is returned to the periodic flow   
-      pair.GetValue().mNow = pair.GetValue().mStart + mRatePeriod * ticks;
+      innerFlow->mNow = innerFlow->mStart + mRatePeriod * ticks;
    }
 
    // Execute flows that occur after a given point in time              
    const auto ticks = GetUptime().Seconds() / mTimePeriod.Seconds();
    for (auto pair : mTimeStack) {
-      if (pair.GetKey() > ticks) {
+      const auto timepoint = pair.GetKey();
+      if (timepoint > ticks) {
          // The time stack is sorted, so no point in continuing         
          break;
       }
 
       // Always update all time points before the tick count            
       // They might have periodic flows inside                          
-      pair.GetValue().Update(dt, sideffects);
+      auto* innerFlow = pair.GetVal();
+      innerFlow->Update(dt, sideffects);
    }
 
    return true;
@@ -190,32 +194,36 @@ bool Temporal::Update(Time dt, Many& sideffects) {
 
 /// Merge a flow                                                              
 ///   @param other - the flow to merge with this one                          
-void Temporal::Merge(const Temporal& other) {
+void Temporal::Merge(Temporal const& other) {
    // Concatenate priority stacks                                       
    mPriorityStack += other.mPriorityStack;
 
    // Merge time stacks                                                 
    for (auto pair : other.mTimeStack) {
-      auto found = mTimeStack.FindIt(pair.GetKey());
+      const auto timepoint = pair.GetKey();
+      auto found = mTimeStack.Find(timepoint);
       if (not found) {
          // New time point required                                     
-         mTimeStack.Insert(pair.GetKey(), this);
-         found = mTimeStack.FindIt(pair.GetKey());
+         mTimeStack.Merge(timepoint, this);
+         found = mTimeStack.Find(timepoint);
       }
 
-      found.GetValue().Merge(pair.GetValue());
+      auto* innerFlow = pair.GetVal();
+      found.GetVal().Merge(innerFlow);
    };
 
    // Merge frequency stacks                                            
    for (auto pair : other.mFrequencyStack) {
-      auto found = mFrequencyStack.FindIt(pair.GetKey());
+      const auto frequency = pair.GetKey();
+      auto found = mFrequencyStack.Find(frequency);
       if (not found) {
          // New time point required                                     
-         mFrequencyStack.Insert(pair.GetKey(), this);
-         found = mFrequencyStack.FindIt(pair.GetKey());
+         mFrequencyStack.Merge(frequency, this);
+         found = mFrequencyStack.Find(frequency);
       }
 
-      found.GetValue().Merge(pair.GetValue());
+      auto* innerFlow = pair.GetVal();
+      found.GetVal().Merge(innerFlow);
    };
 }
 
@@ -320,14 +328,14 @@ Many Temporal::Compile(Many const& scope, Real priority) {
    }
 
    const auto done = scope.ForEach(
-      [&](const Tag& subscope) {
+      [&](Tag const& subscope) {
          // Compile traits                                              
          result << Tag::From(
             subscope.GetTag(), 
             Compile(subscope, priority)
          );
       },
-      [&](const Recipe& subscope) {
+      [&](Recipe const& subscope) {
          // Compile constructs                                          
          result << Recipe {
             subscope.GetTarget(),
@@ -335,7 +343,7 @@ Many Temporal::Compile(Many const& scope, Real priority) {
             subscope.GetCharge()
          };
       },
-      [&](const Verb& subscope) {
+      [&](Verb const& subscope) {
          // Compile verbs                                               
          auto v = Verb::FromMeta(
             subscope.GetVerb(),
@@ -360,7 +368,7 @@ Many Temporal::Compile(Many const& scope, Real priority) {
 /// Link a scope's past points to future points that are on the stack         
 ///   @param scope - the scope to link and insert                             
 ///   @param entanglementAbove - an optional entanglement from above scope    
-void Temporal::Link(Many const& scope, const Ref<Entanglement>& entanglementAbove) {
+void Temporal::Link(Many const& scope, Ref<Entanglement> const& entanglementAbove) {
    LglsAssumeDev(mFuture, "Invalid future");
 
    // Every time we push an OR scope we create an entanglement          
@@ -397,7 +405,7 @@ void Temporal::Link(Many const& scope, const Ref<Entanglement>& entanglementAbov
 
    // Handle shallow scope                                              
    const auto linked = scope.ForEach(
-      [&](const Tag& t) {
+      [&](Tag const& t) {
          // Forward to all future points in the priority stack          
          TMany<Tag> local = t;
          LANGULUS_ASSERT(
@@ -405,15 +413,15 @@ void Temporal::Link(Many const& scope, const Ref<Entanglement>& entanglementAbov
             Flow, "Couldn't push to future"
          );
       },
-      [&](const Construct& c) {
+      [&](Recipe const& c) {
          // Forward to all future points in the priority stack          
-         TMany<Construct> local = c;
+         TMany<Recipe> local = c;
          LANGULUS_ASSERT(
             PushFutures(local, *mFuture, entanglement),
             Flow, "Couldn't push to future"
          );
       },
-      [&](const Verb& v) {
+      [&](Verb const& v) {
          if (v.IsVerb<Verbs::Do>()) {
             // "Do" verbs act as context/mass/rate/time setters         
             // Don't push them, but use them to set environment for     
@@ -483,8 +491,8 @@ void Temporal::Link(Many const& scope, const Ref<Entanglement>& entanglementAbov
 ///   @param entanglementAbove - an optional entanglement from above scope    
 void Temporal::LinkRelative(
    Many const& scope,
-   const Verb& override,
-   const Ref<Entanglement>& entanglementAbove
+   Verb const& override,
+   Ref<Entanglement> const& entanglementAbove
 ) {
    LglsAssumeDev(mFuture, "Invalid future");
 
@@ -506,7 +514,7 @@ void Temporal::LinkRelative(
 
    // Handle shallow scope                                              
    scope.ForEach(
-      [&](const Tag& t) {
+      [&](Tag const& t) {
          TMany<Tag> local = t;
 
          // Forward to future point in appropriate stack, according to  
@@ -549,8 +557,8 @@ void Temporal::LinkRelative(
             );
          //}
       },
-      [&](const Construct& c) {
-         TMany<Construct> local = c;
+      [&](Recipe const& c) {
+         TMany<Recipe> local = c;
 
          // Forward to future point in appropriate stack,               
          // according to the override verb                              
@@ -592,7 +600,7 @@ void Temporal::LinkRelative(
             );
          //}
       },
-      [&](const Verb& v) {
+      [&](Verb const& v) {
          // Multiply verb energy and merge contexts                     
          const Verb localOverride = v * override;
 
@@ -680,7 +688,7 @@ void Temporal::LinkRelative(
 ///      'future', or in any of the futures below it                          
 bool Temporal::PushFutures(
    Many const& scope, MissingFuture& future,
-   const Ref<Entanglement>& entanglementAbove
+   Ref<Entanglement> const& entanglementAbove
 ) noexcept {
    bool atLeastOneSuccess = false;
    try {

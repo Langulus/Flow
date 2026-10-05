@@ -31,7 +31,7 @@ namespace Langulus::Flow
       ///   Construction                                                      
       ///                                                                     
       using A::Verb::Verb;
-      Verb(const Verb&) = default;
+      Verb(Verb const&) = default;
       Verb(Verb&&) = default;
 
       template<CT::NotVoid T1, CT::NotVoid...TN> requires CT::VerbMakable<T1, TN...>
@@ -70,7 +70,7 @@ namespace Langulus::Flow
       ///   Charge arithmetics                                                
       ///                                                                     
       template<CT::VerbBased THIS = Verb>
-      THIS operator * (const Verb&) const;
+      THIS operator * (Verb const&) const;
       template<CT::VerbBased THIS = Verb>
       THIS operator * (Real) const;
       template<CT::VerbBased THIS = Verb>

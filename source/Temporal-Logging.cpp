@@ -107,15 +107,15 @@ bool Temporal::DumpInner(Many const& data, bool newline, bool& first) {
    // Flat if reached                                                   
    // Do some special formatting for specific things                    
    const auto done = data.ForEach(
-      [&](const Verb& v) {
+      [&](Verb const& v) {
          DumpSeparator(data, newline or tooLong, first);
          DumpVerb(v);
       },
-      [&](const Recipe& r) {
+      [&](Recipe const& r) {
          DumpSeparator(data, newline or tooLong, first);
          DumpRecipe(r);
       },
-      [&](const Tag& t) {
+      [&](Tag const& t) {
          DumpSeparator(data, newline or tooLong, first);
          DumpTag(t);
       },
@@ -214,8 +214,7 @@ bool Temporal::DumpInner(Many const& data, bool newline, bool& first) {
 }
 
 /// Dump a missing point as a hexxed address                                  
-///   @param p - the missing point to dump                                    
-void Temporal::DumpMissing(const Missing& p) {
+void Temporal::DumpMissing(Missing const& p) {
    const auto color = p.mFilter.IsPast() ? Logger::PushDarkYellow : Logger::PushDarkGreen;
 
    if (p.mPriority) {
@@ -228,14 +227,7 @@ void Temporal::DumpMissing(const Missing& p) {
 }
 
 /// Dump a verb                                                               
-///   @param v - the verb to dump                                             
-void Temporal::DumpVerb(const Verb& v) {
-   using Rules = CTTI::Serializer<Annies::Text>;
-
-   // Can we fit the verb on a single line?                             
-   const auto serv = static_cast<Text>(v);
-   const auto separated = serv.GetCount() > CarryOverLimit;
-
+void Temporal::DumpVerb(Verb const& v) {
    if (v.IsDone() and v.GetOutput()) {
       // If verb has been executed with output, just dump the           
       // output                                                         
@@ -244,8 +236,14 @@ void Temporal::DumpVerb(const Verb& v) {
       return;
    }
 
+   // Can we fit the verb on a single line?                             
+   Text serv;
+   Langulus::Serialize(v, serv);
+   const auto separated = serv.GetCount() > CarryOverLimit;
+
    // If reached, then verb hasn't been executed yet                    
-   // Let's check if there's a source in which verb is executed         
+   // Let's check if there's a source in which verb will be executed in 
+   using Rules = CTTI::Serializer<Annies::Text>;
    if (v.GetSource().IsValid()) {
       Text srcScope;
       if (Rules::BeginScope(v.GetSource(), srcScope))
@@ -266,8 +264,7 @@ void Temporal::DumpVerb(const Verb& v) {
    }
 
    // After the source, we decide whether to write verb token or        
-   // verb operator, depending on the verb definition, state and        
-   // charge                                                            
+   // verb operator, depending on verb definition, state, and charge    
    bool writtenAsToken = false;
    const auto token = v.GetOperatorToken(writtenAsToken);
    if (writtenAsToken and v.GetSource().IsValid())
@@ -299,11 +296,11 @@ void Temporal::DumpVerb(const Verb& v) {
    }
 }
 
-/// Dump a recipe                                                          
-///   @param c - the recipe to dump                                        
-void Temporal::DumpRecipe(const Recipe& recipe) {
+/// Dump a recipe                                                             
+void Temporal::DumpRecipe(Recipe const& recipe) {
    // Can we fit the construct on a single line?                        
-   const auto serv = Verbs::Interpret::To<Annies::Text>(recipe);
+   Text serv;
+   Langulus::Serialize(recipe, serv);
    const auto separated = serv.GetCount() > CarryOverLimit;
 
    // Write the type, charge, and open the scope                        
@@ -323,11 +320,11 @@ void Temporal::DumpRecipe(const Recipe& recipe) {
    else Logger::Append(')');
 }
 
-/// Dump a trait                                                              
-///   @param t - the trait to dump                                            
-void Temporal::DumpTrait(const Tag& t) {
-   // Can we fit the trait on a single line?                            
-   const auto serv = Verbs::Interpret::To<Annies::Text>(t);
+/// Dump a tag                                                                
+void Temporal::DumpTag(Tag const& t) {
+   // Can we fit the tag on a single line?                              
+   Text serv;
+   Langulus::Serialize(t, serv);
    const auto separated = serv.GetCount() > CarryOverLimit;
 
    // Write the trait and open the scope                                

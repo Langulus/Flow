@@ -119,7 +119,7 @@ namespace Langulus::Flow
    ///   @param rhs - the mass to multiply by                                 
    ///   @return a new verb, with the modified mass                           
    template<CT::VerbBased THIS> LANGULUS(INLINED)
-   THIS Verb::operator * (const Verb& rhs) const {
+   THIS Verb::operator * (Verb const& rhs) const {
       auto shallowCopy = *reinterpret_cast<const THIS*>(this);
       shallowCopy.mMass *= rhs.mMass;
       shallowCopy.mTime += rhs.mTime;

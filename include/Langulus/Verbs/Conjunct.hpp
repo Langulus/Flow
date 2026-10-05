@@ -15,7 +15,7 @@
 /// Either combines LHS and RHS as one AND container, or separates them       
 /// as one OR container. Does only shallow copying.                           
 ///                                                                           
-LANGULUS_DEFINE_OPERATOR(Conjunct, Disjunct, Serial::And.token, Serial::Or.token, 1,
+LANGULUS_DEFINE_OPERATOR(Conjunct, Disjunct, Serial::And.Token, Serial::Or.Token, 1,
    "Either combines LHS and RHS as one AND container, or separates them "
    "as one OR container (does only shallow copying)"
 );

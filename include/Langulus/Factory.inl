@@ -120,7 +120,7 @@ namespace Langulus::Flow
          "Producer isn't related to the reflected one");
 
       verb.ForEachDeep(
-         [&](const Recipe& recipe) {
+         [&](Recipe const& recipe) {
             // For each construct...                                    
             if (not MetaOf<T>()->CastsTo(recipe.GetTarget()))
                return;
@@ -260,7 +260,7 @@ namespace Langulus::Flow
    void FACTORY()::Select(Verb& verb) {
       // For each construct or meta compatible with the factory         
       verb.ForEachDeep(
-         [&](const Recipe& recipe) {
+         [&](Recipe const& recipe) {
             // For each construct...                                    
             if (not MetaDataOf<T>()->CastsTo(recipe.GetTarget()))
                return;

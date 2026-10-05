@@ -8,6 +8,7 @@
 #include <Langulus/Time.inl>
 #include <Langulus/Code.inl>
 #include <Langulus/Temporal.hpp>
+#include <Langulus/Any.hpp>
 
 #include <Langulus/Verbs/Do.hpp>
 #include <Langulus/Verbs/Select.hpp>
@@ -61,38 +62,38 @@ namespace
    /// Get operator definition by ID                                          
    constexpr ::std::string_view GetOperatorToken(Serial::Operator op) {
       switch(op) {
-      case Serial::Operator::OpenScope       : return Serial::OpenScope       .token;
-      case Serial::Operator::CloseScope      : return Serial::CloseScope      .token;
-      case Serial::Operator::OpenScopeAlt    : return Serial::OpenScopeAlt    .token;
-      case Serial::Operator::CloseScopeAlt   : return Serial::CloseScopeAlt   .token;
-      case Serial::Operator::OpenCode        : return Serial::OpenCode        .token;
-      case Serial::Operator::CloseCode       : return Serial::CloseCode       .token;
-      case Serial::Operator::OpenComment     : return Serial::OpenComment     .token;
-      case Serial::Operator::CloseComment    : return Serial::CloseComment    .token;
-      case Serial::Operator::OpenLineComment : return Serial::OpenLineComment .token;
-      case Serial::Operator::CloseLineComment: return Serial::CloseLineComment.token;
-      case Serial::Operator::OpenString      : return Serial::OpenString      .token;
-      case Serial::Operator::CloseString     : return Serial::CloseString     .token;
-      case Serial::Operator::OpenStringAlt   : return Serial::OpenStringAlt   .token;
-      case Serial::Operator::CloseStringAlt  : return Serial::CloseStringAlt  .token;
-      case Serial::Operator::OpenCharacter   : return Serial::OpenCharacter   .token;
-      case Serial::Operator::CloseCharacter  : return Serial::CloseCharacter  .token;
-      case Serial::Operator::OpenByte        : return Serial::OpenByte        .token;
-      case Serial::Operator::CloseByte       : return Serial::CloseByte       .token;
-      case Serial::Operator::SelectIdea      : return Serial::SelectIdea      .token;
-      case Serial::Operator::SelectThing     : return Serial::SelectThing     .token;
-      case Serial::Operator::Future          : return Serial::Future          .token;
-      case Serial::Operator::Past            : return Serial::Past            .token;
-      case Serial::Operator::Null            : return Serial::Null            .token;
-      case Serial::Operator::Escape          : return Serial::Escape          .token;
-      case Serial::Operator::Mass            : return Serial::Mass            .token;
-      case Serial::Operator::Rate            : return Serial::Rate            .token;
-      case Serial::Operator::Time            : return Serial::Time            .token;
-      case Serial::Operator::Priority        : return Serial::Priority        .token;
-      case Serial::Operator::And             : return Serial::And             .token;
-      case Serial::Operator::AndUnordered    : return Serial::AndUnordered    .token;
-      case Serial::Operator::Pair            : return Serial::Pair            .token;
-      case Serial::Operator::Or              : return Serial::Or              .token;
+      case Serial::Operator::OpenScope       : return Serial::OpenScope       .Token;
+      case Serial::Operator::CloseScope      : return Serial::CloseScope      .Token;
+      case Serial::Operator::OpenScopeAlt    : return Serial::OpenScopeAlt    .Token;
+      case Serial::Operator::CloseScopeAlt   : return Serial::CloseScopeAlt   .Token;
+      case Serial::Operator::OpenCode        : return Serial::OpenCode        .Token;
+      case Serial::Operator::CloseCode       : return Serial::CloseCode       .Token;
+      case Serial::Operator::OpenComment     : return Serial::OpenComment     .Token;
+      case Serial::Operator::CloseComment    : return Serial::CloseComment    .Token;
+      case Serial::Operator::OpenLineComment : return Serial::OpenLineComment .Token;
+      case Serial::Operator::CloseLineComment: return Serial::CloseLineComment.Token;
+      case Serial::Operator::OpenString      : return Serial::OpenString      .Token;
+      case Serial::Operator::CloseString     : return Serial::CloseString     .Token;
+      case Serial::Operator::OpenStringAlt   : return Serial::OpenStringAlt   .Token;
+      case Serial::Operator::CloseStringAlt  : return Serial::CloseStringAlt  .Token;
+      case Serial::Operator::OpenCharacter   : return Serial::OpenCharacter   .Token;
+      case Serial::Operator::CloseCharacter  : return Serial::CloseCharacter  .Token;
+      case Serial::Operator::OpenByte        : return Serial::OpenByte        .Token;
+      case Serial::Operator::CloseByte       : return Serial::CloseByte       .Token;
+      case Serial::Operator::SelectIdea      : return Serial::SelectIdea      .Token;
+      case Serial::Operator::SelectThing     : return Serial::SelectThing     .Token;
+      case Serial::Operator::Future          : return Serial::Future          .Token;
+      case Serial::Operator::Past            : return Serial::Past            .Token;
+      case Serial::Operator::Null            : return Serial::Null            .Token;
+      case Serial::Operator::Escape          : return Serial::Escape          .Token;
+      case Serial::Operator::Mass            : return Serial::Mass            .Token;
+      case Serial::Operator::Rate            : return Serial::Rate            .Token;
+      case Serial::Operator::Time            : return Serial::Time            .Token;
+      case Serial::Operator::Precedence      : return Serial::Precedence      .Token;
+      case Serial::Operator::And             : return Serial::And             .Token;
+      case Serial::Operator::AndUnordered    : return Serial::AndUnordered    .Token;
+      case Serial::Operator::Pair            : return Serial::Pair            .Token;
+      case Serial::Operator::Or              : return Serial::Or              .Token;
       default: return "<error>";
       }
    }
@@ -115,8 +116,8 @@ namespace
       if (*code <= 32 or *code >= 127)
          return true;
 
-      return code.StartsWith(Serial::OpenComment.token)
-          or code.StartsWith(Serial::OpenLineComment.token);
+      return code.StartsWith(Serial::OpenComment.Token)
+          or code.StartsWith(Serial::OpenLineComment.Token);
    }
 
    /// Check if the Code container begins with skippable elements             
@@ -182,330 +183,390 @@ namespace
             or not endsWithLetter)
          and code.MatchesLoose(token) == token.GetCount();
    }
+
+
+
+
+   /// Parser for unknown expressions                                         
+   /// An unknown-expressions will be scanned to figure what it contains      
+   struct UnknownParser {
+      static auto Parse(Code const&, Many&, Real, bool optimize) -> size_t;
+   };
+
+   /// Parser for keyword expressions                                         
+   /// A key-expression is any expression that begins with a letter           
+   struct KeywordParser {
+      static auto Parse(Code const&, Many&, bool allowCharge = true) -> size_t;
+      static bool Peek(Code const&) noexcept;
+      static auto Isolate(Code const&) noexcept -> Token;
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         static auto Disambiguate(size_t, Code const&, Token const&) -> RTTI::Inner::Definition const*;
+      #endif
+   };
+
+   /// Parser for skipping expressions                                        
+   /// A skip-expression is any that begins with escapes, tabs, or spaces     
+   struct SkippedParser {
+      static auto Parse(Code const&) -> size_t;
+      static bool Peek(Code const&) noexcept;
+   };
+
+   /// Parser for number expressions                                          
+   /// A num-expression is any that begins with a digit, a minus              
+   /// followed by a digit, or a dot followed by a digit                      
+   struct NumberParser {
+      static auto Parse(Code const&, Many&) -> size_t;
+      static bool Peek(Code const&) noexcept;
+   };
+
+   /// Parser for operators                                                   
+   /// An op-expression is one matching the built-in ones, or one matching    
+   /// one in reflected verb database, where LHS is not DMeta or VMeta        
+   struct OperatorParser {
+      static auto Parse(Code::Operator, Code const&, Many&, Real, bool optimize) -> size_t;
+      static auto PeekBuiltin(Code const&) noexcept -> Code::Operator;
+      static auto Peek(Code const&) noexcept -> Code::Operator;
+      static auto Isolate(Code const&) noexcept -> Token;
+
+   private:
+      static auto ParseContent(Code::Operator, Code const&, Many&, bool optimize) -> size_t;
+      static auto ParseString(Code::Operator, Code const&, Many&) -> size_t;
+      static auto ParseBytes(Code const&, Many&) -> size_t;
+      static auto ParseKeyword(Code::Operator, Code const&, Many&) -> size_t;
+      static auto ParsePhase(Code::Operator, Many&) -> size_t;
+      static auto ParseReflected(Verb&, Code const&, Many&, bool optimize) -> size_t;
+
+      static void InsertContent(Many&, Many&);
+   };
+
+   /// Parser for chargers                                                    
+   /// A charge-expression is any operator *^@! after a DMeta or VMeta        
+   struct ChargeParser {
+      static auto Parse(Code const&, Charge&) -> size_t;
+      static auto Peek(Code const&) noexcept -> Code::Operator;
+   };
 }
 
-namespace Langulus::Flow
-{
-   /// Parse code                                                             
-   ///   @param optimize whether or not to precompute anything that is        
-   ///      computable at compile-time.                                       
-   ///   @return the parsed flow                                              
-   Many Code::Parse(bool optimize) const {
-      // Make sure that all default traits are registered before parsing
-      /*(void)MetaOf<Tags::Logger>();
-      (void)MetaOf<Tags::Count>();
-      (void)MetaOf<Tags::Name>();
-      (void)MetaOf<Tags::Path>();
-      (void)MetaOf<Tags::Data>();
-      (void)MetaOf<Tags::Index>();
-      (void)MetaOf<Tags::Context>();
-      (void)MetaOf<Tags::Tag>();
-      (void)MetaOf<Tags::State>();
-      (void)MetaOf<Tags::Child>();
-      (void)MetaOf<Tags::Parent>();
-      (void)MetaOf<Tags::Clipboard>();
-      (void)MetaOf<Tags::Color>();
-      (void)MetaOf<Tags::Min>();
-      (void)MetaOf<Tags::Max>();
-      (void)MetaOf<Tags::Input>();
-      (void)MetaOf<Tags::Output>();
-      (void)MetaOf<Tags::Mass>();
-      (void)MetaOf<Tags::Rate>();
-      (void)MetaOf<Tags::Time>();
-      (void)MetaOf<Tags::Priority>();
+using namespace Langulus::Flow;
 
-      // Make sure that all default types are registered before parsing 
-      (void)MetaOf<Index>();
-      (void)MetaOf<Temporal>();
-      (void)MetaOf<Time>();
-      (void)MetaOf<Code>();*/
+/// Parse code                                                                
+///   @param optimize whether or not to precompute anything that is           
+///      computable at compile-time.                                          
+///   @return the parsed flow                                                 
+Many Code::Parse(bool optimize) const {
+   // Make sure that all default traits are registered before parsing   
+   /*(void)MetaOf<Tags::Logger>();
+   (void)MetaOf<Tags::Count>();
+   (void)MetaOf<Tags::Name>();
+   (void)MetaOf<Tags::Path>();
+   (void)MetaOf<Tags::Data>();
+   (void)MetaOf<Tags::Index>();
+   (void)MetaOf<Tags::Context>();
+   (void)MetaOf<Tags::Tag>();
+   (void)MetaOf<Tags::State>();
+   (void)MetaOf<Tags::Child>();
+   (void)MetaOf<Tags::Parent>();
+   (void)MetaOf<Tags::Clipboard>();
+   (void)MetaOf<Tags::Color>();
+   (void)MetaOf<Tags::Min>();
+   (void)MetaOf<Tags::Max>();
+   (void)MetaOf<Tags::Input>();
+   (void)MetaOf<Tags::Output>();
+   (void)MetaOf<Tags::Mass>();
+   (void)MetaOf<Tags::Rate>();
+   (void)MetaOf<Tags::Time>();
+   (void)MetaOf<Tags::Priority>();
 
-      // Make sure that all default constants are registered            
-      /*(void)MetaOf<Constants::Yes>();
-      (void)MetaOf<Constants::No>();
-      (void)MetaOf<Constants::True>();
-      (void)MetaOf<Constants::False>();
-      (void)MetaOf<Constants::Null>();
-      (void)MetaOf<Constants::Nothing>();*/
+   // Make sure that all default types are registered before parsing 
+   (void)MetaOf<Index>();
+   (void)MetaOf<Temporal>();
+   (void)MetaOf<Time>();
+   (void)MetaOf<Code>();*/
 
-      // Make sure that all default verbs are registered before parsing 
-      /*(void)MetaOf<Verbs::Do>();
-      (void)MetaOf<Verbs::Select>();
-      (void)MetaOf<Verbs::Associate>();
-      (void)MetaOf<Verbs::Create>();
-      (void)MetaOf<Verbs::Catenate>();
-      (void)MetaOf<Verbs::Conjunct>();
-      (void)MetaOf<Verbs::Interpret>();
-      (void)MetaOf<Verbs::Compare>();
-      (void)MetaOf<Verbs::Equal>();
-      (void)MetaOf<Verbs::Lower>();
-      (void)MetaOf<Verbs::LowerOrEqual>();
-      (void)MetaOf<Verbs::Greater>();
-      (void)MetaOf<Verbs::GreaterOrEqual>();*/
+   // Make sure that all default constants are registered            
+   /*(void)MetaOf<Constants::Yes>();
+   (void)MetaOf<Constants::No>();
+   (void)MetaOf<Constants::True>();
+   (void)MetaOf<Constants::False>();
+   (void)MetaOf<Constants::Null>();
+   (void)MetaOf<Constants::Nothing>();*/
 
-      // Parse                                                          
-      Many output;
-      const auto parsed = UnknownParser::Parse(*this, output, 0, optimize);
-      if (parsed != GetCount()) {
-         Logger::Warning("Some characters were left out at the end, while parsing code:");
-         Logger::Warning("+-- ", 
-            Logger::Green, LeftOf (parsed), 
-            Logger::Red,   RightOf(parsed)
-         );
-      }
-      return output;
+   // Make sure that all default verbs are registered before parsing 
+   /*(void)MetaOf<Verbs::Do>();
+   (void)MetaOf<Verbs::Select>();
+   (void)MetaOf<Verbs::Associate>();
+   (void)MetaOf<Verbs::Create>();
+   (void)MetaOf<Verbs::Catenate>();
+   (void)MetaOf<Verbs::Conjunct>();
+   (void)MetaOf<Verbs::Interpret>();
+   (void)MetaOf<Verbs::Compare>();
+   (void)MetaOf<Verbs::Equal>();
+   (void)MetaOf<Verbs::Lower>();
+   (void)MetaOf<Verbs::LowerOrEqual>();
+   (void)MetaOf<Verbs::Greater>();
+   (void)MetaOf<Verbs::GreaterOrEqual>();*/
+
+   // Parse                                                             
+   Many output;
+   const auto parsed = UnknownParser::Parse(*this, output, 0, optimize);
+   if (parsed != GetCount()) {
+      Logger::Warning("Some characters were left out at the end, while parsing code:");
+      Logger::Warning("+-- ", 
+         Logger::Green, LeftOf (parsed), 
+         Logger::Red,   RightOf(parsed)
+      );
+   }
+   return output;
+}
+
+/// Compare two tokens, ignoring case                                         
+///   @param lhs the left token                                               
+///   @param rhs the right token                                              
+///   @return true if both loosely match                                      
+constexpr bool CompareTokens(Token const& lhs, Token const& rhs) noexcept {
+   return (lhs.size() == rhs.size() and (
+      lhs.size() == 0 or ::std::equal(lhs.begin(), lhs.end(), rhs.begin(),
+         [](const char& c1, const char& c2) noexcept {
+            return c1 == c2 or (::std::toupper(c1) == ::std::toupper(c2));
+         })
+      ));
+}
+
+/// Isolate an operator token                                                 
+///   @param token the operator                                               
+///   @return the isolated operator token                                     
+constexpr Token IsolateOperator(Token const& token) noexcept {
+   auto l = token.data();
+   auto r = token.data() + token.size();
+   while (l < r and *l <= 32)
+      ++l;
+   while (r > l and *(r - 1) <= 32)
+      --r;
+   return token.substr(l - token.data(), r - l);
+}
+
+/// Compare two operators, ignoring case and spacing                          
+///   @param lhs the left operator                                            
+///   @param rhs the right operator                                           
+///   @return true if both loosely match                                      
+constexpr bool CompareOperators(Token const& lhs, Token const& rhs) noexcept {
+   return CompareTokens(IsolateOperator(lhs), IsolateOperator(rhs));
+}
+
+/// Check if a string is reserved as a keyword/operator                       
+///   @param text the text to check                                           
+///   @return true if text is reserved                                        
+bool Code::IsReserved(Text const& text) {
+   for (int i = 0; i < static_cast<int>(Serial::Operator::Last); ++i) {
+      if (CompareOperators(text, GetOperatorToken(static_cast<Serial::Operator>(i))))
+         return true;
    }
 
-   /// Compare two tokens, ignoring case                                      
-   ///   @param lhs the left token                                            
-   ///   @param rhs the right token                                           
-   ///   @return true if both loosely match                                   
-   constexpr bool CompareTokens(Token const& lhs, Token const& rhs) noexcept {
-      return (lhs.size() == rhs.size() and (
-         lhs.size() == 0 or ::std::equal(lhs.begin(), lhs.end(), rhs.begin(),
-            [](const char& c1, const char& c2) noexcept {
-               return c1 == c2 or (::std::toupper(c1) == ::std::toupper(c2));
-            })
-         ));
-   }
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      if (not RTTI::Registry::GetAmbiguousMeta(text).empty())
+         return true;
+   #endif
 
-   /// Isolate an operator token                                              
-   ///   @param token the operator                                            
-   ///   @return the isolated operator token                                  
-   constexpr Token IsolateOperator(Token const& token) noexcept {
-      auto l = token.data();
-      auto r = token.data() + token.size();
-      while (l < r and *l <= 32)
-         ++l;
-      while (r > l and *(r - 1) <= 32)
-         --r;
-      return token.substr(l - token.data(), r - l);
-   }
+   return false;
+}
 
-   /// Compare two operators, ignoring case and spacing                       
-   ///   @param lhs the left operator                                         
-   ///   @param rhs the right operator                                        
-   ///   @return true if both loosely match                                   
-   constexpr bool CompareOperators(Token const& lhs, Token const& rhs) noexcept {
-      return CompareTokens(IsolateOperator(lhs), IsolateOperator(rhs));
-   }
+/// A keyword must be made of only letters and numbers, namespace operator    
+/// and/or underscores                                                        
+///   @param text the text to check                                           
+///   @return true if text is a valid Code keyword                            
+/*bool IsKeywordSymbol(char a) {
+   return IsNumerical(a) or IsAlphabetical(a) or a == ':';
+}*/
 
-   /// Check if a string is reserved as a keyword/operator                    
-   ///   @param text the text to check                                        
-   ///   @return true if text is reserved                                     
-   bool Code::IsReserved(Text const& text) {
-      for (int i = 0; i < static_cast<int>(Serial::Operator::Last); ++i) {
-         if (CompareOperators(text, GetOperatorToken(static_cast<Serial::Operator>(i))))
-            return true;
-      }
+/// A keyword must be made of only letters and numbers, namespace operator    
+/// and/or underscores                                                        
+///   @param text the text to check                                           
+///   @return true if text is a valid Code keyword                            
+bool Code::IsValidKeyword(Text const& text) {
+   return IsKeyword(text);
+}
 
-      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         if (not RTTI::Registry::GetAmbiguousMeta(text).empty())
-            return true;
-      #endif
+/// Parse any code expression, anticipate anything                            
+///   @param input the code to parse                                          
+///   @param lhs [in/out] parsed content goes here (lhs)                      
+///   @param precedence the last parsed operation precedence                  
+///   @param optimize whether to attempt executing at compile-time            
+///   @return number of parsed characters from input                          
+size_t UnknownParser::Parse(Code const& input, Many& lhs, Real precedence, bool optimize) {
+   Many rhs;
+   size_t progress = 0;
+   VERBOSE_TAB("Parsing unknown");
+   #if ENABLE_VERBOSE()
+      if (lhs.IsValid())
+         VERBOSE_ALT("LHS: ", lhs);
+   #endif
 
-      return false;
-   }
+   while (progress < input.GetCount()) {
+      // Scan input until end                                           
+      Code relevant = input.RightOf(progress);
+      size_t localProgress = 0;
+      Code::Operator op;
 
-   /// A keyword must be made of only letters and numbers, namespace operator 
-   /// and/or underscores                                                     
-   ///   @param text the text to check                                        
-   ///   @return true if text is a valid Code keyword                         
-   /*bool IsKeywordSymbol(char a) {
-      return IsNumerical(a) or IsAlphabetical(a) or a == ':';
-   }*/
+      if (relevant[0] == '\0')
+         break;
+      else if (SkippedParser::Peek(relevant))
+         localProgress = SkippedParser::Parse(relevant);
+      else if ((op = OperatorParser::Peek(relevant)) != Code::Operator::Noop)
+         localProgress = OperatorParser::Parse(op, relevant, rhs, precedence, optimize);
+      else if (KeywordParser::Peek(relevant))
+         localProgress = KeywordParser::Parse(relevant, rhs);
+      else if (NumberParser::Peek(relevant))
+         localProgress = NumberParser::Parse(relevant, rhs);
+      else
+         PRETTY_ERROR("Unexpected symbol");
 
-   /// A keyword must be made of only letters and numbers, namespace operator 
-   /// and/or underscores                                                     
-   ///   @param text the text to check                                        
-   ///   @return true if text is a valid Code keyword                         
-   bool Code::IsValidKeyword(Text const& text) {
-      return IsKeyword(text);
-   }
-
-   /// Parse any code expression, anticipate anything                         
-   ///   @param input the code to parse                                       
-   ///   @param lhs [in/out] parsed content goes here (lhs)                   
-   ///   @param precedence the last parsed operation precedence               
-   ///   @param optimize whether to attempt executing at compile-time         
-   ///   @return number of parsed characters from input                       
-   size_t Code::UnknownParser::Parse(Code const& input, Many& lhs, Real precedence, bool optimize) {
-      Many rhs;
-      size_t progress = 0;
-      VERBOSE_TAB("Parsing unknown");
-      #if ENABLE_VERBOSE()
-         if (lhs.IsValid())
-            VERBOSE_ALT("LHS: ", lhs);
-      #endif
-
-      while (progress < input.GetCount()) {
-         // Scan input until end                                        
-         Code relevant = input.RightOf(progress);
-         size_t localProgress = 0;
-         Operator op;
-
-         if (relevant[0] == '\0')
-            break;
-         else if (SkippedParser::Peek(relevant))
-            localProgress = SkippedParser::Parse(relevant);
-         else if ((op = OperatorParser::Peek(relevant)) != Operator::Noop)
-            localProgress = OperatorParser::Parse(op, relevant, rhs, precedence, optimize);
-         else if (KeywordParser::Peek(relevant))
-            localProgress = KeywordParser::Parse(relevant, rhs);
-         else if (NumberParser::Peek(relevant))
-            localProgress = NumberParser::Parse(relevant, rhs);
-         else
-            PRETTY_ERROR("Unexpected symbol");
-
-         if (0 == localProgress) {
-            // This occurs often, when a lower priority operator is     
-            // waiting for higher priority stuff to be parsed first     
-            break;
-         }
-
-         progress += localProgress;
-      }
-
-      // Input was parsed, relay content to output                      
-      VERBOSE(Logger::Green, "Unknown parsed: ", rhs);
-      lhs.Compose(Abandon(rhs));
-      return progress;
-   }
-
-   /// Peek inside input, and return true if first symbol is skippable        
-   ///   @param input the code to peek into                                   
-   ///   @return true if input is skippable                                   
-   bool Code::SkippedParser::Peek(Code const& input) noexcept {
-      return StartsWithSkippable(input);
-   }
-
-   /// Parse a skippable, no content produced                                 
-   ///   @param input code that starts with a skippable character             
-   ///   @return number of parsed characters                                  
-   size_t Code::SkippedParser::Parse(Code const& input) {
-      size_t progress = 0;
-      while (progress < input.GetCount()) {
-         const auto relevant = input.RightOf(progress);
-
-         if (*relevant <= 32 or *relevant >= 127) {
-            // Skip a single skippable character                        
-            ++progress;
-            continue;
-         }
-         else if (relevant.StartsWith(GetOperatorToken(Serial::Operator::OpenLineComment))) {
-            // Skip an entire line comment                              
-            const auto end_marker = GetOperatorToken(Serial::Operator::CloseLineComment);
-            while (progress < input.GetCount() - end_marker.size()
-            and not input.RightOf(progress).StartsWith(end_marker))
-               ++progress;
-            continue;
-         }
-         else if (relevant.StartsWith(GetOperatorToken(Serial::Operator::OpenComment))) {
-            // Skip a block comment (across multiple new lines)         
-            while (progress + 1 < input.GetCount() and (input[progress] != '*' or input[progress + 1] != '/'))
-               ++progress;
-
-            if (progress + 1 < input.GetCount())
-               // Skip the "*/" tag                                     
-               progress += 2;
-            else 
-               // Skip to end of input, "*/" was never found            
-               progress = input.GetCount();
-
-            continue;
-         }
-
-         // If reached, then something valuable was encountered         
+      if (0 == localProgress) {
+         // This occurs often, when a lower priority operator is        
+         // waiting for higher priority stuff to be parsed first        
          break;
       }
 
-      VERBOSE("Skipped ", progress, " characters");
-      return progress;
+      progress += localProgress;
    }
 
-   /// Peek inside input, and return true if first symbol is a character      
-   ///   @param input the code to peek into                                   
-   ///   @return true if input is a character                                 
-   bool Code::KeywordParser::Peek(Code const& input) noexcept {
-      return StartsWithLetter(input);
-   }
-   
-   /// Gather all symbols of a keyword                                        
-   ///   @param input the code to peek into                                   
-   ///   @return the isolated keyword token                                   
-   Token Code::KeywordParser::Isolate(Code const& input) noexcept {
-      size_t progress = 0;
-      while (progress < input.GetCount()) {
-         const auto c = input[progress];
-         if (not IsKeywordSymbol(c))
-            break;
+   // Input was parsed, relay content to output                         
+   VERBOSE(Logger::Green, "Unknown parsed: ", rhs);
+   lhs.Compose(Abandon(rhs));
+   return progress;
+}
+
+/// Peek inside input, and return true if first symbol is skippable           
+///   @param input the code to peek into                                      
+///   @return true if input is skippable                                      
+bool SkippedParser::Peek(Code const& input) noexcept {
+   return StartsWithSkippable(input);
+}
+
+/// Parse a skippable, no content produced                                    
+///   @param input code that starts with a skippable character                
+///   @return number of parsed characters                                     
+size_t SkippedParser::Parse(Code const& input) {
+   size_t progress = 0;
+   while (progress < input.GetCount()) {
+      const auto relevant = input.RightOf(progress);
+
+      if (*relevant <= 32 or *relevant >= 127) {
+         // Skip a single skippable character                           
          ++progress;
+         continue;
+      }
+      else if (relevant.StartsWith(GetOperatorToken(Serial::Operator::OpenLineComment))) {
+         // Skip an entire line comment                                 
+         const auto end_marker = GetOperatorToken(Serial::Operator::CloseLineComment);
+         while (progress < input.GetCount() - end_marker.size()
+         and not input.RightOf(progress).StartsWith(end_marker))
+            ++progress;
+         continue;
+      }
+      else if (relevant.StartsWith(GetOperatorToken(Serial::Operator::OpenComment))) {
+         // Skip a block comment (across multiple new lines)            
+         while (progress + 1 < input.GetCount() and (input[progress] != '*' or input[progress + 1] != '/'))
+            ++progress;
+
+         if (progress + 1 < input.GetCount())
+            // Skip the "*/" tag                                        
+            progress += 2;
+         else 
+            // Skip to end of input, "*/" was never found               
+            progress = input.GetCount();
+
+         continue;
       }
 
-      if (0 == progress)
-         return {};
-
-      return input.LeftOf(progress);
+      // If reached, then something valuable was encountered            
+      break;
    }
-   
-   /// Parse keyword for a constant, data, or trait                           
-   /// Verbs are considered operators, not keywords                           
-   ///   @param input the code to parse                                       
-   ///   @param lhs [in/out] parsed content goes here (lhs)                   
-   ///   @param allowCharge - whether to parse charge (internal use)          
-   ///   @return number of parsed characters                                  
-   size_t Code::KeywordParser::Parse(Code const& input, Many& lhs, bool allowCharge) {
-      // Isolate the keyword                                            
-      size_t progress = 0;
-      const auto keyword = Isolate(input);
-      if (keyword.empty())
-         PRETTY_ERROR("No keyword parsed");
 
-      progress += keyword.size();
-      VERBOSE_TAB("Keyword isolated: ", keyword);
+   VERBOSE("Skipped ", progress, " characters");
+   return progress;
+}
 
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      // If this is reached, then exactly one match in symbols          
-      // Push found meta data, if any                                   
-      const auto meta = Disambiguate(progress, input, keyword);
-      if (not meta) {
-         PRETTY_ERROR("Disambiguation of `", keyword, "` failed");
-      }
+/// Peek inside input, and return true if first symbol is a character         
+///   @param input the code to peek into                                      
+///   @return true if input is a character                                    
+bool KeywordParser::Peek(Code const& input) noexcept {
+   return StartsWithLetter(input);
+}
 
-      const auto dmeta = meta.As<DMeta>();
-      const auto tmeta = meta.As<TMeta>();
-      const auto cmeta = meta.As<CMeta>();
+/// Gather all symbols of a keyword                                           
+///   @param input the code to peek into                                      
+///   @return the isolated keyword token                                      
+Token KeywordParser::Isolate(Code const& input) noexcept {
+   size_t progress = 0;
+   while (progress < input.GetCount()) {
+      const auto c = input[progress];
+      if (not IsAlphabetical(c) and not IsNumerical(c))
+         break;
+      ++progress;
+   }
 
-      if (dmeta) {
-         if (allowCharge) {
-            const auto relevant = input.RightOf(progress);
-            if (ChargeParser::Peek(relevant) != Operator::NoOperator) {
-               // Parse charge for the keyword                          
-               Charge charge;
-               progress += ChargeParser::Parse(relevant, charge);
-               lhs << Construct {dmeta, Many {}, charge};
-            }
-            else lhs << dmeta;
+   if (0 == progress)
+      return {};
+
+   return input.LeftOf(progress);
+}
+
+/// Parse keyword for a constant, data, or trait                              
+/// Verbs are considered operators, not keywords                              
+///   @param input the code to parse                                          
+///   @param lhs [in/out] parsed content goes here (lhs)                      
+///   @param allowCharge whether to parse charge (internal use)               
+///   @return number of parsed characters                                     
+size_t KeywordParser::Parse(Code const& input, Many& lhs, bool allowCharge) {
+   // Isolate the keyword                                               
+   size_t progress = 0;
+   const auto keyword = Isolate(input);
+   if (keyword.empty())
+      PRETTY_ERROR("No keyword parsed");
+
+   progress += keyword.size();
+   VERBOSE_TAB("Keyword isolated: ", keyword);
+
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   // If this is reached, then exactly one match in symbols.            
+   // Push found meta data, if any.                                     
+   const auto meta = Disambiguate(progress, input, keyword);
+   if (not meta) {
+      PRETTY_ERROR("Disambiguation of `", keyword, "` failed");
+   }
+
+   const RTTI::DMeta dmeta = meta;
+   const RTTI::TMeta tmeta = meta;
+   const RTTI::CMeta cmeta = meta;
+
+   if (dmeta) {
+      if (allowCharge) {
+         const auto relevant = input.RightOf(progress);
+         if (ChargeParser::Peek(relevant) != Code::Operator::Noop) {
+            // Parse charge for the keyword                             
+            Charge charge;
+            progress += ChargeParser::Parse(relevant, charge);
+            lhs << Recipe {dmeta, Many {}, charge};
          }
          else lhs << dmeta;
       }
-
-      if (tmeta)
-         lhs << tmeta;
-
-      if (cmeta) {
-         const Block<> constant {{}, cmeta};
-         lhs.SmartPush(IndexBack, Clone(constant));
-      }
-
-      VERBOSE("Keyword parsed: `", keyword, "` as ", lhs, " (of type ", lhs.GetToken(), ")");
-      return progress;
-   #else    // LANGULUS_FEATURE(MANAGED_REFLECTION)
-      (void)lhs;
-      (void)allowCharge;
-      PRETTY_ERROR("Can't parse keyword, managed reflection feature is disabled");
-   #endif   // LANGULUS_FEATURE(MANAGED_REFLECTION)
+      else lhs << dmeta;
    }
+
+   if (tmeta)
+      lhs << tmeta;
+
+   if (cmeta)
+      lhs.Compose(Any::FromConstant(cmeta));
+
+   VERBOSE("Keyword parsed: `", keyword, "` as ", lhs, " (of type ", lhs.GetToken(), ")");
+   return progress;
+#else
+   (void)lhs;
+   (void)allowCharge;
+   PRETTY_ERROR("Can't parse keyword, managed reflection feature is disabled");
+#endif
+}
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    /// Disambiguate a keyword                                                 
@@ -513,765 +574,762 @@ namespace Langulus::Flow
    ///   @param input the input code (used only for debugging)                
    ///   @param keyword the keyword we'll be disambiguating                   
    ///   @return the disambiguated definition                                 
-   AMeta Code::KeywordParser::Disambiguate(
+   auto KeywordParser::Disambiguate(
       const size_t progress, Code const& input, Token const& keyword
-   ) {
-      try
-      {
-         return RTTI::DisambiguateMeta(keyword);
-      }
+   ) -> RTTI::Inner::Definition const* {
+      try { return RTTI::Registry::DisambiguateMeta(keyword); }
       catch (...) {
          PRETTY_ERROR("Unknown keyword: ", keyword);
       }
+      return nullptr;
    }
 #endif
 
-   /// Peek inside input, and return true if first symbol is a digit, or a    
-   /// minus followed by a digit                                              
-   ///   @param input the code to peek into                                   
-   ///   @return true if input begins with a number                           
-   bool Code::NumberParser::Peek(Code const& input) noexcept {
-      return input.StartsWithDigit();
+/// Peek inside input, and return true if first symbol is a digit, or a       
+/// minus followed by a digit                                                 
+///   @param input the code to peek into                                      
+///   @return true if input begins with a number                              
+bool NumberParser::Peek(Code const& input) noexcept {
+   return StartsWithDigit(input);
+}
+
+/// Parse an integer or real number                                           
+///   @param input the code to parse                                          
+///   @param lhs [in/out] parsed content goes here (lhs)                      
+///   @return number of parsed characters                                     
+size_t NumberParser::Parse(Code const& input, Many& lhs) {
+   Real rhs = 0;
+   size_t progress = 0;
+   VERBOSE_TAB("Parsing number");
+
+#if LANGULUS_COMPILER(WASM)
+   // Some standard library implementations don't allow for             
+   // `from_chars` that involve parsing float/double                    //TODO check if still true
+   if constexpr (CT::Float<Real>)
+      rhs = ::std::stof(std::string(Token(input.GetRaw(), input.GetRaw() + input.GetCount())));
+   else if constexpr (CT::Double<Real>)
+      rhs = ::std::stod(std::string(Token(input.GetRaw(), input.GetRaw() + input.GetCount())));
+   
+   static_assert(CT::Float<Real> or CT::Double<Real>, "Unsupported real number type");
+#else
+   if (auto [p, ec] = ::std::from_chars(input.GetRaw(), input.GetRaw() + input.GetCount(), rhs);
+      ec == ::std::errc()) {
+      progress = p - input.GetRaw();
+   }
+#endif
+
+   VERBOSE(Logger::Green, "Number parsed: ", rhs);
+   lhs << rhs;
+   return progress;
+}
+
+/// Peek inside input, and return true if it begins with one of the           
+/// built-in operators                                                        
+///   @param input the code to peek into                                      
+///   @return true if input begins with an operators                          
+auto OperatorParser::PeekBuiltin(Code const& input) noexcept -> Code::Operator {
+   for (int i = 0; i < int(Code::Operator::Last); ++i) {
+      if (not SerializationRules::Operators[i].mCharge and StartsWithOperator(i, input))
+         return Operator(i);
    }
 
-   /// Parse an integer or real number                                        
-   ///   @param input the code to parse                                       
-   ///   @param lhs [in/out] parsed content goes here (lhs)                   
-   ///   @return number of parsed characters                                  
-   size_t Code::NumberParser::Parse(Code const& input, Many& lhs) {
-      Real rhs = 0;
-      size_t progress = 0;
-      VERBOSE_TAB("Parsing number");
+   return Code::Operator::Noop;
+}
 
-   #if LANGULUS_COMPILER(WASM)
-      // Some standard library implementations don't allow for          
-      // from_chars that involve parsing float/double                   
-      if constexpr (CT::Float<Real>)
-         rhs = ::std::stof(std::string(Token(input.GetRaw(), input.GetRaw() + input.GetCount())));
-      else if constexpr (CT::Double<Real>)
-         rhs = ::std::stod(std::string(Token(input.GetRaw(), input.GetRaw() + input.GetCount())));
-      
-      static_assert(CT::Float<Real> or CT::Double<Real>, "Unsupported real number type");
-   #else
-      if (auto [p, ec] = ::std::from_chars(input.GetRaw(), input.GetRaw() + input.GetCount(), rhs);
-         ec == ::std::errc()) {
-         progress = p - input.GetRaw();
-      }
+/// Peek inside input, and return true if it begins with one of the           
+/// builtin or reflected operators                                            
+///   @param input the code to peek into                                      
+///   @return true if input begins with an operators                          
+auto OperatorParser::Peek(Code const& input) noexcept -> Code::Operator {
+   if (not input)
+      return Code::Operator::Noop;
+
+   const auto builtin = PeekBuiltin(input);
+   if (builtin != Code::Operator::Noop)
+      return builtin;
+
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      const auto word = Isolate(input);
+      auto found = RTTI::GetOperator(word);
+      if (found)
+         return Code::Operator::ReflectedOperator;
+
+      found = RTTI::GetMetaVerb(word);
+      if (found)
+         return Code::Operator::ReflectedVerb;
    #endif
 
-      VERBOSE(Logger::Green, "Number parsed: ", rhs);
-      lhs << rhs;
-      return progress;
+   return Code::Operator::Noop;
+}
+
+/// Isolate an operator                                                       
+///   @param input the code to parse                                          
+///   @return the isolated operator                                           
+Token OperatorParser::Isolate(Code const& input) noexcept {
+   // These can be either a word separated by operators/spaces, or      
+   // operators separated by spaces/numbers/chatacters                  
+   if (StartsWithLetter(input))
+      return KeywordParser::Isolate(input);
+
+   // Isolate an operator separated by spaces/letters/digits, or        
+   // built-in operators, such as '(', '"', etc.                        
+   size_t progress = 0;
+   while (progress < input.GetCount()) {
+      const auto relevant = input.RightOf(progress);
+      if (KeywordParser::Peek(relevant)
+      or NumberParser::Peek(relevant)
+      or SkippedParser::Peek(relevant)
+      or PeekBuiltin(relevant) != Code::Operator::Noop)
+         break;
+      ++progress;
    }
 
-   /// Peek inside input, and return true if it begins with one of the        
-   /// builtin operators                                                      
-   ///   @param input - the code to peek into                                 
-   ///   @return true if input begins with an operators                       
-   Code::Operator Code::OperatorParser::PeekBuiltin(Code const& input) noexcept {
-      for (size_t i = 0; i < Operator::OpCounter; ++i) {
-         if (not SerializationRules::Operators[i].mCharge and input.StartsWithOperator(i))
-            return Operator(i);
+   if (0 == progress)
+      return {};
+
+   return input.LeftOf(progress);
+}
+
+/// Parse op-expression, operate on current output (lhs) and content (rhs)    
+///   @attention skippable expressions are not handled here!                  
+///   @attention charge-expressions are not handled here!                     
+///   @param op the built-in operator if any, or Reflected                    
+///   @param input the code to parse                                          
+///   @param lhs [in/out] the operator expression will go here                
+///   @param priority the priority of the last parsed element                 
+///   @param optimize the priority of the last parsed element                 
+///   @return number of parsed characters                                     
+size_t OperatorParser::Parse(
+   Code::Operator op, Code const& input, Many& lhs, Real priority, bool optimize
+) {
+   size_t progress = 0;
+   if (op < Code::Operator::Noop) {
+      // Skip the operator, we already know it                          
+      progress += SerializationRules::Operators[op].mToken.size();
+      VERBOSE_TAB("Parsing built-in operator: [",
+         SerializationRules::Operators[op].mToken, ']');
+      const Code relevant = input.RightOf(progress);
+
+      // Handle built-in operators first                                
+      switch (op) {
+      case Code::Operator::OpenScope:
+      case Code::Operator::OpenScopeAlt:
+         return progress + ParseContent(op, relevant, lhs, optimize);
+      case Code::Operator::CloseScope:
+      case Code::Operator::CloseScopeAlt:
+         return 0;
+      case Code::Operator::OpenString:
+      case Code::Operator::OpenStringAlt:
+      case Code::Operator::OpenCode:
+      case Code::Operator::OpenCharacter:
+         return progress + ParseString(op, relevant, lhs);
+      case Code::Operator::OpenByte:
+         return progress + ParseBytes(relevant, lhs);
+      case Code::Operator::Past:
+      case Code::Operator::Future:
+         return progress + ParsePhase(op, lhs);
+      case Code::Operator::Null:
+         return progress + 4;
+      case Code::Operator::SelectThing:
+      case Code::Operator::SelectIdea:
+         return progress + ParseKeyword(op, relevant, lhs);
+      default:
+         PRETTY_ERROR("Unhandled built-in operator");
       }
-
-      return Operator::NoOperator;
    }
-
-   /// Peek inside input, and return true if it begins with one of the        
-   /// builtin or reflected operators                                         
-   ///   @param input the code to peek into                                   
-   ///   @return true if input begins with an operators                       
-   Code::Operator Code::OperatorParser::Peek(Code const& input) noexcept {
-      if (not input)
-         return Operator::NoOperator;
-
-      const auto builtin = PeekBuiltin(input);
-      if (builtin != Operator::NoOperator)
-         return builtin;
-
+   else if (op == Code::Operator::Noop) {
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         // Handle a reflected operator                                 
          const auto word = Isolate(input);
-         auto found = RTTI::GetOperator(word);
-         if (found)
-            return Operator::ReflectedOperator;
+         const auto found = RTTI::GetOperator(word);
 
-         found = RTTI::GetMetaVerb(word);
-         if (found)
-            return Operator::ReflectedVerb;
-      #endif
-
-      return Operator::NoOperator;
-   }
-
-   /// Isolate an operator                                                    
-   ///   @param input the code to parse                                       
-   ///   @return the isolated operator                                        
-   Token Code::OperatorParser::Isolate(Code const& input) noexcept {
-      // These can be either a word separated by operators/spaces, or   
-      // operators separated by spaces/numbers/chatacters               
-      if (input.StartsWithLetter())
-         return KeywordParser::Isolate(input);
-
-      // Isolate an operator separated by spaces/letters/digits, or     
-      // built-in operators, such as '(', '"', etc.                     
-      size_t progress = 0;
-      while (progress < input.GetCount()) {
-         const auto relevant = input.RightOf(progress);
-         if (KeywordParser::Peek(relevant)
-         or NumberParser::Peek(relevant)
-         or SkippedParser::Peek(relevant)
-         or PeekBuiltin(relevant) != Operator::NoOperator)
-            break;
-         ++progress;
-      }
-
-      if (0 == progress)
-         return {};
-
-      return input.LeftOf(progress);
-   }
-
-   /// Parse op-expression, operate on current output (lhs) and content (rhs) 
-   ///   @attention skippable expressions are not handled here!               
-   ///   @attention charge-expressions are not handled here!                  
-   ///   @param op the built-in operator if any, or Reflected                 
-   ///   @param input the code to parse                                       
-   ///   @param lhs [in/out] the operator expression will go here             
-   ///   @param priority the priority of the last parsed element              
-   ///   @param optimize the priority of the last parsed element              
-   ///   @return number of parsed characters                                  
-   size_t Code::OperatorParser::Parse(
-      Operator op, Code const& input, Many& lhs, Real priority, bool optimize
-   ) {
-      size_t progress = 0;
-      if (op < Operator::NoOperator) {
-         // Skip the operator, we already know it                       
-         progress += SerializationRules::Operators[op].mToken.size();
-         VERBOSE_TAB("Parsing built-in operator: [",
-            SerializationRules::Operators[op].mToken, ']');
-         const Code relevant = input.RightOf(progress);
-
-         switch (op) {
-            // Handle built-in operators first                          
-         case Operator::OpenScope:
-         case Operator::OpenScopeAlt:
-            return progress + ParseContent(op, relevant, lhs, optimize);
-         case Operator::CloseScope:
-         case Operator::CloseScopeAlt:
+         if (found->mPrecedence and priority >= found->mPrecedence) {
+            VERBOSE(Logger::Yellow,
+               "Delaying reflected operator [", found,
+               "] due to a prioritized operation");
             return 0;
-         case Operator::OpenString:
-         case Operator::OpenStringAlt:
-         case Operator::OpenCode:
-         case Operator::OpenCharacter:
-            return progress + ParseString(op, relevant, lhs);
-         case Operator::OpenByte:
-            return progress + ParseBytes(relevant, lhs);
-         case Operator::Past:
-         case Operator::Future:
-            return progress + ParsePhase(op, lhs);
-         case Operator::Null:
-            return progress + 4;
-         case Operator::SelectThing:
-         case Operator::SelectIdea:
-            return progress + ParseKeyword(op, relevant, lhs);
-         default:
-            PRETTY_ERROR("Unhandled built-in operator");
          }
+
+         VERBOSE_TAB("Parsing reflected operator: [", word, "] (", found, ")");
+         progress += word.size();
+         auto operation = Verb::FromMeta(found);
+         if (CompareOperators(word, found->mOperatorReverse))
+            operation.SetMass(-1);
+
+         const Code relevant = input.RightOf(progress);
+         return progress + ParseReflected(operation, relevant, lhs, optimize);
+      #else
+         PRETTY_ERROR("Can't parse reflected operator, managed reflection feature is disabled");
+      #endif
+   }
+   else {
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         // Handle a reflected verb                                     
+         const auto word = Isolate(input);
+         const auto found = RTTI::GetMetaVerb(word);
+
+         if (found->mPrecedence and priority >= found->mPrecedence) {
+            VERBOSE(Logger::Yellow,
+               "Delaying reflected operator [", found, 
+               "] due to a prioritized operation");
+            return 0;
+         }
+
+         progress += word.size();
+         VERBOSE_TAB("Parsing reflected verb: [", word, "] (", found, ")");
+         auto operation = Verb::FromMeta(found);
+         if (CompareOperators(word, found->mTokenReverse))
+            operation.SetMass(-1);
+
+         const Code relevant = input.RightOf(progress);
+         return progress + ParseReflected(operation, relevant, lhs, optimize);
+      #else
+         PRETTY_ERROR("Can't parse reflected verb, managed reflection feature is disabled");
+      #endif
+   }
+}
+
+/// Parse a content scope                                                     
+///   @param op the content opening operator (used for ranges)                
+///   @param input the code to parse                                          
+///   @param lhs [in/out] parsed content goes here (lhs)                      
+///   @param optimize attempt compile-time execution                          
+///   @return number of parsed characters                                     
+size_t OperatorParser::ParseContent(
+   Code::Operator, Code const& input, Many& lhs, bool optimize
+) {
+   size_t progress = 0;
+
+   // Can define contents for one element at a time                     
+   if (lhs.GetCount() > 1)
+      PRETTY_ERROR("Content scope for multiple elements is not allowed: ", lhs);
+
+   // We don't know what to expect, so we attempt blind parse           
+   Many rhs;
+   progress = UnknownParser::Parse(input, rhs, 0, optimize);
+
+   // Account for the closing content scope                             
+   const auto remaining = input.RightOf(progress);
+   if (remaining.StartsWithOperator(Operator::CloseScope))
+      progress += SerializationRules::Operators[Operator::CloseScope].mToken.size();
+   else if (remaining.StartsWithOperator(Operator::CloseScopeAlt))
+      progress += SerializationRules::Operators[Operator::CloseScopeAlt].mToken.size();
+   else
+      PRETTY_ERROR("Missing closing bracket");
+
+   // Insert to new content in rhs to the already available lhs         
+   InsertContent(rhs, lhs);
+
+   //TODO open/closed ranges depending on op, push markers to lhs depending on op and endop
+   return progress;
+}
+
+/// Insert content to lhs, instantiating it if we have to                     
+/// Content is always inserted to the last element in LHS, if multiple        
+/// elements are present. If last element is a meta definition, the           
+/// definition will be replaced by the instantiated element                   
+///   @param rhs the content to insert                                        
+///   @param lhs the place where the content will be inserted                 
+void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
+   if (not lhs.IsTyped() or not lhs) {
+      // If output is untyped, we directly push content, regardless     
+      // if it's filled with something or not - a scope is a scope      
+      // If empty, just merge states                                    
+      const auto stateBackup = lhs.GetState();
+      lhs.ResetState();
+      lhs.Compose(Move(rhs));
+      lhs.AddState(stateBackup);
+      VERBOSE_ALT("Untyped content: ", Logger::Cyan, lhs);
+   }
+   else if (lhs.Is<DMeta>()) {
+      // The content is for an uninstantiated data scope                
+      const auto meta = lhs.As<DMeta>(IndexLast);
+      LANGULUS_ASSERT(meta, Flow, "Bad data id");
+
+      if (meta->Is<Verb>()) {
+         lhs.RemoveIndex(IndexLast);
+         lhs.SmartPush(IndexBack, Verb {Move(rhs)});
       }
-      else if (op == Operator::ReflectedOperator) {
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            // Handle a reflected operator                              
-            const auto word = Isolate(input);
-            const auto found = RTTI::GetOperator(word);
-
-            if (found->mPrecedence and priority >= found->mPrecedence) {
-               VERBOSE(Logger::Yellow,
-                  "Delaying reflected operator [", found,
-                  "] due to a prioritized operation");
-               return 0;
-            }
-
-            VERBOSE_TAB("Parsing reflected operator: [", word, "] (", found, ")");
-            progress += word.size();
-            auto operation = Verb::FromMeta(found);
-            if (CompareOperators(word, found->mOperatorReverse))
-               operation.SetMass(-1);
-
-            const Code relevant = input.RightOf(progress);
-            return progress + ParseReflected(operation, relevant, lhs, optimize);
-         #else
-            PRETTY_ERROR("Can't parse reflected operator, managed reflection feature is disabled");
-         #endif
+      else if (meta->Is<Tag>()) {
+         lhs.RemoveIndex(IndexLast);
+         lhs.SmartPush(IndexBack, Tag {Move(rhs)});
       }
       else {
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            // Handle a reflected verb                                  
-            const auto word = Isolate(input);
-            const auto found = RTTI::GetMetaVerb(word);
-
-            if (found->mPrecedence and priority >= found->mPrecedence) {
-               VERBOSE(Logger::Yellow,
-                  "Delaying reflected operator [", found, 
-                  "] due to a prioritized operation");
-               return 0;
-            }
-
-            progress += word.size();
-            VERBOSE_TAB("Parsing reflected verb: [", word, "] (", found, ")");
-            auto operation = Verb::FromMeta(found);
-            if (CompareOperators(word, found->mTokenReverse))
-               operation.SetMass(-1);
-
-            const Code relevant = input.RightOf(progress);
-            return progress + ParseReflected(operation, relevant, lhs, optimize);
-         #else
-            PRETTY_ERROR("Can't parse reflected verb, managed reflection feature is disabled");
-         #endif
-      }
-   }
-
-   /// Parse a content scope                                                  
-   ///   @param op the content opening operator (used for ranges)             
-   ///   @param input the code to parse                                       
-   ///   @param lhs [in/out] parsed content goes here (lhs)                   
-   ///   @param optimize attempt compile-time execution                       
-   ///   @return number of parsed characters                                  
-   size_t Code::OperatorParser::ParseContent(
-      Code::Operator, Code const& input, Many& lhs, bool optimize
-   ) {
-      size_t progress = 0;
-
-      // Can define contents for one element at a time                  
-      if (lhs.GetCount() > 1)
-         PRETTY_ERROR("Content scope for multiple elements is not allowed: ", lhs);
-
-      // We don't know what to expect, so we attempt blind parse        
-      Many rhs;
-      progress = UnknownParser::Parse(input, rhs, 0, optimize);
-
-      // Account for the closing content scope                          
-      const auto remaining = input.RightOf(progress);
-      if (remaining.StartsWithOperator(Operator::CloseScope))
-         progress += SerializationRules::Operators[Operator::CloseScope].mToken.size();
-      else if (remaining.StartsWithOperator(Operator::CloseScopeAlt))
-         progress += SerializationRules::Operators[Operator::CloseScopeAlt].mToken.size();
-      else
-         PRETTY_ERROR("Missing closing bracket");
-
-      // Insert to new content in rhs to the already available lhs      
-      InsertContent(rhs, lhs);
-
-      //TODO open/closed ranges depending on op, push markers to lhs depending on op and endop
-      return progress;
-   }
-
-   /// Insert content to lhs, instantiating it if we have to                  
-   /// Content is always inserted to the last element in LHS, if multiple     
-   /// elements are present. If last element is a meta definition, the        
-   /// definition will be replaced by the instantiated element                
-   ///   @param rhs the content to insert                                     
-   ///   @param lhs the place where the content will be inserted              
-   void Code::OperatorParser::InsertContent(Many& rhs, Many& lhs) {
-      if (lhs.IsUntyped() or not lhs) {
-         // If output is untyped, we directly push content, regardless  
-         // if it's filled with something or not - a scope is a scope   
-         // If empty, just merge states                                 
-         const auto stateBackup = lhs.GetState();
-         lhs.ResetState();
-         lhs.SmartPush(IndexBack, Move(rhs));
-         lhs.AddState(stateBackup);
-         VERBOSE_ALT("Untyped content: ", Logger::Cyan, lhs);
-      }
-      else if (lhs.Is<DMeta>()) {
-         // The content is for an uninstantiated data scope             
-         const auto meta = lhs.As<DMeta>(IndexLast);
-         LANGULUS_ASSERT(meta, Flow, "Bad data id");
-
-         if (meta->Is<Verb>()) {
+         if (not rhs and not meta->mProducerRetriever
+         and meta->mDefaultConstructor) {
+            // Invoke default-construction                              
+            Many constExpr;
+            constExpr.SetType(meta);
+            constExpr.New(1);
             lhs.RemoveIndex(IndexLast);
-            lhs.SmartPush(IndexBack, Verb {Move(rhs)});
-         }
-         else if (meta->Is<Tag>()) {
-            lhs.RemoveIndex(IndexLast);
-            lhs.SmartPush(IndexBack, Tag {Move(rhs)});
+            lhs.SmartPush(IndexBack, Abandon(constExpr));
          }
          else {
-            if (not rhs and not meta->mProducerRetriever
-            and meta->mDefaultConstructor) {
-               // Invoke default-construction                           
-               Many constExpr;
-               constExpr.SetType(meta);
-               constExpr.New(1);
+            // Invoke the descriptor-constructor only if we have to     
+            Recipe outputConstruct {meta, Move(rhs)};
+            Many precompiled;
+            if (outputConstruct.StaticCreation(precompiled)) {
+               // Precompiled successfully, append it to LHS            
                lhs.RemoveIndex(IndexLast);
-               lhs.SmartPush(IndexBack, Abandon(constExpr));
+               lhs.SmartPush(IndexBack, Abandon(precompiled));
+               VERBOSE_ALT("Statically constructed from DMeta: ", Logger::Cyan, lhs);
+               return;
             }
-            else {
-               // Invoke the descriptor-constructor only if we have to  
-               Construct outputConstruct {meta, Move(rhs)};
-               Many precompiled;
-               if (outputConstruct.StaticCreation(precompiled)) {
-                  // Precompiled successfully, append it to LHS         
-                  lhs.RemoveIndex(IndexLast);
-                  lhs.SmartPush(IndexBack, Abandon(precompiled));
-                  VERBOSE_ALT("Statically constructed from DMeta: ", Logger::Cyan, lhs);
-                  return;
-               }
 
-               lhs.RemoveIndex(IndexLast);
-               lhs.SmartPush(IndexBack, Abandon(outputConstruct));
-            }
+            lhs.RemoveIndex(IndexLast);
+            lhs.SmartPush(IndexBack, Abandon(outputConstruct));
          }
-         VERBOSE_ALT("Constructed from DMeta: ", Logger::Cyan, lhs);
       }
-      else if (lhs.Is<VMeta>()) {
-         // The content is for an uninstantiated verb scope             
-         const auto meta = lhs.As<VMeta>(IndexLast);
-         LANGULUS_ASSERT(meta, Flow, "Bad verb id");
-
-         auto verb = Verb::FromMeta(meta, Move(rhs));
-         lhs.RemoveIndex(IndexLast);
-         lhs.SmartPush(IndexBack, Abandon(verb));
-         VERBOSE_ALT("Constructed from VMeta: ", Logger::Cyan, lhs);
-      }
-      else if (lhs.Is<TMeta>()) {
-         // The content is for an uninstantiated trait scope            
-         const auto meta = lhs.As<TMeta>(IndexLast);
-         LANGULUS_ASSERT(meta, Flow, "Bad trait id");
-
-         auto trait = Tag::From(meta, Move(rhs));
-         lhs.RemoveIndex(IndexLast);
-         lhs.SmartPush(IndexBack, Abandon(trait));
-         VERBOSE_ALT("Constructed from TMeta: ", Logger::Cyan, lhs);
-      }
-      else if (lhs.Is<Verb>()) {
-         // The content is for an instantiated verb scope               
-         auto& verb = lhs.As<Verb>(IndexLast);
-         verb.GetArgument().SmartPush(IndexBack, Move(rhs));
-         VERBOSE_ALT("Constructed from Verb ", Logger::Cyan, lhs);
-      }
-      else if (lhs.Is<Construct>()) {
-         // The content is for an instantiated data scope               
-         auto& construct = lhs.As<Construct>(IndexLast);
-         construct << Move(rhs);
-         VERBOSE_ALT("Constructed from Construct ", Logger::Cyan, lhs);
-      }
-      else {
-         Logger::Error("Bad scope for ", lhs, " (", lhs.GetToken(), ')');
-         Logger::Error("Content to insert is: ", rhs, " (", rhs.GetToken(), ')');
-         LANGULUS_THROW(Flow, "Syntax error - bad scope");
-      }
+      VERBOSE_ALT("Constructed from DMeta: ", Logger::Cyan, lhs);
    }
+   else if (lhs.Is<VMeta>()) {
+      // The content is for an uninstantiated verb scope                
+      const auto meta = lhs.As<VMeta>(IndexLast);
+      LANGULUS_ASSERT(meta, Flow, "Bad verb id");
 
-   /// String/character/code scope                                            
-   ///   @param op the starting operator                                      
-   ///   @param input the code to parse                                       
-   ///   @param lhs [in/out] parsed content goes here (lhs)                   
-   ///   @return number of parsed characters                                  
-   size_t Code::OperatorParser::ParseString(
-      const Code::Operator op, Code const& input, Many& lhs
-   ) {
-      size_t progress = 0;
-      size_t depth = 1;
-      while (progress < input.GetCount()) {
-         // Collect all characters in scope, essentially gobbling them  
-         // up into a text container until matching token is reached    
-         const auto relevant = input.RightOf(progress);
-
-         switch (op) {
-         case Operator::OpenString:
-         case Operator::OpenStringAlt: {
-            // Finish up a "string" or `string`                         
-            //TODO handle escapes!
-            const auto closer = op == Operator::OpenString
-               ? Operator::CloseString : Operator::CloseStringAlt;
-
-            if (relevant.StartsWithOperator(closer)) {
-               const auto tokenSize = SerializationRules::Operators
-                  [closer].mToken.size();
-               lhs << Text {Clone(input.LeftOf(progress))};
-               VERBOSE("String parsed: ", lhs);
-               return tokenSize + progress;
-            }
-            break;
-         }
-         case Operator::OpenCharacter: {
-            // Finish up a 'c'haracter                                  
-            //TODO handle escapes!
-            if (relevant.StartsWithOperator(Operator::CloseCharacter)) {
-               const auto tokenSize = SerializationRules::Operators
-                  [Operator::CloseCharacter].mToken.size();
-               lhs << input[0];
-               VERBOSE("Character parsed: ", lhs);
-               return tokenSize + progress;
-            }
-            break;
-         }
-         case Operator::OpenCode: {
-            // Finish up a {code}                                       
-            // Nested code scopes are handled gracefully                
-            if (relevant.StartsWithOperator(Operator::OpenCode))
-               ++depth;
-            else if (relevant.StartsWithOperator(Operator::CloseCode)) {
-               --depth;
-
-               if (0 == depth) {
-                  const auto tokenSize = SerializationRules::Operators
-                     [Operator::CloseCode].mToken.size();
-                  lhs << Clone(input.LeftOf(progress));
-                  VERBOSE("Code parsed: ", lhs);
-                  return tokenSize + progress;
-               }
-            }
-            break;
-         }
-         default:
-            PRETTY_ERROR("Unexpected string operator");
-         }
-
-         ++progress;
-      }
-
-      PRETTY_ERROR("Unexpected EOF when parsing string/character/code");
+      auto verb = Verb::FromMeta(meta, Move(rhs));
+      lhs.RemoveIndex(IndexLast);
+      lhs.SmartPush(IndexBack, Abandon(verb));
+      VERBOSE_ALT("Constructed from VMeta: ", Logger::Cyan, lhs);
    }
+   else if (lhs.Is<TMeta>()) {
+      // The content is for an uninstantiated trait scope               
+      const auto meta = lhs.As<TMeta>(IndexLast);
+      LANGULUS_ASSERT(meta, Flow, "Bad trait id");
 
-   /// Byte scope parser                                                      
-   ///   @param input the code to parse                                       
-   ///   @param lhs [in/out] here goes the byte sequence                      
-   ///   @return number of parsed characters                                  
-   size_t Code::OperatorParser::ParseBytes(Code const& input, Many& lhs) {
-      size_t progress = 0;
-      while (progress < input.GetCount()) {
-         const auto c = input[progress];
-         if (IsDigit(c)) {
-            ++progress;
-            continue;
+      auto trait = Tag::From(meta, Move(rhs));
+      lhs.RemoveIndex(IndexLast);
+      lhs.SmartPush(IndexBack, Abandon(trait));
+      VERBOSE_ALT("Constructed from TMeta: ", Logger::Cyan, lhs);
+   }
+   else if (lhs.Is<Verb>()) {
+      // The content is for an instantiated verb scope                  
+      auto& verb = lhs.As<Verb>(IndexLast);
+      verb.GetArgument().SmartPush(IndexBack, Move(rhs));
+      VERBOSE_ALT("Constructed from Verb ", Logger::Cyan, lhs);
+   }
+   else if (lhs.Is<Recipe>()) {
+      // The content is for an instantiated data scope                  
+      auto& construct = lhs.As<Recipe>(IndexLast);
+      construct << Move(rhs);
+      VERBOSE_ALT("Constructed from Recipe ", Logger::Cyan, lhs);
+   }
+   else {
+      Logger::Error("Bad scope for ", lhs, " (", lhs.GetToken(), ')');
+      Logger::Error("Content to insert is: ", rhs, " (", rhs.GetToken(), ')');
+      LANGULUS_THROW(Flow, "Syntax error - bad scope");
+   }
+}
+
+/// String/character/code scope                                               
+///   @param op the starting operator                                         
+///   @param input the code to parse                                          
+///   @param lhs [in/out] parsed content goes here (lhs)                      
+///   @return number of parsed characters                                     
+size_t OperatorParser::ParseString(
+   const Code::Operator op, Code const& input, Many& lhs
+) {
+   size_t progress = 0;
+   size_t depth = 1;
+   while (progress < input.GetCount()) {
+      // Collect all characters in scope, essentially gobbling them     
+      // up into a text container until matching token is reached       
+      const auto relevant = input.RightOf(progress);
+
+      switch (op) {
+      case Operator::OpenString:
+      case Operator::OpenStringAlt: {
+         // Finish up a "string" or `string`                            
+         //TODO handle escapes!
+         const auto closer = op == Operator::OpenString
+            ? Operator::CloseString : Operator::CloseStringAlt;
+
+         if (relevant.StartsWithOperator(closer)) {
+            const auto tokenSize = SerializationRules::Operators
+               [closer].mToken.size();
+            lhs << Text {Clone(input.LeftOf(progress))};
+            VERBOSE("String parsed: ", lhs);
+            return tokenSize + progress;
          }
-
-         const auto lc = ::std::tolower(c);
-         if (lc >= 'a' and lc <= 'f') {
-            ++progress;
-            continue;
-         }
-
          break;
       }
-
-      // Parse all bytes                                                
-      Bytes result;
-      auto i = input.GetRaw();
-      const auto iEnd = i + progress;
-      uint8_t stager {};
-      uint8_t shifter {4};
-      while (i != iEnd) {
-         stager |= uint8_t(*i - (IsDigit(*i) ? '0' : 'a')) << shifter;
-
-         if (shifter == 0) {
-            result << Byte {stager};
-            stager = {};
-            shifter = 4;
+      case Operator::OpenCharacter: {
+         // Finish up a 'c'haracter                                     
+         //TODO handle escapes!
+         if (relevant.StartsWithOperator(Operator::CloseCharacter)) {
+            const auto tokenSize = SerializationRules::Operators
+               [Operator::CloseCharacter].mToken.size();
+            lhs << input[0];
+            VERBOSE("Character parsed: ", lhs);
+            return tokenSize + progress;
          }
-         else shifter = 0;
+         break;
+      }
+      case Operator::OpenCode: {
+         // Finish up a {code}                                          
+         // Nested code scopes are handled gracefully                   
+         if (relevant.StartsWithOperator(Operator::OpenCode))
+            ++depth;
+         else if (relevant.StartsWithOperator(Operator::CloseCode)) {
+            --depth;
 
-         ++i;
+            if (0 == depth) {
+               const auto tokenSize = SerializationRules::Operators
+                  [Operator::CloseCode].mToken.size();
+               lhs << Clone(input.LeftOf(progress));
+               VERBOSE("Code parsed: ", lhs);
+               return tokenSize + progress;
+            }
+         }
+         break;
+      }
+      default:
+         PRETTY_ERROR("Unexpected string operator");
       }
 
-      // There might be a leftover byte                                 
-      if (shifter == 0)
+      ++progress;
+   }
+
+   PRETTY_ERROR("Unexpected EOF when parsing string/character/code");
+}
+
+/// Byte scope parser                                                         
+///   @param input the code to parse                                          
+///   @param lhs [in/out] here goes the byte sequence                         
+///   @return number of parsed characters                                     
+size_t OperatorParser::ParseBytes(Code const& input, Many& lhs) {
+   size_t progress = 0;
+   while (progress < input.GetCount()) {
+      const auto c = input[progress];
+      if (IsDigit(c)) {
+         ++progress;
+         continue;
+      }
+
+      const auto lc = ::std::tolower(c);
+      if (lc >= 'a' and lc <= 'f') {
+         ++progress;
+         continue;
+      }
+
+      break;
+   }
+
+   // Parse all bytes                                                   
+   Bytes result;
+   auto i = input.GetRaw();
+   const auto iEnd = i + progress;
+   uint8_t stager {};
+   uint8_t shifter {4};
+   while (i != iEnd) {
+      stager |= uint8_t(*i - (IsDigit(*i) ? '0' : 'a')) << shifter;
+
+      if (shifter == 0) {
          result << Byte {stager};
+         stager = {};
+         shifter = 4;
+      }
+      else shifter = 0;
 
-      lhs << Abandon(result);
-      return progress;
+      ++i;
    }
 
-   /// Phase contents                                                         
-   ///   @param op the phase operator                                         
-   ///   @param lhs [in/out] phased content goes here                         
-   ///   @return number of parsed characters                                  
-   size_t Code::OperatorParser::ParsePhase(const Code::Operator op, Many& lhs) {
-      if (op == Operator::Past)
-         lhs.MakePast();
-      else
-         lhs.MakeFuture();
-      return 0;
+   // There might be a leftover byte                                    
+   if (shifter == 0)
+      result << Byte {stager};
+
+   lhs << Abandon(result);
+   return progress;
+}
+
+/// Phase contents                                                            
+///   @param op the phase operator                                            
+///   @param lhs [in/out] phased content goes here                            
+///   @return number of parsed characters                                     
+size_t OperatorParser::ParsePhase(const Code::Operator op, Many& lhs) {
+   if (op == Operator::Past)
+      lhs.MakePast();
+   else
+      lhs.MakeFuture();
+   return 0;
+}
+
+/// Keyword parser (for after # or ## operators)                              
+///   @param op the operator                                                  
+///   @param input the code to parse                                          
+///   @param lhs [in/out] selected idea goes here                             
+///   @return number of parsed characters                                     
+size_t OperatorParser::ParseKeyword(
+   const Code::Operator op, Code const& input, Many& lhs
+) {
+   size_t progress = 0;
+   if (SkippedParser::Peek(input)) {
+      PRETTY_ERROR(
+         "Syntax error - # and ## should be followed "
+         "by either a keyword, or a scope"
+      );
    }
-   
-   /// Keyword parser (for after # or ## operators)                           
-   ///   @param op the operator                                               
-   ///   @param input the code to parse                                       
-   ///   @param lhs [in/out] selected idea goes here                          
-   ///   @return number of parsed characters                                  
-   size_t Code::OperatorParser::ParseKeyword(
-      const Code::Operator op, Code const& input, Many& lhs
-   ) {
-      size_t progress = 0;
-      if (SkippedParser::Peek(input)) {
+
+   // Try parsing a keyword                                             
+   Many content;
+   const auto keyword = KeywordParser::Isolate(input);
+   if (keyword.empty()) {
+      // Try parsing a scope?                                           
+      const auto next_op = OperatorParser::Peek(input);
+      switch (next_op) {
+      case Operator::OpenScope:     case Operator::OpenScopeAlt:
+      case Operator::OpenString:    case Operator::OpenStringAlt:
+      case Operator::OpenCharacter: case Operator::OpenCode:
+         break;
+      default:
          PRETTY_ERROR(
-            "Syntax error - # and ## should be followed "
-            "by either a keyword, or a scope"
+            "Syntax error - # and ## should be followed by "
+            "either a keyword, or a scope"
          );
       }
 
-      // Try parsing a keyword                                          
-      Many content;
-      const auto keyword = KeywordParser::Isolate(input);
-      if (keyword.empty()) {
-         // Try parsing a scope?                                        
-         const auto next_op = OperatorParser::Peek(input);
-         switch (next_op) {
-         case Operator::OpenScope:     case Operator::OpenScopeAlt:
-         case Operator::OpenString:    case Operator::OpenStringAlt:
-         case Operator::OpenCharacter: case Operator::OpenCode:
-            break;
-         default:
-            PRETTY_ERROR(
-               "Syntax error - # and ## should be followed by "
-               "either a keyword, or a scope"
-            );
-         }
-
-         // Scoped data was found                                       
-         progress += OperatorParser::Parse(next_op, input, content, 0, true);
-      }
-      else {
-         // If reached, then a keyword was found                        
-         progress += keyword.size();
-         content << Text {Clone(keyword)};
-      }
-
-      if (op == Operator::SelectIdea) {
-         // Implicitly create/select an idea                            
-         Verbs::Select verb {Construct::FromToken("Idea", Abandon(content))};
-         verb.SetSource(Many::Past("Thing"));
-
-         // Check if there's a scope after an idea - it can be used to  
-         // assemble the idea into data, while optionally providing     
-         // future arguments for that process                           
-         const auto tail = input.RightOf(progress);
-         const auto next_op = OperatorParser::Peek(tail);
-         if (next_op == Operator::OpenScope
-         or next_op == Operator::OpenScopeAlt) {
-            // Scoped data was found                                    
-            // Wrap everything in a Verbs::Do                           
-            Many arguments;
-            progress += OperatorParser::Parse(next_op, tail, arguments, 0, true);
-
-            Verbs::Do doer {Abandon(arguments)};
-            doer.SetSource(Abandon(verb));
-            lhs.SmartPush(IndexBack, Abandon(doer));
-         }
-         else lhs.SmartPush(IndexBack, Abandon(verb));
-      }
-      else if (op == Operator::SelectThing) {
-         // Implicitly select an object by name                         
-         Verbs::Select verb {Construct::FromToken("Thing", Abandon(content))};
-         verb.SetSource(Many::Past("Thing"));
-         lhs.SmartPush(IndexBack, Abandon(verb));
-      }
-      else {
-         PRETTY_ERROR("Not a supported keyword operator: ",
-            SerializationRules::Operators[op].mToken);
-      }
-
-      return progress;
+      // Scoped data was found                                          
+      progress += OperatorParser::Parse(next_op, input, content, 0, true);
+   }
+   else {
+      // If reached, then a keyword was found                           
+      progress += keyword.size();
+      content << Text {Clone(keyword)};
    }
 
-   /// Execute a reflected verb operator                                      
-   ///   @param op the operator to execute                                    
-   ///   @param input the code to parse                                       
-   ///   @param lhs [in/out] result of the operator goes here                 
-   ///   @param optimize whether or not to attempt executing at compile-time  
-   ///   @return number of parsed characters                                  
-   size_t Code::OperatorParser::ParseReflected(
-      Verb& op, Code const& input, Many& lhs, bool optimize
-   ) {
-      size_t progress = 0;
-      Code relevant = input;
+   if (op == Operator::SelectIdea) {
+      // Implicitly create/select an idea                               
+      Verbs::Select verb {Recipe::FromToken("Idea", Abandon(content))};
+      verb.SetSource(Many::Past("Thing"));
 
-      // Parse charge if any                                            
-      if (ChargeParser::Peek(relevant) != Operator::NoOperator) {
-         progress += ChargeParser::Parse(relevant, op);
-         relevant = input.RightOf(progress);
+      // Check if there's a scope after an idea - it can be used to     
+      // assemble the idea into data, while optionally providing        
+      // future arguments for that process                              
+      const auto tail = input.RightOf(progress);
+      const auto next_op = OperatorParser::Peek(tail);
+      if (next_op == Operator::OpenScope
+      or next_op == Operator::OpenScopeAlt) {
+         // Scoped data was found                                       
+         // Wrap everything in a Verbs::Do                              
+         Many arguments;
+         progress += OperatorParser::Parse(next_op, tail, arguments, 0, true);
+
+         Verbs::Do doer {Abandon(arguments)};
+         doer.SetSource(Abandon(verb));
+         lhs.SmartPush(IndexBack, Abandon(doer));
       }
-      
-      // Parse RHS for the operator                                     
-      progress += UnknownParser::Parse(
-         relevant, op.GetArgument(), op.GetVerb()->mPrecedence, optimize);
+      else lhs.SmartPush(IndexBack, Abandon(verb));
+   }
+   else if (op == Operator::SelectThing) {
+      // Implicitly select an object by name                            
+      Verbs::Select verb {Recipe::FromToken("Thing", Abandon(content))};
+      verb.SetSource(Many::Past("Thing"));
+      lhs.SmartPush(IndexBack, Abandon(verb));
+   }
+   else {
+      PRETTY_ERROR("Not a supported keyword operator: ",
+         SerializationRules::Operators[op].mToken);
+   }
 
-      if (optimize and not op.GetCharge().IsFlowDependent()) {
-         // Try executing operator at compile-time                      
-         // We must disable multicast for this                          
-         VERBOSE_TAB("Attempting compile-time execution... ");
+   return progress;
+}
 
-         // Next-execute the argument first                             
-         Many unusedContext;
-         Many argument;
-         if (Execute(op.GetArgument(), unusedContext, argument, true, true)) {
-            // Then the verb itself                                     
-            Many opSrcBackup = Move(op.GetSource());
-            Many opArgBackup = Move(op.GetArgument());
-            op.SetSource(lhs);
-            op.SetArgument(argument);
-            Execute<1, 1, 0>(lhs, op);
+/// Execute a reflected verb operator                                         
+///   @param op the operator to execute                                       
+///   @param input the code to parse                                          
+///   @param lhs [in/out] result of the operator goes here                    
+///   @param optimize whether or not to attempt executing at compile-time     
+///   @return number of parsed characters                                     
+size_t OperatorParser::ParseReflected(
+   Verb& op, Code const& input, Many& lhs, bool optimize
+) {
+   size_t progress = 0;
+   Code relevant = input;
 
-            if (op.GetSuccesses()) {
-               // The verb was executed at compile-time, so directly    
-               // substitute LHS with the verb's output                 
-               VERBOSE("Verb was executed at compile time: ", op.GetOutput());
-               lhs = Move(op.GetOutput());
-               return progress;
-            }
-            else {
-               op.SetSource(Abandon(opSrcBackup));
-               //op.SetArgument(Abandon(opArgBackup));
-               IF_SAFE(op.GetOutput().Reset());
-            }
-         }
-         else {
-            // Argument didn't execute, but we could still try to       
-            // pre-compute the op. Like for example when conjuncting    
-            // two containers.                                          
-            Many opSrcBackup = Move(op.GetSource());
-            op.SetSource(lhs);
-            Execute<1, 1, 0>(lhs, op);
-
-            if (op.GetSuccesses()) {
-               // The verb was executed at compile-time, so directly    
-               // substitute LHS with the verb's output                 
-               VERBOSE("Verb was executed at compile time: ", op.GetOutput());
-               lhs = Move(op.GetOutput());
-               return progress;
-            }
-            else {
-               op.SetSource(Abandon(opSrcBackup));
-               IF_SAFE(op.GetOutput().Reset());
-            }
-         }
-      }
-
-      // Either compile-time execution is impossible, or we don't       
-      // want it, so directly substitute LHS with the verb              
-      op.SetSource(Move(lhs));
-      lhs = Move(op);
-      return progress;
+   // Parse charge if any                                               
+   if (ChargeParser::Peek(relevant) != Operator::NoOperator) {
+      progress += ChargeParser::Parse(relevant, op);
+      relevant = input.RightOf(progress);
    }
    
-   /// Peek inside input, and return true if it begins with one of the        
-   /// built-in operators for charging                                        
-   ///   @param input the code to peek into                                   
-   ///   @return true if input begins with an operator for charging           
-   Code::Operator Code::ChargeParser::Peek(Code const& input) noexcept {
+   // Parse RHS for the operator                                        
+   progress += UnknownParser::Parse(
+      relevant, op.GetArgument(), op.GetVerb()->mPrecedence, optimize);
+
+   if (optimize and not op.GetCharge().IsFlowDependent()) {
+      // Try executing operator at compile-time                         
+      // We must disable multicast for this                             
+      VERBOSE_TAB("Attempting compile-time execution... ");
+
+      // Next-execute the argument first                                
+      Many unusedContext;
+      Many argument;
+      if (Execute(op.GetArgument(), unusedContext, argument, true, true)) {
+         // Then the verb itself                                        
+         Many opSrcBackup = Move(op.GetSource());
+         Many opArgBackup = Move(op.GetArgument());
+         op.SetSource(lhs);
+         op.SetArgument(argument);
+         Execute<1, 1, 0>(lhs, op);
+
+         if (op.GetSuccesses()) {
+            // The verb was executed at compile-time, so directly       
+            // substitute LHS with the verb's output                    
+            VERBOSE("Verb was executed at compile time: ", op.GetOutput());
+            lhs = Move(op.GetOutput());
+            return progress;
+         }
+         else {
+            op.SetSource(Abandon(opSrcBackup));
+            //op.SetArgument(Abandon(opArgBackup));
+            IF_SAFE(op.GetOutput().Reset());
+         }
+      }
+      else {
+         // Argument didn't execute, but we could still try to          
+         // pre-compute the op. Like for example when conjuncting       
+         // two containers.                                             
+         Many opSrcBackup = Move(op.GetSource());
+         op.SetSource(lhs);
+         Execute<1, 1, 0>(lhs, op);
+
+         if (op.GetSuccesses()) {
+            // The verb was executed at compile-time, so directly       
+            // substitute LHS with the verb's output                    
+            VERBOSE("Verb was executed at compile time: ", op.GetOutput());
+            lhs = Move(op.GetOutput());
+            return progress;
+         }
+         else {
+            op.SetSource(Abandon(opSrcBackup));
+            IF_SAFE(op.GetOutput().Reset());
+         }
+      }
+   }
+
+   // Either compile-time execution is impossible, or we don't          
+   // want it, so directly substitute LHS with the verb                 
+   op.SetSource(Move(lhs));
+   lhs = Move(op);
+   return progress;
+}
+
+/// Peek inside input, and return true if it begins with one of the           
+/// built-in operators for charging                                           
+///   @param input the code to peek into                                      
+///   @return true if input begins with an operator for charging              
+auto ChargeParser::Peek(Code const& input) noexcept -> Code::Operator {
+   // Parse skippables if any                                           
+   auto relevant = input;
+   if (SkippedParser::Peek(relevant)) {
+      const auto offset = SkippedParser::Parse(relevant);
+      relevant = input.RightOf(offset);
+   }
+
+   // Find the charge operator                                          
+   for (size_t i = 0; i < Operator::OpCounter; ++i) {
+      if (SerializationRules::Operators[i].mCharge
+      and relevant.StartsWithOperator(i))
+         return Operator(i);
+   }
+
+   return Operator::NoOperator;
+}
+
+/// Parse mass/time/frequency/priority operators                              
+///   @param input the code to parse                                          
+///   @param charge [out] parsed charge goes here                             
+///   @return number of parsed characters                                     
+size_t ChargeParser::Parse(Code const& input, Charge& charge) {
+   size_t progress = 0;
+   VERBOSE_TAB("Parsing charge");
+
+   while (progress < input.GetCount()) {
+      // Scan input until end of charge operators/code                  
+      auto relevant = input.RightOf(progress);
+      if (not relevant or relevant[0] == '\0')
+         break;
+
       // Parse skippables if any                                        
-      auto relevant = input;
       if (SkippedParser::Peek(relevant)) {
-         const auto offset = SkippedParser::Parse(relevant);
-         relevant = input.RightOf(offset);
+         progress += SkippedParser::Parse(relevant);
+         relevant = input.RightOf(progress);
       }
 
       // Find the charge operator                                       
+      auto op = Operator::NoOperator;
       for (size_t i = 0; i < Operator::OpCounter; ++i) {
          if (SerializationRules::Operators[i].mCharge
-         and relevant.StartsWithOperator(i))
-            return Operator(i);
-      }
-
-      return Operator::NoOperator;
-   }
-
-   /// Parse mass/time/frequency/priority operators                           
-   ///   @param input the code to parse                                       
-   ///   @param charge [out] parsed charge goes here                          
-   ///   @return number of parsed characters                                  
-   size_t Code::ChargeParser::Parse(Code const& input, Charge& charge) {
-      size_t progress = 0;
-      VERBOSE_TAB("Parsing charge");
-
-      while (progress < input.GetCount()) {
-         // Scan input until end of charge operators/code               
-         auto relevant = input.RightOf(progress);
-         if (not relevant or relevant[0] == '\0')
-            break;
-
-         // Parse skippables if any                                     
-         if (SkippedParser::Peek(relevant)) {
-            progress += SkippedParser::Parse(relevant);
+         and relevant.StartsWithOperator(i)) {
+            op = Operator(i);
+            progress += SerializationRules::Operators[i].mToken.size();
             relevant = input.RightOf(progress);
-         }
-
-         // Find the charge operator                                    
-         auto op = Operator::NoOperator;
-         for (size_t i = 0; i < Operator::OpCounter; ++i) {
-            if (SerializationRules::Operators[i].mCharge
-            and relevant.StartsWithOperator(i)) {
-               op = Operator(i);
-               progress += SerializationRules::Operators[i].mToken.size();
-               relevant = input.RightOf(progress);
-               break;
-            }
-         }
-
-         if (op == Operator::NoOperator)
-            return progress;
-
-         VERBOSE("Parsing charge operator: [",
-            SerializationRules::Operators[op].mToken, ']');
-
-         // Skip any spacing and consume '-' operators here             
-         bool reverse = false;
-         while (SkippedParser::Peek(relevant) or relevant[0] == '-') {
-            progress += SkippedParser::Parse(relevant);
-            relevant = input.RightOf(progress);
-            if (relevant[0] == '-') {
-               ++progress;
-               reverse = not reverse;
-               relevant = input.RightOf(progress);
-            }
-         }
-
-         // For each charge operator encountered - parse a RHS          
-         Many rhs;
-         if (KeywordParser::Peek(relevant)) {
-            // Charge parameter can be a keyword, like a constant,      
-            // but is not allowed to have charge on its own, to         
-            // avoid endless nesting - you must wrap it in a scope      
-            progress += KeywordParser::Parse(relevant, rhs, false);
-         }
-         else if (NumberParser::Peek(relevant)) {
-            // Can be a literal number                                  
-            progress += NumberParser::Parse(relevant, rhs);
-         }
-         else if (OperatorParser::Peek(relevant) == Operator::OpenScope) {
-            // Can be anything wrapped in a scope                       
-            progress += OperatorParser::Parse(Operator::OpenScope, relevant, rhs, 0, true);
-         }
-         else PRETTY_ERROR("Unexpected symbol");
-
-         // Save changes                                                
-         // AsCast may throw here, if RHS did not evaluate or convert   
-         // to real - this is later caught and handled gracefully       
-         auto asReal = rhs.AsCast<Real>();
-         if (reverse)
-            asReal *= Real {-1};
-
-         switch (op) {
-         case Operator::Mass:
-            charge.mMass = asReal;
             break;
-         case Operator::Rate:
-            charge.mRate = asReal;
-            break;
-         case Operator::Time:
-            charge.mTime = asReal;
-            break;
-         case Operator::Priority:
-            charge.mPriority = asReal;
-            break;
-         default:
-            PRETTY_ERROR("Invalid charge operator: ",
-               SerializationRules::Operators[op].mToken);
          }
       }
 
-      VERBOSE("Charge parsed: ", charge);
-      return progress;
+      if (op == Operator::NoOperator)
+         return progress;
+
+      VERBOSE("Parsing charge operator: [",
+         SerializationRules::Operators[op].mToken, ']');
+
+      // Skip any spacing and consume '-' operators here                
+      bool reverse = false;
+      while (SkippedParser::Peek(relevant) or relevant[0] == '-') {
+         progress += SkippedParser::Parse(relevant);
+         relevant = input.RightOf(progress);
+         if (relevant[0] == '-') {
+            ++progress;
+            reverse = not reverse;
+            relevant = input.RightOf(progress);
+         }
+      }
+
+      // For each charge operator encountered - parse a RHS             
+      Many rhs;
+      if (KeywordParser::Peek(relevant)) {
+         // Charge parameter can be a keyword, like a constant,         
+         // but is not allowed to have charge on its own, to            
+         // avoid endless nesting - you must wrap it in a scope         
+         progress += KeywordParser::Parse(relevant, rhs, false);
+      }
+      else if (NumberParser::Peek(relevant)) {
+         // Can be a literal number                                     
+         progress += NumberParser::Parse(relevant, rhs);
+      }
+      else if (OperatorParser::Peek(relevant) == Operator::OpenScope) {
+         // Can be anything wrapped in a scope                          
+         progress += OperatorParser::Parse(Operator::OpenScope, relevant, rhs, 0, true);
+      }
+      else PRETTY_ERROR("Unexpected symbol");
+
+      // Save changes                                                   
+      // AsCast may throw here, if RHS did not evaluate or convert      
+      // to real - this is later caught and handled gracefully          
+      auto asReal = rhs.AsCast<Real>();
+      if (reverse)
+         asReal *= Real {-1};
+
+      switch (op) {
+      case Operator::Mass:
+         charge.mMass = asReal;
+         break;
+      case Operator::Rate:
+         charge.mRate = asReal;
+         break;
+      case Operator::Time:
+         charge.mTime = asReal;
+         break;
+      case Operator::Priority:
+         charge.mPriority = asReal;
+         break;
+      default:
+         PRETTY_ERROR("Invalid charge operator: ",
+            SerializationRules::Operators[op].mToken);
+      }
    }
+
+   VERBOSE("Charge parsed: ", charge);
+   return progress;
 }

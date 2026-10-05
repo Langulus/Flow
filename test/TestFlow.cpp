@@ -254,18 +254,18 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       }
    }
 
-   GIVEN("The script: Create!-1(Verb(?(Number,DMeta,Construct), ??(Number,DMeta,Construct)))") {
+   GIVEN("The script: Create!-1(Verb(?(Number,DMeta,Recipe), ??(Number,DMeta,Recipe)))") {
       Many a1 = Many::Past();
       a1 << MetaOf<A::Number>()
          << MetaOf<DMeta>()
-         << MetaOf<Construct>();
+         << MetaOf<Recipe>();
 
       Many a2 = Many::Future();
       a2 << MetaOf<A::Number>()
          << MetaOf<DMeta>()
-         << MetaOf<Construct>();
+         << MetaOf<Recipe>();
 
-      const Code code = "Create!-1(Verb(?(Number,DMeta,Construct), ??(Number,DMeta,Construct)))";
+      const Code code = "Create!-1(Verb(?(Number,DMeta,Recipe), ??(Number,DMeta,Recipe)))";
       Many const required = Verbs::Create {
          Many {Verb {a1, a2}}
       }.SetPriority(-1);
@@ -280,7 +280,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    GIVEN("The script: ? create Thing(User)") {
       const Code code = "? create Thing(User)";
       Many const required = Verbs::Create {
-         Construct::From<Thing>(MetaOf<User>())
+         Recipe::From<Thing>(MetaOf<User>())
       }.SetSource(Many::Past());
 
       WHEN("Parsed") {
@@ -319,7 +319,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       Many const required = Verbs::Select {Many::Future()}
          .SetSource(
             Verbs::Select {
-               Construct::From<Thing>(MetaOf<User>())
+               Recipe::From<Thing>(MetaOf<User>())
             }.SetSource(Many::Past())
          );
 
@@ -362,7 +362,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       Verbs::Associate first {Many::Future()};
       first.SetSource(Many::Past());
 
-      Verbs::Select second {Construct::From<Thing>(sessionOrUser)};
+      Verbs::Select second {Recipe::From<Thing>(sessionOrUser)};
       second.SetSource(Many::Past());
 
       Verbs::Select third {Many::Future()};
@@ -403,7 +403,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: Thing(Universe, Window, Temporal)") {
       const Code code = "Thing(Universe, Window, Temporal)";
-      Many const required = Construct::From<Thing>(
+      Many const required = Recipe::From<Thing>(
          MetaOf<Universe>(),
          MetaOf<Window>(),
          MetaOf<Temporal>()

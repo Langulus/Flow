@@ -18,8 +18,8 @@
 namespace Langulus::Flow
 {
    struct Missing;
-   struct MissingFuture;
    struct MissingPast;
+   struct MissingFuture;
    struct Entangled;
    struct Entanglement;
    struct Redundant;
@@ -43,12 +43,10 @@ namespace Langulus::Flow
    /// them, which means that the temporal flow acts as a time-based linker,  
    /// that actively seeks the past and future inputs for suitable data to    
    /// complete your scripts at runtime.                                      
-   ///                                                                        
    struct Temporal final {
-      //using Pasts   = TMany<MissingPast*>;
-      //using Futures = TMany<MissingFuture*>;
-
    protected:
+      friend struct Missing;
+      friend struct MissingPast;
       friend struct MissingFuture;
 
       // Parent flow                                                    
@@ -88,23 +86,23 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) Temporal(Temporal*);
 
       LANGULUS_API(FLOW) Temporal(Temporal&&) noexcept = default;
-      LANGULUS_API(FLOW) Temporal(const Temporal&) noexcept = default;
+      LANGULUS_API(FLOW) Temporal(Temporal const&) noexcept = default;
       LANGULUS_API(FLOW) ~Temporal() = default;
       LANGULUS_API(FLOW) Temporal& operator = (Temporal&&) noexcept = default;
-      LANGULUS_API(FLOW) Temporal& operator = (const Temporal&) noexcept = default;
+      LANGULUS_API(FLOW) Temporal& operator = (Temporal const&) noexcept = default;
 
       LANGULUS_API(FLOW) operator Code() const;
       LANGULUS_API(FLOW) operator Text() const;
 
       LANGULUS_API(FLOW)
-      bool operator == (const Temporal&) const;
+      bool operator == (Temporal const&) const;
 
       LANGULUS_API(FLOW) bool IsValid() const;
 
       LANGULUS_API(FLOW) Time GetUptime() const;
       LANGULUS_API(FLOW) Time GetDeltaTime() const;
 
-      LANGULUS_API(FLOW) void Merge(const Temporal&);
+      LANGULUS_API(FLOW) void Merge(Temporal const&);
 
       template<CT::NotVoid...TN> requires (sizeof...(TN) >= 1)
       Many Push(TN&&...tn) {
@@ -119,18 +117,20 @@ namespace Langulus::Flow
 
    protected:
       LANGULUS_API(FLOW) static Many Compile(Many const&, Real priority = 0);
-      LANGULUS_API(FLOW) /*static*/ bool PushFutures(Many const&, MissingFuture&, const Ref<Entanglement>&) noexcept;
+      LANGULUS_API(FLOW) /*static*/ bool PushFutures(Many const&, MissingFuture&, Ref<Entanglement> const&) noexcept;
 
-      LANGULUS_API(FLOW) void Link(Many const&, const Ref<Entanglement>&);
-      LANGULUS_API(FLOW) void LinkRelative(Many const&, const Verb&, const Ref<Entanglement>&);
+      LANGULUS_API(FLOW) void Link(Many const&, Ref<Entanglement> const&);
+      LANGULUS_API(FLOW) void LinkRelative(Many const&, Verb const&, Ref<Entanglement> const&);
       LANGULUS_API(FLOW) Many PushInner(Many);
 
       void ResetInner(Many&);
       static bool DumpInner(Many const&, bool newline, bool& first);
       static void DumpSeparator(Many const&, bool newline, bool& first);
-      static void DumpMissing(const Missing&);
-      static void DumpVerb(const Verb&);
-      static void DumpTag(const Tag&);
-      static void DumpRecipe(const Recipe&);
+      static void DumpMissing(Missing const&);
+      static void DumpVerb(Verb const&);
+      static void DumpTag(Tag const&);
+      static void DumpRecipe(Recipe const&);
    };
 }
+
+LANGULUS_MORPHISM(Langulus::Flow::Temporal, Langulus::Annies::Text, Langulus::Flow::Code);

@@ -23,6 +23,7 @@
    #define VERBOSE_FUTURE(...)            LANGULUS(NOOP)
 #endif
 
+using namespace Langulus;
 using namespace Langulus::Flow;
 
 
@@ -80,7 +81,7 @@ bool Missing::IsSatisfied() const {
 }
 
 /// Insert data into a past point                                             
-///   @param content - the content to push                                    
+///   @param content the content to push                                      
 ///   @return true if mContent changed                                        
 void MissingPast::FillPast(Many const& content) {
    if (not content) {
@@ -189,7 +190,7 @@ void MissingPast::FillPast(Many const& content) {
 /// will be filled from either what's currently in this future point, or from 
 /// contents of the future points above this one                              
 ///   @attention assumes 'content' has been Temporal::Compiled previously     
-///   @param content - the content to push                                    
+///   @param content the content to push                                      
 ///   @return true if mContent changed                                        
 void MissingFuture::FillFuture(Many const& content, Temporal& flow) {
    if (not content) {
@@ -317,8 +318,8 @@ void MissingFuture::FillFuture(Many const& content, Temporal& flow) {
 /// time stacks. All else gets inserted in contents of this missing future    
 /// point. It is important this dispatch is done at this final step, because  
 /// rated/timed verbs still have to be linked with the relevant future point  
-///   @param linked - the compiled & linked scope to insert                   
-///   @param flow - the flow to use when inserting rated/timed verbs          
+///   @param linked the compiled & linked scope to insert                     
+///   @param flow the flow to use when inserting rated/timed verbs            
 void MissingFuture::Commit(Many const& linked, Temporal& flow) {
    LglsAssumeDev(not linked.IsDeep(),
       "Can't commit a deep scope here");
@@ -333,7 +334,7 @@ void MissingFuture::Commit(Many const& linked, Temporal& flow) {
    }
    else if (linked.template Is<Verb>()) {
       //TODO what about rated/timed recipes?
-      linked.ForEach([&](const Verb& v) {
+      linked.ForEach([&](Verb const& v) {
          const auto time = v.GetTime();
          const auto rate = v.GetRate();
          TMany<Verb> local = v;
@@ -348,21 +349,21 @@ void MissingFuture::Commit(Many const& linked, Temporal& flow) {
             }
 
             LglsAssumeDev(found->mFuture, "Invalid future");
-            found->mFuture->Commit(local, found.GetValue());
+            found->mFuture->Commit(local, **found);
 
             //found.GetValue().LinkRelative(local, v, entanglement);
          }
          else if (rate) {
             // Verb is rated, forward it to the frequency stack         
             local[0].SetRate(0);
-            auto found = flow.mFrequencyStack.FindIt(rate);
+            auto found = flow.mFrequencyStack.Find(rate);
             if (not found) {
                flow.mFrequencyStack.Merge(rate, flow);
-               found = flow.mFrequencyStack.FindIt(rate);
+               found = flow.mFrequencyStack.Find(rate);
             }
 
             LglsAssumeDev(found->mFuture, "Invalid future");
-            found->mFuture->Commit(local, found.GetValue());
+            found->mFuture->Commit(local, **found);
 
             /*LANGULUS_ASSERT(
                found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
@@ -413,8 +414,8 @@ decltype(auto) Missing::VerboseLinking(const T& what, const MissingFuture& conte
 
 /// Links the missing past points with the provided context                   
 ///   @attention assumes argument is a valid scope                            
-///   @param scope - the scope to link                                        
-///   @param context - the future point we're using as past context           
+///   @param scope the scope to link                                          
+///   @param context the future point we're using as past context             
 ///   @return the linked equivalent to the provided scope                     
 Many Missing::Link(Many const& scope, const MissingFuture& context) const {
    Many result;
@@ -441,17 +442,17 @@ Many Missing::Link(Many const& scope, const MissingFuture& context) const {
 
    // Link all missing past points in the provided scope using context  
    const auto found = scope.ForEach(
-      [&](const Tag& tag) {
+      [&](Tag const& tag) {
          // Link a tag                                                  
          const auto tab = VerboseLinking(tag, context);
          result << Tag::From(tag, Link(tag, context));
       },
-      [&](const Recipe& recipe) {
+      [&](Recipe const& recipe) {
          // Link a construct                                            
          const auto tab = VerboseLinking(recipe, context);
          result << Recipe::From(recipe, Link(recipe.GetDescriptor(), context));
       },
-      [&](const Verb& verb) {
+      [&](Verb const& verb) {
          // Link a verb                                                 
          const auto tab = VerboseLinking(verb, context);
          auto source = Link(verb.GetSource(), context);
@@ -497,11 +498,11 @@ Many Missing::Link(Many const& scope, const MissingFuture& context) const {
    return Abandon(result);
 }
 
-/// Scan for future points below a given context                              
+/// Scan for future points below a given context.                             
 /// If a future point contains other future points below it that are of the   
-/// same priority, then it's considered suspended                             
-///   @param context - the future point to search below                       
-///   @param stack - used for nesting deep contents                           
+/// same priority, then it's considered suspended.                            
+///   @param context the future point to search below                         
+///   @param stack used for nesting deep contents                             
 ///   @return the hierarchy of future points below the context                
 void Missing::RemapFutures(MissingFuture& context, Many const& stack) {
    if (not stack or stack.IsSparse())
@@ -521,15 +522,15 @@ void Missing::RemapFutures(MissingFuture& context, Many const& stack) {
 
    // Flat if reached                                                   
    stack.ForEachRev(
-      [&](const Tag& tag) {
+      [&](Tag const& tag) {
          // Nest inside traits                                          
          RemapFutures(context, tag.GetData());
       },
-      [&](const Recipe& recipe) {
+      [&](Recipe const& recipe) {
          // Nest inside constructs                                      
          RemapFutures(context, recipe.GetDescriptor());
       },
-      [&](const Verb& verb) {
+      [&](Verb const& verb) {
          // Nest inside verbs                                           
          RemapFutures(context, verb.GetArgument());
          RemapFutures(context, verb.GetSource());
@@ -565,18 +566,21 @@ Missing::operator Text() const {
    }
 
    if (mPriority or mContent) {
-      result += '(';
+      result += Serial::OpenScope.Token;
       Langulus::Serialize(mFilter, result);
 
-      if (mPriority)
-         result += Text {" !", mPriority};
+      if (mPriority) {
+         result += ' ';
+         result += Serial::Priority.Token;
+         result += mPriority;
+      }
 
       if (mContent) {
-         result += ", ";
+         result += Serial::And.Token;
          Langulus::Serialize(mContent, result);
       }
 
-      result += ')';
+      result += Serial::CloseScope.Token;
    }
    else Langulus::Serialize(mFilter, result);
    return result;

@@ -29,9 +29,10 @@ namespace Langulus::Flow
    /// with the same descriptor twice.                                        
    ///                                                                        
    template<class T, FactoryUsage USAGE = FactoryUsage::Default>
-   class TFactory : public Annies::THive<T> {
-   public:
-      using Base = Annies::THive<T>;
+   struct TFactory : Annies::THive<T> {
+      using CTTI_ReflectAs    = TFactory;
+      using Base              = Annies::THive<T>;
+      
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
       static constexpr bool IsNotUnique = not IsUnique;
 
@@ -53,8 +54,12 @@ namespace Langulus::Flow
       /// This is needed, because elements must be remapped to a new valid    
       /// owner upon move                                                     
       TFactory() = default;
-      TFactory(const TFactory&) = delete;
-      TFactory(TFactory&&) = delete;
+      TFactory(const TFactory&) = delete("Factory elements are bound to the "
+                                         "factory that produced them, "
+                                         "and can't be copied to another");
+      TFactory(TFactory&&)      = delete("Factory elements are bound to the "
+                                         "factory that produced them, "
+                                         "and can't be moved to another");
      ~TFactory();
 
       auto operator = (TFactory&&) noexcept -> TFactory&;

@@ -125,7 +125,7 @@ bool ExecuteAND(
 
             output.Compose(Abandon(local));
          },
-         [&](const Tag& tag) {
+         [&](Tag const& tag) {
             // Nest if traits, but retain each trait                    
             if (tag.IsMissing()) {
                // Never touch missing stuff, only propagate it          
@@ -143,16 +143,16 @@ bool ExecuteAND(
 
             output.Compose(Tag::From(tag, Abandon(local)));
          },
-         [&](const Recipe& recipe) {
+         [&](Recipe const& recipe) {
             // Nest if recipes, but retain each recipe                  
             VERBOSE("Executing recipe: ", recipe);
 
             Many local;
             if (not Flow::Execute(recipe.GetDescriptor(), environment, local, integrate, skipVerbs, silent)) {
                if (silent)
-                  throw Exception("Construct AND failure");
+                  throw Exception("Recipe AND failure");
                else
-                  LglsError("Construct AND failure: "/*, flow*/);
+                  LglsError("Recipe AND failure: "/*, flow*/);
             }
 
             auto solved = Recipe::From(recipe, Abandon(local));
@@ -203,9 +203,9 @@ bool ExecuteAND(
 
                   if (not ExecuteVerb(context, verb, silent)) {
                      if (silent)
-                        LANGULUS_THROW(Flow, "Construct AND failure");
+                        LANGULUS_THROW(Flow, "Recipe AND failure");
                      else
-                        LANGULUS_OOPS(Flow, "Construct AND failure: ");
+                        LANGULUS_OOPS(Flow, "Recipe AND failure: ");
                   }
                   else if (verb.GetOutput())
                      local << Abandon(verb.GetOutput());
@@ -216,7 +216,7 @@ bool ExecuteAND(
             output.SmartPush(IndexBack, Abandon(local));*/
             TODO();
          },
-         [&](const Verb& constVerb) {
+         [&](Verb const& constVerb) {
             // Execute verbs                                         
             if (skipVerbs)
                return Loop::Break;
@@ -286,7 +286,7 @@ bool ExecuteOR(
    }
    else {
       executed = flow.ForEach(
-         [&](const Tag& tag) {
+         [&](Tag const& tag) {
             // Nest if traits, but retain each trait                 
             if (tag.IsMissing()) {
                // Never touch missing stuff, only propagate it       
@@ -301,7 +301,7 @@ bool ExecuteOR(
                output.Compose(Tag::From(tag, Abandon(local)));
             }
          },
-         [&](const Recipe& recipe) {
+         [&](Recipe const& recipe) {
             // Nest if constructs, but retain each construct         
             Many local;
             if (Flow::Execute(recipe.GetDescriptor(), environment, local, integrate, skipVerbs, silent)) {
@@ -359,7 +359,7 @@ bool ExecuteOR(
             output.SmartPush(IndexBack, Abandon(local));*/
             TODO();
          },
-         [&](const Verb& constVerb) {
+         [&](Verb const& constVerb) {
             // Execute verbs                                            
             if (localSkipVerbs)
                return Loop::Break;

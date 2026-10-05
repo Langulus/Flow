@@ -25,7 +25,7 @@ SCENARIO("Test factories on the stack", "[factory]") {
 		REQUIRE(factory.GetType() == MetaOf<Producible>());
 
 		WHEN("Two default elements produced") {
-         const auto descriptor = Construct::From<Producible>();
+         const auto descriptor = Recipe::From<Producible>();
          Verbs::Create creator {descriptor};
          const Producible prototype {&producer, descriptor.GetDescriptor()};
          Many const normalized {};
@@ -88,7 +88,7 @@ SCENARIO("Test factories on the stack", "[factory]") {
       REQUIRE(factory.GetType() == MetaOf<Producible>());
 
 		WHEN("Two default elements produced") {
-         const auto descriptor = Construct::From<Producible>();
+         const auto descriptor = Recipe::From<Producible>();
 			Verbs::Create creator {descriptor};
          const Producible prototype {&producer, descriptor.GetDescriptor()};
 
@@ -126,7 +126,7 @@ SCENARIO("Test factories on the stack", "[factory]") {
          TMany<Producer> context;
          context.New(1);
 
-         const auto descriptor = Construct::From<Producible>(
+         const auto descriptor = Recipe::From<Producible>(
             Traits::Parent(&context[0]),
             "test"_text
          );
@@ -169,7 +169,7 @@ SCENARIO("Test factories on the stack", "[factory]") {
 		}
 
 		WHEN("Two elements produced via descriptors, with parent on the stack") {
-         const auto descriptor = Construct::From<Producible>(
+         const auto descriptor = Recipe::From<Producible>(
             Traits::Parent(&producer),
             "test"_text
          );
@@ -231,7 +231,7 @@ SCENARIO("Test factories on the heap", "[factory]") {
 		REQUIRE(factory.GetType() == MetaOf<Producible>());
 
 		WHEN("Two default elements produced") {
-         const auto descriptor = Construct::From<Producible>();
+         const auto descriptor = Recipe::From<Producible>();
          Verbs::Create creator {descriptor};
          const Producible prototype {&producer, descriptor.GetDescriptor()};
          Many const normalized {};
@@ -296,7 +296,7 @@ SCENARIO("Test factories on the heap", "[factory]") {
       REQUIRE(factory.GetType() == MetaOf<Producible>());
 
       WHEN("Two default elements produced") {
-         const auto descriptor = Construct::From<Producible>();
+         const auto descriptor = Recipe::From<Producible>();
 			Verbs::Create creator {descriptor};
          const Producible prototype {&producer, descriptor.GetDescriptor()};
 
@@ -331,7 +331,7 @@ SCENARIO("Test factories on the heap", "[factory]") {
 		}
       
 		WHEN("Two elements produced via descriptors, with parent on the heap (inducing a circular dependency)") {
-         const auto descriptor = Construct::From<Producible>(
+         const auto descriptor = Recipe::From<Producible>(
             Traits::Parent(&producer),
             "test"_text
          );
@@ -374,7 +374,7 @@ SCENARIO("Test factories on the heap", "[factory]") {
 
       WHEN("Two elements produced via descriptors, with parent on the stack") {
          Producer context;
-         const auto descriptor = Construct::From<Producible>(
+         const auto descriptor = Recipe::From<Producible>(
             Traits::Parent(&context),
             "test"_text
          );
@@ -432,7 +432,7 @@ SCENARIO("Nested factories and circular referencing", "[factory]") {
 
    GIVEN("A factory") {
       Verbs::Create creator1 {
-         Construct::From<ShallowProducer>(
+         Recipe::From<ShallowProducer>(
             Traits::Parent(&deepProducer),
             "test"_text
          )
@@ -448,7 +448,7 @@ SCENARIO("Nested factories and circular referencing", "[factory]") {
 
       auto& shallowProducer = creator1.GetOutput().As<ShallowProducer>();
       Verbs::Create creator2 {
-         Construct::From<TheProducible>(
+         Recipe::From<TheProducible>(
             Traits::Parent(&shallowProducer),
             "test"_text
          )

@@ -58,9 +58,10 @@ namespace Langulus::Flow
    ///   Langulus code container, parser, serializer and deserializer         
    ///                                                                        
    struct Code : Text {
-      using CTTI_Files = Yes<"flow">;
-      using CTTI_Bases = Text;
-      using Operator   = Serial::Operator;
+      using CTTI_ReflectAs = Code;
+      using CTTI_Files     = Yes<"flow">;
+      using CTTI_Bases     = Text;
+      using Operator       = Serial::Operator;
 
       using Text::Text;
 
@@ -98,66 +99,6 @@ namespace Langulus::Flow
 
       LANGULUS_API(FLOW) static bool IsReserved(Text const&);
       LANGULUS_API(FLOW) static bool IsValidKeyword(Text const&);
-
-   protected:
-      /// Parser for unknown expressions                                      
-      /// An unknown-expressions will be scanned to figure what it contains   
-      struct LANGULUS_API(FLOW) UnknownParser {
-         static auto Parse(Code const&, Many&, Real, bool optimize) -> size_t;
-      };
-
-      /// Parser for keyword expressions                                      
-      /// A key-expression is any expression that begins with a letter        
-      struct LANGULUS_API(FLOW) KeywordParser {
-         static auto Parse(Code const&, Many&, bool allowCharge = true) -> size_t;
-         static bool Peek(Code const&) noexcept;
-         static auto Isolate(Code const&) noexcept -> Token;
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            static auto Disambiguate(size_t, Code const&, Token const&) -> RTTI::Inner::Definition const*;
-         #endif
-      };
-
-      /// Parser for skipping expressions                                     
-      /// A skip-expression is any that begins with escapes, tabs, or spaces  
-      struct LANGULUS_API(FLOW) SkippedParser {
-         static auto Parse(Code const&) -> size_t;
-         static bool Peek(Code const&) noexcept;
-      };
-
-      /// Parser for number expressions                                       
-      /// A num-expression is any that begins with a digit, a minus           
-      /// followed by a digit, or a dot followed by a digit                   
-      struct LANGULUS_API(FLOW) NumberParser {
-         static auto Parse(Code const&, Many&) -> size_t;
-         static bool Peek(Code const&) noexcept;
-      };
-
-      /// Parser for operators                                                
-      /// An op-expression is one matching the built-in ones, or one matching 
-      /// one in reflected verb database, where LHS is not DMeta or VMeta     
-      struct LANGULUS_API(FLOW) OperatorParser {
-         static auto Parse(Operator, Code const&, Many&, Real, bool optimize) -> size_t;
-         static auto PeekBuiltin(Code const&) noexcept -> Operator;
-         static auto Peek(Code const&) noexcept -> Operator;
-         static auto Isolate(Code const&) noexcept -> Token;
-
-      private:
-         static auto ParseContent(Operator, Code const&, Many&, bool optimize) -> size_t;
-         static auto ParseString(Operator, Code const&, Many&) -> size_t;
-         static auto ParseBytes(Code const&, Many&) -> size_t;
-         static auto ParseKeyword(Operator, Code const&, Many&) -> size_t;
-         static auto ParsePhase(Operator, Many&) -> size_t;
-         static auto ParseReflected(Verb&, Code const&, Many&, bool optimize) -> size_t;
-
-         static void InsertContent(Many&, Many&);
-      };
-
-      /// Parser for chargers                                                 
-      /// A charge-expression is any operator *^@! after a DMeta or VMeta     
-      struct LANGULUS_API(FLOW) ChargeParser {
-         static auto Parse(Code const&, Charge&) -> size_t;
-         static auto Peek(Code const&) noexcept -> Operator;
-      };
    };
 }
 

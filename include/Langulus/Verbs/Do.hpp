@@ -59,7 +59,7 @@ namespace Langulus::CTTI
       using Can = Verbs::Do;
 
       static bool Default(Annies::Many const& lhs, Verbs::Do& verb) {
-         auto const& flow = GetArgument();
+         auto const& flow = verb.GetArgument();
          auto& output = verb.GetOutput();
          output = Many::CopyStates(lhs);
 
@@ -102,7 +102,9 @@ namespace Langulus::CTTI
             // hierarchy of verbs, and we must preserve that.           
             size_t successCount = 0;
             for (auto handle : lhs) {
-               if (Flow::Execute(flow, lhs, output/*, integrate, skipVerbs, silent*/))
+               //TODO magic bools here. maybe carry state with verbs and use it as arguments here?
+               bool unusedSkipVerbs = false;
+               if (Flow::Execute(flow, lhs, output, false, unusedSkipVerbs, false))
                   ++successCount;
             }
             return successCount > 0;
@@ -127,7 +129,9 @@ namespace Langulus::CTTI
                }
                else {
                   // No dispatcher for that particular resolved element 
-                  if (Flow::Execute(flow, resolved, output/*, integrate, skipVerbs, silent*/))
+                  //TODO magic bools here. maybe carry state with verbs and use it as arguments here?
+                  bool unusedSkipVerbs = false;
+                  if (Flow::Execute(flow, resolved, output, false, unusedSkipVerbs, false))
                      ++successCount;
                }
             }
@@ -142,10 +146,11 @@ namespace Langulus::CTTI
    ///                          tag(2 or 3)                                   
    LglsImplementAbilitiesFor(Annies::Tag) {
       using Can = Verbs::Do;
+      using Tag = Annies::Tag;
 
-      static bool Default(Annies::Tag const& tag, Verbs::Do& verb) {
+      static bool Default(Tag const& tag, Verbs::Do& verb) {
          Langulus::InvokeAbility(tag.GetData(), verb);
-         verb.GetOutput() = Annies::Tag::From(tag, Move(verb.GetOutput()));
+         verb.GetOutput() = Tag::From(tag, Move(verb.GetOutput()));
          return true;
       }
    };

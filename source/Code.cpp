@@ -95,7 +95,7 @@ namespace
       case Serial::Operator::AndUnordered    : return Serial::AndUnordered    .Token;
       case Serial::Operator::Pair            : return Serial::Pair            .Token;
       case Serial::Operator::Or              : return Serial::Or              .Token;
-      default: return "<error>";
+      default: return "";
       }
    }
 
@@ -826,33 +826,31 @@ void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
       const auto meta = lhs.AsAt<DMeta>(Index::Last);
       LglsAssert((bool) meta, "Bad data id");
 
-      if (meta.Is<Verb>()) {
+      if (meta.Is(MetaDataOf<Verb>())) {
          lhs.EraseAt(Index::Last);
          lhs.Compose(Verb {Move(rhs)});
       }
-      else if (meta.Is<Tag>()) {
+      else if (meta.Is(MetaDataOf<Tag>())) {
          lhs.EraseAt(Index::Last);
          lhs.Compose(Tag {Move(rhs)});
       }
-      else {
-         if (not rhs and not meta->mProducerRetriever
-         and meta->mDefaultConstructor) {
+      else if (not meta.GetProducer()) {
+         if (not rhs and meta.GetDefaultConstructor()) {
             // Invoke default-construction                              
-            Many constExpr;
+            Any constExpr;
             constExpr.SetType(meta);
-            constExpr.New(1);
+            constExpr.Emplace();
             lhs.EraseAt(Index::Last);
             lhs.Compose(Abandon(constExpr));
          }
          else {
             // Invoke the descriptor-constructor only if we have to     
             Recipe outputConstruct {meta, Move(rhs)};
-            Many precompiled;
-            if (outputConstruct.StaticCreation(precompiled)) {
-               // Precompiled successfully, append it to LHS            
+            Verbs::Create creator {&outputConstruct};
+            if (creator.RunStateless()) {
+               VERBOSE_CONSTRUCT("Describe-constructed: ", Logger::Cyan, creator.GetOutput());
                lhs.EraseAt(Index::Last);
-               lhs.Compose(Abandon(precompiled));
-               VERBOSE_ALT("Statically constructed from DMeta: ", Logger::Cyan, lhs);
+               lhs.Compose(Abandon(creator.GetOutput()));
                return;
             }
 
@@ -895,8 +893,8 @@ void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
       VERBOSE_ALT("Constructed from Recipe ", Logger::Cyan, lhs);
    }
    else {
-      Logger::Error("Bad scope for ", lhs, " (", lhs.GetToken(), ')');
-      Logger::Error("Content to insert is: ", rhs, " (", rhs.GetToken(), ')');
+      Logger::Error("Bad scope for ", lhs, " (", lhs.GetName(), ')');
+      Logger::Error("Content to insert is: ", rhs, " (", rhs.GetName(), ')');
       throw Exception("Syntax error - bad scope");
    }
 }
@@ -1072,33 +1070,29 @@ size_t OperatorParser::ParseKeyword(
    }
 
    if (op == Serial::Operator::SelectIdea) {
-      // Implicitly create/select an idea                               
-      Verbs::Select verb {Recipe::FromToken("Idea", Abandon(content))};
-      verb.SetSource(Many::Past("Thing"));
+      // Implicitly create/select an idea from a Thing inside context   
+      auto verb = Verbs::Select(Recipe::Of("Idea", Abandon(content)))
+                        .In(Many::Past("Thing"));
 
       // Check if there's a scope after an idea - it can be used to     
       // assemble the idea into data, while optionally providing        
       // future arguments for that process                              
       const auto tail = input.RightOf(progress);
       const auto next_op = OperatorParser::Peek(tail);
-      if (next_op == Operator::OpenScope
-      or next_op == Operator::OpenScopeAlt) {
+      if (next_op == Serial::Operator::OpenScope
+      or  next_op == Serial::Operator::OpenScopeAlt) {
          // Scoped data was found                                       
          // Wrap everything in a Verbs::Do                              
          Many arguments;
          progress += OperatorParser::Parse(next_op, tail, arguments, 0, true);
-
-         Verbs::Do doer {Abandon(arguments)};
-         doer.SetSource(Abandon(verb));
-         lhs.SmartPush(IndexBack, Abandon(doer));
+         lhs.Compose(Verbs::Do{Abandon(arguments)}.In(Abandon(verb)));
       }
-      else lhs.SmartPush(IndexBack, Abandon(verb));
+      else lhs.Compose(Abandon(verb));
    }
    else if (op == Serial::Operator::SelectThing) {
-      // Implicitly select an object by name                            
-      Verbs::Select verb {Recipe::FromToken("Thing", Abandon(content))};
-      verb.SetSource(Many::Past("Thing"));
-      lhs.SmartPush(IndexBack, Abandon(verb));
+      // Implicitly select an object by name from Thing in the context  
+      lhs.Compose(Verbs::Select{Recipe::FromToken("Thing", Abandon(content))}
+                        .In(Many::Past("Thing")));
    }
    else {
       PRETTY_ERROR("Not a supported keyword operator: ", GetOperatorToken(op));
@@ -1120,14 +1114,14 @@ size_t OperatorParser::ParseReflected(
    Code relevant = input;
 
    // Parse charge if any                                               
-   if (ChargeParser::Peek(relevant) != Operator::NoOperator) {
+   if (ChargeParser::Peek(relevant) != Serial::Operator::Noop) {
       progress += ChargeParser::Parse(relevant, op);
       relevant = input.RightOf(progress);
    }
    
    // Parse RHS for the operator                                        
    progress += UnknownParser::Parse(
-      relevant, op.GetArgument(), op.GetVerb()->mPrecedence, optimize);
+      relevant, op.GetArgument(), op.GetVerb().GetPrecedence(), optimize);
 
    if (optimize and not op.GetCharge().IsFlowDependent()) {
       // Try executing operator at compile-time                         
@@ -1135,15 +1129,15 @@ size_t OperatorParser::ParseReflected(
       VERBOSE_TAB("Attempting compile-time execution... ");
 
       // Next-execute the argument first                                
+      bool unusedSkipper = false;
       Many unusedContext;
       Many argument;
-      if (Execute(op.GetArgument(), unusedContext, argument, true, true)) {
+      if (Flow::Execute(op.GetArgument(), unusedContext, argument, true, unusedSkipper, true)) {
          // Then the verb itself                                        
          Many opSrcBackup = Move(op.GetSource());
          Many opArgBackup = Move(op.GetArgument());
-         op.SetSource(lhs);
-         op.SetArgument(argument);
-         Execute<1, 1, 0>(lhs, op);
+         op.SetArgument(argument).In(lhs);
+         Flow::Execute<1, 1, 0>(lhs, op);
 
          if (op.GetSuccesses()) {
             // The verb was executed at compile-time, so directly       
@@ -1153,7 +1147,7 @@ size_t OperatorParser::ParseReflected(
             return progress;
          }
          else {
-            op.SetSource(Abandon(opSrcBackup));
+            op.In(Abandon(opSrcBackup));
             //op.SetArgument(Abandon(opArgBackup));
             IF_SAFE(op.GetOutput().Reset());
          }
@@ -1163,8 +1157,8 @@ size_t OperatorParser::ParseReflected(
          // pre-compute the op. Like for example when conjuncting       
          // two containers.                                             
          Many opSrcBackup = Move(op.GetSource());
-         op.SetSource(lhs);
-         Execute<1, 1, 0>(lhs, op);
+         op.In(lhs);
+         Flow::Execute<1, 1, 0>(lhs, op);
 
          if (op.GetSuccesses()) {
             // The verb was executed at compile-time, so directly       
@@ -1174,7 +1168,7 @@ size_t OperatorParser::ParseReflected(
             return progress;
          }
          else {
-            op.SetSource(Abandon(opSrcBackup));
+            op.In(Abandon(opSrcBackup));
             IF_SAFE(op.GetOutput().Reset());
          }
       }
@@ -1182,7 +1176,7 @@ size_t OperatorParser::ParseReflected(
 
    // Either compile-time execution is impossible, or we don't          
    // want it, so directly substitute LHS with the verb                 
-   op.SetSource(Move(lhs));
+   op.In(Move(lhs));
    lhs = Move(op);
    return progress;
 }
@@ -1191,7 +1185,7 @@ size_t OperatorParser::ParseReflected(
 /// built-in operators for charging                                           
 ///   @param input the code to peek into                                      
 ///   @return true if input begins with an operator for charging              
-auto ChargeParser::Peek(Code const& input) noexcept -> Code::Operator {
+auto ChargeParser::Peek(Code const& input) noexcept -> Serial::Operator {
    // Parse skippables if any                                           
    auto relevant = input;
    if (SkippedParser::Peek(relevant)) {
@@ -1200,13 +1194,14 @@ auto ChargeParser::Peek(Code const& input) noexcept -> Code::Operator {
    }
 
    // Find the charge operator                                          
-   for (size_t i = 0; i < Operator::OpCounter; ++i) {
-      if (SerializationRules::Operators[i].mCharge
-      and relevant.StartsWithOperator(i))
-         return Operator(i);
+   for (int i = 0; i < int(Serial::Operator::Last); ++i) {
+      if ((i == int(Serial::Operator::Mass) or i == int(Serial::Operator::Rate)
+        or i == int(Serial::Operator::Time) or i == int(Serial::Operator::Precedence))
+      and StartsWithOperator(relevant, i))
+         return Serial::Operator(i);
    }
 
-   return Operator::NoOperator;
+   return Serial::Operator::Noop;
 }
 
 /// Parse mass/time/frequency/priority operators                              
@@ -1230,22 +1225,15 @@ size_t ChargeParser::Parse(Code const& input, Charge& charge) {
       }
 
       // Find the charge operator                                       
-      auto op = Operator::NoOperator;
-      for (size_t i = 0; i < Operator::OpCounter; ++i) {
-         if (SerializationRules::Operators[i].mCharge
-         and relevant.StartsWithOperator(i)) {
-            op = Operator(i);
-            progress += SerializationRules::Operators[i].mToken.size();
-            relevant = input.RightOf(progress);
-            break;
-         }
-      }
+      auto op = ChargeParser::Peek(relevant);
+      LglsAssumeDev(op != Serial::Operator::Noop);
+      //if (op == Operator::NoOperator) //TODO we've peeked before entering this function, no?
+        // return progress;
 
-      if (op == Operator::NoOperator)
-         return progress;
-
-      VERBOSE("Parsing charge operator: [",
-         SerializationRules::Operators[op].mToken, ']');
+      const auto token = GetOperatorToken(op);
+      progress += token.size();
+      relevant = input.RightOf(progress);
+      VERBOSE("Parsing charge operator: [", token, ']');
 
       // Skip any spacing and consume '-' operators here                
       bool reverse = false;
@@ -1271,35 +1259,34 @@ size_t ChargeParser::Parse(Code const& input, Charge& charge) {
          // Can be a literal number                                     
          progress += NumberParser::Parse(relevant, rhs);
       }
-      else if (OperatorParser::Peek(relevant) == Operator::OpenScope) {
+      else if (OperatorParser::Peek(relevant) == Serial::Operator::OpenScope) {
          // Can be anything wrapped in a scope                          
-         progress += OperatorParser::Parse(Operator::OpenScope, relevant, rhs, 0, true);
+         progress += OperatorParser::Parse(Serial::Operator::OpenScope, relevant, rhs, 0, true);
       }
       else PRETTY_ERROR("Unexpected symbol");
 
       // Save changes                                                   
-      // AsCast may throw here, if RHS did not evaluate or convert      
-      // to real - this is later caught and handled gracefully          
-      auto asReal = rhs.AsCast<Real>();
+      // AsCast may throw here, if RHS did not convert to real - this   
+      // is later caught and handled gracefully.                        
+      auto asReal = rhs.As<Real>();
       if (reverse)
          asReal *= Real {-1};
 
       switch (op) {
-      case Operator::Mass:
-         charge.mMass = asReal;
+      case Serial::Operator::Mass:
+         charge.mass = asReal;
          break;
-      case Operator::Rate:
-         charge.mRate = asReal;
+      case Serial::Operator::Rate:
+         charge.rate = asReal;
          break;
-      case Operator::Time:
-         charge.mTime = asReal;
+      case Serial::Operator::Time:
+         charge.time = asReal;
          break;
-      case Operator::Priority:
-         charge.mPriority = asReal;
+      case Serial::Operator::Precedence:
+         charge.precedence = asReal;
          break;
       default:
-         PRETTY_ERROR("Invalid charge operator: ",
-            SerializationRules::Operators[op].mToken);
+         PRETTY_ERROR("Invalid charge operator: ", token);
       }
    }
 

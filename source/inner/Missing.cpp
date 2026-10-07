@@ -379,7 +379,7 @@ void MissingFuture::Commit(Many const& linked, Temporal& flow) {
 
 /// Just a helper function for logging                                        
 template<class T>
-decltype(auto) Missing::VerboseLinking(const T& what, const MissingFuture& context) {
+decltype(auto) Missing::VerboseLinking(T const& what, const MissingFuture& context) {
    #if VERBOSE_MISSING_ENABLED()
       if constexpr (Same<T, Tag>) {
          Logger::Verbose("Linking tag ");
@@ -571,7 +571,7 @@ Missing::operator Text() const {
 
       if (mPriority) {
          result += ' ';
-         result += Serial::Priority.Token;
+         result += Serial::Precedence.Token;
          result += mPriority;
       }
 

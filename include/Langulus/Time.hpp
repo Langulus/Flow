@@ -84,7 +84,7 @@ namespace Langulus
    ///                                                                        
    ///   A steady clock used to acquire TimePoint(s)                          
    ///                                                                        
-   class SteadyClock : private StdClock {
+   struct SteadyClock : private StdClock {
       static TimePoint Now() noexcept;
    };
 }

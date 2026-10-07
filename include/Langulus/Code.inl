@@ -16,7 +16,7 @@ namespace Langulus::Flow
    /// Notice that this constructor explicitly avoids character types         
    ///   @param number - the number to stringify                              
    /*template<CT::BuiltinNumber T> requires (not CT::Character<T>)
-   LANGULUS(INLINED) Code::Code(const T& number)
+   LANGULUS(INLINED) Code::Code(T const& number)
       : Code {Text::FromNumber(number)} {}*/
 
    /// Remove elements from the left side of Code code                        

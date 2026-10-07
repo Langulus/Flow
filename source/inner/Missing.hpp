@@ -55,7 +55,7 @@ namespace Langulus::Flow
 
    protected:
       template<class T>
-      static decltype(auto) VerboseLinking(const T&, const MissingFuture&);
+      static decltype(auto) VerboseLinking(T const&, const MissingFuture&);
    };
 
 

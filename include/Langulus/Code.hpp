@@ -28,7 +28,7 @@ namespace Langulus::CT
       /// Hopefully it will be resolved by them one day                       
       template<class T>
       consteval bool CodifiableByOperator_AvoidMSVC_ICE() {
-         return std::is_object_v<T> and requires (const T& a) {
+         return std::is_object_v<T> and requires (T const& a) {
             a.operator ::Langulus::Flow::Code();
          };
       }
@@ -40,7 +40,7 @@ namespace Langulus::CT
 
       /// Does Code has an explicit/implicit constructor that accepts T       
       template<class...T>
-      concept CodifiableByConstructor = requires (const T&...a) {
+      concept CodifiableByConstructor = requires (T const&...a) {
          ((::Langulus::Flow::Code {a}), ...); };
    }
 

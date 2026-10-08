@@ -32,31 +32,30 @@
 using namespace Langulus;
 using namespace Langulus::Flow;
 
-#define ENABLE_VERBOSE() 0
+#define LglsVerboseEnabled 0
+#include <Langulus/Logger/ToggleVerbose.hpp>
 
-#define VERBOSE_INNER(...) \
-   Logger::Flow("Flow::Code: ", Logger::PushCyan, __VA_ARGS__ \
+#define LglsVerboseFlow(...) \
+   LglsVerbose(Flow, "Flow::Code: ", Logger::PushCyan, __VA_ARGS__ \
       , Logger::Pop, " at ", progress, ": " \
       , Logger::NewLine, "+-[", Logger::PushGreen, Logger::Underline \
       , input. LeftOf(progress).Replace('\n', "\\n"), Logger::PopAndPushWhite \
       , input.RightOf(progress).Replace('\n', "\\n"), Logger::Pop, ']')
 
-#define PRETTY_ERROR(...) \
+#define LglsVerboseFlowScoped(...) \
+   LglsVerboseScoped(Flow, "Flow::Code: ", Logger::PushCyan, __VA_ARGS__ \
+      , Logger::Pop, " at ", progress, ": " \
+      , Logger::NewLine, "+-[", Logger::PushGreen, Logger::Underline \
+      , input. LeftOf(progress).Replace('\n', "\\n"), Logger::PopAndPushWhite \
+      , input.RightOf(progress).Replace('\n', "\\n"), Logger::Pop, ']')
+
+#define LglsFlowError(...) \
    LglsError("Flow::Code: ", Logger::PushDarkYellow, __VA_ARGS__ \
       , Logger::Pop, " at ", progress, ": " \
       , Logger::NewLine, "+-[", Logger::PushDarkYellow, Logger::Underline \
       , input. LeftOf(progress).Replace('\n', "\\n"), Logger::Pop \
       , input.RightOf(progress).Replace('\n', "\\n"), ']');
 
-#if ENABLE_VERBOSE()
-   #define VERBOSE(...)       VERBOSE_INNER(__VA_ARGS__)
-   #define VERBOSE_TAB(...)   auto tab = VERBOSE_INNER(__VA_ARGS__) << Logger::Tabs{}
-   #define VERBOSE_ALT(...)   Logger::Flow(__VA_ARGS__)
-#else
-   #define VERBOSE(...)       LANGULUS(NOOP)
-   #define VERBOSE_TAB(...)   LANGULUS(NOOP)
-   #define VERBOSE_ALT(...)   LANGULUS(NOOP)
-#endif
 
 namespace
 {
@@ -396,11 +395,9 @@ bool Code::IsValidKeyword(Text const& text) {
 size_t UnknownParser::Parse(Code const& input, Many& lhs, Real precedence, bool optimize) {
    Many rhs;
    size_t progress = 0;
-   VERBOSE_TAB("Parsing unknown");
-   #if ENABLE_VERBOSE()
-      if (lhs.IsValid())
-         VERBOSE_ALT("LHS: ", lhs);
-   #endif
+   LglsVerboseFlowScoped("Parsing unknown");
+   if (lhs.IsValid())
+      LglsVerbose(Flow, "LHS: ", lhs);
 
    while (progress < input.GetCount()) {
       // Scan input until end                                           
@@ -419,7 +416,7 @@ size_t UnknownParser::Parse(Code const& input, Many& lhs, Real precedence, bool 
       else if (NumberParser::Peek(relevant))
          localProgress = NumberParser::Parse(relevant, rhs);
       else
-         PRETTY_ERROR("Unexpected symbol");
+         LglsFlowError("Unexpected symbol");
 
       if (0 == localProgress) {
          // This occurs often, when a lower priority operator is        
@@ -431,7 +428,7 @@ size_t UnknownParser::Parse(Code const& input, Many& lhs, Real precedence, bool 
    }
 
    // Input was parsed, relay content to output                         
-   VERBOSE(Logger::Green, "Unknown parsed: ", rhs);
+   LglsVerboseFlow(Logger::Green, "Unknown parsed: ", rhs);
    lhs.Compose(Abandon(rhs));
    return progress;
 }
@@ -483,7 +480,7 @@ size_t SkippedParser::Parse(Code const& input) {
       break;
    }
 
-   VERBOSE("Skipped ", progress, " characters");
+   LglsVerboseFlow("Skipped ", progress, " characters");
    return progress;
 }
 
@@ -523,18 +520,17 @@ size_t KeywordParser::Parse(Code const& input, Many& lhs, bool allowCharge) {
    size_t progress = 0;
    const auto keyword = Isolate(input);
    if (keyword.empty())
-      PRETTY_ERROR("No keyword parsed");
+      LglsFlowError("No keyword parsed");
 
    progress += keyword.size();
-   VERBOSE_TAB("Keyword isolated: ", keyword);
+   LglsVerboseFlowScoped("Keyword isolated: ", keyword);
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    // If this is reached, then exactly one match in symbols.            
    // Push found meta data, if any.                                     
    const auto meta = Disambiguate(progress, input, keyword);
-   if (not meta) {
-      PRETTY_ERROR("Disambiguation of `", keyword, "` failed");
-   }
+   if (not meta)
+      LglsFlowError("Disambiguation of `", keyword, "` failed");
 
    const RTTI::DMeta dmeta = meta;
    const RTTI::TMeta tmeta = meta;
@@ -560,12 +556,12 @@ size_t KeywordParser::Parse(Code const& input, Many& lhs, bool allowCharge) {
    if (cmeta)
       lhs.Compose(Any::FromConstant(cmeta));
 
-   VERBOSE("Keyword parsed: `", keyword, "` as ", lhs, " (of type ", lhs.GetToken(), ")");
+   LglsVerboseFlow("Keyword parsed: `", keyword, "` as ", lhs, " (of type ", lhs.GetToken(), ")");
    return progress;
 #else
    (void)lhs;
    (void)allowCharge;
-   PRETTY_ERROR("Can't parse keyword, managed reflection feature is disabled");
+   LglsFlowError("Can't parse keyword, managed reflection feature is disabled");
 #endif
 }
 
@@ -579,9 +575,7 @@ size_t KeywordParser::Parse(Code const& input, Many& lhs, bool allowCharge) {
       const size_t progress, Code const& input, Token const& keyword
    ) -> RTTI::Inner::Definition const* {
       try { return RTTI::Registry::DisambiguateMeta(keyword); }
-      catch (...) {
-         PRETTY_ERROR("Unknown keyword: ", keyword);
-      }
+      catch (...) { LglsFlowError("Unknown keyword: ", keyword); }
       return nullptr;
    }
 #endif
@@ -601,7 +595,7 @@ bool NumberParser::Peek(Code const& input) noexcept {
 size_t NumberParser::Parse(Code const& input, Many& lhs) {
    Real rhs = 0;
    size_t progress = 0;
-   VERBOSE_TAB("Parsing number");
+   LglsVerboseFlowScoped("Parsing number");
 
 #if LANGULUS_COMPILER(WASM)
    // Some standard library implementations don't allow for             
@@ -619,7 +613,7 @@ size_t NumberParser::Parse(Code const& input, Many& lhs) {
    }
 #endif
 
-   VERBOSE(Logger::Green, "Number parsed: ", rhs);
+   LglsVerboseFlow(Logger::Green, "Number parsed: ", rhs);
    lhs << rhs;
    return progress;
 }
@@ -707,7 +701,7 @@ size_t OperatorParser::Parse(
       // Skip the operator, we already know it                          
       const auto token = GetOperatorToken(op);
       progress += token.size();
-      VERBOSE_TAB("Parsing built-in operator: [", token, ']');
+      LglsVerboseFlowScoped("Parsing built-in operator: [", token, ']');
       const Code relevant = input.RightOf(progress);
 
       // Handle built-in operators first                                
@@ -734,7 +728,7 @@ size_t OperatorParser::Parse(
       case Serial::Operator::SelectIdea:
          return progress + ParseKeyword(op, relevant, lhs);
       default:
-         PRETTY_ERROR("Unhandled built-in operator");
+         LglsFlowError("Unhandled built-in operator");
       }
    }
    else {
@@ -744,13 +738,13 @@ size_t OperatorParser::Parse(
          const auto found = RTTI::VMeta(RTTI::Registry::GetMetaVerbByToken(word));
 
          if (found.GetPrecedence() and priority >= found.GetPrecedence()) {
-            VERBOSE(Logger::Yellow, "Delaying reflected operator [", found, 
+            LglsVerboseFlow(Logger::Yellow, "Delaying reflected operator [", found, 
                                     "] due to a prioritized operation");
             return 0;
          }
 
          progress += word.size();
-         VERBOSE_TAB("Parsing reflected verb: [", word, "] (", found, ")");
+         LglsVerboseFlowScoped("Parsing reflected verb: [", word, "] (", found, ")");
          auto operation = Verb::From(found);
          if (CompareOperators(word, found.GetNegativeName())
          or  CompareOperators(word, found.GetNegativeOperator()))
@@ -759,7 +753,7 @@ size_t OperatorParser::Parse(
          const Code relevant = input.RightOf(progress);
          return progress + ParseReflected(operation, relevant, lhs, optimize);
       #else
-         PRETTY_ERROR("Can't parse reflected verb, managed reflection feature is disabled");
+         LglsFlowError("Can't parse reflected verb, managed reflection feature is disabled");
       #endif
    }
    return 0;
@@ -778,7 +772,7 @@ size_t OperatorParser::ParseContent(
 
    // Can define contents for one element at a time                     
    if (lhs.GetCount() > 1)
-      PRETTY_ERROR("Content scope for multiple elements is not allowed: ", lhs);
+      LglsFlowError("Content scope for multiple elements is not allowed: ", lhs);
 
    // We don't know what to expect, so we attempt blind parse           
    Many rhs;
@@ -791,7 +785,7 @@ size_t OperatorParser::ParseContent(
    else if (StartsWithOperator(remaining, Serial::Operator::CloseScopeAlt))
       progress += Serial::CloseScopeAlt.Token.size();
    else
-      PRETTY_ERROR("Missing closing bracket");
+      LglsFlowError("Missing closing bracket");
 
    // Insert to new content in rhs to the already available lhs         
    InsertContent(rhs, lhs);
@@ -819,7 +813,7 @@ void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
       lhs.ResetState();
       lhs.Compose(Move(rhs));
       lhs.SetState(stateBackup);
-      VERBOSE_ALT("Untyped content: ", Logger::Cyan, lhs);
+      LglsVerbose(Flow, "Untyped content: ", Logger::Cyan, lhs);
    }
    else if (lhs.Is<DMeta>()) {
       // The content is for an uninstantiated data scope                
@@ -848,7 +842,7 @@ void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
             Recipe outputConstruct {meta, Move(rhs)};
             Verbs::Create creator {&outputConstruct};
             if (creator.RunStateless()) {
-               VERBOSE_CONSTRUCT("Describe-constructed: ", Logger::Cyan, creator.GetOutput());
+               LglsVerbose(Flow, "Describe-constructed: ", Logger::Cyan, creator.GetOutput());
                lhs.EraseAt(Index::Last);
                lhs.Compose(Abandon(creator.GetOutput()));
                return;
@@ -858,7 +852,7 @@ void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
             lhs.Compose(Abandon(outputConstruct));
          }
       }
-      VERBOSE_ALT("Constructed from DMeta: ", Logger::Cyan, lhs);
+      LglsVerbose(Flow, "Constructed from DMeta: ", Logger::Cyan, lhs);
    }
    else if (lhs.Is<VMeta>()) {
       // The content is for an uninstantiated verb scope                
@@ -868,7 +862,7 @@ void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
       auto verb = Verb::From(meta, Move(rhs));
       lhs.EraseAt(Index::Last);
       lhs.Compose(Abandon(verb));
-      VERBOSE_ALT("Constructed from VMeta: ", Logger::Cyan, lhs);
+      LglsVerbose(Flow, "Constructed from VMeta: ", Logger::Cyan, lhs);
    }
    else if (lhs.Is<TMeta>()) {
       // The content is for an uninstantiated trait scope               
@@ -878,19 +872,19 @@ void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
       auto tag = Tag::From(meta, Move(rhs));
       lhs.EraseAt(Index::Last);
       lhs.Compose(Abandon(tag));
-      VERBOSE_ALT("Constructed from TMeta: ", Logger::Cyan, lhs);
+      LglsVerbose(Flow, "Constructed from TMeta: ", Logger::Cyan, lhs);
    }
    else if (lhs.Is<Verb>()) {
       // The content is for an instantiated verb scope                  
       auto& verb = lhs.AsAt<Verb>(Index::Last);
       verb.Compose(Move(rhs));
-      VERBOSE_ALT("Constructed from Verb ", Logger::Cyan, lhs);
+      LglsVerbose(Flow, "Constructed from Verb ", Logger::Cyan, lhs);
    }
    else if (lhs.Is<Recipe>()) {
       // The content is for an instantiated data scope                  
       auto& recipe = lhs.AsAt<Recipe>(Index::Last);
       recipe << Move(rhs);
-      VERBOSE_ALT("Constructed from Recipe ", Logger::Cyan, lhs);
+      LglsVerbose(Flow, "Constructed from Recipe ", Logger::Cyan, lhs);
    }
    else {
       Logger::Error("Bad scope for ", lhs, " (", lhs.GetName(), ')');
@@ -926,7 +920,7 @@ size_t OperatorParser::ParseString(
          if (StartsWithOperator(relevant, closer)) {
             const size_t tokenSize = GetOperatorToken(closer).size();
             lhs << Text {Clone(input.LeftOf(progress))};
-            VERBOSE("String parsed: ", lhs);
+            LglsVerboseFlow("String parsed: ", lhs);
             return tokenSize + progress;
          }
          break;
@@ -937,7 +931,7 @@ size_t OperatorParser::ParseString(
          if (StartsWithOperator(relevant, Serial::Operator::CloseCharacter)) {
             const size_t tokenSize = Serial::CloseCharacter.Token.size();
             lhs << input[0];
-            VERBOSE("Character parsed: ", lhs);
+            LglsVerboseFlow("Character parsed: ", lhs);
             return tokenSize + progress;
          }
          break;
@@ -953,20 +947,19 @@ size_t OperatorParser::ParseString(
             if (0 == depth) {
                const size_t tokenSize = Serial::CloseCode.Token.size();
                lhs << Clone(input.LeftOf(progress));
-               VERBOSE("Code parsed: ", lhs);
+               LglsVerboseFlow("Code parsed: ", lhs);
                return tokenSize + progress;
             }
          }
          break;
       }
-      default:
-         PRETTY_ERROR("Unexpected string operator");
+      default: LglsFlowError("Unexpected string operator");
       }
 
       ++progress;
    }
 
-   PRETTY_ERROR("Unexpected EOF when parsing string/character/code");
+   LglsFlowError("Unexpected EOF when parsing string/character/code");
 }
 
 /// Byte scope parser                                                         
@@ -1040,8 +1033,8 @@ size_t OperatorParser::ParseKeyword(
 ) {
    size_t progress = 0;
    if (SkippedParser::Peek(input)) {
-      PRETTY_ERROR("Syntax error - # and ## should be followed "
-                   "by either a keyword, or a scope");
+      LglsFlowError("Syntax error - # and ## should be followed "
+                    "by either a keyword, or a scope");
    }
 
    // Try parsing a keyword                                             
@@ -1056,8 +1049,8 @@ size_t OperatorParser::ParseKeyword(
       case Serial::Operator::OpenCharacter: case Serial::Operator::OpenCode:
          break;
       default:
-         PRETTY_ERROR("Syntax error - # and ## should be followed by "
-                      "either a keyword, or a scope");
+         LglsFlowError("Syntax error - # and ## should be followed by "
+                       "either a keyword, or a scope");
       }
 
       // Scoped data was found                                          
@@ -1094,9 +1087,7 @@ size_t OperatorParser::ParseKeyword(
       lhs.Compose(Verbs::Select{Recipe::FromToken("Thing", Abandon(content))}
                         .In(Many::Past("Thing")));
    }
-   else {
-      PRETTY_ERROR("Not a supported keyword operator: ", GetOperatorToken(op));
-   }
+   else LglsFlowError("Not a supported keyword operator: ", GetOperatorToken(op));
 
    return progress;
 }
@@ -1121,12 +1112,13 @@ size_t OperatorParser::ParseReflected(
    
    // Parse RHS for the operator                                        
    progress += UnknownParser::Parse(
-      relevant, op.GetArgument(), op.GetVerb().GetPrecedence(), optimize);
+      relevant, op.GetArgument(), op.GetVerb().GetPrecedence(), optimize
+   );
 
    if (optimize and not op.GetCharge().IsFlowDependent()) {
       // Try executing operator at compile-time                         
       // We must disable multicast for this                             
-      VERBOSE_TAB("Attempting compile-time execution... ");
+      LglsVerboseFlowScoped("Attempting compile-time execution... ");
 
       // Next-execute the argument first                                
       bool unusedSkipper = false;
@@ -1142,7 +1134,7 @@ size_t OperatorParser::ParseReflected(
          if (op.GetSuccesses()) {
             // The verb was executed at compile-time, so directly       
             // substitute LHS with the verb's output                    
-            VERBOSE("Verb was executed at compile time: ", op.GetOutput());
+            LglsVerboseFlow("Verb was executed at compile time: ", op.GetOutput());
             lhs = Move(op.GetOutput());
             return progress;
          }
@@ -1163,7 +1155,7 @@ size_t OperatorParser::ParseReflected(
          if (op.GetSuccesses()) {
             // The verb was executed at compile-time, so directly       
             // substitute LHS with the verb's output                    
-            VERBOSE("Verb was executed at compile time: ", op.GetOutput());
+            LglsVerboseFlow("Verb was executed at compile time: ", op.GetOutput());
             lhs = Move(op.GetOutput());
             return progress;
          }
@@ -1210,7 +1202,7 @@ auto ChargeParser::Peek(Code const& input) noexcept -> Serial::Operator {
 ///   @return number of parsed characters                                     
 size_t ChargeParser::Parse(Code const& input, Charge& charge) {
    size_t progress = 0;
-   VERBOSE_TAB("Parsing charge");
+   LglsVerboseFlowScoped("Parsing charge");
 
    while (progress < input.GetCount()) {
       // Scan input until end of charge operators/code                  
@@ -1233,7 +1225,7 @@ size_t ChargeParser::Parse(Code const& input, Charge& charge) {
       const auto token = GetOperatorToken(op);
       progress += token.size();
       relevant = input.RightOf(progress);
-      VERBOSE("Parsing charge operator: [", token, ']');
+      LglsVerboseFlow("Parsing charge operator: [", token, ']');
 
       // Skip any spacing and consume '-' operators here                
       bool reverse = false;
@@ -1263,7 +1255,7 @@ size_t ChargeParser::Parse(Code const& input, Charge& charge) {
          // Can be anything wrapped in a scope                          
          progress += OperatorParser::Parse(Serial::Operator::OpenScope, relevant, rhs, 0, true);
       }
-      else PRETTY_ERROR("Unexpected symbol");
+      else LglsError("Unexpected symbol");
 
       // Save changes                                                   
       // AsCast may throw here, if RHS did not convert to real - this   
@@ -1286,10 +1278,10 @@ size_t ChargeParser::Parse(Code const& input, Charge& charge) {
          charge.precedence = asReal;
          break;
       default:
-         PRETTY_ERROR("Invalid charge operator: ", token);
+         LglsError("Invalid charge operator: ", token);
       }
    }
 
-   VERBOSE("Charge parsed: ", charge);
+   LglsVerboseFlow("Charge parsed: ", charge);
    return progress;
 }

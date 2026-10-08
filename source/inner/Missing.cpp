@@ -378,7 +378,7 @@ void MissingFuture::Commit(Many const& linked, Temporal& flow) {
 
 
 /// Just a helper function for logging                                        
-template<class T>
+template<class T> [[nodiscard]]
 decltype(auto) Missing::VerboseLinking(T const& what, const MissingFuture& context) {
    #if VERBOSE_MISSING_ENABLED()
       if constexpr (Same<T, Tag>) {
@@ -406,7 +406,7 @@ decltype(auto) Missing::VerboseLinking(T const& what, const MissingFuture& conte
 
       Logger::Append(" to point ");
       Temporal::DumpMissing(context);
-      return Logger::Append(Logger::Tabs {1});
+      return Logger::Indent(1);
    #else
       return 0;
    #endif
@@ -425,7 +425,7 @@ Many Missing::Link(Many const& scope, const MissingFuture& context) const {
    if (scope.IsDeep()) {
       // Nest scopes, linking any past points in subscopes              
       scope.ForEach([&](Many const& subscope) {
-         const auto tab = VerboseLinking(subscope, context);
+         auto _ = VerboseLinking(subscope, context);
          try { result << Link(subscope, context); }
          catch (...) {
             if (not scope.IsOr())
@@ -444,23 +444,23 @@ Many Missing::Link(Many const& scope, const MissingFuture& context) const {
    const auto found = scope.ForEach(
       [&](Tag const& tag) {
          // Link a tag                                                  
-         const auto tab = VerboseLinking(tag, context);
+         auto _ = VerboseLinking(tag, context);
          result << Tag::From(tag, Link(tag, context));
       },
       [&](Recipe const& recipe) {
          // Link a construct                                            
-         const auto tab = VerboseLinking(recipe, context);
+         auto _ = VerboseLinking(recipe, context);
          result << Recipe::From(recipe, Link(recipe.GetDescriptor(), context));
       },
       [&](Verb const& verb) {
          // Link a verb                                                 
-         const auto tab = VerboseLinking(verb, context);
+         auto _ = VerboseLinking(verb, context);
          auto source = Link(verb.GetSource(), context);
-         result << Verb::From(verb, Link(verb.GetArgument(), context)).SetSource(Abandon(source));
+         result << Verb::From(verb, Link(verb.GetArgument(), context)).In(Abandon(source));
       },
       [&](const MissingPast& past) {
          // Replace a missing past point with provided context          
-         const auto tab = VerboseLinking(past, context);
+         auto _ = VerboseLinking(past, context);
          if (mPriority > past.mPriority) {
             #if VERBOSE_MISSING_ENABLED()
                Logger::Error("Skipped because of precedence");

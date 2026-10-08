@@ -14,16 +14,16 @@
 #include "inner/Entangled.hpp"
 #include "inner/Redundant.hpp"
 
-#if 1 //TODO use the custom headers
-   #define VERBOSE_ENABLED() 1
-   #define VERBOSE_TEMPORAL(...)       Logger::Verbose(*this, ": ", __VA_ARGS__)
-   #define VERBOSE_TEMPORAL_TAB(...)   const auto tab = Logger::VerboseTab(*this, ": ", __VA_ARGS__)
-#else
-   #define VERBOSE_ENABLED() 0
-   #define VERBOSE_TEMPORAL(...)       LANGULUS(NOOP)
-   #define VERBOSE_TEMPORAL_TAB(...)   LANGULUS(NOOP)
-#endif
+#define LglsVerboseEnabled 0
+#include <Langulus/Logger/ToggleVerbose.hpp>
 
+#define LglsVerboseTempo(...) \
+   LglsVerbose(Verbose, *this, ": ", __VA_ARGS__)
+
+#define LglsVerboseTempoScoped(...) \
+   LglsVerboseScoped(Verbose, *this, ": ", __VA_ARGS__)
+
+using namespace Langulus;
 using namespace Langulus::Flow;
 
 
@@ -201,29 +201,25 @@ void Temporal::Merge(Temporal const& other) {
    // Merge time stacks                                                 
    for (auto pair : other.mTimeStack) {
       const auto timepoint = pair.GetKey();
-      auto found = mTimeStack.Find(timepoint);
-      if (not found) {
-         // New time point required                                     
-         mTimeStack.Merge(timepoint, this);
-         found = mTimeStack.Find(timepoint);
-      }
-
+      auto found = mTimeStack.Merge(timepoint);
       auto* innerFlow = pair.GetVal();
-      found.GetVal()->Merge(innerFlow);
+      auto v = found.GetVal();
+      if (v)
+         v->Merge(*innerFlow);
+      else
+         v.Assign(innerFlow);
    };
 
    // Merge frequency stacks                                            
    for (auto pair : other.mFrequencyStack) {
       const auto frequency = pair.GetKey();
-      auto found = mFrequencyStack.Find(frequency);
-      if (not found) {
-         // New time point required                                     
-         mFrequencyStack.Merge(frequency, this);
-         found = mFrequencyStack.Find(frequency);
-      }
-
+      auto found = mFrequencyStack.Merge(frequency);
       auto* innerFlow = pair.GetVal();
-      found.GetVal()->Merge(innerFlow);
+      auto v = found.GetVal();
+      if (v)
+         v->Merge(*innerFlow);
+      else
+         v.Assign(innerFlow);
    };
 }
 
@@ -248,15 +244,18 @@ void Temporal::Merge(Temporal const& other) {
 ///      corresponding stacks, and are stripped from such properties;         
 ///      from there on, they're handled conventionally, by the                
 ///      aforementioned rules in the context of that stack                    
+///   7. When this temporal flow is not at the beginning of time, any new     
+///      verbs that would've been executed until now are executed, and their  
+///      side effects are returned.                                           //TODO what if they affect other verbs in the flow, like inside of them, or producing contexts that can be used by other verbs? this is a huge deal
 ///   @attention assumes argument is a valid scope                            
 ///   @param scope the scope to analyze and push                              
-///   @return true if the flow changed                                        
+///   @return any side effects of the insertion                               
 Many Temporal::PushInner(Many scope) {
    Many compiled;
 
    {
-      #if VERBOSE_ENABLED()
-         VERBOSE_TEMPORAL_TAB("Pushing: ");
+      #if LglsVerboseEnabled
+         LglsVerboseTempoScoped("Pushing: ");
          bool unused = true;
          DumpInner(scope, true, unused);
       #endif
@@ -265,8 +264,8 @@ Many Temporal::PushInner(Many scope) {
       compiled = Compile(scope);
    }
    {
-      #if VERBOSE_ENABLED()
-         VERBOSE_TEMPORAL_TAB("Compiled to: ");
+      #if LglsVerboseEnabled
+         LglsVerboseTempoScoped("Compiled to: ");
          bool unused = true;
          DumpInner(compiled, true, unused);
       #endif
@@ -293,7 +292,7 @@ Many Temporal::PushInner(Many scope) {
 Many Temporal::Compile(Many const& scope, Real priority) {
    Many result;
    if (scope.IsOr())
-      result.MakeOr();
+      result.EnableOr();
 
    if (scope.IsPast()) {
       // Convert the scope to a MissingPast intermediate format         
@@ -330,30 +329,16 @@ Many Temporal::Compile(Many const& scope, Real priority) {
    const auto done = scope.ForEach(
       [&](Tag const& subscope) {
          // Compile traits                                              
-         result << Tag::From(
-            subscope.GetTag(), 
-            Compile(subscope, priority)
-         );
+         result << Tag::From(subscope, Compile(subscope.GetData(), priority));
       },
       [&](Recipe const& subscope) {
          // Compile constructs                                          
-         result << Recipe {
-            subscope.GetTarget(),
-            Compile(subscope.GetDescriptor(), priority),
-            subscope.GetCharge()
-         };
+         result << Recipe::From(subscope, Compile(subscope.GetDescriptor(), priority));
       },
       [&](Verb const& subscope) {
          // Compile verbs                                               
-         auto v = Verb::FromMeta(
-            subscope.GetVerb(),
-            Compile(subscope.GetArgument(), subscope.GetPriority()),
-            subscope.GetCharge(),
-            subscope.GetVerbState()
-         ).SetSource(
-            Compile(subscope.GetSource(), subscope.GetPriority())
-         );
-         result << Abandon(v);
+         result << Verb::From(subscope, Compile(subscope.GetArgument(), subscope.GetPrecedence()))
+                                    .In(Compile(subscope.GetSource(),   subscope.GetPrecedence()));
       }
    );
 
@@ -374,8 +359,9 @@ void Temporal::Link(Many const& scope, Ref<Entanglement> const& entanglementAbov
    // Every time we push an OR scope we create an entanglement          
    Ref<Entanglement> entanglement;
    if (scope.IsOr()) {
-      entanglement = mEntanglements.Emplace(IndexBack)
-         .New(entanglementAbove ? entanglementAbove->mParent : nullptr);
+      entanglement = mEntanglements.Emplace(
+         entanglementAbove ? entanglementAbove->mParent : nullptr
+      );
    }
    else entanglement = entanglementAbove;
 
@@ -489,8 +475,9 @@ void Temporal::LinkRelative(
    // Every time we push an OR scope we create an entanglement          
    Ref<Entanglement> entanglement;
    if (scope.IsOr()) {
-      entanglement = mEntanglements.Emplace(IndexBack)
-         .New(entanglementAbove ? entanglementAbove->mParent : nullptr);
+      entanglement = mEntanglements.Emplace(
+         entanglementAbove ? entanglementAbove->mParent : nullptr
+      );
    }
    else entanglement = entanglementAbove;
 

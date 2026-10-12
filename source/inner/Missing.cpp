@@ -7,6 +7,7 @@
 ///                                                                           
 #include "Missing.hpp"
 #include "Redundant.hpp"
+#include "Entangled.hpp"
 #include <Langulus/Temporal.hpp>
 #include <Langulus/Verbs/Do.hpp>
 #include <Langulus/Verbs/Interpret.hpp>

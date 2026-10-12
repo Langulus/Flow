@@ -960,6 +960,7 @@ size_t OperatorParser::ParseString(
    }
 
    LglsFlowError("Unexpected EOF when parsing string/character/code");
+   return progress;
 }
 
 /// Byte scope parser                                                         

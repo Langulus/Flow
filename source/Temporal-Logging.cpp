@@ -119,7 +119,7 @@ bool Temporal::DumpInner(Many const& data, bool newline, bool& first) {
          DumpSeparator(data, newline or tooLong, first);
          DumpTag(t);
       },
-      [&](const MissingFuture& p) {
+      [&](MissingFuture const& p) {
          if (p.mSuspended) {
             if (p.mContent) {
                bool unused = true;
@@ -140,7 +140,7 @@ bool Temporal::DumpInner(Many const& data, bool newline, bool& first) {
 
          DumpMissing(p);
       },
-      [&](const MissingPast& p) {
+      [&](MissingPast const& p) {
          // Write a missing past linking point                          
          DumpSeparator(data, newline or tooLong, first);
 

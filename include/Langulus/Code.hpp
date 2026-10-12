@@ -109,6 +109,19 @@ namespace Langulus::CTTI
       static constexpr bool CriticalFailure = true;
       static constexpr bool SkipElements = false;
    };
+
+   /// Rule for serializing Code to Text. Wraps it in {} symbols.             
+   template<>
+   struct SerializationRule<Annies::Text, Flow::Code> {
+      using S = Serializer<Annies::Text>;
+      using Context = typename S::Context;
+
+      static void Serialize(Flow::Code const& item, Annies::Text& out, Context*) {
+         out += Serial::OpenCode.Token;
+         out += item;
+         out += Serial::CloseCode.Token;
+      }
+   };
 }
 
 namespace Langulus

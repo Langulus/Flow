@@ -91,38 +91,38 @@
       return {};
    }
 
-   /// Get the first member matching a runtime trait definition               
-   ///   @param trait - the trait to search for                               
+   /// Get the first member matching a runtime tag definition               
+   ///   @param tag - the tag to search for                               
    ///   @return the static mutable memory block representing the member      
-   Block<> Resolvable::GetMember(TMeta trait) noexcept {
-      auto member = mClassType->GetMember(trait);
+   Block<> Resolvable::GetMember(TMeta tag) noexcept {
+      auto member = mClassType->GetMember(tag);
       if (member)
          return GetBlock().GetMember(*member, 0);
       return {};
    }
 
-   /// Get the first member matching a runtime trait definition (const)       
-   ///   @param trait - the trait to search for                               
+   /// Get the first member matching a runtime tag definition (const)       
+   ///   @param tag - the tag to search for                               
    ///   @return the static constant memory block representing the member     
-   Block<> Resolvable::GetMember(TMeta trait) const noexcept {
-      auto r = const_cast<Resolvable*>(this)->GetMember(trait);
+   Block<> Resolvable::GetMember(TMeta tag) const noexcept {
+      auto r = const_cast<Resolvable*>(this)->GetMember(tag);
       r.MakeConst();
       return r;
    }
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
-   /// Get the first member matching a runtime trait token                    
-   ///   @param trait - the trait to search for                               
+   /// Get the first member matching a runtime tag token                    
+   ///   @param tag - the tag to search for                               
    ///   @return the static mutable memory block representing the member      
-   Block<> Resolvable::GetMember(Token const& trait) noexcept {
-      return GetMember(RTTI::GetMetaTrait(trait));
+   Block<> Resolvable::GetMember(Token const& tag) noexcept {
+      return GetMember(RTTI::GetMetaTrait(tag));
    }
 
-   /// Get the first member matching a runtime trait token (const)            
-   ///   @param trait - the trait to search for                               
+   /// Get the first member matching a runtime tag token (const)            
+   ///   @param tag - the tag to search for                               
    ///   @return the static constant memory block representing the member     
-   Block<> Resolvable::GetMember(Token const& trait) const noexcept {
-      return GetMember(RTTI::GetMetaTrait(trait));
+   Block<> Resolvable::GetMember(Token const& tag) const noexcept {
+      return GetMember(RTTI::GetMetaTrait(tag));
    }
 #endif
 

@@ -73,8 +73,8 @@ SCENARIO("Serialization", "[serialization]") {
       "won't you tell me your name"_text
    };
    const auto txtToken = MetaDataOf<Text>()->mToken.size();
-   const auto traitToken = MetaDataOf<Traits::Name>()->mToken.size();
-   const auto nameToken = MetaTraitOf<Traits::Name>()->mToken.size();
+   const auto traitToken = MetaDataOf<Tags::Name>()->mToken.size();
+   const auto nameToken = MetaTraitOf<Tags::Name>()->mToken.size();
 
 	GIVEN("A Many instance containing Text") {
       Many pack;
@@ -99,9 +99,9 @@ SCENARIO("Serialization", "[serialization]") {
 
 	GIVEN("A Many instance containing Tag") {
       Many pack;
-		pack  << Traits::Name(texts[0])
-		      << Traits::Name(texts[1])
-		      << Traits::Name(texts[2]);
+		pack  << Tags::Name(texts[0])
+		      << Tags::Name(texts[1])
+		      << Tags::Name(texts[2]);
 
 		WHEN("Pack is serialized as binary") {
 			auto serialized = Verbs::Interpret::To<Bytes>(pack);

@@ -127,7 +127,7 @@ SCENARIO("Test factories on the stack", "[factory]") {
          context.New(1);
 
          const auto descriptor = Recipe::From<Producible>(
-            Traits::Parent(&context[0]),
+            Tags::Parent(&context[0]),
             "test"_text
          );
 			Verbs::Create creator {&descriptor};
@@ -170,7 +170,7 @@ SCENARIO("Test factories on the stack", "[factory]") {
 
 		WHEN("Two elements produced via descriptors, with parent on the stack") {
          const auto descriptor = Recipe::From<Producible>(
-            Traits::Parent(&producer),
+            Tags::Parent(&producer),
             "test"_text
          );
 			Verbs::Create creator {&descriptor};
@@ -332,7 +332,7 @@ SCENARIO("Test factories on the heap", "[factory]") {
       
 		WHEN("Two elements produced via descriptors, with parent on the heap (inducing a circular dependency)") {
          const auto descriptor = Recipe::From<Producible>(
-            Traits::Parent(&producer),
+            Tags::Parent(&producer),
             "test"_text
          );
 			Verbs::Create creator {&descriptor};
@@ -375,7 +375,7 @@ SCENARIO("Test factories on the heap", "[factory]") {
       WHEN("Two elements produced via descriptors, with parent on the stack") {
          Producer context;
          const auto descriptor = Recipe::From<Producible>(
-            Traits::Parent(&context),
+            Tags::Parent(&context),
             "test"_text
          );
 			Verbs::Create creator {&descriptor};
@@ -433,7 +433,7 @@ SCENARIO("Nested factories and circular referencing", "[factory]") {
    GIVEN("A factory") {
       Verbs::Create creator1 {
          Recipe::From<ShallowProducer>(
-            Traits::Parent(&deepProducer),
+            Tags::Parent(&deepProducer),
             "test"_text
          )
       };
@@ -449,7 +449,7 @@ SCENARIO("Nested factories and circular referencing", "[factory]") {
       auto& shallowProducer = creator1.GetOutput().As<ShallowProducer>();
       Verbs::Create creator2 {
          Recipe::From<TheProducible>(
-            Traits::Parent(&shallowProducer),
+            Tags::Parent(&shallowProducer),
             "test"_text
          )
       };

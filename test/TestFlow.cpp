@@ -186,7 +186,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
          IndexSingle, 
          "and"
       };
-      argument.MakeOr();
+      argument.EnableOr();
       Many const required = Verbs::Associate {argument}
          .SetSource(',');
 
@@ -245,7 +245,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       Many const package = Verbs::Select {Many::Future()}
          .SetSource(Verbs::Select {MetaOf<Verb>()});
       Many const required = Verbs::Associate {package}
-         .SetSource(Verbs::Select {MetaOf<Traits::Context>()});
+         .SetSource(Verbs::Select {MetaOf<Tags::Context>()});
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -305,7 +305,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       conjunct.SetPriority(4);
 
       Many required = Many::Wrap<Verb>(catenate, conjunct);
-      required.MakeOr();
+      required.EnableOr();
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -330,9 +330,9 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       }
    }
 
-   GIVEN("The script: Traits::Name") {
-      const Code code = "Traits::Name";
-      Many const required = MetaOf<Traits::Name>();
+   GIVEN("The script: Tags::Name") {
+      const Code code = "Tags::Name";
+      Many const required = MetaOf<Tags::Name>();
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -357,7 +357,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "(? = ??) or (?.Thing(Session or User)) or (?.??)";
 
       Many sessionOrUser {MetaOf<Session>(), MetaOf<User>()};
-      sessionOrUser.MakeOr();
+      sessionOrUser.EnableOr();
 
       Verbs::Associate first {Many::Future()};
       first.SetSource(Many::Past());
@@ -369,7 +369,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       third.SetSource(Many::Past());
 
       Many required = Many::Wrap<Verb>(first, second, third);
-      required.MakeOr();
+      required.EnableOr();
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -420,7 +420,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Tags::Name {missingFutureText}}
          .SetSource(Many::Past());
 
       WHEN("Parsed") {
@@ -434,7 +434,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create @ 1 ! 2 ^ 3 * 5 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Tags::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(1_real).SetPriority(2_real).SetRate(3_real).SetMass(5_real);
 
@@ -449,7 +449,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create @ 1.66 ! 2.11 ^ 3.22 * 5.33 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Tags::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(1.66_real).SetPriority(2.11_real).SetRate(3.22_real).SetMass(5.33_real);
 
@@ -464,7 +464,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create@0.2!0.1^0.3*0.4 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Tags::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(0.2_real).SetPriority(0.1_real).SetRate(0.3_real).SetMass(0.4_real);
 
@@ -479,7 +479,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create@1!2^3*4 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Tags::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(1_real).SetPriority(2_real).SetRate(3_real).SetMass(4_real);
 
@@ -494,7 +494,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create@1.66!2.22^0.04*0.05 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Tags::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(1.66_real).SetPriority(2.22_real).SetRate(0.04_real).SetMass(0.05_real);
 
@@ -509,7 +509,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create@0.2!0.3^0.4*0.5 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Tags::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(0.2_real).SetPriority(0.3_real).SetRate(0.4_real).SetMass(0.5_real);
 
@@ -524,7 +524,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       const Code code = "? create@-0.2!-0.3^-0.4*-0.5 Name(A::Text??)";
       Many missingFutureText = Many::Future();
       missingFutureText << MetaOf<A::Text>();
-      Many const required = Verbs::Create {Traits::Name {missingFutureText}}
+      Many const required = Verbs::Create {Tags::Name {missingFutureText}}
          .SetSource(Many::Past())
          .SetTime(-0.2_real).SetPriority(-0.3_real).SetRate(-0.4_real).SetMass(-0.5_real);
 
@@ -537,7 +537,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: Input(`test`, 6, true)") {
       const Code code = "Input(`test`, 6, true)";
-      Many const required = Traits::Input {"test", 6_real, true};
+      Many const required = Tags::Input {"test", 6_real, true};
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();

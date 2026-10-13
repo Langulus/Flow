@@ -509,7 +509,7 @@ Token KeywordParser::Isolate(Code const& input) noexcept {
    return input.LeftOf(progress);
 }
 
-/// Parse keyword for a constant, data, or trait                              
+/// Parse keyword for a constant, data, or tag                              
 /// Verbs are considered operators, not keywords                              
 ///   @param input the code to parse                                          
 ///   @param lhs [in/out] parsed content goes here (lhs)                      
@@ -865,7 +865,7 @@ void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
       LglsVerbose(Flow, "Constructed from VMeta: ", Logger::Cyan, lhs);
    }
    else if (lhs.Is<TMeta>()) {
-      // The content is for an uninstantiated trait scope               
+      // The content is for an uninstantiated tag scope               
       const auto meta = lhs.AsAt<TMeta>(Index::Last);
       LglsAssert((bool) meta, "Bad tag id");
 

@@ -327,12 +327,12 @@ void Temporal::DumpTag(Tag const& t) {
    Langulus::Serialize(t, serv);
    const auto separated = serv.GetCount() > CarryOverLimit;
 
-   // Write the trait and open the scope                                
+   // Write the tag and open the scope                                
    Logger::Append(Logger::PushPurple, t.GetTag(), '(', Logger::Pop);
    if (separated)
       Logger::Append(Logger::Tab);
 
-   // Write the trait contents                                          
+   // Write the tag contents                                          
    bool unused = true;
    DumpInner(static_cast<Many const&>(t), separated, unused);
 

@@ -131,7 +131,7 @@ namespace Langulus::Flow
 
             CreateInner(producer, verb, count, recipe.GetDescriptor());
          },
-         [&](const DMeta& type) {
+         [&](DMeta const& type) {
             // For each type...                                         
             if (not type or not MetaOf<T>()->CastsTo(type))
                return;
@@ -267,7 +267,7 @@ namespace Langulus::Flow
 
             TODO();
          },
-         [&](const DMeta& type) {
+         [&](DMeta const& type) {
             // For each type...                                         
             if (not type or not MetaDataOf<T>()->CastsTo(type))
                return;

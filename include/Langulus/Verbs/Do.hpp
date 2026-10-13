@@ -162,7 +162,7 @@ namespace Langulus::Annies
    /// Implemented in Langulus::Flow, as it requires some prime verbs         
    /// being defined, such as Verbs::Do.                                      
    template<class V>
-   bool TVerb<V>::Run() const {
+   bool TVerb<V>::Run() {
       if (not mContext) {
          // Context is empty and doesn't have any relevant states,      
          // and execution happens only in stateless mode by using       
@@ -175,9 +175,17 @@ namespace Langulus::Annies
       }
 
       // Dispatcher for Many should always exist                        
-      if (IsVerb<Verbs::Do>())
-         return Langulus::InvokeAbility(mContext, reinterpret_cast<Verbs::Do&>(*this));
-      else
-         return Langulus::InvokeAbility(mContext, Verbs::Do(*this));
+      if constexpr (::std::is_same_v<V, Verbs::Do>)
+         return Langulus::InvokeAbility(mContext, *this);
+      else {
+         if (this->template IsVerb<Verbs::Do>())
+            return Langulus::InvokeAbility(mContext, reinterpret_cast<Verbs::Do&>(*this));
+         else {
+            Verbs::Do temporary(*this);
+            bool result = Langulus::InvokeAbility(mContext, temporary);
+            mOutput = Abandon(temporary.GetOutput());
+            return result;
+         }
+      }
    }
 }

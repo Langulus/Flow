@@ -1066,7 +1066,7 @@ size_t OperatorParser::ParseKeyword(
    if (op == Serial::Operator::SelectIdea) {
       // Implicitly create/select an idea from a Thing inside context   
       auto verb = Verbs::Select(Recipe::Of("Idea", Abandon(content)))
-                        .In(Many::Past("Thing"));
+                            .In(Many::Past("Thing"));
 
       // Check if there's a scope after an idea - it can be used to     
       // assemble the idea into data, while optionally providing        
@@ -1085,8 +1085,8 @@ size_t OperatorParser::ParseKeyword(
    }
    else if (op == Serial::Operator::SelectThing) {
       // Implicitly select an object by name from Thing in the context  
-      lhs.Compose(Verbs::Select{Recipe::FromToken("Thing", Abandon(content))}
-                        .In(Many::Past("Thing")));
+      lhs.Compose(Verbs::Select{Recipe::Of("Thing", Abandon(content))}
+                            .In(Many::Past("Thing")));
    }
    else LglsFlowError("Not a supported keyword operator: ", GetOperatorToken(op));
 
@@ -1107,7 +1107,7 @@ size_t OperatorParser::ParseReflected(
 
    // Parse charge if any                                               
    if (ChargeParser::Peek(relevant) != Serial::Operator::Noop) {
-      progress += ChargeParser::Parse(relevant, op);
+      progress += ChargeParser::Parse(relevant, op.GetCharge());
       relevant = input.RightOf(progress);
    }
    

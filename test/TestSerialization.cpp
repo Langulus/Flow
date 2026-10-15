@@ -74,7 +74,7 @@ SCENARIO("Serialization", "[serialization]") {
    };
    const auto txtToken = MetaDataOf<Text>()->mToken.size();
    const auto traitToken = MetaDataOf<Tags::Name>()->mToken.size();
-   const auto nameToken = MetaTraitOf<Tags::Name>()->mToken.size();
+   const auto nameToken = MetaTagOf<Tags::Name>()->mToken.size();
 
 	GIVEN("A Many instance containing Text") {
       Many pack;

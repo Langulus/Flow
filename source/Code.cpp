@@ -1187,7 +1187,7 @@ auto ChargeParser::Peek(Code const& input) noexcept -> Serial::Operator {
    for (int i = 0; i < int(Serial::Operator::Last); ++i) {
       if ((i == int(Serial::Operator::Mass) or i == int(Serial::Operator::Rate)
         or i == int(Serial::Operator::Time) or i == int(Serial::Operator::Precedence))
-      and StartsWithOperator(relevant, i))
+      and StartsWithOperator(relevant, Serial::Operator(i)))
          return Serial::Operator(i);
    }
 

@@ -107,7 +107,7 @@ namespace Langulus::Flow
       template<CT::NotVoid...TN> requires (sizeof...(TN) >= 1)
       Many Push(TN&&...tn) {
          Many result;
-         (result.Compose(PushInner(Forward<TN>(tn))), ...);
+         (result.Compose(PushInner(LglsFwd(tn))), ...);
          return result;
       }
 

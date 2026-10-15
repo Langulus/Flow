@@ -9,6 +9,7 @@
 #include <Langulus/THive.hpp>
 #include <Langulus/TMap.hpp>
 #include <Langulus/TMany.hpp>
+#include <Langulus/TVerb.hpp>
 #include "Producible.hpp"
 
 

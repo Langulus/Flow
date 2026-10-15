@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Factory.hpp"
-#include <Langulus/TVerb.hpp>
+#include <Langulus/Recipe.hpp>
 
 #define TEMPLATE()   template<class T, FactoryUsage USAGE>
 #define FACTORY()    TFactory<T, USAGE>
@@ -21,7 +21,6 @@
 
 namespace Langulus::Flow
 {
-
    /// Factory destructor                                                     
    /// Checks if all elements are referenced exactly once before destruction  
    /// if safe mode is enabled                                                
@@ -41,7 +40,7 @@ namespace Langulus::Flow
    ///   @param other - the factory to move                                   
    TEMPLATE() LANGULUS(INLINED)
    auto FACTORY()::operator = (TFactory&& other) noexcept -> TFactory& {
-      Base::operator = (Forward<Base>(other));
+      Base::operator = (::std::forward<Base>(other));
       mHashmap = Move(other.mHashmap);
       return *this;
    }
@@ -79,7 +78,7 @@ namespace Langulus::Flow
    /// Dump the factory to the log                                            
    TEMPLATE()
    void FACTORY()::Dump() const {
-      const auto scope = Logger::SpecialTab("--------- FACTORY DUMP FOR ", 
+      auto _ = Logger::SpecialScoped("--------- FACTORY DUMP FOR ", 
          MetaDataOf<TFactory>(), " (", Base::mCount, " of ", Base::mReserved,
          " cells used in ", Base::mFrames.GetCount(), " frames): "
       );
@@ -116,7 +115,7 @@ namespace Langulus::Flow
    ///   @param verb - the creation verb                                      
    TEMPLATE()
    void FACTORY()::Create(auto* producer, Verb& verb) {
-      static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
+      static_assert(CT::Related<ProducersOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
 
       verb.ForEachDeep(
@@ -126,12 +125,12 @@ namespace Langulus::Flow
                return;
             
             auto count = static_cast<int>(
-               ::std::floor(recipe.GetCharge().mMass * verb.GetMass())
+               ::std::floor(recipe.GetMass() * verb.GetMass())
             );
 
             CreateInner(producer, verb, count, recipe.GetDescriptor());
          },
-         [&](DMeta const& type) {
+         [&](RTTI::DMeta const& type) {
             // For each type...                                         
             if (not type or not MetaOf<T>()->CastsTo(type))
                return;
@@ -151,7 +150,7 @@ namespace Langulus::Flow
    ///   @return the new (or reused) instance                                 
    TEMPLATE()
    auto FACTORY()::CreateOne(auto* producer, Many const& descriptor) -> T* {
-      static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
+      static_assert(CT::Related<ProducersOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
 
       if constexpr (IsUnique) {
@@ -171,7 +170,7 @@ namespace Langulus::Flow
    ///   @return a pointer to the newly created element                       
    TEMPLATE() template<class...ARG>
    auto FACTORY()::Emplace(ARG&&...arguments) -> T* requires IsNotUnique {
-      auto result = Base::NewInner(Forward<ARG>(arguments)...);
+      auto result = Base::NewInner(LglsFwd(arguments)...);
       if (not result)
          return nullptr;
 
@@ -194,7 +193,7 @@ namespace Langulus::Flow
    void FACTORY()::CreateInner(
       auto* producer, Verb& verb, int count, Many const& descriptor
    ) {
-      static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
+      static_assert(CT::Related<ProducersOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
 
       if (count > 0) {
@@ -294,7 +293,7 @@ namespace Langulus::Flow
    ///   @return the produced instance                                        
    TEMPLATE()
    auto FACTORY()::Produce(auto* producer, Many const& descriptor) -> T* {
-      static_assert(CT::Related<ProducerOf<T>, decltype(producer)>,
+      static_assert(CT::Related<ProducersOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
 
       // Register entry in the hashmap, for fast search by descriptor   
@@ -329,8 +328,7 @@ namespace Langulus::Flow
       // Destroy the element                                            
       Base::Destroy(item);
    }
-   
-} // namespace Langulus::Flow
+}
 
 #undef TEMPLATE
 #undef FACTORY

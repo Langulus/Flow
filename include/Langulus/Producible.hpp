@@ -19,7 +19,7 @@ namespace Langulus::Flow
    };
 
    template<class, FactoryUsage>
-   class TFactory;
+   struct TFactory;
 
 
    ///                                                                        
@@ -38,7 +38,7 @@ namespace Langulus::Flow
 
    protected:
       template<class, FactoryUsage>
-      friend class TFactory;
+      friend struct TFactory;
 
       // The descriptor used for hashing and element identification     
       Many mDescriptor;

@@ -370,7 +370,7 @@ void Temporal::Link(Many const& scope, Ref<Entanglement> const& entanglementAbov
          // Sparse blocks are always pushed directly without linking    
          // anything, because that would require changing data behind   
          // the handle. This allows for specifying contexts externally, 
-         // but also makes the flow impure, because it allows it to be  
+         // but also makes the flow impure, because it allows to be     
          // affected by external influence.                             
          scope.ForEach([&](Many const& sub) {
             LglsAssert(PushFutures(&sub, *mFuture, entanglement),

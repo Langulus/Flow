@@ -26,7 +26,7 @@ namespace Langulus
 
       enum Enum : uint8_t {
          Auto = 0,         // Automatically determined refresh rate,    
-                           // based on traits and context               
+                           // based on tags and context               
 
          None,             // No refresh rate (a constant, that never   
                            // refreshes)                                

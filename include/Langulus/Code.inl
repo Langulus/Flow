@@ -40,7 +40,7 @@ namespace Langulus::Flow
    ///   @return true if the first symbol is special                          
    /*LANGULUS(INLINED)
    bool Code::StartsWithSpecial() const noexcept {
-      const auto& letter = (*this)[0];
+      auto const& letter = (*this)[0];
       return letter > 0 and letter < 32;
    }*/
 
@@ -52,7 +52,7 @@ namespace Langulus::Flow
       if (IsEmpty())
          return false;
 
-      const auto& letter = (*this)[0];
+      auto const& letter = (*this)[0];
       if (letter > 0 and letter <= 32)
          return true;
 

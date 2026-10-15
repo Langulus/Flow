@@ -32,8 +32,8 @@ using namespace Langulus;
 
 namespace
 {
-   bool ExecuteAND(Many const&, Many const&, Many&, bool, bool&, bool = false);
-   bool ExecuteOR (Many const&, Many const&, Many&, bool, bool&, bool = false);
+   bool ExecuteAND(Many const&, Many const&, Many&, const bool, bool&, const bool = false);
+   bool ExecuteOR (Many const&, Many const&, Many&, const bool, bool&, const bool = false);
 }
 
 /// Nested AND/OR flow execution                                              
@@ -128,7 +128,7 @@ bool ExecuteAND(
             output.Compose(Abandon(local));
          },
          [&](Tag const& tag) {
-            // Nest if traits, but retain each tag                    
+            // Nest if tags, but retain each tag                    
             if (tag.IsMissing()) {
                // Never touch missing stuff, only propagate it          
                output.Compose(tag);
@@ -289,7 +289,7 @@ bool ExecuteOR(
    else {
       executed = flow.ForEach(
          [&](Tag const& tag) {
-            // Nest if traits, but retain each tag                 
+            // Nest if tags, but retain each tag                 
             if (tag.IsMissing()) {
                // Never touch missing stuff, only propagate it       
                output.Compose(tag);

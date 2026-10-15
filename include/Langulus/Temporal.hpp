@@ -133,4 +133,4 @@ namespace Langulus::Flow
    };
 }
 
-LANGULUS_MORPHISM(Langulus::Flow::Temporal, Langulus::Annies::Text, Langulus::Flow::Code);
+LANGULUS_MORPHISM(Flow::Temporal, Annies::Text, Flow::Code);

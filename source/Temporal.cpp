@@ -328,7 +328,7 @@ Many Temporal::Compile(Many const& scope, Real priority) {
 
    const auto done = scope.ForEach(
       [&](Tag const& subscope) {
-         // Compile traits                                              
+         // Compile tags                                              
          result << Tag::From(subscope, Compile(subscope.GetData(), priority));
       },
       [&](Recipe const& subscope) {

@@ -102,7 +102,7 @@ namespace
    /// special characters or escape sequences, like colors                    
    ///   @return true if the first symbol is special                          
    /*bool StartsWithSpecial(Code const& code) noexcept {
-      const auto& letter = code[0];
+      auto const& letter = code[0];
       return letter > 0 and letter < 32;
    }*/
 
@@ -254,7 +254,7 @@ using namespace Langulus::Flow;
 ///      computable at compile-time.                                          
 ///   @return the parsed flow                                                 
 Many Code::Parse(bool optimize) const {
-   // Make sure that all default traits are registered before parsing   
+   // Make sure that all default tags are registered before parsing   
    /*(void)MetaOf<Tags::Logger>();
    (void)MetaOf<Tags::Count>();
    (void)MetaOf<Tags::Name>();
@@ -1112,13 +1112,14 @@ size_t OperatorParser::ParseReflected(
    }
    
    // Parse RHS for the operator                                        
+   Many parsed_arguments;
    progress += UnknownParser::Parse(
-      relevant, op.GetArgument(), op.GetVerb().GetPrecedence(), optimize
+      relevant, parsed_arguments, op.GetVerb().GetPrecedence(), optimize
    );
+   op.SetArgument(Abandon(parsed_arguments));
 
    if (optimize and not op.GetCharge().IsFlowDependent()) {
       // Try executing operator at compile-time                         
-      // We must disable multicast for this                             
       LglsVerboseFlowScoped("Attempting compile-time execution... ");
 
       // Next-execute the argument first                                
@@ -1129,10 +1130,8 @@ size_t OperatorParser::ParseReflected(
          // Then the verb itself                                        
          Many opSrcBackup = Move(op.GetSource());
          Many opArgBackup = Move(op.GetArgument());
-         op.SetArgument(argument).In(lhs);
-         Flow::Execute<1, 1, 0>(lhs, op);
 
-         if (op.GetSuccesses()) {
+         if (op.SetArgument(argument).In(lhs).Run()) {
             // The verb was executed at compile-time, so directly       
             // substitute LHS with the verb's output                    
             LglsVerboseFlow("Verb was executed at compile time: ", op.GetOutput());
@@ -1150,10 +1149,8 @@ size_t OperatorParser::ParseReflected(
          // pre-compute the op. Like for example when conjuncting       
          // two containers.                                             
          Many opSrcBackup = Move(op.GetSource());
-         op.In(lhs);
-         Flow::Execute<1, 1, 0>(lhs, op);
 
-         if (op.GetSuccesses()) {
+         if (op.In(lhs).Run()) {
             // The verb was executed at compile-time, so directly       
             // substitute LHS with the verb's output                    
             LglsVerboseFlow("Verb was executed at compile time: ", op.GetOutput());

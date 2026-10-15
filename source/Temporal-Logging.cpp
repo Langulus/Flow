@@ -86,7 +86,7 @@ bool Temporal::DumpInner(Many const& data, bool newline, bool& first) {
                Logger::Append(Logger::Tab);
 
             bool inner = true;
-            group.ForEachElement([&](Many const& subgroup) {
+            group.Apply([&](auto const& subgroup) {
                DumpSeparator(group, tooLong, inner);
                bool unused = true;
                DumpInner(subgroup, false, unused);
@@ -203,7 +203,7 @@ bool Temporal::DumpInner(Many const& data, bool newline, bool& first) {
             Logger::Append(Logger::PushGreen, data, Logger::Pop);
       }
       else {
-         data.ForEachElement([&](Many const& element) {
+         data.Apply([&](auto const& element) {
             DumpSeparator(data, newline or tooLong, first);
             Logger::Append(element);
          });

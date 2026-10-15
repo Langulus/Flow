@@ -176,7 +176,7 @@ namespace Langulus::Annies
 
       // Dispatcher for Many should always exist                        
       if constexpr (::std::is_same_v<V, Verbs::Do>)
-         return Langulus::InvokeAbility(mContext, *this);
+         return Langulus::InvokeAbility(mContext, reinterpret_cast<Verbs::Do&>(*this));
       else {
          if (this->template IsVerb<Verbs::Do>())
             return Langulus::InvokeAbility(mContext, reinterpret_cast<Verbs::Do&>(*this));

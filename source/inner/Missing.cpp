@@ -133,7 +133,7 @@ void MissingPast::FillPast(Many const& content) {
                atLeastOneSuccess = true;
             }
             else if (subcontent.GetType()) {
-               for (const auto& type : mFilter) {
+               for (auto const& type : mFilter) {
                   if (not subcontent.CastsTo(type))
                      continue;
 
@@ -242,7 +242,7 @@ void MissingFuture::FillFuture(Many const& content, Temporal& flow) {
                atLeastOneSuccess = true;
             }
             else if (subcontent.GetType()) {
-               for (const auto& type : mFilter) {
+               for (auto const& type : mFilter) {
                   if (not subcontent.CastsTo(type))
                      continue;
 
@@ -344,10 +344,8 @@ void MissingFuture::Commit(Many const& linked, Temporal& flow) {
             // Verb is timed, forward it to the time stack              
             local[0].SetTime(0);
             auto found = flow.mTimeStack.Find(time);
-            if (not found) {
-               flow.mTimeStack.Merge(time, flow);
-               found = flow.mTimeStack.Find(time);
-            }
+            if (not found)
+               found = flow.mTimeStack.Merge(time, flow);
 
             LglsAssumeDev(found->mFuture, "Invalid future");
             found->mFuture->Commit(local, **found);
@@ -358,10 +356,8 @@ void MissingFuture::Commit(Many const& linked, Temporal& flow) {
             // Verb is rated, forward it to the frequency stack         
             local[0].SetRate(0);
             auto found = flow.mFrequencyStack.Find(rate);
-            if (not found) {
-               flow.mFrequencyStack.Merge(rate, flow);
-               found = flow.mFrequencyStack.Find(rate);
-            }
+            if (not found)
+               found = flow.mFrequencyStack.Merge(rate, flow);
 
             LglsAssumeDev(found->mFuture, "Invalid future");
             found->mFuture->Commit(local, **found);
@@ -524,7 +520,7 @@ void Missing::RemapFutures(MissingFuture& context, Many const& stack) {
    // Flat if reached                                                   
    stack.ForEachRev(
       [&](Tag const& tag) {
-         // Nest inside traits                                          
+         // Nest inside tags                                          
          RemapFutures(context, tag.GetData());
       },
       [&](Recipe const& recipe) {

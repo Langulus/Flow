@@ -9,7 +9,7 @@
 #include "Langulus/CT/Convertible.hpp"
 #include <Langulus/TRef.hpp>
 #include <Langulus/Many.hpp>
-#include <Langulus/Text.hpp>
+#include <Langulus/SerializeText.hpp>
 //#include <Langulus/Temporal.hpp>
 
 
@@ -58,8 +58,8 @@ namespace Langulus::Flow
       /// Just stringify the contents                                         
       explicit operator Text() const {
          Text result;
-         if (IsActive())   Serialize(mTrueContent,  result);
-         else              Serialize(mFalseContent, result);
+         if (IsActive())   Langulus::Serialize(mTrueContent,  result);
+         else              Langulus::Serialize(mFalseContent, result);
          return result;
       }
 

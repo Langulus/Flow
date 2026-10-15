@@ -9,8 +9,8 @@
 /// INTENTIONALLY NOT GUARDED                                                 
 /// Include this file once in each cpp file, after all other headers          
 #include <Langulus/Flow/Resolvable.hpp>
-#include <Langulus/Flow/Factory.hpp>
-#include <Langulus/Flow/Producible.hpp>
+#include <Langulus/Factory.hpp>
+#include <Langulus/Producible.hpp>
 #include <Langulus/Testing.hpp>
 
 using namespace Flow;

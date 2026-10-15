@@ -8,13 +8,15 @@
 #include "inner/Missing.hpp"
 #include "inner/Redundant.hpp"
 
+#include <Langulus/Except.hpp>
+#include <Langulus/TTag.hpp>
+#include <Langulus/Neat.hpp>
+#include <Langulus/Recipe.hpp>
+#include <Langulus/SerializeText.hpp>
+
 #include <Langulus/Verbs/Do.hpp>
 #include <Langulus/Verbs/Interpret.hpp>
 #include <Langulus/Verbs/Create.hpp>
-#include "Langulus/Except.hpp"
-#include "Langulus/TTag.hpp"
-#include "Langulus/Neat.hpp"
-#include "Langulus/Recipe.hpp"
 
 #if 0
    #define VERBOSE(...)      Logger::Verbose(__VA_ARGS__)

@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 //#include "Executor.hpp"
-#include <Langulus/Text.hpp>
+#include <Langulus/SerializeText.hpp>
 #include <Langulus/Many.hpp>
 #include <Langulus/TVerb.hpp>
 #include <Langulus/CT/Charged.hpp>

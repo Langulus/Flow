@@ -15,7 +15,7 @@ namespace Langulus::Flow
    ///                                                                        
    ///   A redundant data, that is used only as past, never executed          
    ///                                                                        
-   struct Redundant {
+   struct Redundant {//TODO hmm, wasn't this substituted with sparse data? sparse data can be omitted, no?
       Many mContent;
 
       operator Text() const {

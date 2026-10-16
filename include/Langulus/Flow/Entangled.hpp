@@ -10,7 +10,6 @@
 #include <Langulus/TRef.hpp>
 #include <Langulus/Many.hpp>
 #include <Langulus/SerializeText.hpp>
-//#include <Langulus/Temporal.hpp>
 
 
 namespace Langulus::Flow

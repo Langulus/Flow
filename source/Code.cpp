@@ -5,8 +5,6 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include <Langulus/Time.inl>
-#include <Langulus/Code.hpp>
 #include <Langulus/Temporal.hpp>
 #include <Langulus/Any.hpp>
 #include <Langulus/Bytes.hpp>
@@ -159,12 +157,12 @@ namespace
 
    /// Check if the Code container ends with a number                         
    ///   @return true if the last symbol is a number                          
-   bool EndsWithDigit(Code const& code) noexcept {
+   /*bool EndsWithDigit(Code const& code) noexcept {
       if (code.IsEmpty())
          return false;
 
       return IsNumerical(code[-1]);
-   }
+   }*/
 
    /// Check if the code container begins with a Serial::Operator             
    ///   @return true if the operator matches                                 
@@ -646,10 +644,10 @@ auto OperatorParser::Peek(Code const& input) noexcept -> Serial::Operator {
       return builtin;
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      const auto word = Isolate(input);
-      auto found = RTTI::Registry::GetMetaVerbByToken(word);
-      if (found)
-         return Serial::Operator::CustomOp;
+   const auto word = Isolate(input);
+   auto found = RTTI::Registry::GetMetaVerbByToken(word);
+   if (found)
+      return Serial::Operator::CustomOp;
    #endif
 
    return Serial::Operator::Noop;

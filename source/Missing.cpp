@@ -5,10 +5,12 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "Missing.hpp"
-#include "Redundant.hpp"
-#include "Entangled.hpp"
+#include <Langulus/Flow/Missing.hpp>
+#include <Langulus/Flow/Redundant.hpp>
+#include <Langulus/Flow/Entangled.hpp>
+
 #include <Langulus/Temporal.hpp>
+
 #include <Langulus/Verbs/Do.hpp>
 #include <Langulus/Verbs/Interpret.hpp>
 
@@ -345,7 +347,7 @@ void MissingFuture::Commit(Many const& linked, Temporal& flow) {
             local[0].SetTime(0);
             auto found = flow.mTimeStack.Find(time);
             if (not found)
-               found = flow.mTimeStack.Merge(time, flow);
+               found = flow.mTimeStack.Merge(time, &flow);
 
             LglsAssumeDev(found->mFuture, "Invalid future");
             found->mFuture->Commit(local, **found);
@@ -357,7 +359,7 @@ void MissingFuture::Commit(Many const& linked, Temporal& flow) {
             local[0].SetRate(0);
             auto found = flow.mFrequencyStack.Find(rate);
             if (not found)
-               found = flow.mFrequencyStack.Merge(rate, flow);
+               found = flow.mFrequencyStack.Merge(rate, &flow);
 
             LglsAssumeDev(found->mFuture, "Invalid future");
             found->mFuture->Commit(local, **found);

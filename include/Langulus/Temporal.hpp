@@ -8,6 +8,9 @@
 #pragma once
 #include "Code.hpp"
 #include "Time.hpp"
+#include "Flow/Entangled.hpp"
+#include "Flow/Missing.hpp"
+#include "Flow/Redundant.hpp"
 #include <Langulus/TMap.hpp>
 #include <Langulus/TMany.hpp>
 #include <Langulus/TRef.hpp>
@@ -17,14 +20,6 @@
 
 namespace Langulus::Flow
 {
-   struct Missing;
-   struct MissingPast;
-   struct MissingFuture;
-   struct Entangled;
-   struct Entanglement;
-   struct Redundant;
-
-
    ///                                                                        
    /// MARK: Temporal flow                                                    
    ///                                                                        

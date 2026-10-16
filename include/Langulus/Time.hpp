@@ -27,10 +27,18 @@ namespace Langulus
       using Base = time_point;
       using Base::time_point;
 
-      constexpr TimePoint() noexcept;
-      constexpr TimePoint(const time_point&) noexcept;
+      constexpr TimePoint() noexcept
+         : time_point {min()} {
+         using Representation = typename Base::rep;
+         static_assert(sizeof(Representation) == sizeof(TimePoint), "Size mismatch");
+      }
 
-      constexpr explicit operator bool() const noexcept;
+      constexpr TimePoint(const time_point& a) noexcept
+         : time_point {a} {}
+
+      constexpr explicit operator bool() const noexcept {
+         return *this != min();
+      }
    };
 
 
@@ -64,10 +72,15 @@ namespace Langulus
          return *this;
       }
 
-      constexpr explicit operator bool() const noexcept;
+      constexpr explicit operator bool() const noexcept {
+         return *this != zero();
+      }
 
       template<CT::Number T = Real>
-      T Seconds() const noexcept;
+      T Seconds() const noexcept {
+         auto& asBase = static_cast<const Base&>(*this);
+         return std::chrono::duration<T>(asBase).count();
+      }
 
       Time operator + (auto&& rhs) const {
          return ::std::chrono::duration_cast<Base>(
@@ -85,7 +98,9 @@ namespace Langulus
    ///   A steady clock used to acquire TimePoint(s)                          
    ///                                                                        
    struct SteadyClock : private StdClock {
-      static TimePoint Now() noexcept;
+      static TimePoint Now() noexcept {
+         return steady_clock::now();
+      }
    };
 }
 

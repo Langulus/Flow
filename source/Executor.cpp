@@ -5,8 +5,8 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "inner/Missing.hpp"
-#include "inner/Redundant.hpp"
+#include <Langulus/Flow/Missing.hpp>
+#include <Langulus/Flow/Redundant.hpp>
 
 #include <Langulus/Except.hpp>
 #include <Langulus/TTag.hpp>

@@ -5,14 +5,9 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include <Langulus/Time.inl>
-#include <Langulus/Code.inl>
-#include <Langulus/Neat.hpp>
 #include <Langulus/Temporal.hpp>
+#include <Langulus/Neat.hpp>
 #include <Langulus/Verbs/Do.hpp>
-#include "inner/Missing.hpp"
-#include "inner/Entangled.hpp"
-#include "inner/Redundant.hpp"
 
 #define LglsVerboseEnabled 0
 #include <Langulus/Logger/ToggleVerbose.hpp>

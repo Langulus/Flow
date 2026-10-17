@@ -95,7 +95,7 @@ namespace Langulus::Flow
    ///   @param descriptor - the normalized descriptor for the element        
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE() LANGULUS(INLINED)
-   auto FACTORY()::FindInner(Many const& descriptor) const -> Cell* {
+   auto FACTORY()::FindInner(Many const& descriptor) const -> T* {
       VERBOSE_FACTORY(NameOf<TFactory>(), " seeking for ", descriptor);
       const auto hash = descriptor.GetHash();
       const auto found = mHashmap.FindIt(hash);
@@ -169,7 +169,7 @@ namespace Langulus::Flow
    ///   @param arguments... - arguments to forwards towards contructor       
    ///   @return a pointer to the newly created element                       
    TEMPLATE() template<class...ARG>
-   auto FACTORY()::Emplace(ARG&&...arguments) -> T* requires IsNotUnique {
+   auto FACTORY()::Emplace(ARG&&...arguments) -> T* requires (not IsUnique) {
       auto result = Base::NewInner(LglsFwd(arguments)...);
       if (not result)
          return nullptr;
@@ -266,7 +266,7 @@ namespace Langulus::Flow
 
             TODO();
          },
-         [&](DMeta const& type) {
+         [&](RTTI::DMeta const& type) {
             // For each type...                                         
             if (not type or not MetaDataOf<T>()->CastsTo(type))
                return;
@@ -317,7 +317,7 @@ namespace Langulus::Flow
    ///   @attention item pointer is no longer valid after this call           
    ///   @param item - element to destroy                                     
    TEMPLATE()
-   void FACTORY()::Destroy(Cell* item) {
+   void FACTORY()::Destroy(T* item) {
       // Remove from hashmap                                            
       const auto hash = item->mData.GetHash();
       auto& list = mHashmap[hash];

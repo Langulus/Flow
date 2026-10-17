@@ -35,18 +35,15 @@ namespace Langulus::Flow
       using Base              = Annies::THive<T>;
       
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
-      static constexpr bool IsNotUnique = not IsUnique;
 
    protected:
-      using typename Base::Cell;
-
       // A hash map for fast retrieval of elements                      
-      TMapUnsorted<Hash, TMany<Cell*>> mHashmap;
+      TMapUnsorted<Hash, TMany<T*>> mHashmap;
 
       auto Produce(auto*, Many const&) -> T*;
       void CreateInner(auto*, Verb&, int, Many const& = {});
-      void Destroy(Cell*);
-      auto FindInner(Many const&) const -> Cell*;
+      void Destroy(T*);
+      auto FindInner(Many const&) const -> T*;
 
    public:
       /// Factories can't be default-, move- or copy-constructed              
@@ -69,16 +66,12 @@ namespace Langulus::Flow
       void Create(auto*, Verb&);
       auto CreateOne(auto*, Many const&) -> T*;
       template<class...ARG>
-      auto Emplace(ARG&&...) -> T* requires IsNotUnique;
+      auto Emplace(ARG&&...) -> T* requires (not IsUnique);
       void Select(Verb&);
       auto Find(Many const&) const -> const T*;
       void Teardown();
 
       IF_SAFE(void Dump() const);
-
-      #if LANGULUS(TESTING)
-         auto& GetHashmap() const { return mHashmap; }
-      #endif
    };
 
    template<class T>

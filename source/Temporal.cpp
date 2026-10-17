@@ -664,7 +664,7 @@ bool Temporal::PushFutures(
 
    // If reached, then scope wasn't linked in the immediate future      
    // Dig deeper for any future points below the provided one           
-   if (not atLeastOneSuccess or not scope.IsExecutableDeep()) {
+   if (not atLeastOneSuccess or not scope.IsExecutable()) {
       future.mBelow.ForEach([&](MissingFuture& below) {
          atLeastOneSuccess |= PushFutures(scope, below, entanglementAbove);
          // Continue linking only if the future is uncertain            

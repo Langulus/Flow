@@ -189,7 +189,7 @@ bool Temporal::Update(Time dt, Many& sideffects) {
 
 /// Merge a flow                                                              
 ///   @param other the flow to merge with this one                            
-void Temporal::Merge(Temporal const& other) {
+void Temporal::Merge(Temporal /*const*/& other) {
    // Merge priority stacks                                             
    mPriorityStack.MergeRange(other.mPriorityStack);
 
@@ -197,7 +197,7 @@ void Temporal::Merge(Temporal const& other) {
    for (auto pair : other.mTimeStack) {
       const auto timepoint = pair.GetKey();
       auto found = mTimeStack.Merge(timepoint);
-      auto* innerFlow = pair.GetVal();
+      auto* innerFlow = *pair.GetVal();
       auto v = found.GetVal();
       if (v)
          v->Merge(*innerFlow);
@@ -209,7 +209,7 @@ void Temporal::Merge(Temporal const& other) {
    for (auto pair : other.mFrequencyStack) {
       const auto frequency = pair.GetKey();
       auto found = mFrequencyStack.Merge(frequency);
-      auto* innerFlow = pair.GetVal();
+      auto* innerFlow = *pair.GetVal();
       auto v = found.GetVal();
       if (v)
          v->Merge(*innerFlow);
@@ -218,7 +218,7 @@ void Temporal::Merge(Temporal const& other) {
    };
 }
 
-/// Push a scope of verbs and data to the flow                                
+/// Push a scope of verbs and data to the flow.                               
 /// The following rules are used to place the data:                           
 ///   1. Data is always inserted at future missing points (??) - there is     
 ///      always at least one such point in any flow (at the back of the       
@@ -228,11 +228,11 @@ void Temporal::Merge(Temporal const& other) {
 ///      insertion                                                            
 ///   3. Future and past points might have a filter, which decides what       
 ///      kind of data can be inserted at that point                           
-///   4. Future and past points might have priority, which decides what       
-///      kind of verbs are allowed inside. Priorities are set when a          
-///      verb is inserted. A verb of higher-or-equal priority can never be    
-///      inserted in a point of lower priority. A verb of higher-or-equal     
-///      priority can only wrap lower-or-equal priority scopes in itself.     
+///   4. Future and past points might have precedences, which decides what    
+///      kind of verbs are allowed inside. Precedences are set when a         
+///      verb is inserted. A verb of higher-or-equal precedence can never be  
+///      inserted in a point of lower precedence. A verb of higher-or-equal   
+///      precedence can only wrap lower-or-equal precedence scopes in itself. 
 ///   5. Future and past points might have branches, which forces shallow     
 ///      duplication of missing future/past content when linking              
 ///   6. Verbs with different frequency and time charge go to the             

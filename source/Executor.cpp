@@ -32,66 +32,6 @@ using namespace Langulus;
 
 namespace
 {
-   bool ExecuteAND(Many const&, Many const&, Many&, const bool, bool&, const bool = false);
-   bool ExecuteOR (Many const&, Many const&, Many&, const bool, bool&, const bool = false);
-}
-
-/// Nested AND/OR flow execution                                              
-///   @param flow the flow to execute                                         
-///   @param environment the environment in which scope will be executed.     
-///      Note: each verb in the flow can have its own context, but the        
-///      environment is the overarching context, which is used to disambiguate
-///      and link missing points inside the flow.                             
-///   @param output [out] verb execution results and propagated data will be  
-///      pushed here                                                          
-///   @param integrate execution happens in two stages:                       
-///      1. integration: everything not executed will still be pushed to      
-///         output, preserving the hierarchy. Useful when integrating verbs.  
-///      2. execution: only unexecuted verbs will push to output, especially  
-///         useful for collecting side-effects when updating.                 
-///   @param skipVerbs [in/out] whether to skip executing verbs in other      
-///      branches after an OR-success of a short-circuited verb.              
-///   @param silent whether or not to silence logging, in case we're          
-///      executing at compile-time, for example.                              
-///   @return true of no errors occured                                       
-bool Flow::Execute(
-   Many const& flow, Many const& environment, Many& output,
-   const bool integrate, bool& skipVerbs, const bool silent
-) {
-   auto results = Many::CopyStates(flow);
-   if (flow) {
-      if (flow.IsSparse()) {
-         // Sparse contents are always simply forwarded (if integrating)
-         // and never executed.                                         
-         if (integrate) {
-            results.Compose(flow);
-            VERBOSE(Logger::Green, "AND scope forwarded: {", flow, "}");
-         }
-      }
-      else {
-         // Dense flows will be integrated and/or executed              
-         if (integrate)
-            VERBOSE_TAB("Executing scope (integrating): [", flow, ']');
-         else
-            VERBOSE_TAB("Executing scope: [", flow, ']');
-         
-         try {
-            if (flow.IsOr())
-               ExecuteOR(flow, environment, results, integrate, skipVerbs, silent);
-            else
-               ExecuteAND(flow, environment, results, integrate, skipVerbs, silent);
-         }
-         catch (...) {
-            // Execution failed                                         
-            return false;
-         }
-      }
-   }
-
-   output.Compose(Abandon(results));
-   return true;
-}
-
 /// Nested AND scope execution                                                
 bool ExecuteAND(
    Many const& flow, Many const& environment, Many& output,
@@ -173,7 +113,7 @@ bool ExecuteAND(
             // Otherwise just propagate                                 
             output.Compose(Abandon(solved));
          },
-         [&](const Neat& neat) {
+         [&](Neat const& neat) {
             (void)neat;
             // And order-independent container                       
             // Make a shallow copy of the Neat, and strip all        
@@ -182,11 +122,11 @@ bool ExecuteAND(
             // the corresponding results                             
             VERBOSE("Executing neat: ", neat);
             /*Neat local = neat;
-            local.template RemoveData<A::Verb>();
+            local.template RemoveData<Verb>();
             VERBOSE("Executing neat (verbs stripped): ", local);
 
             local.ForEach(
-               [&](const A::Verb& constVerb) {
+               [&](Verb const& constVerb) {
                   if (constVerb.IsMissing()) {
                      // Never touch missing stuff, only propagate it 
                      local << constVerb;
@@ -325,7 +265,7 @@ bool ExecuteOR(
                output.Compose(Abandon(solved));
             }
          },
-         [&](const Neat& neat) {
+         [&](Neat const& neat) {
             (void)neat;
 
             // Make a shallow copy of the neat, and strip all        
@@ -333,10 +273,10 @@ bool ExecuteOR(
             // missing, but generally they will be substituted with  
             // the corresponding results                             
             /*Neat local = neat;
-            local.template RemoveData<A::Verb>();
+            local.template RemoveData<Verb>();
 
             local.ForEach(
-               [&](const A::Verb& constVerb) noexcept {
+               [&](Verb const& constVerb) noexcept {
                   if (constVerb.IsMissing()) {
                      // Never touch missing stuff, only propagate it 
                      local << constVerb;
@@ -400,11 +340,68 @@ bool ExecuteOR(
    else          VERBOSE(Logger::Red,   "OR scope failed: ", flow);
    return executed;
 }
+}
+
+/// Nested AND/OR flow execution                                              
+///   @param flow the flow to execute                                         
+///   @param environment the environment in which scope will be executed.     
+///      Note: each verb in the flow can have its own context, but the        
+///      environment is the overarching context, which is used to disambiguate
+///      and link missing points inside the flow.                             
+///   @param output [out] verb execution results and propagated data will be  
+///      pushed here                                                          
+///   @param integrate execution happens in two stages:                       
+///      1. integration: everything not executed will still be pushed to      
+///         output, preserving the hierarchy. Useful when integrating verbs.  
+///      2. execution: only unexecuted verbs will push to output, especially  
+///         useful for collecting side-effects when updating.                 
+///   @param skipVerbs [in/out] whether to skip executing verbs in other      
+///      branches after an OR-success of a short-circuited verb.              
+///   @param silent whether or not to silence logging, in case we're          
+///      executing at compile-time, for example.                              
+///   @return true of no errors occured                                       
+bool Flow::Execute(
+   Many const& flow, Many const& environment, Many& output,
+   const bool integrate, bool& skipVerbs, const bool silent
+) {
+   auto results = Many::CopyStates(flow);
+   if (flow) {
+      if (flow.IsSparse()) {
+         // Sparse contents are always simply forwarded (if integrating)
+         // and never executed.                                         
+         if (integrate) {
+            results.Compose(flow);
+            VERBOSE(Logger::Green, "AND scope forwarded: {", flow, "}");
+         }
+      }
+      else {
+         // Dense flows will be integrated and/or executed              
+         if (integrate)
+            VERBOSE_TAB("Executing scope (integrating): [", flow, ']');
+         else
+            VERBOSE_TAB("Executing scope: [", flow, ']');
+         
+         try {
+            if (flow.IsOr())
+               ExecuteOR(flow, environment, results, integrate, skipVerbs, silent);
+            else
+               ExecuteAND(flow, environment, results, integrate, skipVerbs, silent);
+         }
+         catch (...) {
+            // Execution failed                                         
+            return false;
+         }
+      }
+   }
+
+   output.Compose(Abandon(results));
+   return true;
+}
 
 /// Integrate all parts of a verb inside this environment                     
-///   @param context - [in/out] the context for integration                   
-///   @param verb - [in/out] verb to integrate                                
-///   @param silent - whether or not to silence logging, in case we're        
+///   @param context [in/out] the context for integration                     
+///   @param verb [in/out] verb to integrate                                  
+///   @param silent whether or not to silence logging, in case we're          
 ///      executing at compile-time, for example                               
 ///   @return true of no errors occured                                       
 bool Flow::IntegrateVerb(Many const& environment, Verb& verb, const bool silent) {
@@ -440,9 +437,9 @@ bool Flow::IntegrateVerb(Many const& environment, Verb& verb, const bool silent)
 /// Ideally, this function is the last thing that gets called, after          
 /// dispatching in all nested context, and after executing all nested branches
 /// of a flow. Verb context should be a single flat element.                  
-///   @param context - [in/out] the context in which verb will be executed    
-///   @param verb - [in/out] verb to execute                                  
-///   @param silent - whether or not to silence logging, in case we're        
+///   @param context [in/out] the context in which verb will be executed      
+///   @param verb [in/out] verb to execute                                    
+///   @param silent whether or not to silence logging, in case we're          
 ///      executing at compile-time, for example                               
 ///   @return true of no errors occured                                       
 bool Flow::ExecuteVerb(Many const& environment, Verb& verb, const bool silent) {

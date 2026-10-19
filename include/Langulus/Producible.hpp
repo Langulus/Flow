@@ -31,7 +31,6 @@ namespace Langulus::Flow
    ///      references) and is known to cause circular dependencies. That's   
    ///      why ProducedFrom::Teardown has to be called as a first-stage      
    ///      destruction, usually in a custom Reference(int) routine.          
-   ///                                                                        
    template<class T>
    struct ProducedFrom {
       using CTTI_Producer = T;

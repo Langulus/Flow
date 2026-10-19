@@ -97,7 +97,7 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) Time GetUptime() const;
       LANGULUS_API(FLOW) Time GetDeltaTime() const;
 
-      LANGULUS_API(FLOW) void Merge(Temporal const&);
+      LANGULUS_API(FLOW) void Merge(Temporal /*const*/&);
 
       template<CT::NotVoid...TN> requires (sizeof...(TN) >= 1)
       Many Push(TN&&...tn) {

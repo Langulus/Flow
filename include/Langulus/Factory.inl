@@ -120,7 +120,7 @@ namespace Langulus::Flow
 
       verb.ForEachDeep(
          [&](Recipe const& recipe) {
-            // For each construct...                                    
+            // For each recipe...                                    
             if (not MetaOf<T>()->CastsTo(recipe.GetTarget()))
                return;
             
@@ -197,12 +197,12 @@ namespace Langulus::Flow
          "Producer isn't related to the reflected one");
 
       if (count > 0) {
-         // Produce amount of compatible constructs                     
+         // Produce amount of compatible recipes                     
          if constexpr (IsUnique) {
             // Check if descriptor matches any of the available         
             const auto found = FindInner(descriptor);
             if (found) {
-               // The unique construct was found, just return it.       
+               // The unique recipe was found, just return it.       
                // Mass will be ignored, it makes no sense to            
                // create multiple instances if unique                   
                verb << &found->mData;
@@ -225,12 +225,12 @@ namespace Langulus::Flow
          }
       }
       else if (count < 0) {
-         // Destroy amount of compatible constructs                     
+         // Destroy amount of compatible recipes                     
          if constexpr (IsUnique) {
             // Check if descriptor matches any of the available         
             const auto found = FindInner(descriptor);
             if (found) {
-               // The unique construct was found, destroy it            
+               // The unique recipe was found, destroy it            
                // Mass is ignored, there should be exactly one          
                Destroy(found);
                return;
@@ -257,10 +257,10 @@ namespace Langulus::Flow
    ///   @param verb - the selection verb                                     
    TEMPLATE()
    void FACTORY()::Select(Verb& verb) {
-      // For each construct or meta compatible with the factory         
+      // For each recipe or meta compatible with the factory         
       verb.ForEachDeep(
          [&](Recipe const& recipe) {
-            // For each construct...                                    
+            // For each recipe...                                    
             if (not MetaDataOf<T>()->CastsTo(recipe.GetTarget()))
                return;
 

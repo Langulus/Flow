@@ -447,7 +447,7 @@ Many Missing::Link(Many const& scope, const MissingFuture& context) const {
          result << Tag::From(tag, Link(tag, context));
       },
       [&](Recipe const& recipe) {
-         // Link a construct                                            
+         // Link a recipe                                            
          auto _ = VerboseLinking(recipe, context);
          result << Recipe::From(recipe, Link(recipe.GetDescriptor(), context));
       },
@@ -526,7 +526,7 @@ void Missing::RemapFutures(MissingFuture& context, Many const& stack) {
          RemapFutures(context, tag.GetData());
       },
       [&](Recipe const& recipe) {
-         // Nest inside constructs                                      
+         // Nest inside recipes                                      
          RemapFutures(context, recipe.GetDescriptor());
       },
       [&](Verb const& verb) {

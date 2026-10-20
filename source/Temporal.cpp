@@ -194,28 +194,14 @@ void Temporal::Merge(Temporal /*const*/& other) {
    mPriorityStack.MergeRange(other.mPriorityStack);
 
    // Merge time stacks                                                 
-   for (auto pair : other.mTimeStack) {
-      const auto timepoint = pair.GetKey();
-      auto found = mTimeStack.Merge(timepoint);
-      auto* innerFlow = *pair.GetVal();
-      auto v = found.GetVal();
-      if (v)
-         v->Merge(*innerFlow);
-      else
-         v.Assign(innerFlow);
-   };
+   mTimeStack.MergeRange(other.mTimeStack, [](auto&& lhs, auto&& rhs) {
+      lhs->Merge(LglsFwd(rhs));
+   });
 
-   // Merge frequency stacks                                            
-   for (auto pair : other.mFrequencyStack) {
-      const auto frequency = pair.GetKey();
-      auto found = mFrequencyStack.Merge(frequency);
-      auto* innerFlow = *pair.GetVal();
-      auto v = found.GetVal();
-      if (v)
-         v->Merge(*innerFlow);
-      else
-         v.Assign(innerFlow);
-   };
+   // Merge time stacks                                                 
+   mFrequencyStack.MergeRange(other.mFrequencyStack, [](auto&& lhs, auto&& rhs) {
+      lhs->Merge(LglsFwd(rhs));
+   });
 }
 
 /// Push a scope of verbs and data to the flow.                               
@@ -327,7 +313,7 @@ Many Temporal::Compile(Many const& scope, Real priority) {
          result << Tag::From(subscope, Compile(subscope.GetData(), priority));
       },
       [&](Recipe const& subscope) {
-         // Compile constructs                                          
+         // Compile recipes                                          
          result << Recipe::From(subscope, Compile(subscope.GetDescriptor(), priority));
       },
       [&](Verb const& subscope) {

@@ -296,7 +296,7 @@ void Temporal::DumpVerb(Verb const& v) {
 
 /// Dump a recipe                                                             
 void Temporal::DumpRecipe(Recipe const& recipe) {
-   // Can we fit the construct on a single line?                        
+   // Can we fit the recipe on a single line?                        
    Text serv;
    Langulus::Serialize(recipe, serv);
    const auto separated = serv.GetCount() > CarryOverLimit;

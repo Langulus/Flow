@@ -117,12 +117,12 @@ namespace Langulus::CTTI
             size_t successCount = 0;
             for (auto handle : lhs) {
                auto resolved = handle.GetResolved();
-               auto& abilities = resolved.GetType().GetVerbs();
+               auto& abilities = resolved.type/*GetType()*/.GetVerbs();
                auto found_dispatcher = abilities.find(MetaVerbOf<Verbs::Do>().GetDefinition());
                if (found_dispatcher != abilities.end()) {
                   // Custom reflected dispatcher is available           
                   auto dispatch = Verbs::Do::Like(verb);
-                  if (found_dispatcher->second(resolved.GetRaw(), reinterpret_cast<Verb&>(dispatch))) {
+                  if (found_dispatcher->second(resolved.data/*GetRaw()*/, reinterpret_cast<Verb&>(dispatch))) {
                      output.Compose(Move(dispatch.GetOutput()));
                      ++successCount;
                   }

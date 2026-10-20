@@ -79,3 +79,9 @@ namespace Langulus::Flow
 }
 
 #include "Factory.inl"
+
+namespace Langulus
+{
+   using Flow::TFactory;
+   using Flow::TFactoryUnique;
+}

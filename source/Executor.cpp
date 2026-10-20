@@ -101,7 +101,7 @@ bool ExecuteAND(
 
             // We can attempt an implicit Verbs::Create to make         
             // the data at compile-time. Allowed only if no producer    
-            // was specified and if construct is not flow-dependent.    
+            // was specified and if recipe is not flow-dependent.    
             if (not recipe.GetTarget().GetProducer()) {
                Verbs::Create creator {&solved};
                if (creator.RunStateless()) {
@@ -134,7 +134,7 @@ bool ExecuteAND(
                   }
 
                   // Execute all verbs, push their outputs to the    
-                  // local shallow-copied construct                  
+                  // local shallow-copied recipe                  
                   auto verb = Verb::FromMeta(
                      constVerb.GetVerb(),
                      constVerb.GetArgument(),
@@ -244,7 +244,7 @@ bool ExecuteOR(
             }
          },
          [&](Recipe const& recipe) {
-            // Nest if constructs, but retain each construct         
+            // Nest if recipes, but retain each recipe         
             Many local;
             if (Flow::Execute(recipe.GetDescriptor(), environment, local, integrate, skipVerbs, silent)) {
                executed = true;
@@ -253,7 +253,7 @@ bool ExecuteOR(
                // We can attempt an implicit Verbs::Create to make   
                // the data at compile-time. Allowed only if no       
                // producer was specified.                            
-               if (not recipe.GetTarget().GetProducer() /*and not construct.GetCharge().IsFlowDependent()*/) {
+               if (not recipe.GetTarget().GetProducer() /*and not recipe.GetCharge().IsFlowDependent()*/) {
                   Verbs::Create creator {&solved};
                   if (creator.RunStateless()) {
                      output.Compose(Abandon(creator.GetOutput()));
@@ -284,7 +284,7 @@ bool ExecuteOR(
                   }
 
                   // Execute all verbs, push their outputs to the    
-                  // local shallow-copied construct                  
+                  // local shallow-copied recipe                  
                   auto verb = Verb::FromMeta(
                      constVerb.GetVerb(),
                      constVerb.GetArgument(),

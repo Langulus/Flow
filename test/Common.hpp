@@ -8,7 +8,7 @@
 
 /// INTENTIONALLY NOT GUARDED                                                 
 /// Include this file once in each cpp file, after all other headers          
-#include <Langulus/Flow/Resolvable.hpp>
+#include <Langulus/Flow/Downcastable.hpp>
 #include <Langulus/Factory.hpp>
 #include <Langulus/Producible.hpp>
 #include <Langulus/Testing.hpp>
@@ -17,15 +17,15 @@ using namespace Flow;
 
 
 /// A mockup of Langulus::Thing, for testing purposes                         
-struct Thing : Resolvable, Referenced {
+struct Thing : Downcastable, Referenced {
    using CTTI_Abstract = No;
    using CTTI_Producer = Thing;
    LANGULUS_BASES(Resolvable);
 
-   Thing() : Resolvable {this} {}
+   Thing() : Downcastable {this} {}
 
    template<class T>
-   Thing(const T* c) : Resolvable {c} {}
+   Thing(const T* c) : Downcastable {c} {}
 
    virtual ~Thing() {
       Reference(-1);
@@ -47,43 +47,43 @@ struct Thing2 : Thing {
 };
 
 /// A mockup of a universe component, for testing purposes                    
-struct Universe : Resolvable {
+struct Universe : Downcastable {
    using CTTI_Abstract = No;
    using CTTI_Producer = Thing;
    LANGULUS_BASES(Resolvable);
-   Universe() : Resolvable {this} {}
+   Universe() : Downcastable {this} {}
 };
 
 /// A mockup of a window component, for testing purposes                      
-struct Window : Resolvable {
+struct Window : Downcastable {
    using CTTI_Abstract = No;
    using CTTI_Producer = Thing;
    LANGULUS_BASES(Resolvable);
-   Window() : Resolvable {this} {}
+   Window() : Downcastable {this} {}
 };
 
 /// A mockup of a user component, for testing purposes                        
-struct User : Resolvable {
+struct User : Downcastable {
    using CTTI_Abstract = No;
    using CTTI_Producer = Thing;
    LANGULUS_BASES(Resolvable);
-   User() : Resolvable {this} {}
+   User() : Downcastable {this} {}
 };
 
 /// A mockup of a session component, for testing purposes                     
-struct Session : Resolvable {
+struct Session : Downcastable {
    using CTTI_Abstract = No;
    using CTTI_Producer = Thing;
    LANGULUS_BASES(Resolvable);
-   Session() : Resolvable {this} {}
+   Session() : Downcastable {this} {}
 };
 
 /// A mockup of a fraction                                                    
-/*struct Fraction : Resolvable {
+/*struct Fraction : Downcastable {
    using CTTI_Abstract = No;
    LANGULUS(UNINSERTABLE) false;
    LANGULUS_BASES(Resolvable);
-   Fraction() : Resolvable(MetaOf<Fraction>()) {}
+   Fraction() : Downcastable(MetaOf<Fraction>()) {}
 };*/
 
 struct Producible;

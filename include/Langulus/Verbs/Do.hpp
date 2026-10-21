@@ -59,7 +59,6 @@ namespace Langulus::CTTI
       using Can = Verbs::Do;
 
       static bool Default(Annies::Many const& lhs, Verbs::Do& verb) {
-         auto const& flow = verb.GetArgument();
          auto& output = verb.GetOutput();
          output = Many::CopyStates(lhs);
 
@@ -100,6 +99,7 @@ namespace Langulus::CTTI
             // to run the verb's argument inside whatever context there 
             // is. Thing is, the argument might contain a whole         
             // hierarchy of verbs, and we must preserve that.           
+            const auto flow = verb.GetArgument();
             size_t successCount = 0;
             for (auto handle : lhs) {
                //TODO magic bools here. maybe carry state with verbs and use it as arguments here?
@@ -114,6 +114,7 @@ namespace Langulus::CTTI
             // means that each element must be resolved to its concrete 
             // type using dynamic_cast, and might end up possessing     
             // completely different abilities.                          
+            const auto flow = verb.GetArgument();
             size_t successCount = 0;
             for (auto handle : lhs) {
                auto resolved = handle.GetResolved();

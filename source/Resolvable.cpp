@@ -5,7 +5,7 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include <Langulus/Resolvable.hpp>
+#include <Langulus/Downcastable.hpp>
 
 
 /*namespace Langulus::Flow

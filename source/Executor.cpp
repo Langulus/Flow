@@ -421,9 +421,10 @@ bool Flow::IntegrateVerb(Many const& environment, Verb& verb, const bool silent)
       localSource = environment;
 
    // Integrate the verb argument to the source                         
+   const Many flow = verb.GetArgument();
    Many localArgument;
    bool unusedSkipVerbs = false;
-   if (not Flow::Execute(verb.GetArgument(), localSource, localArgument, true, unusedSkipVerbs, silent)) {
+   if (not Flow::Execute(flow, localSource, localArgument, true, unusedSkipVerbs, silent)) {
       if (not silent)
          FLOW_ERRORS("Error at argument of: ", verb);
       return false;
@@ -460,8 +461,8 @@ bool Flow::ExecuteVerb(Many const& environment, Verb& verb, const bool silent) {
       // is that the integrated argument or source are propagated to    
       // the verb's output.                                             
       if (not verb.GetOutput()) {
-         if (verb)   verb << Move(verb.GetArgument());
-         else        verb << Move(verb.GetSource());
+         if (verb)   verb << verb.GetArgument();//Move(verb.GetArgument());
+         else        verb << verb.GetSource();  //Move(verb.GetSource());
       }
 
       return true;

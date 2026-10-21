@@ -179,7 +179,9 @@ namespace
                not     StartsWithLetter(remainder)
                and not StartsWithDigit(remainder)))
             or not endsWithLetter)
-         and code.MatchesLoose(token) == token.GetCount();
+         and code.MatchesExt(token, [](char c1, char c2) noexcept {
+            return ::std::tolower(c1) == ::std::tolower(c2);
+         }) == token.GetCount();
    }
 
 
@@ -507,7 +509,7 @@ Token KeywordParser::Isolate(Code const& input) noexcept {
    return input.LeftOf(progress);
 }
 
-/// Parse keyword for a constant, data, or tag                              
+/// Parse keyword for a constant, data, or tag                                
 /// Verbs are considered operators, not keywords                              
 ///   @param input the code to parse                                          
 ///   @param lhs [in/out] parsed content goes here (lhs)                      
@@ -1124,10 +1126,11 @@ size_t OperatorParser::ParseReflected(
       bool unusedSkipper = false;
       Many unusedContext;
       Many argument;
-      if (Flow::Execute(op.GetArgument(), unusedContext, argument, true, unusedSkipper, true)) {
+      const Many flow = op.GetArgument();
+      if (Flow::Execute(flow, unusedContext, argument, true, unusedSkipper, true)) {
          // Then the verb itself                                        
          Many opSrcBackup = Move(op.GetSource());
-         Many opArgBackup = Move(op.GetArgument());
+         //Many opArgBackup = Move(op.GetArgument());
 
          if (op.SetArgument(argument).In(lhs).Run()) {
             // The verb was executed at compile-time, so directly       

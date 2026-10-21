@@ -270,23 +270,24 @@ void Temporal::DumpVerb(Verb const& v) {
 
    Logger::Append(Logger::PushBlue, token, Logger::Pop);
 
-   if (not v.GetArgument().IsValid())
+   const auto arg = v.GetArgument();
+   if (not arg.IsValid())
       return;
 
-   if (writtenAsToken and v.GetArgument().IsValid())
+   if (writtenAsToken and arg.IsValid())
       Logger::Append(' ');
 
    Text argScope;
-   if (Rules::BeginScope(v.GetArgument(), argScope))
+   if (Rules::BeginScope(arg, argScope))
       Logger::Append(Logger::PushBlue, argScope, Logger::Pop);
    else if (separated)
       Logger::Append(Logger::PushBlue, '(', Logger::Pop, Logger::Tab);
 
    bool unused = true;
-   DumpInner(v.GetArgument(), separated, unused);
+   DumpInner(arg, separated, unused);
 
    argScope.Clear();
-   if (Rules::EndScope(v.GetArgument(), argScope))
+   if (Rules::EndScope(arg, argScope))
       Logger::Append(Logger::PushBlue, argScope, Logger::Pop);
    else if (separated) {
       Logger::Append(Logger::Untab);

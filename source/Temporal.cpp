@@ -100,6 +100,7 @@ void Temporal::ResetInner(Many& scope) {
          ResetInner(verb.GetSource());
          auto argument = verb.GetArgument();
          ResetInner(argument);
+         verb.SetArgument(Abandon(argument));
          verb.Clear();
       }
    );
@@ -189,18 +190,18 @@ bool Temporal::Update(Time dt, Many& sideffects) {
 
 /// Merge a flow                                                              
 ///   @param other the flow to merge with this one                            
-void Temporal::Merge(Temporal /*const*/& other) {
+void Temporal::Merge(Temporal& other) {
    // Merge priority stacks                                             
    mPriorityStack.MergeRange(other.mPriorityStack);
 
    // Merge time stacks                                                 
    mTimeStack.MergeRange(other.mTimeStack, [](auto&& lhs, auto&& rhs) {
-      lhs->Merge(LglsFwd(rhs));
+      lhs->Merge(**rhs);
    });
 
    // Merge time stacks                                                 
    mFrequencyStack.MergeRange(other.mFrequencyStack, [](auto&& lhs, auto&& rhs) {
-      lhs->Merge(LglsFwd(rhs));
+      lhs->Merge(**rhs);
    });
 }
 

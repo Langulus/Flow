@@ -127,12 +127,12 @@ namespace Langulus::CTTI
 namespace Langulus
 {
    /// Make a code literal                                                    
-   auto operator ""_code(const char* text, size_t size) -> Flow::Code {
+   constexpr auto operator ""_code(const char* text, size_t size) -> Flow::Code {
       return Flow::Code(Annies::Text::FromText(text, size));
    }
 
    /// Make a code literal and parse it                                       
-   auto operator ""_parse(const char* text, size_t size) -> Many {
+   constexpr auto operator ""_parse(const char* text, size_t size) -> Many {
       return Flow::Code(Annies::Text::FromText(text, size)).Parse();
    }
 }

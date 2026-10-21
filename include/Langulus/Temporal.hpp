@@ -129,3 +129,8 @@ namespace Langulus::Flow
 }
 
 LANGULUS_MORPHISM(Flow::Temporal, Annies::Text, Flow::Code);
+
+namespace Langulus
+{
+   using Flow::Temporal;
+}

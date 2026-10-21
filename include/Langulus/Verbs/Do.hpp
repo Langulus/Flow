@@ -166,13 +166,13 @@ namespace Langulus::Annies
    bool TVerb<V>::Run() {
       if (not mContext) {
          // Context is empty and doesn't have any relevant states,      
-         // and execution happens only in stateless mode by using       
+         // and execution happens only in unary mode by using           
          // verb argument as the context. This sometimes happens with   
-         // unary operators, like -5. Since 5 is a number, stateless    
+         // unary operators, like -5. Since 5 is a number, unary        
          // subtraction on numbers will be sought and executed.         
          // Another example is selecting global objects, like the       
-         // logger, by using `.logger`                                  
-         return RunStateless();
+         // logger, by using ` .logger`                                 
+         return RunUnary();
       }
 
       // Dispatcher for Many should always exist                        
@@ -184,6 +184,28 @@ namespace Langulus::Annies
          else {
             Verbs::Do temporary(*this);
             bool result = Langulus::InvokeAbility(mContext, temporary);
+            mOutput = Abandon(temporary.GetOutput());
+            return result;
+         }
+      }
+   }
+
+   /// Execute the verb in unary mode (ignores context).                      
+   /// The ability is determined by the contents of the argument instead.     
+   /// Useful for instantiating constants, unary operations, etc.             
+   /// Implemented in Langulus::Flow, as it requires some prime verbs         
+   /// being defined, such as Verbs::Do.                                      
+   template<class V>
+   bool TVerb<V>::RunUnary() {
+      // Dispatcher for Many should always exist                        
+      if constexpr (::std::is_same_v<V, Verbs::Do>)
+         return Langulus::InvokeAbilityUnary(GetArgument(), reinterpret_cast<Verbs::Do&>(*this));
+      else {
+         if (this->template IsVerb<Verbs::Do>())
+            return Langulus::InvokeAbilityUnary(GetArgument(), reinterpret_cast<Verbs::Do&>(*this));
+         else {
+            Verbs::Do temporary(*this);
+            bool result = Langulus::InvokeAbilityUnary(GetArgument(), temporary);
             mOutput = Abandon(temporary.GetOutput());
             return result;
          }

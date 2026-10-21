@@ -104,7 +104,7 @@ bool ExecuteAND(
             // was specified and if recipe is not flow-dependent.    
             if (not recipe.GetTarget().GetProducer()) {
                Verbs::Create creator {&solved};
-               if (creator.RunStateless()) {
+               if (creator.RunUnary()) {
                   output.Compose(Abandon(creator.GetOutput()));
                   return;
                }
@@ -255,7 +255,7 @@ bool ExecuteOR(
                // producer was specified.                            
                if (not recipe.GetTarget().GetProducer() /*and not recipe.GetCharge().IsFlowDependent()*/) {
                   Verbs::Create creator {&solved};
-                  if (creator.RunStateless()) {
+                  if (creator.RunUnary()) {
                      output.Compose(Abandon(creator.GetOutput()));
                      return;
                   }

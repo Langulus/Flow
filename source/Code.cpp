@@ -30,6 +30,7 @@
 using namespace Langulus;
 using namespace Langulus::Flow;
 
+
 #define LglsVerboseEnabled 0
 #include <Langulus/Logger/ToggleVerbose.hpp>
 
@@ -841,7 +842,7 @@ void OperatorParser::InsertContent(Many& rhs, Many& lhs) {
             // Invoke the descriptor-constructor only if we have to     
             Recipe outputConstruct {meta, Move(rhs)};
             Verbs::Create creator {&outputConstruct};
-            if (creator.RunStateless()) {
+            if (creator.RunUnary()) {
                LglsVerbose(Flow, "Describe-constructed: ", Logger::Cyan, creator.GetOutput());
                lhs.EraseAt(Index::Last);
                lhs.Compose(Abandon(creator.GetOutput()));

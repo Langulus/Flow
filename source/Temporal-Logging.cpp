@@ -8,7 +8,7 @@
 #include <Langulus/Flow/Missing.hpp>
 #include <Langulus/Flow/Entangled.hpp>
 #include <Langulus/Temporal.hpp>
-#include <Langulus/MetaOf.hpp>
+//#include <Langulus/MetaOf.hpp>
 
 using namespace Langulus::Flow;
 

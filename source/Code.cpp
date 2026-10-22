@@ -1127,11 +1127,11 @@ size_t OperatorParser::ParseReflected(
       bool unusedSkipper = false;
       Many unusedContext;
       Many argument;
-      const Many flow = op.GetArgument();
+      const Many flow = op.GetRHS();
       if (Flow::Execute(flow, unusedContext, argument, true, unusedSkipper, true)) {
          // Then the verb itself                                        
-         Many opSrcBackup = Move(op.GetSource());
-         //Many opArgBackup = Move(op.GetArgument());
+         Many opSrcBackup = Move(op.GetLHS());
+         //Many opArgBackup = Move(op.GetRHS());
 
          if (op.SetArgument(argument).In(lhs).Run()) {
             // The verb was executed at compile-time, so directly       
@@ -1150,7 +1150,7 @@ size_t OperatorParser::ParseReflected(
          // Argument didn't execute, but we could still try to          
          // pre-compute the op. Like for example when conjuncting       
          // two containers.                                             
-         Many opSrcBackup = Move(op.GetSource());
+         Many opSrcBackup = Move(op.GetLHS());
 
          if (op.In(lhs).Run()) {
             // The verb was executed at compile-time, so directly       

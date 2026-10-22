@@ -454,8 +454,8 @@ Many Missing::Link(Many const& scope, const MissingFuture& context) const {
       [&](Verb const& verb) {
          // Link a verb                                                 
          auto _ = VerboseLinking(verb, context);
-         auto source = Link(verb.GetSource(), context);
-         result << Verb::From(verb, Link(verb.GetArgument(), context)).In(Abandon(source));
+         auto source = Link(verb.GetLHS(), context);
+         result << Verb::From(verb, Link(verb.GetRHS(), context)).In(Abandon(source));
       },
       [&](const MissingPast& past) {
          // Replace a missing past point with provided context          
@@ -531,8 +531,8 @@ void Missing::RemapFutures(MissingFuture& context, Many const& stack) {
       },
       [&](Verb const& verb) {
          // Nest inside verbs                                           
-         RemapFutures(context, verb.GetArgument());
-         RemapFutures(context, verb.GetSource());
+         RemapFutures(context, verb.GetRHS());
+         RemapFutures(context, verb.GetLHS());
       },
       [&](const MissingFuture& below_const) {
          // Nest/register missing future points                         

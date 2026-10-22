@@ -137,11 +137,11 @@ bool ExecuteAND(
                   // local shallow-copied recipe                  
                   auto verb = Verb::FromMeta(
                      constVerb.GetVerb(),
-                     constVerb.GetArgument(),
+                     constVerb.GetRHS(),
                      constVerb,
                      constVerb.GetVerbState()
                   );
-                  verb.SetSource(constVerb.GetSource());
+                  verb.SetSource(constVerb.GetLHS());
 
                   if (not ExecuteVerb(context, verb, silent)) {
                      if (silent)
@@ -171,7 +171,7 @@ bool ExecuteAND(
 
             // Shallow-copy the verb to make it mutable              
             // Also resets its output                                
-            auto verb = Verb::Like(constVerb).In(constVerb.GetSource());
+            auto verb = Verb::Like(constVerb).In(constVerb.GetLHS());
             if (verb.IsMissing()) {
                if (integrate) {
                   output.Compose(verb);
@@ -287,11 +287,11 @@ bool ExecuteOR(
                   // local shallow-copied recipe                  
                   auto verb = Verb::FromMeta(
                      constVerb.GetVerb(),
-                     constVerb.GetArgument(),
+                     constVerb.GetRHS(),
                      constVerb,
                      constVerb.GetVerbState()
                   );
-                  verb.SetSource(constVerb.GetSource());
+                  verb.SetSource(constVerb.GetLHS());
 
                   if (ExecuteVerb(context, verb, silent))
                      executed = true;
@@ -407,21 +407,21 @@ bool Flow::Execute(
 bool Flow::IntegrateVerb(Many const& environment, Verb& verb, const bool silent) {
    // Integrate the verb source to environment                          
    Many localSource;
-   if (not verb.GetSource().Is<Redundant>()) {
+   if (not verb.GetLHS().Is<Redundant>()) {
       bool unusedSkipVerbs = false;
-      if (not Flow::Execute(verb.GetSource(), environment, localSource, true, unusedSkipVerbs, silent)) {
+      if (not Flow::Execute(verb.GetLHS(), environment, localSource, true, unusedSkipVerbs, silent)) {
          if (not silent)
             FLOW_ERRORS("Error at source of: ", verb);
          return false;
       }
    }
-   else localSource = verb.GetSource().As<Redundant>().mContent;
+   else localSource = verb.GetLHS().As<Redundant>().mContent;
 
    if (not localSource.IsValid())
       localSource = environment;
 
    // Integrate the verb argument to the source                         
-   const Many flow = verb.GetArgument();
+   const Many flow = verb.GetRHS();
    Many localArgument;
    bool unusedSkipVerbs = false;
    if (not Flow::Execute(flow, localSource, localArgument, true, unusedSkipVerbs, silent)) {
@@ -461,8 +461,8 @@ bool Flow::ExecuteVerb(Many const& environment, Verb& verb, const bool silent) {
       // is that the integrated argument or source are propagated to    
       // the verb's output.                                             
       if (not verb.GetOutput()) {
-         if (verb)   verb << verb.GetArgument();//Move(verb.GetArgument());
-         else        verb << verb.GetSource();  //Move(verb.GetSource());
+         if (verb)   verb << verb.GetRHS();//Move(verb.GetRHS());
+         else        verb << verb.GetLHS();  //Move(verb.GetLHS());
       }
 
       return true;

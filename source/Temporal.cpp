@@ -97,8 +97,8 @@ void Temporal::ResetInner(Many& scope) {
          });
       },
       [&](Verb& verb) {
-         ResetInner(verb.GetSource());
-         auto argument = verb.GetArgument();
+         ResetInner(verb.GetLHS());
+         auto argument = verb.GetRHS();
          ResetInner(argument);
          verb.SetArgument(Abandon(argument));
          verb.Clear();
@@ -319,8 +319,8 @@ Many Temporal::Compile(Many const& scope, Real priority) {
       },
       [&](Verb const& subscope) {
          // Compile verbs                                               
-         result << Verb::From(subscope, Compile(subscope.GetArgument(), subscope.GetPrecedence()))
-                                    .In(Compile(subscope.GetSource(),   subscope.GetPrecedence()));
+         result << Verb::From(subscope, Compile(subscope.GetRHS(), subscope.GetPrecedence()))
+                                    .In(Compile(subscope.GetLHS(),   subscope.GetPrecedence()));
       }
    );
 
@@ -388,12 +388,12 @@ void Temporal::Link(Many const& scope, Ref<Entanglement> const& entanglementAbov
             // "Do" verbs act as context/mass/rate/time setters         
             // Don't push them, but use them to set environment for     
             // any sub-verbs                                            
-            if (v.GetSource()) {
-               LglsAssert(PushFutures(v.GetSource(), *mFuture, entanglement),
+            if (v.GetLHS()) {
+               LglsAssert(PushFutures(v.GetLHS(), *mFuture, entanglement),
                           "Couldn't push to future");
             }
 
-            LinkRelative(v.GetArgument(), v, entanglement);
+            LinkRelative(v.GetRHS(), v, entanglement);
          }
          /*else if (v.GetTime()) {
             // Verb is timed, forward it to the time stack              
@@ -563,12 +563,12 @@ void Temporal::LinkRelative(
             // "Do" verbs act as context/mass/rate/time setters         
             // Don't push them, but use them to set environment for     
             // any sub-verbs                                            
-            if (v.GetSource()) {
-               LglsAssert(PushFutures(v.GetSource(), *mFuture, entanglement),
+            if (v.GetLHS()) {
+               LglsAssert(PushFutures(v.GetLHS(), *mFuture, entanglement),
                           "Couldn't push to future");
             }
 
-            LinkRelative(v.GetArgument(), localOverride, entanglement);
+            LinkRelative(v.GetRHS(), localOverride, entanglement);
          }
          /*else if (localOverride.GetTime()) {
             // Verb is timed, forward it to the time stack              
@@ -589,8 +589,8 @@ void Temporal::LinkRelative(
             const auto rate = localOverride.GetRate();
             TMany<Verb> local = v;
             local[0].SetRate(0);
-            //if (not local[0].GetSource()) //TODO check if this is allowed - no other branch seems to override source
-            //   local[0].SetSource(localOverride.GetSource());
+            //if (not local[0].GetLHS()) //TODO check if this is allowed - no other branch seems to override source
+            //   local[0].SetSource(localOverride.GetLHS());
 
             auto found = mFrequencyStack.FindIt(rate);
             if (not found) {
@@ -614,9 +614,9 @@ void Temporal::LinkRelative(
 
             // Always push any valid source to the future, so that      
             // missing past can get satisfied by it                     
-            if (override.GetSource()) {
+            if (override.GetLHS()) {
                LANGULUS_ASSERT(
-                  PushFutures(override.GetSource(), *mFuture, entanglement),
+                  PushFutures(override.GetLHS(), *mFuture, entanglement),
                   Flow, "Couldn't push to future"
                );
             }*/

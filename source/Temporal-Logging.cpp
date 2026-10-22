@@ -242,18 +242,18 @@ void Temporal::DumpVerb(Verb const& v) {
    // If reached, then verb hasn't been executed yet                    
    // Let's check if there's a source in which verb will be executed in 
    using Rules = CTTI::Serializer<Annies::Text>;
-   if (v.GetSource().IsValid()) {
+   if (v.GetLHS().IsValid()) {
       Text srcScope;
-      if (Rules::BeginScope(v.GetSource(), srcScope))
+      if (Rules::BeginScope(v.GetLHS(), srcScope))
          Logger::Append(Logger::PushBlue, srcScope, Logger::Pop);
       else if (separated)
          Logger::Append(Logger::PushBlue, '(', Logger::Pop, Logger::Tab);
 
       bool unused = true;
-      DumpInner(v.GetSource(), separated, unused);
+      DumpInner(v.GetLHS(), separated, unused);
 
       srcScope.Clear();
-      if (Rules::EndScope(v.GetSource(), srcScope))
+      if (Rules::EndScope(v.GetLHS(), srcScope))
          Logger::Append(Logger::PushBlue, srcScope, Logger::Pop);
       else if (separated) {
          Logger::Append(Logger::Untab);
@@ -265,12 +265,12 @@ void Temporal::DumpVerb(Verb const& v) {
    // verb operator, depending on verb definition, state, and charge    
    bool writtenAsToken = false;
    const auto token = v.GetOperatorToken(writtenAsToken);
-   if (writtenAsToken and v.GetSource().IsValid())
+   if (writtenAsToken and v.GetLHS().IsValid())
       Logger::Append(' ');
 
    Logger::Append(Logger::PushBlue, token, Logger::Pop);
 
-   const auto arg = v.GetArgument();
+   const auto arg = v.GetRHS();
    if (not arg.IsValid())
       return;
 

@@ -9,6 +9,7 @@
 #include <Langulus/TVerb.hpp>
 #include <Langulus/TTag.hpp>
 #include <Langulus/Flow/Export.hpp>
+#include <Langulus/CT/Able.hpp>
 //#include "Langulus/CT/Executable.hpp"
 //#include "Langulus/CT/Deep.hpp"
 
@@ -58,6 +59,7 @@ namespace Langulus::CTTI
    LglsImplementAbilitiesFor(Annies::Many) {
       using Can = Verbs::Do;
 
+      /// Binary dispatcher                                                   
       static bool Default(Annies::Many const& lhs, Verbs::Do& verb) {
          auto& output = verb.GetOutput();
          output = Many::CopyStates(lhs);
@@ -74,7 +76,7 @@ namespace Langulus::CTTI
             // all of them for abilities once.                          
             auto& abilities = lhs.GetType().GetVerbs();
             auto found_dispatcher = abilities.find(MetaVerbOf<Verbs::Do>().GetDefinition());
-            if (found_dispatcher != abilities.end()) {
+            if (found_dispatcher != abilities.end() and found_dispatcher->second.binary) {
                // Custom reflected dispatcher is available.             
                // It's your responsibility to implement it adequately.  
                // Keep in mind, that once you declare a custom Do for   
@@ -85,7 +87,7 @@ namespace Langulus::CTTI
                auto dispatch = Verbs::Do::Like(verb);
                size_t successCount = 0;
                for (auto handle : lhs) {
-                  if (found_dispatcher->second(handle.GetRaw(), reinterpret_cast<Verb&>(dispatch))) {
+                  if (found_dispatcher->second.binary(handle.GetRaw(), reinterpret_cast<Verb&>(dispatch))) {
                      output.Compose(Move(dispatch.GetOutput()));
                      ++successCount;
                      dispatch.Clear();
@@ -99,12 +101,12 @@ namespace Langulus::CTTI
             // to run the verb's argument inside whatever context there 
             // is. Thing is, the argument might contain a whole         
             // hierarchy of verbs, and we must preserve that.           
-            const auto flow = verb.GetArgument();
+            const auto flow = verb.GetRHS();
             size_t successCount = 0;
             for (auto handle : lhs) {
                //TODO magic bools here. maybe carry state with verbs and use it as arguments here?
                bool unusedSkipVerbs = false;
-               if (Flow::Execute(flow, lhs, output, false, unusedSkipVerbs, false))
+               if (Flow::Execute(flow, handle, output, false, unusedSkipVerbs, false))
                   ++successCount;
             }
             return successCount > 0;
@@ -114,16 +116,16 @@ namespace Langulus::CTTI
             // means that each element must be resolved to its concrete 
             // type using dynamic_cast, and might end up possessing     
             // completely different abilities.                          
-            const auto flow = verb.GetArgument();
+            const auto flow = verb.GetRHS();
             size_t successCount = 0;
             for (auto handle : lhs) {
-               auto resolved = handle.GetResolved();
-               auto& abilities = resolved.type/*GetType()*/.GetVerbs();
+               Many resolved {Annies::Absorb, handle.GetResolved()};
+               auto& abilities = resolved.GetType().GetVerbs();
                auto found_dispatcher = abilities.find(MetaVerbOf<Verbs::Do>().GetDefinition());
-               if (found_dispatcher != abilities.end()) {
+               if (found_dispatcher != abilities.end() and found_dispatcher->second.binary) {
                   // Custom reflected dispatcher is available           
                   auto dispatch = Verbs::Do::Like(verb);
-                  if (found_dispatcher->second(resolved.data/*GetRaw()*/, reinterpret_cast<Verb&>(dispatch))) {
+                  if (found_dispatcher->second.binary(resolved.GetRaw(), reinterpret_cast<Verb&>(dispatch))) {
                      output.Compose(Move(dispatch.GetOutput()));
                      ++successCount;
                   }
@@ -139,8 +141,92 @@ namespace Langulus::CTTI
             return successCount > 0;
          }
       }
+
+      /// Unary dispatcher                                                    
+      static bool Default(Verbs::Do& verb) {
+         auto& output = verb.GetOutput();
+         auto const lhs = verb.GetRHS();
+         output = Many::CopyStates(lhs);
+
+         // What kind of data does 'mContext' hold? Is it capable of    
+         // dispatching? If so, do that and ignore anything else.       
+         // This is where deep containers get nested before executing   
+         // any verbs. The verb's argument will get eventually run in   
+         // a context that cares about it.                              
+         auto resolver = lhs.GetType().GetResolver();
+         if (not resolver) {
+            // No resolver is available, which means no dynamic_casts,  
+            // so all types are just as they appear, and we can check   
+            // all of them for abilities once.                          
+            auto& abilities = lhs.GetType().GetVerbs();
+            auto found_dispatcher = abilities.find(MetaVerbOf<Verbs::Do>().GetDefinition());
+            if (found_dispatcher != abilities.end() and found_dispatcher->second.unary) {
+               // Custom reflected dispatcher is available.             
+               // It's your responsibility to implement it adequately.  
+               // Keep in mind, that once you declare a custom Do for   
+               // your type, you no longer rely on reflected bases'     
+               // verbs or default verbs. You must invoke those by      
+               // yourself in your dispatcher - the custom dispatcher   
+               // provides full control!                                
+               size_t successCount = 0;
+               for (auto handle : lhs) {
+                  auto dispatch = Verbs::Do::From(verb, handle);
+                  if (found_dispatcher->second.unary(reinterpret_cast<Verb&>(dispatch))) {
+                     output.Compose(Move(dispatch.GetOutput()));
+                     ++successCount;
+                  }
+               }
+               return successCount > 0;
+            }
+
+            //                                                          
+            // If reached, then contained type has no dispatcher. Time  
+            // to run the verb's argument inside whatever context there 
+            // is. Thing is, the argument might contain a whole         
+            // hierarchy of verbs, and we must preserve that.           
+            size_t successCount = 0;
+            for (auto handle : lhs) {
+               //TODO magic bools here. maybe carry state with verbs and use it as arguments here?
+               bool unusedSkipVerbs = false;
+               if (Flow::Execute({}, handle, output, false, unusedSkipVerbs, false))//TODO dedicated unary here?
+                  ++successCount;
+            }
+            return successCount > 0;
+         }
+         else {
+            // Type is resolvable - probably abstract pointer. This     
+            // means that each element must be resolved to its concrete 
+            // type using dynamic_cast, and might end up possessing     
+            // completely different abilities.                          
+            size_t successCount = 0;
+            for (auto handle : lhs) {
+               Many resolved {Annies::Absorb, handle.GetResolved()};
+               auto& abilities = resolved.GetType().GetVerbs();
+               auto found_dispatcher = abilities.find(MetaVerbOf<Verbs::Do>().GetDefinition());
+               if (found_dispatcher != abilities.end() and found_dispatcher->second.unary) {
+                  // Custom reflected dispatcher is available           
+                  auto dispatch = Verbs::Do::From(verb, resolved);
+                  if (found_dispatcher->second.unary(reinterpret_cast<Verb&>(dispatch))) {
+                     output.Compose(Move(dispatch.GetOutput()));
+                     ++successCount;
+                  }
+               }
+               else {
+                  // No dispatcher for that particular resolved element 
+                  //TODO magic bools here. maybe carry state with verbs and use it as arguments here?
+                  bool unusedSkipVerbs = false;
+                  if (Flow::Execute({}, resolved, output, false, unusedSkipVerbs, false))//TODO dedicated unary here?
+                     ++successCount;
+               }
+            }
+            return successCount > 0;
+         }
+      }
    };
    
+   static_assert(CT::AbleBinary<Annies::Many, Verbs::Do>);
+   static_assert(CT::AbleUnary<Annies::Many, Verbs::Do>);
+
    /// Execute a flow inside a tag, and preserve that tag. Example:           
    ///         tag(1 or 2) add 1 --> tag({1 add 1} or {2 add 1})              
    ///                         resulting in:                                  
@@ -197,15 +283,16 @@ namespace Langulus::Annies
    /// being defined, such as Verbs::Do.                                      
    template<class V>
    bool TVerb<V>::RunUnary() {
-      // Dispatcher for Many should always exist                        
+      // Dispatcher for argument type should always exist               
+      using A = decltype(GetRHS());
       if constexpr (::std::is_same_v<V, Verbs::Do>)
-         return Langulus::InvokeAbilityUnary(GetArgument(), reinterpret_cast<Verbs::Do&>(*this));
+         return Langulus::InvokeAbilityUnary<A>(reinterpret_cast<Verbs::Do&>(*this));
       else {
          if (this->template IsVerb<Verbs::Do>())
-            return Langulus::InvokeAbilityUnary(GetArgument(), reinterpret_cast<Verbs::Do&>(*this));
+            return Langulus::InvokeAbilityUnary<A>(reinterpret_cast<Verbs::Do&>(*this));
          else {
             Verbs::Do temporary(*this);
-            bool result = Langulus::InvokeAbilityUnary(GetArgument(), temporary);
+            bool result = Langulus::InvokeAbilityUnary<A>(temporary);
             mOutput = Abandon(temporary.GetOutput());
             return result;
          }

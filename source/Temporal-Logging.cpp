@@ -17,6 +17,15 @@ namespace
    constexpr int CarryOverLimit = 100;
 }
 
+/// Serialize temporal as Code                                                
+Temporal::operator Code() const {
+   return Text::Mention(this);
+}
+
+/// Serialize temporal as debug string                                        
+Temporal::operator Text() const {
+   return Text::Mention(this);
+}
 
 /// Dump the contents of the flow to the log in a pretty, colorized and       
 /// easily readable way                                                       
@@ -297,7 +306,7 @@ void Temporal::DumpVerb(Verb const& v) {
 
 /// Dump a recipe                                                             
 void Temporal::DumpRecipe(Recipe const& recipe) {
-   // Can we fit the recipe on a single line?                        
+   // Can we fit the recipe on a single line?                           
    Text serv;
    Langulus::Serialize(recipe, serv);
    const auto separated = serv.GetCount() > CarryOverLimit;
@@ -326,12 +335,12 @@ void Temporal::DumpTag(Tag const& t) {
    Langulus::Serialize(t, serv);
    const auto separated = serv.GetCount() > CarryOverLimit;
 
-   // Write the tag and open the scope                                
+   // Write the tag and open the scope                                  
    Logger::Append(Logger::PushPurple, t.GetTag(), '(', Logger::Pop);
    if (separated)
       Logger::Append(Logger::Tab);
 
-   // Write the tag contents                                          
+   // Write the tag contents                                            
    bool unused = true;
    DumpInner(static_cast<Many const&>(t), separated, unused);
 

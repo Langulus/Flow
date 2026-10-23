@@ -37,11 +37,6 @@ Temporal::Temporal(Temporal* parent)
    mFuture = mPriorityStack.As<MissingFuture*>();
 }
 
-/// For logging temporal instances                                            
-Temporal::operator Text() const {
-   return Text::Mention(this);
-}
-
 /// Reset progress for the priority stack                                     
 void Temporal::Reset() {
    // Reset timers                                                      
@@ -310,11 +305,11 @@ Many Temporal::Compile(Many const& scope, Real priority) {
 
    const auto done = scope.ForEach(
       [&](Tag const& subscope) {
-         // Compile tags                                              
+         // Compile tags                                                
          result << Tag::From(subscope, Compile(subscope.GetData(), priority));
       },
       [&](Recipe const& subscope) {
-         // Compile recipes                                          
+         // Compile recipes                                             
          result << Recipe::From(subscope, Compile(subscope.GetDescriptor(), priority));
       },
       [&](Verb const& subscope) {

@@ -20,7 +20,7 @@ namespace Langulus::Flow
    struct Code;
 }
 
-namespace Langulus::CT
+/*namespace Langulus::CT
 {
    namespace Inner
    {
@@ -50,7 +50,7 @@ namespace Langulus::CT
    template<class...T>
    concept Codifiable = ((Inner::CodifiableByOperator<T>
         or Inner::CodifiableByConstructor<T>) and ...);
-}
+}*/
 
 namespace Langulus::Flow
 {
@@ -59,7 +59,7 @@ namespace Langulus::Flow
    ///                                                                        
    struct Code : Text {
       using CTTI_ReflectAs = Code;
-      using CTTI_Files     = Yes<"flow">;
+      using CTTI_Files     = Yes<"Flow">;
       using CTTI_Bases     = Text;
       using Text::Text;
 

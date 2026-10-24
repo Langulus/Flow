@@ -27,10 +27,6 @@ namespace Langulus::Flow
    ///                                                                        
    /// Saves the recipe by which the item was made with, in order to compare  
    /// creation requests.                                                     
-   ///   @attention mDescriptor can contain anything (including Thing         
-   ///      references) and is known to cause circular dependencies. That's   
-   ///      why ProducedFrom::Teardown has to be called as a first-stage      
-   ///      destruction, usually in a custom Reference(int) routine.          
    template<class T>
    struct ProducedFrom {
       using CTTI_Producer = T;
@@ -40,6 +36,11 @@ namespace Langulus::Flow
       friend struct TFactory;
 
       // The descriptor used for hashing and element identification     
+      /// @attention mDescriptor can contain anything (including Thing  //TODO think about adding Teardown to deep ownership components to handle that?
+      ///    references) and is known to cause circular dependencies.   
+      ///    That's why ProducedFrom::Teardown has to be called as a    
+      ///    first-stage destruction, usually in a custom Reference(int)
+      ///    routine.                                                   
       Many mDescriptor;
       // The producer of the element                                    
       Ref<T> mProducer;
@@ -59,4 +60,9 @@ namespace Langulus::Flow
       auto GetProducer() const noexcept -> const Ref<T>&;
       void TeardownInner();
    };
+}
+
+namespace Langulus
+{
+   using Flow::ProducedFrom;
 }

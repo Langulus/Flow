@@ -8,6 +8,7 @@
 #pragma once
 #include <Langulus/Utils/Literal.hpp>
 #include <Langulus/Utils/Values.hpp>
+#include <Langulus/CT/Number.hpp>
 
 
 namespace Langulus
@@ -15,9 +16,8 @@ namespace Langulus
    ///                                                                        
    ///   Refresh rates                                                        
    ///                                                                        
-   /// Represents the frequency at which data is recomputed                   
-   /// Many of these rates map onto shader stages                             
-   ///                                                                        
+   /// Represents the frequency at which data is recomputed.                  
+   /// Many of these rates map onto shader stages.                            
    struct RefreshRate {
       using CTTI_POD       = Yup;
       using CTTI_Nullable  = Yup;
@@ -26,7 +26,7 @@ namespace Langulus
 
       enum Enum : uint8_t {
          Auto = 0,         // Automatically determined refresh rate,    
-                           // based on tags and context               
+                           // based on tags and context                 
 
          None,             // No refresh rate (a constant, that never   
                            // refreshes)                                
@@ -105,8 +105,8 @@ namespace Langulus
 
    public:
       constexpr RefreshRate() noexcept = default;
-      constexpr RefreshRate(const CT::Number auto&) noexcept;
-      constexpr RefreshRate(const Enum&) noexcept;
+      constexpr RefreshRate(CT::Number auto const&) noexcept;
+      constexpr RefreshRate(Enum const&) noexcept;
 
       constexpr bool IsUniform() const noexcept;
       constexpr bool IsStaticUniform() const noexcept;

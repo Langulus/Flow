@@ -24,11 +24,9 @@ namespace Langulus::Flow
    /// in-place. Additionally, the factory also internally utilizes a hashmap 
    /// to quickly find relevant elements. Items are laid out serially, so     
    /// that iteration is as fast and cache-friendly as possible.              
-   ///                                                                        
    ///	By specifying a FactoryUsage::Unique usage, you're essentially       
    /// making a set of the produced resources, never duplicating elements     
    /// with the same descriptor twice.                                        
-   ///                                                                        
    template<class T, FactoryUsage USAGE = FactoryUsage::Default>
    struct TFactory : Annies::THive<T> {
       using CTTI_ReflectAs    = TFactory;
@@ -40,8 +38,12 @@ namespace Langulus::Flow
       // A hash map for fast retrieval of elements                      
       TMapUnsorted<Hash, TMany<T*>> mHashmap;
 
-      auto Produce(auto*, Many const&) -> T*;
-      void CreateInner(auto*, Verb&, int, Many const& = {});
+      template<class P>
+      auto Produce(P*, Many const&) -> T*;
+
+      template<class P>
+      void CreateInner(P*, Verb&, int, Many const& = {});
+
       void Destroy(T*);
       auto FindInner(Many const&) const -> T*;
 

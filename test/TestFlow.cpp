@@ -280,7 +280,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
    GIVEN("The script: ? create Thing(User)") {
       const Code code = "? create Thing(User)";
       Many const required = Verbs::Create {
-         Recipe::From<Thing>(MetaOf<User>())
+         Recipe::For<Thing>(MetaOf<User>())
       }.SetSource(Many::Past());
 
       WHEN("Parsed") {
@@ -319,7 +319,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       Many const required = Verbs::Select {Many::Future()}
          .SetSource(
             Verbs::Select {
-               Recipe::From<Thing>(MetaOf<User>())
+               Recipe::For<Thing>(MetaOf<User>())
             }.SetSource(Many::Past())
          );
 
@@ -362,7 +362,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
       Verbs::Associate first {Many::Future()};
       first.SetSource(Many::Past());
 
-      Verbs::Select second {Recipe::From<Thing>(sessionOrUser)};
+      Verbs::Select second {Recipe::For<Thing>(sessionOrUser)};
       second.SetSource(Many::Past());
 
       Verbs::Select third {Many::Future()};
@@ -403,7 +403,7 @@ SCENARIO("Parsing scripts with corner cases", "[flow]") {
 
    GIVEN("The script: Thing(Universe, Window, Temporal)") {
       const Code code = "Thing(Universe, Window, Temporal)";
-      Many const required = Recipe::From<Thing>(
+      Many const required = Recipe::For<Thing>(
          MetaOf<Universe>(),
          MetaOf<Window>(),
          MetaOf<Temporal>()

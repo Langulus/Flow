@@ -44,8 +44,8 @@
    }
 
    /// Convenience function that logs this's identity and suffixes with ": "  
-   /// Useful when used like: Logger::Verbose() << Self() << "etc..."         
-   Text Resolvable::Self() const {
+   /// Useful when used like: Logger::Verbose() << this << "etc..."         
+   Text Resolvable::this const {
       return Text {operator Text(), ": "};
    }
 

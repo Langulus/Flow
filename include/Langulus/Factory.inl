@@ -8,6 +8,7 @@
 #pragma once
 #include "Factory.hpp"
 #include <Langulus/Recipe.hpp>
+#include <Langulus/CT/Derived.hpp>
 
 #define TEMPLATE()   template<class T, FactoryUsage USAGE>
 #define FACTORY()    TFactory<T, USAGE>
@@ -21,9 +22,9 @@
 
 namespace Langulus::Flow
 {
-   /// Factory destructor                                                     
+   /// Factory destructor.                                                    
    /// Checks if all elements are referenced exactly once before destruction  
-   /// if safe mode is enabled                                                
+   /// if safe mode is enabled.                                               
    TEMPLATE() LANGULUS(INLINED)
    FACTORY()::~TFactory() {
       static_assert(CT::Producible<T>, "T must have a producer");
@@ -37,7 +38,7 @@ namespace Langulus::Flow
 
    /// Move-assignment remaps all elements to the new instance owner          
    ///   @attention notice how mFactoryOwner never changes on both sides      
-   ///   @param other - the factory to move                                   
+   ///   @param other the factory to move                                     
    TEMPLATE() LANGULUS(INLINED)
    auto FACTORY()::operator = (TFactory&& other) noexcept -> TFactory& {
       Base::operator = (::std::forward<Base>(other));
@@ -92,15 +93,15 @@ namespace Langulus::Flow
 #endif
 
    /// Find an element with the provided descriptor                           
-   ///   @param descriptor - the normalized descriptor for the element        
+   ///   @param descriptor the normalized descriptor for the element          
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE() LANGULUS(INLINED)
    auto FACTORY()::FindInner(Many const& descriptor) const -> T* {
       VERBOSE_FACTORY(NameOf<TFactory>(), " seeking for ", descriptor);
       const auto hash = descriptor.GetHash();
-      const auto found = mHashmap.FindIt(hash);
+      const auto found = mHashmap.Find(hash);
       if (found) {
-         for (auto cell : found.GetValue()) {
+         for (auto cell : found.GetVal()) {
             if (cell->mData.GetDescriptor() != descriptor)
                continue;
             return cell;
@@ -111,17 +112,18 @@ namespace Langulus::Flow
    }
 
    /// Create/Destroy element(s) inside the factory                           
-   ///   @param producer - the producer                                       
-   ///   @param verb - the creation verb                                      
+   ///   @param producer the producer                                         
+   ///   @param verb the creation verb                                        
    TEMPLATE()
    void FACTORY()::Create(auto* producer, Verb& verb) {
       static_assert(CT::Related<ProducersOf<T>, decltype(producer)>,
          "Producer isn't related to the reflected one");
 
+      const auto produced = MetaDataOf<T>();
       verb.ForEachDeep(
-         [&](Recipe const& recipe) {
-            // For each recipe...                                    
-            if (not MetaOf<T>()->CastsTo(recipe.GetTarget()))
+         [this,&produced,&producer,&verb](Recipe const& recipe) {
+            // For each recipe...                                       
+            if (not produced.CastsTo(recipe.GetTarget()))
                return;
             
             auto count = static_cast<int>(
@@ -130,9 +132,9 @@ namespace Langulus::Flow
 
             CreateInner(producer, verb, count, recipe.GetDescriptor());
          },
-         [&](RTTI::DMeta const& type) {
+         [this,&produced,&producer,&verb](RTTI::DMeta const& type) {
             // For each type...                                         
-            if (not type or not MetaOf<T>()->CastsTo(type))
+            if (not type or not produced.CastsTo(type))
                return;
 
             auto count = static_cast<int>(
@@ -145,8 +147,8 @@ namespace Langulus::Flow
    }
    
    /// Create (or reuse) a single element                                     
-   ///   @param producer - the producer                                       
-   ///   @param descriptor - the descriptor                                   
+   ///   @param producer the producer                                         
+   ///   @param descriptor the descriptor                                     
    ///   @return the new (or reused) instance                                 
    TEMPLATE()
    auto FACTORY()::CreateOne(auto* producer, Many const& descriptor) -> T* {
@@ -166,7 +168,7 @@ namespace Langulus::Flow
    }
 
    /// Emplace a non-unique element manually with custom constructor          
-   ///   @param arguments... - arguments to forwards towards contructor       
+   ///   @param arguments... arguments to forwards towards contructor         
    ///   @return a pointer to the newly created element                       
    TEMPLATE() template<class...ARG>
    auto FACTORY()::Emplace(ARG&&...arguments) -> T* requires (not IsUnique) {
@@ -177,7 +179,7 @@ namespace Langulus::Flow
       const auto hash = result->mData.GetHash();
       const auto found = mHashmap.FindIt(hash);
       if (found)
-         found.GetValue() << result;
+         found.GetVal() << result;
       else
          mHashmap.Insert(hash, result);
 
@@ -185,24 +187,28 @@ namespace Langulus::Flow
    }
 
    /// Inner creation/destruction verb                                        
-   ///   @param producer - the producer                                       
-   ///   @param verb - [in/out] the creation/destruction verb                 
-   ///   @param count - the number of items to create (or destroy if negative)
-   ///   @param descriptor - element descriptor                               
-   TEMPLATE()
+   ///   @param producer the producer                                         
+   ///   @param verb [in/out] the creation/destruction verb                   
+   ///   @param count the number of items to create (or destroy if negative)  
+   ///   @param descriptor element descriptor                                 
+   TEMPLATE() template<class PRODUCER>
    void FACTORY()::CreateInner(
-      auto* producer, Verb& verb, int count, Many const& descriptor
+      PRODUCER* producer, Verb& verb, int count, Many const& descriptor
    ) {
-      static_assert(CT::Related<ProducersOf<T>, decltype(producer)>,
-         "Producer isn't related to the reflected one");
+      constexpr auto Ps = ProducersOf<T>{};
+      static_assert(Expand(Ps, []<class...P> {
+            return (CT::Related<P, PRODUCER> or ...);
+         }),
+         "Producer isn't related to the reflected one"
+      );
 
       if (count > 0) {
-         // Produce amount of compatible recipes                     
+         // Produce amount of compatible recipes                        
          if constexpr (IsUnique) {
             // Check if descriptor matches any of the available         
             const auto found = FindInner(descriptor);
             if (found) {
-               // The unique recipe was found, just return it.       
+               // The unique recipe was found, just return it.          
                // Mass will be ignored, it makes no sense to            
                // create multiple instances if unique                   
                verb << &found->mData;
@@ -225,12 +231,12 @@ namespace Langulus::Flow
          }
       }
       else if (count < 0) {
-         // Destroy amount of compatible recipes                     
+         // Destroy amount of compatible recipes                        
          if constexpr (IsUnique) {
             // Check if descriptor matches any of the available         
             const auto found = FindInner(descriptor);
             if (found) {
-               // The unique recipe was found, destroy it            
+               // The unique recipe was found, destroy it               
                // Mass is ignored, there should be exactly one          
                Destroy(found);
                return;
@@ -254,13 +260,13 @@ namespace Langulus::Flow
    }
 
    /// Select/Deselect element(s) inside the factory                          
-   ///   @param verb - the selection verb                                     
+   ///   @param verb the selection verb                                       
    TEMPLATE()
    void FACTORY()::Select(Verb& verb) {
-      // For each recipe or meta compatible with the factory         
+      // For each recipe or meta compatible with the factory            
       verb.ForEachDeep(
          [&](Recipe const& recipe) {
-            // For each recipe...                                    
+            // For each recipe...                                       
             if (not MetaDataOf<T>()->CastsTo(recipe.GetTarget()))
                return;
 
@@ -277,7 +283,7 @@ namespace Langulus::Flow
    }
 
    /// External interface for finding an entry in the factory                 
-   ///   @param descriptor - descriptor to match exactly                      
+   ///   @param descriptor descriptor to match exactly                        
    ///   @return a valid pointer if element was found                         
    TEMPLATE()
    auto FACTORY()::Find(Many const& descriptor) const -> const T* {
@@ -288,13 +294,17 @@ namespace Langulus::Flow
    }
 
    /// Produce a single T with the given descriptor                           
-   ///   @param producer - the producer                                       
-   ///   @param descriptor - element descriptor                               
+   ///   @param producer the producer                                         
+   ///   @param descriptor element descriptor                                 
    ///   @return the produced instance                                        
-   TEMPLATE()
-   auto FACTORY()::Produce(auto* producer, Many const& descriptor) -> T* {
-      static_assert(CT::Related<ProducersOf<T>, decltype(producer)>,
-         "Producer isn't related to the reflected one");
+   TEMPLATE() template<class PRODUCER>
+   auto FACTORY()::Produce(PRODUCER* producer, Many const& descriptor) -> T* {
+      constexpr auto Ps = ProducersOf<T>{};
+      static_assert(Expand(Ps, []<class...P> {
+            return (CT::Related<P, PRODUCER> or ...);
+         }),
+         "Producer isn't related to the reflected one"
+      );
 
       // Register entry in the hashmap, for fast search by descriptor   
       VERBOSE_FACTORY(NameOf<TFactory>(), " producing: ", descriptor);
@@ -303,9 +313,9 @@ namespace Langulus::Flow
          return nullptr;
 
       const auto hash = result->mData.GetHash();
-      const auto found = mHashmap.FindIt(hash);
+      const auto found = mHashmap.Find(hash);
       if (found)
-         found.GetValue() << result;
+         found.GetVal() << result;
       else
          mHashmap.Insert(hash, result);
 
@@ -315,7 +325,7 @@ namespace Langulus::Flow
    /// Destroys an element inside factory                                     
    ///   @attention assumes item is a valid pointer, owned by the factory     
    ///   @attention item pointer is no longer valid after this call           
-   ///   @param item - element to destroy                                     
+   ///   @param item element to destroy                                       
    TEMPLATE()
    void FACTORY()::Destroy(T* item) {
       // Remove from hashmap                                            

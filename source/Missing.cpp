@@ -352,7 +352,7 @@ void MissingFuture::Commit(Many const& linked, Temporal& flow) {
             LglsAssumeDev(found->mFuture, "Invalid future");
             found->mFuture->Commit(local, **found);
 
-            //found.GetValue().LinkRelative(local, v, entanglement);
+            //found.GetVal().LinkRelative(local, v, entanglement);
          }
          else if (rate) {
             // Verb is rated, forward it to the frequency stack         
@@ -365,7 +365,7 @@ void MissingFuture::Commit(Many const& linked, Temporal& flow) {
             found->mFuture->Commit(local, **found);
 
             /*LANGULUS_ASSERT(
-               found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
+               found.GetVal().PushFutures(local, *found.GetVal().mFuture, entanglement),
                Flow, "Couldn't push to future"
             );*/
          }

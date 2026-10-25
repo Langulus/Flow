@@ -401,7 +401,7 @@ void Temporal::Link(Many const& scope, Ref<Entanglement> const& entanglementAbov
                found = mTimeStack.FindIt(v.GetTime());
             }
 
-            found.GetValue().LinkRelative(local, v, entanglement);
+            found.GetVal().LinkRelative(local, v, entanglement);
          }
          else if (v.GetRate()) {
             // Verb is rated, forward it to the frequency stack         
@@ -414,10 +414,10 @@ void Temporal::Link(Many const& scope, Ref<Entanglement> const& entanglementAbov
                found = mFrequencyStack.FindIt(v.GetRate());
             }
 
-            LglsAssumeDev(found.GetValue().mFuture,
+            LglsAssumeDev(found.GetVal().mFuture,
                "Invalid future");
             LANGULUS_ASSERT(
-               found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
+               found.GetVal().PushFutures(local, *found.GetVal().mFuture, entanglement),
                Flow, "Couldn't push to future"
             );
          }*/
@@ -481,10 +481,10 @@ void Temporal::LinkRelative(
                found = mTimeStack.FindIt(override.GetTime());
             }
 
-            LglsAssumeDev(found.GetValue().mFuture,
+            LglsAssumeDev(found.GetVal().mFuture,
                "Invalid future");
             LANGULUS_ASSERT(
-               found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
+               found.GetVal().PushFutures(local, *found.GetVal().mFuture, entanglement),
                Flow, "Couldn't push to future"
             );
          }
@@ -496,10 +496,10 @@ void Temporal::LinkRelative(
                found = mFrequencyStack.FindIt(override.GetRate());
             }
 
-            LglsAssumeDev(found.GetValue().mFuture,
+            LglsAssumeDev(found.GetVal().mFuture,
                "Invalid future");
             LANGULUS_ASSERT(
-               found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
+               found.GetVal().PushFutures(local, *found.GetVal().mFuture, entanglement),
                Flow, "Couldn't push to future"
             );
          }
@@ -522,10 +522,10 @@ void Temporal::LinkRelative(
                found = mTimeStack.FindIt(override.GetTime());
             }
 
-            LglsAssumeDev(found.GetValue().mFuture,
+            LglsAssumeDev(found.GetVal().mFuture,
                "Invalid future");
             LANGULUS_ASSERT(
-               found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
+               found.GetVal().PushFutures(local, *found.GetVal().mFuture, entanglement),
                Flow, "Couldn't push to future"
             );
          }
@@ -537,10 +537,10 @@ void Temporal::LinkRelative(
                found = mFrequencyStack.FindIt(override.GetRate());
             }
 
-            LglsAssumeDev(found.GetValue().mFuture,
+            LglsAssumeDev(found.GetVal().mFuture,
                "Invalid future");
             LANGULUS_ASSERT(
-               found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
+               found.GetVal().PushFutures(local, *found.GetVal().mFuture, entanglement),
                Flow, "Couldn't push to future"
             );
          }
@@ -577,7 +577,7 @@ void Temporal::LinkRelative(
                found = mTimeStack.FindIt(time);
             }
 
-            found.GetValue().LinkRelative(local, localOverride, entanglement);
+            found.GetVal().LinkRelative(local, localOverride, entanglement);
          }
          else if (localOverride.GetRate()) {
             // Verb is rated, forward it to the frequency stack         
@@ -593,10 +593,10 @@ void Temporal::LinkRelative(
                found = mFrequencyStack.FindIt(rate);
             }
 
-            LglsAssumeDev(found.GetValue().mFuture,
+            LglsAssumeDev(found.GetVal().mFuture,
                "Invalid future");
             LANGULUS_ASSERT(
-               found.GetValue().PushFutures(local, *found.GetValue().mFuture, entanglement),
+               found.GetVal().PushFutures(local, *found.GetVal().mFuture, entanglement),
                Flow, "Couldn't push to future"
             );
          }*/

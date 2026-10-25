@@ -63,7 +63,7 @@ namespace Langulus::Flow
       using CTTI_Bases     = Text;
       using Text::Text;
 
-      /// Construction from any kind of text that is an Annies container     
+      /// Construction from any kind of text that is an Annies container      
       template<CT::Text T> requires CT::Container<T>
       constexpr Code(T&& text) {
          this->Absorb(LglsFwd(text));

@@ -46,7 +46,7 @@ namespace Langulus::Flow
       Ref<T> mProducer;
 
    public:
-      ProducedFrom(const ProducedFrom&) = delete("Factory elements are bound to the "
+      ProducedFrom(ProducedFrom const&) = delete("Factory elements are bound to the "
                                                  "factory that produced them, "
                                                  "and can't be copied to another");
       ProducedFrom(ProducedFrom&&);

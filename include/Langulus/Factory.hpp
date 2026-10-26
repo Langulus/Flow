@@ -54,7 +54,7 @@ namespace Langulus::Flow
       /// This is needed, because elements must be remapped to a new valid    
       /// owner upon move                                                     
       TFactory() = default;
-      TFactory(const TFactory&) = delete("Factory elements are bound to the "
+      TFactory(TFactory const&) = delete("Factory elements are bound to the "
                                          "factory that produced them, "
                                          "and can't be copied to another");
       TFactory(TFactory&&)      = delete("Factory elements are bound to the "

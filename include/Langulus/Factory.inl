@@ -25,7 +25,7 @@ namespace Langulus::Flow
    /// Factory destructor.                                                    
    /// Checks if all elements are referenced exactly once before destruction  
    /// if safe mode is enabled.                                               
-   TEMPLATE() LANGULUS(INLINED)
+   TEMPLATE()
    FACTORY()::~TFactory() {
       static_assert(CT::Producible<T>, "T must have a producer");
 
@@ -39,7 +39,7 @@ namespace Langulus::Flow
    /// Move-assignment remaps all elements to the new instance owner          
    ///   @attention notice how mFactoryOwner never changes on both sides      
    ///   @param other the factory to move                                     
-   TEMPLATE() LANGULUS(INLINED)
+   TEMPLATE()
    auto FACTORY()::operator = (TFactory&& other) noexcept -> TFactory& {
       Base::operator = (::std::forward<Base>(other));
       mHashmap = Move(other.mHashmap);
@@ -47,22 +47,28 @@ namespace Langulus::Flow
    }
 
    /// Reset the factory                                                      
-   TEMPLATE() LANGULUS(INLINED)
+   TEMPLATE()
    void FACTORY()::Reset() {
       mHashmap.Reset();
       Base::Reset();
    }
    
+   ///   @attention                                                           
    /// Factories can have their own hierarchies going on, and tearing them    
    /// down to account of circular references is mandatory. Here's an example:
-   /// The Physics module has a Euclidean::World factory.                     
-   /// Each World has a factory for Euclidean::Instances                      
-   /// Each Instance refers to its World producer                             
-   /// In order to destroy a World, you have to first visit all Instances     
-   /// and sever their connection with the World, so that the proper order    
-   /// of destruction happens. Otherwise the World will be destroyed from     
-   /// the Instance::mProducer handle instead on World factory destruction.   
-   TEMPLATE() LANGULUS(INLINED)
+   /// 1. The Physics module has a Euclidean::World factory.                  
+   /// 2. Each Euclidean::World has a factory for Euclidean::Instances.       
+   /// 3. Each Instance refers to its World producer.                         
+   /// 4. In order to destroy a World, you have to first visit all Instances  
+   ///    and sever their connection with their World, so that the proper     
+   ///    order of destruction happens later. Otherwise the World will be     
+   ///    destroyed from the last Instance::mProducer handle instead of on    
+   ///    World factory destruction.                                          
+   //TODO is this really true though? The world factory should hold the last references. 
+   //TODO maybe this was done to cope with bad consistency?
+   //TODO maybe make a weak pointer variant of TRef and use that as mProducer? just use TOwn?
+   //TODO but then descriptors are deep containers that can reference whatever they want... can't remedy that with weak pointers...
+   TEMPLATE()
    void FACTORY()::Teardown() {
       mHashmap.Reset();
 
@@ -95,7 +101,7 @@ namespace Langulus::Flow
    /// Find an element with the provided descriptor                           
    ///   @param descriptor the normalized descriptor for the element          
    ///   @return the found element, or nullptr if not found                   
-   TEMPLATE() LANGULUS(INLINED)
+   TEMPLATE()
    auto FACTORY()::FindInner(Many const& descriptor) const -> T* {
       VERBOSE_FACTORY(NameOf<TFactory>(), " seeking for ", descriptor);
       const auto hash = descriptor.GetHash();

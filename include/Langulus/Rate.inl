@@ -11,7 +11,6 @@
 
 namespace Langulus::Flow
 {
-
    /// Manual rate constructor from a dense number                            
    ///   @param value - the number to interpret as symbolical rate            
    constexpr RefreshRate::RefreshRate(const CT::Number auto& value) noexcept
@@ -72,7 +71,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    constexpr size_t RefreshRate::GetInputIndex() const {
       if (not IsInput())
-         LANGULUS_THROW(Convert, "Not an input");
+         throw Exception("Not an input");
       return mMode - InputBegin;
    }
 
@@ -80,7 +79,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    constexpr size_t RefreshRate::GetStaticUniformIndex() const {
       if (not IsStaticUniform())
-         LANGULUS_THROW(Convert, "Not a static uniform");
+         throw Exception("Not a static uniform");
       return mMode - StaticUniformBegin;
    }
 
@@ -88,7 +87,7 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    constexpr size_t RefreshRate::GetDynamicUniformIndex() const {
       if (not IsDynamicUniform())
-         LANGULUS_THROW(Convert, "Not a dynamic uniform");
+         throw Exception("Not a dynamic uniform");
       return mMode - DynamicUniformBegin;
    }
 
@@ -96,13 +95,12 @@ namespace Langulus::Flow
    LANGULUS(INLINED)
    constexpr size_t RefreshRate::GetStageIndex() const {
       if (not IsShaderStage())
-         LANGULUS_THROW(Convert, "Not a shader stage");
+         throw Exception("Not a shader stage");
       return mMode - StagesBegin;
    }
 
    namespace Rate
    {
-
       constexpr RefreshRate Auto       {RefreshRate::Auto      };
       constexpr RefreshRate None       {RefreshRate::None      };
       constexpr RefreshRate Tick       {RefreshRate::Tick      };
@@ -118,7 +116,5 @@ namespace Langulus::Flow
       constexpr RefreshRate TessCtrl   {RefreshRate::TessCtrl  };
       constexpr RefreshRate TessEval   {RefreshRate::TessEval  };
       constexpr RefreshRate Pixel      {RefreshRate::Pixel     };
-
-   } // namespace Langulus::Flow::Rate
-
-} // namespace Langulus::Flow
+   }
+}

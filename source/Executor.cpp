@@ -145,7 +145,7 @@ bool ExecuteAND(
 
                   if (not ExecuteVerb(context, verb, silent)) {
                      if (silent)
-                        LANGULUS_THROW(Flow, "Recipe AND failure");
+                        throw Exception(Flow, "Recipe AND failure");
                      else
                         LANGULUS_OOPS(Flow, "Recipe AND failure: ");
                   }

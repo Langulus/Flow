@@ -53,10 +53,25 @@ void Temporal::Reset() {
 /// Reset progress for all verbs inside a scope                               
 ///   @param scope scope to reset                                             
 void Temporal::ResetInner(Many& scope) {
+   // Do the same to all nested deep containers, including Neats        
+   scope.ForEachDeep([&](Many& m) {
+      if (not m.IsSparse())
+         ResetInner(m);
+   });
+
+   // Nest in non-deep elements, if such are available                  
    scope.ForEach(
-      [&](Many& m) {
-         if (not m.IsSparse())
-            ResetInner(m);
+      [&](Verb& verb) {
+         if (not verb.GetLHS().IsSparse())
+            ResetInner(verb.GetLHS());
+
+         if (not verb.IsSparse()) {
+            auto argument = verb.GetRHS(); //TODO beware, this does a shallow copy and reference. ResetInner could modify even if uses > 1, but still a dangerous pattern
+            ResetInner(argument);
+         }
+         
+         verb.Clear();  // This is why we are here for, the rest is     
+                        // just nesting                                 
       },
       [&](Missing& missing) {
          if (not missing.mContent.IsSparse())
@@ -70,33 +85,15 @@ void Temporal::ResetInner(Many& scope) {
       },
       [&](Tag& tag) {
          if (not tag.IsSparse()) {
-            auto data = tag.GetData();
+            auto data = tag.GetData(); //TODO beware, this does a shallow copy and reference. ResetInner could modify even if uses > 1, but still a dangerous pattern
             ResetInner(data);
          }
       },
       [&](Recipe& recipe) {
-         auto descriptor = recipe.GetDescriptor();
-         ResetInner(descriptor);
-      },
-      [&](Neat& neat) {
-         neat.ForEachTag([this](Tag& tag) {
-            auto data = tag.GetData();
-            ResetInner(data);
-         });
-         neat.ForEachRecipe([this](Recipe& recipe) {
-            auto descriptor = recipe.GetDescriptor();
+         if (not recipe.IsSparse()) {
+            auto descriptor = recipe.GetDescriptor(); //TODO beware, this does a shallow copy and reference. ResetInner could modify even if uses > 1, but still a dangerous pattern
             ResetInner(descriptor);
-         });
-         neat.ForEachTail([this](Many& stuff) {
-            ResetInner(stuff);
-         });
-      },
-      [&](Verb& verb) {
-         ResetInner(verb.GetLHS());
-         auto argument = verb.GetRHS();
-         ResetInner(argument);
-         verb.SetArgument(Abandon(argument));
-         verb.Clear();
+         }
       }
    );
 }

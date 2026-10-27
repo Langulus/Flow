@@ -1258,7 +1258,7 @@ size_t ChargeParser::Parse(Code const& input, Charge& charge) {
       else LglsError("Unexpected symbol");
 
       // Save changes                                                   
-      // AsCast may throw here, if RHS did not convert to real - this   
+      // As<real> may throw here, if RHS did not convert to real - this 
       // is later caught and handled gracefully.                        
       auto asReal = rhs.As<Real>();
       if (reverse)

@@ -48,11 +48,11 @@ namespace Langulus::Flow
       auto FindInner(Many const&) const -> T*;
 
    public:
-      /// Factories can't be default-, move- or copy-constructed              
+      /// Factories can't be default-, move- or copy-constructed.             
       /// We must guarantee that mFactoryOwner is always valid, and move is   
-      /// allowed only via assignment, on a previously initialized factory    
+      /// allowed only via assignment, on a previously initialized factory.   
       /// This is needed, because elements must be remapped to a new valid    
-      /// owner upon move                                                     
+      /// owner upon move.                                                    
       TFactory() = default;
       TFactory(TFactory const&) = delete("Factory elements are bound to the "
                                          "factory that produced them, "

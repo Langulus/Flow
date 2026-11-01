@@ -9,6 +9,7 @@
 #include <Langulus/Utils/Literal.hpp>
 #include <Langulus/Utils/Values.hpp>
 #include <Langulus/CT/Number.hpp>
+#include <Langulus/Assume.hpp>
 
 
 namespace Langulus
@@ -105,22 +106,104 @@ namespace Langulus
 
    public:
       constexpr RefreshRate() noexcept = default;
-      constexpr RefreshRate(CT::Number auto const&) noexcept;
-      constexpr RefreshRate(Enum const&) noexcept;
 
-      constexpr bool IsUniform() const noexcept;
-      constexpr bool IsStaticUniform() const noexcept;
-      constexpr bool IsDynamicUniform() const noexcept;
-      constexpr bool IsAttribute() const noexcept;
-      constexpr bool IsInput() const noexcept;
-      constexpr bool IsShaderStage() const noexcept;
-      constexpr auto GetInputIndex() const -> size_t;
-      constexpr auto GetStaticUniformIndex() const -> size_t;
-      constexpr auto GetDynamicUniformIndex() const -> size_t;
-      constexpr auto GetStageIndex() const -> size_t;
+      /// Manual rate constructor from a dense number                         
+      ///   @param value the number to interpret as symbolical rate           
+      constexpr RefreshRate(CT::Number auto const& value) noexcept
+         : mMode {static_cast<Type>(value)} {}
+
+      /// Manual rate constructor from internal enumerator                    
+      ///   @param value the rate                                             
+      constexpr RefreshRate(Enum const& value) noexcept
+         : mMode {value} {}
+
+      /// Does this rate map onto uniform variables (as in shader uniforms)?  
+      /// Uniforms are called like this, because they rarely change.          
+      ///   @return true if this rate qualifies as a shader uniform           
+      constexpr bool IsUniform() const noexcept {
+         return mMode >= UniformBegin and mMode < UniformEnd;
+      }
+
+      /// Shader uniforms can be either static, or dynamic, depending on rate.
+      /// Static uniforms tend to change less often than dynamic ones.        
+      ///   @return true if this rate qualifies as a static uniform rate      
+      constexpr bool IsStaticUniform() const noexcept {
+         return mMode >= StaticUniformBegin and mMode < StaticUniformEnd;
+      }
+
+      /// Shader uniforms can be either static, or dynamic, depending on rate.
+      /// Dynamic uniforms tend to change more often than static ones.        
+      ///   @return true if this rate qualifies as a dynamic uniform rate     
+      constexpr bool IsDynamicUniform() const noexcept {
+         return mMode >= DynamicUniformBegin and mMode < DynamicUniformEnd;
+      }
+
+      /// Check if rate is considered per-vertex (as in vertex attribute).    
+      /// This rate acts as the gateway to shader attributes (vertex stage is 
+      /// the entry stage of a shader)                                        
+      constexpr bool IsAttribute() const noexcept {
+         return mMode == Enum::Vertex;
+      }
+
+      /// An input rate is any rate, that isn't None/Auto.                    
+      /// In other words: anything that needs to be recomputed (not constant  
+      /// or unknown) at runtime is considered an input rate.                 
+      constexpr bool IsInput() const noexcept {
+         return mMode >= InputBegin and mMode < InputEnd;
+      }
+
+      /// Check if rate maps onto shader stages                               
+      constexpr bool IsShaderStage() const noexcept {
+         return mMode >= StagesBegin and mMode < StagesEnd;
+      }
+
+      /// Get the relative input index                                        
+      constexpr auto GetInputIndex() const -> size_t {
+         LglsAssert(IsInput(), "Not an input");
+         return mMode - InputBegin;
+      }
+
+      /// Get the relative static uniform index                               
+      constexpr auto GetStaticUniformIndex() const -> size_t {
+         LglsAssert(IsStaticUniform(), "Not a static uniform");
+         return mMode - StaticUniformBegin;
+      }
+
+      /// Get the relative dynamic uniform index                              
+      constexpr auto GetDynamicUniformIndex() const -> size_t {
+         LglsAssert(IsDynamicUniform(), "Not a dynamic uniform");
+         return mMode - DynamicUniformBegin;
+      }
+   
+      /// Get the relative shader stage index                                 
+      constexpr auto GetStageIndex() const -> size_t {
+         LglsAssert(IsShaderStage(), "Not a shader stage");
+         return mMode - StagesBegin;
+      }
 
       constexpr operator Enum () const noexcept {
          return static_cast<Enum>(mMode);
       }
    };
+
+   using RRate = RefreshRate;
+}
+
+namespace Langulus::Rate
+{
+   constexpr RRate Auto       {RRate::Auto      };
+   constexpr RRate None       {RRate::None      };
+   constexpr RRate Tick       {RRate::Tick      };
+
+   constexpr RRate Pass       {RRate::Pass      };
+   constexpr RRate Camera     {RRate::Camera    };
+   constexpr RRate Level      {RRate::Level     };
+   constexpr RRate Renderable {RRate::Renderable};
+   constexpr RRate Instance   {RRate::Instance  };
+
+   constexpr RRate Vertex     {RRate::Vertex    };
+   constexpr RRate Primitive  {RRate::Primitive };
+   constexpr RRate TessCtrl   {RRate::TessCtrl  };
+   constexpr RRate TessEval   {RRate::TessEval  };
+   constexpr RRate Pixel      {RRate::Pixel     };
 }

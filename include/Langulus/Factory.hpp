@@ -10,7 +10,11 @@
 #include <Langulus/TMap.hpp>
 #include <Langulus/TMany.hpp>
 #include <Langulus/TVerb.hpp>
+#include <Langulus/Neat.hpp>
 #include "Producible.hpp"
+
+#define TEMPLATE()   template<class T, FactoryUsage USAGE>
+#define FACTORY()    TFactory<T, USAGE>
 
 
 namespace Langulus::Flow
@@ -33,19 +37,21 @@ namespace Langulus::Flow
       using Base              = Annies::THive<T>;
       
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
+      using Query = Tif<IsUnique, T const*, TMany<T const*> const*>;
 
    protected:
-      // A hash map for fast retrieval of elements                      
-      TMapUnsorted<Hash, TMany<T*>> mHashmap;
+      // Elements indexed by their descriptor                           
+      TMapUnsorted<Neat, Query> mIndexedByDescriptor;
 
       template<class P>
-      auto Produce(P*, Many const&) -> T*;
+      auto Produce(P*, Neat const&) -> T*;
 
       template<class P>
-      void CreateInner(P*, Verb&, int, Many const& = {});
+      void CreateInner(P*, Verb&, int, Neat const& = {});
 
       void Destroy(T*);
-      auto FindInner(Many const&) const -> T*;
+
+      auto FindInner(Neat const&) const -> Query;
 
    public:
       /// Factories can't be default-, move- or copy-constructed.             
@@ -65,12 +71,18 @@ namespace Langulus::Flow
       auto operator = (TFactory&&) noexcept -> TFactory&;
 
       void Reset();
-      void Create(auto*, Verb&);
-      auto CreateOne(auto*, Many const&) -> T*;
+
+      template<class P>
+      void Create(P*, Verb&);
+
+      template<class P>
+      auto CreateOne(P*, Neat const&) -> T*;
+
       template<class...ARG>
       auto Emplace(ARG&&...) -> T* requires (not IsUnique);
+      
       void Select(Verb&);
-      auto Find(Many const&) const -> const T*;
+      auto Find(Neat const&) const -> Query;
       void Teardown();
 
       IF_SAFE(void Dump() const);
@@ -81,6 +93,9 @@ namespace Langulus::Flow
 }
 
 #include "Factory.inl"
+
+#undef TEMPLATE
+#undef FACTORY
 
 namespace Langulus
 {

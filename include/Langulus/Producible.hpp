@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include <Langulus/Many.hpp>
+#include <Langulus/Neat.hpp>
 #include <Langulus/TRef.hpp>
 
 
@@ -41,7 +41,7 @@ namespace Langulus::Flow
       ///    That's why ProducedFrom::Teardown has to be called as a    
       ///    first-stage destruction, usually in a custom Reference(int)
       ///    routine.                                                   
-      Many mDescriptor;
+      Neat mDescriptor;//TODO maybe make this optional?
       // The producer of the element                                    
       Ref<T> mProducer;
 
@@ -50,7 +50,7 @@ namespace Langulus::Flow
                                                  "factory that produced them, "
                                                  "and can't be copied to another");
       ProducedFrom(ProducedFrom&&);
-      ProducedFrom(T* = nullptr, Many const& = {});
+      ProducedFrom(T* = nullptr, Neat const& = {});
 
       template<template<class> class S>
       ProducedFrom(S<ProducedFrom>&&) requires CT::Intent<S<ProducedFrom>>;

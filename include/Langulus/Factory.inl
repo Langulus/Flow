@@ -197,9 +197,9 @@ namespace Langulus::Flow
    ///   @param verb [in/out] the creation/destruction verb                   
    ///   @param count the number of items to create (or destroy if negative)  
    ///   @param descriptor element descriptor                                 
-   TEMPLATE() template<class PRODUCER>
+   TEMPLATE() template<class P>
    void FACTORY()::CreateInner(
-      PRODUCER* producer, Verb& verb, int count, Neat const& descriptor
+      P* producer, Verb& verb, int count, Neat const& descriptor
    ) {
       if (count > 0) {
          // Produce amount of compatible recipes                        
@@ -237,7 +237,7 @@ namespace Langulus::Flow
             if (found) {
                // The unique recipe was found, destroy it               
                // Mass is ignored, there should be exactly one          
-               Destroy(found);
+               Destroy(const_cast<T*>(found));
                return;
             }
          }
@@ -293,8 +293,8 @@ namespace Langulus::Flow
    ///   @param producer the producer                                         
    ///   @param descriptor element descriptor                                 
    ///   @return the produced instance                                        
-   TEMPLATE() template<class PRODUCER>
-   auto FACTORY()::Produce(PRODUCER* producer, Neat const& descriptor) -> T* {
+   TEMPLATE() template<class P>
+   auto FACTORY()::Produce(P* producer, Neat const& descriptor) -> T* {
       // Register entry in the hashmap, for fast search by descriptor   
       VERBOSE_FACTORY(NameOf<TFactory>(), " producing: ", descriptor);
       auto result = Base::Emplace(producer, descriptor);

@@ -69,11 +69,8 @@ namespace Langulus::Flow
    void FACTORY()::Teardown() {
       mIndexedByDescriptor.Reset();
 
-      for (auto& item : *this) {
-         item.TeardownInner();
-
-         // Propagate Teardown routine                                  
-         if constexpr (requires { item.Teardown(); })
+      if constexpr (requires (T item) { item.Teardown(); }) {
+         for (T& item : *this)
             item.Teardown();
       }
    }

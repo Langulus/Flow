@@ -41,7 +41,7 @@ namespace Langulus::Flow
       ///    That's why ProducedFrom::Teardown has to be called as a    
       ///    first-stage destruction, usually in a custom Reference(int)
       ///    routine.                                                   
-      Neat mDescriptor;//TODO maybe make this optional?
+      Neat mDescriptor;//TODO maybe make this optional by letting the produced item cache it if they want to?
       // The producer of the element                                    
       Ref<T> mProducer;
 
@@ -49,16 +49,47 @@ namespace Langulus::Flow
       ProducedFrom(ProducedFrom const&) = delete("Factory elements are bound to the "
                                                  "factory that produced them, "
                                                  "and can't be copied to another");
-      ProducedFrom(ProducedFrom&&);
-      ProducedFrom(T* = nullptr, Neat const& = {});
 
+                                                 //TODO make make these protected?
+      /// Move a produced item                                                
+      ///   @param other the item to move                                     
+      ProducedFrom(ProducedFrom&& other)
+         : ProducedFrom {Move(other)} {}
+
+      /// Construct a produced item                                           
+      ///   @param producer the item's producer                               
+      ///   @param descriptor the item's neat descriptor                      
+      ProducedFrom(T* producer = nullptr, Neat const& descriptor = {})
+         : mDescriptor {descriptor}
+         , mProducer   {producer} {}
+
+      /// Generic construction                                                
+      ///   @param other intent and element to initialize with                
+      ///   @attention mProducer intentionally not overwritten                
       template<template<class> class S>
-      ProducedFrom(S<ProducedFrom>&&) requires CT::Intent<S<ProducedFrom>>;
+      ProducedFrom(S<ProducedFrom>&& other) requires CT::Intent<S<ProducedFrom>>
+         : mDescriptor {other.Nest(other->mDescriptor)} {}
 
-      auto GetDescriptor() const noexcept -> Many const&;
-      Hash GetHash() const noexcept;
-      auto GetProducer() const noexcept -> const Ref<T>&;
-      void TeardownInner();
+      /// Get the normalized descriptor of the produced item                  
+      constexpr auto GetDescriptor() const noexcept -> Neat const& {
+         return mDescriptor;
+      }
+
+      /// Get the hash of the normalized descriptor                           
+      constexpr auto GetHash() const noexcept -> Hash {
+         return mDescriptor.GetHash();
+      }
+
+      /// Return the producer of the item (a.k.a. the owner of the factory)   
+      auto GetProducer() const noexcept -> Ref<T> const& {
+         return mProducer;
+      }  
+
+      /// First stage destruction if needed                                   
+      void Teardown() {
+         mDescriptor.Reset();
+         mProducer.Reset();
+      }
    };
 }
 

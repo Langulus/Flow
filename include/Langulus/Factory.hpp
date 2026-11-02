@@ -41,7 +41,7 @@ namespace Langulus::Flow
 
    protected:
       // Elements indexed by their descriptor                           
-      TMapUnsorted<Neat, Query> mIndexedByDescriptor;
+      TMapUnsorted<Neat, Tif<IsUnique, T const*, TMany<T const*>>> mIndexedByDescriptor;
 
       template<class P>
       auto Produce(P*, Neat const&) -> T*;

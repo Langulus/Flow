@@ -295,22 +295,24 @@ namespace Langulus::Flow
    ///   @return the produced instance                                        
    TEMPLATE() template<class P>
    auto FACTORY()::Produce(P* producer, Neat const& descriptor) -> T* {
-      // Register entry in the hashmap, for fast search by descriptor   
+      // Allocate the new item                                          
       VERBOSE_FACTORY(NameOf<TFactory>(), " producing: ", descriptor);
       auto result = Base::Emplace(producer, descriptor);
       if (not result)
          return nullptr;
 
+      // Register item in the hashmap, for fast search by descriptor    
+      T* new_pointer = &*result;
       if constexpr (IsUnique)
-         mIndexedByDescriptor.Merge(descriptor, result);
+         mIndexedByDescriptor.Merge(descriptor, new_pointer);
       else {
          const auto found = mIndexedByDescriptor.Find(descriptor);
          if (found)
-            found.GetVal() << result;
+            *found.GetVal() << new_pointer;
          else
-            mIndexedByDescriptor.Merge(descriptor, result);
+            mIndexedByDescriptor.Merge(descriptor, new_pointer);
       }
-      return result;
+      return new_pointer;
    }
 
    /// Destroys an element inside factory                                     

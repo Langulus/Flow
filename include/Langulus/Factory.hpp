@@ -37,21 +37,16 @@ namespace Langulus::Flow
       using Base              = Annies::THive<T>;
       
       static constexpr bool IsUnique = USAGE == FactoryUsage::Unique;
-      using Query = Tif<IsUnique, T const*, TMany<T const*> const*>;
+      using Query  = Tif<IsUnique, T const*, TMany<T const*> const*>;
+      using Bucket = Tif<IsUnique, T const*, TMany<T const*>>;
 
    protected:
       // Elements indexed by their descriptor                           
-      TMapUnsorted<Neat, Tif<IsUnique, T const*, TMany<T const*>>> mIndexedByDescriptor;
+      TMapUnsorted<Neat, Bucket> mIndexedByDescriptor;
 
       template<class P>
-      auto Produce(P*, Neat const&) -> T*;
-
-      template<class P>
-      void CreateInner(P*, Verb&, int, Neat const& = {});
-
-      void Destroy(T*);
-
-      auto FindInner(Neat const&) const -> Query;
+      void CreateOrDestroyInner(P*, Verb&, int, Neat const& = {});
+      void EraseByDescription(Neat const&, int count = 1);
 
    public:
       /// Factories can't be default-, move- or copy-constructed.             
@@ -76,13 +71,10 @@ namespace Langulus::Flow
       void Create(P*, Verb&);
 
       template<class P>
-      auto CreateOne(P*, Neat const&) -> T*;
-
-      template<class...ARG>
-      auto Emplace(ARG&&...) -> T* requires (not IsUnique);
+      auto Produce(P*, Neat const&) -> T*;
       
       void Select(Verb&);
-      auto Find(Neat const&) const -> Query;
+      auto FindByDescription(Neat const&) const -> Query;
       void Teardown();
 
       IF_SAFE(void Dump() const);

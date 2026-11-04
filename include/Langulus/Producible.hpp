@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include <Langulus/Neat.hpp>
-#include <Langulus/TRef.hpp>
+//#include <Langulus/TRef.hpp>
 
 
 namespace Langulus::Flow
@@ -23,7 +23,7 @@ namespace Langulus::Flow
 
 
    ///                                                                        
-   ///   An element, that is factory produced                                 
+   ///   An element that is factory produced                                  
    ///                                                                        
    /// Saves the recipe by which the item was made with, in order to compare  
    /// creation requests.                                                     
@@ -39,11 +39,13 @@ namespace Langulus::Flow
       /// @attention mDescriptor can contain anything (including Thing  //TODO think about adding Teardown to deep ownership components to handle that?
       ///    references) and is known to cause circular dependencies.   
       ///    That's why ProducedFrom::Teardown has to be called as a    
-      ///    first-stage destruction, usually in a custom Reference(int)
-      ///    routine.                                                   
-      Neat mDescriptor;//TODO maybe make this optional by letting the produced item cache it if they want to?
-      // The producer of the element                                    
-      Ref<T> mProducer;
+      ///    first-stage destruction by the producer.                   
+      const Neat mDescriptor;//TODO maybe make this optional by letting the produced item cache it if they want to?
+
+      // The producer of the element.                                   
+      // No need to be owning, because only the producer is allowed to  
+      // request deletion of this instance.                             
+      T const* const mProducer;
 
    public:
       ProducedFrom(ProducedFrom const&) = delete("Factory elements are bound to the "
@@ -59,7 +61,7 @@ namespace Langulus::Flow
       /// Construct a produced item                                           
       ///   @param producer the item's producer                               
       ///   @param descriptor the item's neat descriptor                      
-      ProducedFrom(T* producer = nullptr, Neat const& descriptor = {})
+      ProducedFrom(T const* producer = nullptr, Neat const& descriptor = {})
          : mDescriptor {descriptor}
          , mProducer   {producer} {}
 
@@ -81,14 +83,13 @@ namespace Langulus::Flow
       }
 
       /// Return the producer of the item (a.k.a. the owner of the factory)   
-      auto GetProducer() const noexcept -> Ref<T> const& {
+      auto GetProducer() const noexcept -> T const* {
          return mProducer;
       }  
 
       /// First stage destruction if needed                                   
       void Teardown() {
-         mDescriptor.Reset();
-         mProducer.Reset();
+         const_cast<Neat&>(mDescriptor).Reset();
       }
    };
 }

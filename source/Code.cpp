@@ -573,7 +573,7 @@ size_t KeywordParser::Parse(Code const& input, Many& lhs, bool allowCharge) {
    ///   @param keyword the keyword we'll be disambiguating                   
    ///   @return the disambiguated definition                                 
    auto KeywordParser::Disambiguate(
-      const size_t progress, Code const& input, Token const& keyword
+      size_t const progress, Code const& input, Token const& keyword
    ) -> RTTI::Inner::Definition const* {
       try { return RTTI::Registry::DisambiguateMeta(keyword); }
       catch (...) { LglsFlowError("Unknown keyword: ", keyword); }
@@ -919,7 +919,7 @@ size_t OperatorParser::ParseString(
                                  : Serial::Operator::CloseStringAlt;
 
          if (StartsWithOperator(relevant, closer)) {
-            const size_t tokenSize = GetOperatorToken(closer).size();
+            size_t const tokenSize = GetOperatorToken(closer).size();
             lhs << Text {Clone(input.LeftOf(progress))};
             LglsVerboseFlow("String parsed: ", lhs);
             return tokenSize + progress;
@@ -930,7 +930,7 @@ size_t OperatorParser::ParseString(
          // Finish up a 'c'haracter                                     
          //TODO handle escapes!
          if (StartsWithOperator(relevant, Serial::Operator::CloseCharacter)) {
-            const size_t tokenSize = Serial::CloseCharacter.Token.size();
+            size_t const tokenSize = Serial::CloseCharacter.Token.size();
             lhs << input[0];
             LglsVerboseFlow("Character parsed: ", lhs);
             return tokenSize + progress;
@@ -946,7 +946,7 @@ size_t OperatorParser::ParseString(
             --depth;
 
             if (0 == depth) {
-               const size_t tokenSize = Serial::CloseCode.Token.size();
+               size_t const tokenSize = Serial::CloseCode.Token.size();
                lhs << Clone(input.LeftOf(progress));
                LglsVerboseFlow("Code parsed: ", lhs);
                return tokenSize + progress;

@@ -9,6 +9,7 @@
 #include "Factory.hpp"
 #include <Langulus/Recipe.hpp>
 #include <Langulus/CT/Derived.hpp>
+#include <vector>
 
 #if 0
    #define VERBOSE_FACTORY(...) Logger::Verbose(__VA_ARGS__)
@@ -75,28 +76,11 @@ namespace Langulus::Flow
       }
    }
 
-#if LANGULUS(SAFE)
-   /// Dump the factory to the log                                            
-   TEMPLATE()
-   void FACTORY()::Dump() const {
-      auto _ = Logger::SpecialScoped("--------- FACTORY DUMP FOR ", 
-         MetaDataOf<TFactory>(), " (", Base::mCount, " of ", Base::mReserved,
-         " cells used in ", Base::mFrames.GetCount(), " frames): "
-      );
-
-      size_t counter = 0;
-      for (auto& item : *this) {
-         Logger::Info(counter++, "] ", item, ", ",
-            item.GetReferences(), " references");
-      }
-   }
-#endif
-
    /// Find element(s) with the provided descriptor                           
    ///   @param descriptor the normalized descriptor for the element          
    ///   @return the found element, or nullptr if not found                   
    TEMPLATE()
-   auto FACTORY()::FindInner(Neat const& descriptor) const -> Query {
+   auto FACTORY()::FindByDescription(Neat const& descriptor) const -> Query {
       VERBOSE_FACTORY(NameOf<TFactory>(), " seeking for ", descriptor);
       const auto found = mIndexedByDescriptor.Find(descriptor);
       if (found)
@@ -104,7 +88,9 @@ namespace Langulus::Flow
       return nullptr;
    }
 
-   /// Create/Destroy element(s) inside the factory                           
+   /// Create/Destroy element(s) inside the factory.                          
+   /// This considers all verb requests and mass. All produced T (if any)     
+   /// will go to the verb's output container.                                
    ///   @param producer the producer                                         
    ///   @param verb the creation verb                                        
    TEMPLATE() template<class P>
@@ -117,142 +103,31 @@ namespace Langulus::Flow
          " is related to " + CppNameOf<P>()
       );
 
-      const auto produced = MetaDataOf<T>();
+      const auto requested = MetaDataOf<T>();
       verb.ForEachDeep(
-         [this,&produced,&producer,&verb](Recipe const& recipe) {
+         [this,&requested,&producer,&verb](Recipe const& recipe) {
             // For each compatible recipe...                            
-            if (not produced.CastsTo(recipe.GetTarget()))
+            if (not requested.CastsTo(recipe.GetTarget()))
                return;
             
             auto count = static_cast<int>(
                ::std::floor(recipe.GetMass() * verb.GetMass())
             );
 
-            CreateInner(producer, verb, count, recipe.GetDescriptor());
+            CreateOrDestroyInner(producer, verb, count, recipe.GetDescriptor());
          },
-         [this,&produced,&producer,&verb](RTTI::DMeta const& type) {
+         [this,&requested,&producer,&verb](RTTI::DMeta const& type) {
             // For each compatible type...                              
-            if (not type or not produced.CastsTo(type))
+            if (not type or not requested.CastsTo(type))
                return;
 
             auto count = static_cast<int>(
                ::std::floor(verb.GetMass())
             );
 
-            CreateInner(producer, verb, count);
+            CreateOrDestroyInner(producer, verb, count);
          }
       );
-   }
-   
-   /// Create (or reuse) a single element                                     
-   ///   @param producer the producer                                         
-   ///   @param descriptor the descriptor                                     
-   ///   @return the new (or reused) instance                                 
-   TEMPLATE() template<class P>
-   auto FACTORY()::CreateOne(P* producer, Neat const& descriptor) -> T* {
-      constexpr ProducersOf<T> producers;
-      static_assert(Expand(producers, []<class...C> {
-         return (CT::Related<C, P> or ...);
-      }),
-         "None of the producers in " + CppNameOf<decltype(producers)>() + 
-         " is related to " + CppNameOf<P>()
-      );
-
-      if constexpr (IsUnique) {
-         // Check if descriptor matches any of the available            
-         const auto found = FindInner(descriptor);
-         if (found)
-            return found;
-      }
-
-      // If reached, nothing was found                                  
-      // Produce exactly one element with this descriptor               
-      return Produce(producer, descriptor);
-   }
-
-   /// Emplace a non-unique element manually with custom constructor          
-   ///   @param arguments... arguments to forwards towards contructor         
-   ///   @return a pointer to the newly created element                       
-   TEMPLATE() template<class...ARG>
-   auto FACTORY()::Emplace(ARG&&...arguments) -> T* requires (not IsUnique) {
-      auto result = Base::NewInner(LglsFwd(arguments)...);
-      if (not result)
-         return nullptr;
-
-      const auto hash = result->mData.GetHash();
-      const auto found = mIndexedByDescriptor.FindIt(hash);
-      if (found)
-         found.GetVal() << result;
-      else
-         mIndexedByDescriptor.Insert(hash, result);
-
-      return &result->mData;
-   }
-
-   /// Inner creation/destruction verb                                        
-   ///   @param producer the producer                                         
-   ///   @param verb [in/out] the creation/destruction verb                   
-   ///   @param count the number of items to create (or destroy if negative)  
-   ///   @param descriptor element descriptor                                 
-   TEMPLATE() template<class P>
-   void FACTORY()::CreateInner(
-      P* producer, Verb& verb, int count, Neat const& descriptor
-   ) {
-      if (count > 0) {
-         // Produce amount of compatible recipes                        
-         if constexpr (IsUnique) {
-            // Check if descriptor matches any of the available         
-            const auto found = FindInner(descriptor);
-            if (found) {
-               // The unique recipe was found, just return it.          
-               // Mass will be ignored, it makes no sense to            
-               // create multiple instances if unique                   
-               verb << found;
-               return;
-            }
-
-            // If reached, nothing was found                            
-            // Produce exactly one element with this descriptor         
-            // Mass will be ignored, it makes no sense to create        
-            // multiple instances if unique                             
-            verb << Produce(producer, descriptor);
-         }
-         else {
-            // Satisfy the required count                               
-            while (count >= 1) {
-               auto produced = Produce(producer, descriptor);
-               verb << produced;
-               --count;
-            }
-         }
-      }
-      else if (count < 0) {
-         // Destroy amount of compatible recipes                        
-         if constexpr (IsUnique) {
-            // Check if descriptor matches any of the available         
-            const auto found = FindInner(descriptor);
-            if (found) {
-               // The unique recipe was found, destroy it               
-               // Mass is ignored, there should be exactly one          
-               Destroy(const_cast<T*>(found));
-               return;
-            }
-         }
-         else {
-            // Destroy the required amount of matching items            
-            do {
-               const auto found = FindInner(descriptor);
-               if (not found)
-                  break;
-
-               Destroy(found);
-               ++count;
-            }
-            while (count < 0);
-         }
-
-         verb.Done();
-      }
    }
 
    /// Select/Deselect element(s) inside the factory                          
@@ -278,20 +153,29 @@ namespace Langulus::Flow
       );
    }
 
-   /// External interface for finding an entry in the factory                 
-   ///   @param descriptor descriptor to match exactly                        
-   ///   @return a valid pointer if element was found                         
-   TEMPLATE()
-   auto FACTORY()::Find(Neat const& descriptor) const -> Query {
-      return FindInner(descriptor);
-   }
-
-   /// Produce a single T with the given descriptor                           
+   /// Produce a single T with the given descriptor, or reuse one if factory  
+   /// IsUnique, and there is already item with the same descriptor available.
    ///   @param producer the producer                                         
    ///   @param descriptor element descriptor                                 
-   ///   @return the produced instance                                        
+   ///   @return the found/produced instance                                  
    TEMPLATE() template<class P>
    auto FACTORY()::Produce(P* producer, Neat const& descriptor) -> T* {
+      // Check if producer is correct at compile-time                   
+      constexpr ProducersOf<T> producers;
+      static_assert(Expand(producers, []<class...C> {
+         return (CT::Related<C, P> or ...);
+      }),
+         "None of the producers in " + CppNameOf<decltype(producers)>() + 
+         " is related to " + CppNameOf<P>()
+      );
+
+      if constexpr (IsUnique) {
+         // Check if descriptor matches any of the available            
+         const auto found = FindByDescription(descriptor);
+         if (found)
+            return const_cast<T*>(found);
+      }
+
       // Allocate the new item                                          
       VERBOSE_FACTORY(NameOf<TFactory>(), " producing: ", descriptor);
       auto result = Base::Emplace(producer, descriptor);
@@ -312,27 +196,128 @@ namespace Langulus::Flow
       return new_pointer;
    }
 
-   /// Destroys an element inside factory                                     
-   ///   @attention assumes item is a valid pointer, owned by the factory     
-   ///   @attention item pointer is no longer valid after this call           
-   ///   @param item element to destroy                                       
-   TEMPLATE()
-   void FACTORY()::Destroy(T* item) {
-      // Remove from hashmap                                            
-      if constexpr (IsUnique)
-         mIndexedByDescriptor.Erase(item->GetDescriptor());
-      else {
-         auto found = mIndexedByDescriptor.Find(item->GetDescriptor());
-         IF_SAFE(if (not found) return;)
+   /// Emplace a non-unique element manually with custom constructor          
+   ///   @param arguments... arguments to forwards towards contructor         
+   ///   @return a pointer to the newly created element                       
+   /*TEMPLATE() template<class...ARG>
+   auto FACTORY()::Emplace(ARG&&...arguments) -> T* requires (not IsUnique) {
+      auto result = Base::NewInner(LglsFwd(arguments)...);
+      if (not result)
+         return nullptr;
 
-         if (found.GetVal()->Erase(item)) {
-            if (found.GetVal()->IsEmpty())
-               mIndexedByDescriptor.Erase(found);
+      const auto hash = result->mData.GetHash();
+      const auto found = mIndexedByDescriptor.FindIt(hash);
+      if (found)
+         found.GetVal() << result;
+      else
+         mIndexedByDescriptor.Insert(hash, result);
+
+      return &result->mData;
+   }*/
+
+   /// Destroys an element inside factory                                     
+   ///   @param descriptor element to destroy                                 
+   ///   @param count number of element to destroy (ignored if IsUnique)      
+   TEMPLATE()
+   void FACTORY()::EraseByDescription(Neat const& descriptor, int count) {
+      LglsAssumeDevAndOptimize(count > 0);
+
+      if constexpr (IsUnique) {
+         const auto pair = mIndexedByDescriptor.Find(descriptor);
+         T const* const item = *pair.GetVal();
+         mIndexedByDescriptor.Erase(pair);
+         Base::Erase(item);
+      }
+      else {
+         const auto pair = mIndexedByDescriptor.Find(descriptor);
+
+         if (pair.GetVal()->GetCount() <= static_cast<size_t>(count)) {
+            // Keep it in a non-owning list, so that we don't lose it   
+            ::std::vector<T const*> list;
+            list.reserve(pair.GetVal()->GetCount());
+            for (T const* item : *pair.GetVal())
+               list.emplace_back(item);
+
+            // Erase from registry                                      
+            mIndexedByDescriptor.Erase(pair);
+
+            // Erase from Hive                                          
+            for (T const* item : ::std::reverse(list))
+               Base::Erase(item);
+         }
+         else {
+            CT::Handle auto item_handle = (*pair.GetVal())[Index::Last];
+            while(count) {
+               T* item = *item_handle;
+
+               // Erase from registry                                   
+               pair.GetVal()->Erase(item_handle);
+               --item_handle;
+
+               // Erase from Hive                                       
+               Base::Erase(item);
+               --count;
+            }
+         }
+      }
+   }
+
+#if LANGULUS(SAFE)
+   /// Dump the factory to the log                                            
+   TEMPLATE()
+   void FACTORY()::Dump() const {
+      auto _ = Logger::SpecialScoped("--------- FACTORY DUMP FOR ", 
+         MetaDataOf<TFactory>(), " (", Base::mCount, " of ", Base::mReserved,
+         " cells used in ", Base::mFrames.GetCount(), " frames): "
+      );
+
+      size_t counter = 0;
+      for (auto& item : *this) {
+         Logger::Info(counter++, "] ", item, ", ",
+            item.GetReferences(), " references");
+      }
+   }
+#endif
+
+   /// Inner creation/destruction verb                                        
+   ///   @param producer the producer                                         
+   ///   @param verb [in/out] the creation/destruction verb                   
+   ///   @param count the number of items to create (or destroy if negative)  
+   ///   @param descriptor element descriptor                                 
+   TEMPLATE() template<class P>
+   void FACTORY()::CreateOrDestroyInner(
+      P* producer, Verb& verb, int count, Neat const& descriptor
+   ) {
+      if (count > 0) {
+         // Produce amount of compatible recipes                        
+         if constexpr (IsUnique) {
+            // We can ignore count if only one unique T can exist       
+            verb << Produce(producer, descriptor);
+         }
+         else {
+            // Satisfy the required count                               
+            while (count >= 1) {
+               verb << Produce(producer, descriptor);
+               --count;
+            }
+         }
+      }
+      else if (count < 0) {
+         // Destroy amount of compatible recipes                        
+         if constexpr (IsUnique) {
+            // We can ignore count if only one unique T can exist       
+            EraseByDescription(descriptor);
+         }
+         else {
+            // Destroy the desired amount of elements, in the reverse   
+            // order of creation.                                       
+            EraseByDescription(descriptor, -count);
          }
       }
 
-      // Remove from hive                                               
-      Base::Erase(item);
+      // Note: can also be reached by 0 count, which can be used to     
+      // probe capability of Create verb.                               
+      verb.Done();
    }
 }
 

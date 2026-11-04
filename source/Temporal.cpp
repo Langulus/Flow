@@ -47,7 +47,7 @@ void Temporal::Reset() {
 
    // Reset all entanglements                                           
    for (auto b : mEntanglements)
-      (*b)->mDone = false;
+      b->mDone = false;
 }
 
 /// Reset progress for all verbs inside a scope                               
@@ -147,7 +147,7 @@ bool Temporal::Update(Time dt, Many& sideffects) {
 
    // Execute flows that occur periodically                             
    for (auto pair : mFrequencyStack) {
-      auto* innerFlow = *pair.GetVal();
+      auto* innerFlow = pair.GetVal();
       innerFlow->mNow += dt;
       auto ticks = innerFlow->GetUptime().Seconds() / mRatePeriod.Seconds();
       const auto frequency = pair.GetKey();
@@ -173,7 +173,7 @@ bool Temporal::Update(Time dt, Many& sideffects) {
 
       // Always update all time points before the tick count            
       // They might have periodic flows inside                          
-      auto* innerFlow = *pair.GetVal();
+      auto* innerFlow = pair.GetVal();
       innerFlow->Update(dt, sideffects);
    }
 

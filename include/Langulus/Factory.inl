@@ -10,6 +10,7 @@
 #include <Langulus/Recipe.hpp>
 #include <Langulus/CT/Derived.hpp>
 #include <vector>
+#include <ranges>
 
 #if 0
    #define VERBOSE_FACTORY(...) Logger::Verbose(__VA_ARGS__)
@@ -187,9 +188,9 @@ namespace Langulus::Flow
       if constexpr (IsUnique)
          mIndexedByDescriptor.Merge(descriptor, new_pointer);
       else {
-         const auto found = mIndexedByDescriptor.Find(descriptor);
+         auto found = mIndexedByDescriptor.Find(descriptor);
          if (found)
-            *found.GetVal() << new_pointer;
+            found.GetVal() << new_pointer;
          else
             mIndexedByDescriptor.Merge(descriptor, new_pointer);
       }
@@ -224,34 +225,34 @@ namespace Langulus::Flow
 
       if constexpr (IsUnique) {
          const auto pair = mIndexedByDescriptor.Find(descriptor);
-         T const* const item = *pair.GetVal();
+         T const* const item = pair.GetVal();
          mIndexedByDescriptor.Erase(pair);
          Base::Erase(item);
       }
       else {
          const auto pair = mIndexedByDescriptor.Find(descriptor);
 
-         if (pair.GetVal()->GetCount() <= static_cast<size_t>(count)) {
+         if (pair.GetVal().GetCount() <= static_cast<size_t>(count)) {
             // Keep it in a non-owning list, so that we don't lose it   
             ::std::vector<T const*> list;
-            list.reserve(pair.GetVal()->GetCount());
-            for (T const* item : *pair.GetVal())
+            list.reserve(pair.GetVal().GetCount());
+            for (T const* item : pair.GetVal())
                list.emplace_back(item);
 
             // Erase from registry                                      
             mIndexedByDescriptor.Erase(pair);
 
             // Erase from Hive                                          
-            for (T const* item : ::std::reverse(list))
+            for (T const* item : list | ::std::views::reverse)
                Base::Erase(item);
          }
          else {
-            CT::Handle auto item_handle = (*pair.GetVal())[Index::Last];
+            CT::Handle auto item_handle = pair.GetVal()[Index::Last];
             while(count) {
                T* item = *item_handle;
 
                // Erase from registry                                   
-               pair.GetVal()->Erase(item_handle);
+               pair.GetVal().Erase(item_handle);
                --item_handle;
 
                // Erase from Hive                                       

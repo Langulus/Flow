@@ -8,7 +8,9 @@
 #include <Langulus/Flow/Missing.hpp>
 #include <Langulus/Flow/Entangled.hpp>
 #include <Langulus/Temporal.hpp>
-//#include <Langulus/MetaOf.hpp>
+
+#include <Langulus/Annies/Functional/ForEach.hpp>
+#include <Langulus/Annies/Functional/Compare.hpp>
 
 using namespace Langulus::Flow;
 

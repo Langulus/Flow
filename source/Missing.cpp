@@ -14,6 +14,11 @@
 #include <Langulus/Verbs/Do.hpp>
 #include <Langulus/Verbs/Interpret.hpp>
 
+#include <Langulus/Annies/Functional/Insert.hpp>
+#include <Langulus/Annies/Functional/Deepen.hpp>
+#include <Langulus/Annies/Functional/ForEach.hpp>
+#include <Langulus/Annies/Functional/Compare.hpp>
+
 #if 1
    #define VERBOSE_MISSING_ENABLED() 1
    #define VERBOSE_MISSING_POINT(...)     Logger::Verbose(__VA_ARGS__)

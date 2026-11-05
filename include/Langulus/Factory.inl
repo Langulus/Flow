@@ -247,7 +247,8 @@ namespace Langulus::Flow
                Base::Erase(item);
          }
          else {
-            CT::Handle auto item_handle = pair.GetVal()[Index::Last];
+            CT::Handle auto item_handle =  pair.GetVal().GetHandle()
+                                        + (pair.GetVal().GetCount() - 1);
             while(count) {
                T* item = *item_handle;
 

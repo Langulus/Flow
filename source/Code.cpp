@@ -23,6 +23,12 @@
 
 #include <Langulus/Utils/ASCII.hpp>
 
+#include <Langulus/Annies/Functional/Compare.hpp>
+#include <Langulus/Annies/Functional/Insert.hpp>
+#include <Langulus/Annies/Functional/Remove.hpp>
+#include <Langulus/Annies/Functional/Assign.hpp>
+#include <Langulus/Annies/Functional/Deepen.hpp>
+
 #if LANGULUS_COMPILER(WASM)
    #include <string>
 #endif

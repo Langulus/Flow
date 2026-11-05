@@ -18,6 +18,11 @@
 #include <Langulus/Verbs/Interpret.hpp>
 #include <Langulus/Verbs/Create.hpp>
 
+#include <Langulus/Annies/Functional/ForEach.hpp>
+#include <Langulus/Annies/Functional/Compare.hpp>
+#include <Langulus/Annies/Functional/Insert.hpp>
+#include <Langulus/Annies/Functional/Deepen.hpp>
+
 #if 0
    #define VERBOSE(...)      Logger::Verbose(__VA_ARGS__)
    #define VERBOSE_TAB(...)  const auto tab = Logger::VerboseTab(__VA_ARGS__)

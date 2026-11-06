@@ -8,6 +8,7 @@
 #pragma once
 //#include "Executor.hpp"
 #include <Langulus/SerializeText.hpp>
+#include <Langulus/Rate.hpp>
 #include <Langulus/Many.hpp>
 #include <Langulus/TVerb.hpp>
 #include <Langulus/CT/Charged.hpp>
@@ -99,6 +100,19 @@ namespace Langulus::Flow
       LANGULUS_API(FLOW) static bool IsValidKeyword(Text const&);
    };
 }
+
+/// Convert std::string_view -> Flow::Code                                    
+LANGULUS_MORPHISM(std::string_view, Flow::Code);
+
+/// Convert RRate -> Flow::Code                                               
+LANGULUS_MORPHISM_CUSTOM(RRate, {
+      return Annies::Text::Named(from);
+   },
+   Flow::Code
+);
+
+/// Convert Literal -> Flow::Code                                             
+LANGULUS_MORPHISM_CONCEPT(CT::Literal, Flow::Code);
 
 namespace Langulus::CTTI
 {

@@ -250,11 +250,11 @@ namespace Langulus::Flow
             CT::Handle auto item_handle =  pair.GetVal().GetHandle()
                                         + (pair.GetVal().GetCount() - 1);
             while(count) {
-               T* item = *item_handle;
+               T const* item = *item_handle;
 
                // Erase from registry                                   
-               pair.GetVal().Erase(item_handle);
-               --item_handle;
+               item_handle = pair.GetVal().Erase(item_handle);
+               //--item_handle;
 
                // Erase from Hive                                       
                Base::Erase(item);

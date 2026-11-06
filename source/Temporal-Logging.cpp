@@ -11,6 +11,7 @@
 
 #include <Langulus/Annies/Functional/ForEach.hpp>
 #include <Langulus/Annies/Functional/Compare.hpp>
+#include <Langulus/Annies/Functional/Remove.hpp>
 
 using namespace Langulus::Flow;
 

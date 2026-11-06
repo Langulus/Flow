@@ -9,11 +9,13 @@
 #include <Langulus/Neat.hpp>
 #include <Langulus/Verbs/Do.hpp>
 
+#include <Langulus/Annies/Functional/Assign.hpp>
 #include <Langulus/Annies/Functional/Deepen.hpp>
 #include <Langulus/Annies/Functional/ForEach.hpp>
 #include <Langulus/Annies/Functional/Compare.hpp>
 #include <Langulus/Annies/Functional/Merge.hpp>
 #include <Langulus/Annies/Functional/Insert.hpp>
+#include <Langulus/Annies/Functional/Remove.hpp>
 
 #define LglsVerboseEnabled 0
 #include <Langulus/Logger/ToggleVerbose.hpp>

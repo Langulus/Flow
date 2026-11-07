@@ -9,11 +9,10 @@
 #include <cstdint>
 
 
-namespace Langulus::Flow
+namespace Langulus
 {
    ///                                                                        
    ///   Bits for seek functions                                              
-   ///                                                                        
    enum class Seek : uint8_t {
       // Seek entities that are children of the context                 
       Below = 1,

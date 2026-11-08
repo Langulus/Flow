@@ -230,7 +230,7 @@ namespace Langulus::Flow
          Base::Erase(item);
       }
       else {
-         const auto pair = mIndexedByDescriptor.Find(descriptor);
+         auto pair = mIndexedByDescriptor.Find(descriptor);
 
          if (pair.GetVal().GetCount() <= static_cast<size_t>(count)) {
             // Keep it in a non-owning list, so that we don't lose it   

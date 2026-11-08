@@ -104,6 +104,9 @@ namespace Langulus::Flow
 /// Convert std::string_view -> Flow::Code                                    
 LANGULUS_MORPHISM(std::string_view, Flow::Code);
 
+/// Convert Text -> Flow::Code                                                
+LANGULUS_MORPHISM(Annies::Text, Flow::Code);
+
 /// Convert RRate -> Flow::Code                                               
 LANGULUS_MORPHISM_CUSTOM(RRate, {
       return Annies::Text::Named(from);

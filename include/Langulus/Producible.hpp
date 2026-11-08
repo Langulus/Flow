@@ -55,8 +55,8 @@ namespace Langulus::Flow
                                                  //TODO make make these protected?
       /// Move a produced item                                                
       ///   @param other the item to move                                     
-      ProducedFrom(ProducedFrom&& other)
-         : ProducedFrom {Move(other)} {}
+      ProducedFrom(ProducedFrom&& other) = delete;
+         //: ProducedFrom {Move(other)} {}
 
       /// Construct a produced item                                           
       ///   @param producer the item's producer                               
@@ -68,9 +68,9 @@ namespace Langulus::Flow
       /// Generic construction                                                
       ///   @param other intent and element to initialize with                
       ///   @attention mProducer intentionally not overwritten                
-      template<template<class> class S>
+      /*template<template<class> class S>
       ProducedFrom(S<ProducedFrom>&& other) requires CT::Intent<S<ProducedFrom>>
-         : mDescriptor {NestIntentOf(other, const_cast<Neat&>(other->mDescriptor))} {}
+         : mDescriptor {NestIntentOf(other, const_cast<Neat&>(other->mDescriptor))} {}*/
 
       /// Get the normalized descriptor of the produced item                  
       constexpr auto GetDescriptor() const noexcept -> Neat const& {

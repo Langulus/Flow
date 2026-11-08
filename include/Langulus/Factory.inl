@@ -240,7 +240,7 @@ namespace Langulus::Flow
                list.emplace_back(item);
 
             // Erase from registry                                      
-            mIndexedByDescriptor.Erase(pair);
+            (void) mIndexedByDescriptor.Erase(pair);
 
             // Erase from Hive                                          
             for (T const* item : list | ::std::views::reverse)

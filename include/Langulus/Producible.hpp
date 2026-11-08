@@ -70,7 +70,7 @@ namespace Langulus::Flow
       ///   @attention mProducer intentionally not overwritten                
       template<template<class> class S>
       ProducedFrom(S<ProducedFrom>&& other) requires CT::Intent<S<ProducedFrom>>
-         : mDescriptor {NestIntentOf(other, other->mDescriptor)} {}
+         : mDescriptor {NestIntentOf(other, const_cast<Neat&>(other->mDescriptor))} {}
 
       /// Get the normalized descriptor of the produced item                  
       constexpr auto GetDescriptor() const noexcept -> Neat const& {

@@ -115,7 +115,7 @@ namespace Langulus::Flow
                ::std::floor(recipe.GetMass() * verb.GetMass())
             );
 
-            CreateOrDestroyInner(producer, verb, count, recipe.GetDescriptor());
+            CreateOrDestroyInner(producer, verb, count, Neat {recipe.GetDescriptor()});
          },
          [this,&requested,&producer,&verb](RTTI::DMeta const& type) {
             // For each compatible type...                              

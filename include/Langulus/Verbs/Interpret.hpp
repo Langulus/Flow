@@ -12,7 +12,6 @@
 ///                                                                           
 /// MARK: Interpret                                                           
 /// Performs conversion                                                       
-///                                                                           
 LANGULUS_DEFINE_OPERATOR(Interpret, Interpret, " => ", " => ", 0,
    "Performs conversion"
 );

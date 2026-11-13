@@ -14,7 +14,6 @@
 /// Used for emitting and absorbing events. Can be used for input events, or  
 /// any other abstract communication mechanism, as well as physical events    
 /// between entities, depending on context.                                   
-///                                                                           
 LANGULUS_DEFINE_VERB(Emit, Absorb, 0,
    "Used for emitting and absorbing events. Can be used for input events, or "
    "any other abstract communication mechanism, as well as physical events "

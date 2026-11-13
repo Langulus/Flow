@@ -13,7 +13,6 @@
 /// MARK: Select/Deselect verb                                                
 ///   Used to focus on a part of a context, or access members.                
 /// Narrows or broadens a context.                                            
-///                                                                           
 LANGULUS_DEFINE_OPERATOR(Select, Deselect, ".", "..", 100,
    "Used to focus on a part of a context, or access members. "
    "Narrows or broadens a context."

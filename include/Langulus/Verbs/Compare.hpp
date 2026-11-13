@@ -13,7 +13,6 @@
 /// MARK: Three-way comparison                                                
 /// General purpose three-way comparison, that checks for equality, lesser,   
 /// and greater at the same time.                                             
-///                                                                           
 LANGULUS_DEFINE_OPERATOR(Compare, Compare, " <=> ", " <=> ", 3,
    "General purpose three-way comparison, that checks for "
    "equality, lesser, and greater at the same time"

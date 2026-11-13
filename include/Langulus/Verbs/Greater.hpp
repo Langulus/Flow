@@ -12,7 +12,6 @@
 ///                                                                           
 /// MARK: Greater test                                                        
 /// Compares for greatness, returns source if greater than argument.          
-///                                                                           
 LANGULUS_DEFINE_OPERATOR(Greater, LowerOrEqual, " > ", " <= ", 3,
    "Compares for source being greater than argument, "
    "and returns source if so"

@@ -13,7 +13,6 @@
 /// MARK: Associate/Disassociate                                              
 /// Either performs a shallow copy, or excites/inhibits associations,         
 /// depending on the context's complexity                                     
-///                                                                           
 LANGULUS_DEFINE_OPERATOR(Associate, Disassociate, " = ", " ~ ", 2,
    "Either performs a shallow copy, or aggregates associations, "
    "depending on the context's complexity"

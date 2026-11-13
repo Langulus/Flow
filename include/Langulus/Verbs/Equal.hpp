@@ -12,7 +12,6 @@
 ///                                                                           
 /// MARK: Equality test                                                       
 /// Compares for equality, returns source if equal to argument.               
-///                                                                           
 LANGULUS_DEFINE_OPERATOR(Equal, Different, " == ", " != ", 3,
    "Compares for equality, returns source if equal to argument"
 );

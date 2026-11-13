@@ -13,7 +13,6 @@
 /// MARK: Create/Destroy verb                                                 
 /// Used for allocating new elements. If the type you're creating has         
 /// a producer, you need to execute the verb in the appropriate context.      
-///                                                                           
 LANGULUS_DEFINE_VERB(Create, Destroy, 1000,
    "Used for allocating new elements of any kind. "
    "If the type you're creating has a producer, "

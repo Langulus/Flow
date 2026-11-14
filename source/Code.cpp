@@ -344,7 +344,7 @@ constexpr bool CompareTokens(Token const& lhs, Token const& rhs) noexcept {
 ///   @param rhs the right operator                                           
 ///   @return true if both loosely match                                      
 constexpr bool CompareOperators(Token const& lhs, Token const& rhs) noexcept {
-   return CompareTokens(IsolateOperator(lhs), IsolateOperator(rhs));
+   return CompareTokens(RTTI::IsolateOperator(lhs), RTTI::IsolateOperator(rhs));
 }
 
 /// Check if a string is reserved as a keyword/operator                       

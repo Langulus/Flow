@@ -119,7 +119,7 @@ namespace Langulus::CTTI
             const auto flow = verb.GetRHS();
             size_t successCount = 0;
             for (auto handle : lhs) {
-               Many resolved {Annies::Absorb, handle.GetResolved()};
+               Many resolved {Absorb, handle.GetResolved()};
                auto& abilities = resolved.GetType().GetVerbs();
                auto found_dispatcher = abilities.find(MetaVerbOf<Verbs::Do>().GetDefinition());
                if (found_dispatcher != abilities.end() and found_dispatcher->second.binary) {
@@ -200,7 +200,7 @@ namespace Langulus::CTTI
             // completely different abilities.                          
             size_t successCount = 0;
             for (auto handle : lhs) {
-               Many resolved {Annies::Absorb, handle.GetResolved()};
+               Many resolved {Absorb, handle.GetResolved()};
                auto& abilities = resolved.GetType().GetVerbs();
                auto found_dispatcher = abilities.find(MetaVerbOf<Verbs::Do>().GetDefinition());
                if (found_dispatcher != abilities.end() and found_dispatcher->second.unary) {

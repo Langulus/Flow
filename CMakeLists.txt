@@ -31,17 +31,11 @@ add_langulus_library(LangulusFlow
 )
 
 target_include_directories(LangulusFlow
-   PUBLIC   $<TARGET_PROPERTY:LangulusLogger,INTERFACE_INCLUDE_DIRECTORIES>
-            $<TARGET_PROPERTY:LangulusRTTI,INTERFACE_INCLUDE_DIRECTORIES>
-            $<TARGET_PROPERTY:LangulusFractalloc,INTERFACE_INCLUDE_DIRECTORIES>
-            $<TARGET_PROPERTY:LangulusPercist,INTERFACE_INCLUDE_DIRECTORIES>
-            $<TARGET_PROPERTY:LangulusAnnies,INTERFACE_INCLUDE_DIRECTORIES>
-            include
+   PUBLIC   include
 )
 
 target_link_libraries(LangulusFlow
-   PUBLIC   LangulusCore
-            $<TARGET_PROPERTY:LangulusLogger,INTERFACE_LINK_LIBRARIES>
+   PUBLIC   LangulusAnnies
 )
 
 target_compile_definitions(LangulusFlow

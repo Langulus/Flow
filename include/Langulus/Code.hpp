@@ -21,7 +21,7 @@ namespace Langulus::Flow
    ///   Langulus code container, parser, serializer and deserializer         
    struct Code : Text {
       using CTTI_ReflectAs = Code;
-      using CTTI_Files     = Yes<"Flow">;
+      using CTTI_Files     = Yes<"flow">;
       using CTTI_Bases     = Text;
       using Text::Text;
 

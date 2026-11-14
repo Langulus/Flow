@@ -339,19 +339,6 @@ constexpr bool CompareTokens(Token const& lhs, Token const& rhs) noexcept {
       ));
 }
 
-/// Isolate an operator token                                                 
-///   @param token the operator                                               
-///   @return the isolated operator token                                     
-constexpr Token IsolateOperator(Token const& token) noexcept {
-   auto l = token.data();
-   auto r = token.data() + token.size();
-   while (l < r and *l <= 32)
-      ++l;
-   while (r > l and *(r - 1) <= 32)
-      --r;
-   return token.substr(l - token.data(), r - l);
-}
-
 /// Compare two operators, ignoring case and spacing                          
 ///   @param lhs the left operator                                            
 ///   @param rhs the right operator                                           

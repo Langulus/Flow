@@ -236,7 +236,7 @@ namespace Langulus::Flow
             // Keep it in a non-owning list, so that we don't lose it   
             ::std::vector<T const*> list;
             list.reserve(pair.GetVal().GetCount());
-            for (T const* item : pair.GetVal())
+            for (T const* item : ::std::as_const(pair.GetVal()))
                list.emplace_back(item);
 
             // Erase from registry                                      

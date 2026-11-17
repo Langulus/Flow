@@ -187,13 +187,8 @@ namespace Langulus::Flow
       T* new_pointer = &*result;
       if constexpr (IsUnique)
          mIndexedByDescriptor.Merge(descriptor, new_pointer);
-      else {
-         auto found = mIndexedByDescriptor.Find(descriptor);
-         if (found)
-            found.GetVal() << new_pointer;
-         else
-            mIndexedByDescriptor.Merge(descriptor, new_pointer);
-      }
+      else
+         mIndexedByDescriptor[descriptor] << new_pointer;
       return new_pointer;
    }
 

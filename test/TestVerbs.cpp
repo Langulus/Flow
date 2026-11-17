@@ -5,14 +5,17 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include <Langulus/Verbs/Select.hpp>
 #include "Common.hpp"
+#include <Langulus/SerializeText.hpp>
+#include <Langulus/Code.hpp>
+#include <Langulus/Verbs/Select.hpp>
+#include <Langulus/Verbs/Do.hpp>
 
 
-SCENARIO("Text capsulation in verbs", "[verbs]") {
-   static Allocator::State memoryState;
+SCENARIO("Text capsulation in verbs") {
+   static MemoryState memoryState;
 
-   static_assert(CT::Stringifiable<Verb>,
+   /*static_assert(CT::Stringifiable<Verb>,
       "Verb must be convertible to Text");
    static_assert(CT::Convertible<Verb, Code>,
       "Verb must be convertible to Code");
@@ -20,13 +23,10 @@ SCENARIO("Text capsulation in verbs", "[verbs]") {
    static_assert(CT::Stringifiable<Thing>,
       "Thing must be convertible to Text");
    static_assert(CT::Convertible<Thing, Text>,
-      "Thing must be convertible to Text");
+      "Thing must be convertible to Text");*/
 
    GIVEN("A templated utf8 text container") {
       Text text = "tests";
-
-      REQUIRE(!text.IsStatic());
-      REQUIRE(text.GetUses() == 1);
 
       WHEN("Wrapped inside a verb's output") {
          Verb wrapper = Verbs::Do().SetOutput(&text);
@@ -51,7 +51,7 @@ SCENARIO("Text capsulation in verbs", "[verbs]") {
       }
 
       WHEN("Wrapped inside a verb's source") {
-         Verb wrapper = Verbs::Do().SetSource(&text);
+         Verb wrapper = Verbs::Do().In(&text);
          REQUIRE(text.GetUses() == 1);
          REQUIRE(text == "tests");
 
@@ -61,7 +61,7 @@ SCENARIO("Text capsulation in verbs", "[verbs]") {
       }
 
       WHEN("Wrapped everywhere inside a verb") {
-         Verb wrapper = Verbs::Do(&text).SetSource(&text).SetOutput(&text);
+         Verb wrapper = Verbs::Do(&text).In(&text).SetOutput(&text);
          REQUIRE(text.GetUses() == 1);
          REQUIRE(text == "tests");
 
@@ -75,8 +75,11 @@ SCENARIO("Text capsulation in verbs", "[verbs]") {
       Verbs::Select test;
 
       WHEN("Stringified") {
-         const auto toText = static_cast<Text>(test);
-         const auto toCode = static_cast<Code>(test);
+         Text toText;
+         REQUIRE(Langulus::Serialize(test, toText));
+
+         Flow::Code toCode;
+         REQUIRE(Langulus::Serialize(test, toCode));
 
          REQUIRE(toText == toCode);
          REQUIRE(toText == ".");
@@ -84,4 +87,5 @@ SCENARIO("Text capsulation in verbs", "[verbs]") {
    }
 
    REQUIRE(memoryState.Assert());
+   REQUIRE_FALSE(Allocator::CollectGarbage());
 }

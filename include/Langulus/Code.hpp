@@ -53,6 +53,13 @@ LANGULUS_MORPHISM_CUSTOM(RRate, {
 /// Convert Literal -> Flow::Code                                             
 LANGULUS_MORPHISM_CONCEPT(CT::Literal, Flow::Code);
 
+/// Converting verbs -> Flow::Code (same as Text)                             
+LANGULUS_MORPHISM_CONCEPT_CUSTOM(CT::Executable, {
+   Annies::Text text;
+   Langulus::Serialize(from, text);
+   return text;
+}, Flow::Code);
+
 namespace Langulus::CTTI
 {
    /// The presence of this structure makes Code a CT::Serializer             

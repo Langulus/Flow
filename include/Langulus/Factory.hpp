@@ -57,10 +57,11 @@ namespace Langulus::Flow
       TFactory() = default;
       TFactory(TFactory const&) = delete("Factory elements are bound to the "
                                          "factory that produced them, "
-                                         "and can't be copied to another");
+                                         "and can't be copied to another. "
+                                         "You can move them using TransferFrom, though.");
       TFactory(TFactory&&)      = delete("Factory elements are bound to the "
                                          "factory that produced them, "
-                                         "and can't be moved to another");
+                                         "and can't be moved to another without using TransferFrom explicitly.");
      ~TFactory();
 
       auto operator = (TFactory&&) noexcept -> TFactory&;
@@ -72,6 +73,15 @@ namespace Langulus::Flow
 
       template<class P>
       auto Produce(P*, Neat const&) -> T*;
+      
+      template<class P>
+      void TransferFrom(P const* new_producer, TFactory&& old_factory) {
+         Reset();
+         Base::Absorb(Abandon(::std::forward<Base&&>(old_factory)));
+         mIndexedByDescriptor = Abandon {old_factory.mIndexedByDescriptor};
+         for (T& item : *this)
+            const_cast<P const*&>(item.mProducer) = new_producer;
+      }
       
       void Select(Verb&);
       auto FindByDescription(Neat const&) const -> Query;

@@ -1,10 +1,7 @@
-file(GLOB_RECURSE
-	LANGULUS_FLOW_TEST_SOURCES 
-	LIST_DIRECTORIES FALSE CONFIGURE_DEPENDS
-	*.cpp
-)
-
 add_langulus_test(LangulusFlowTest
-	SOURCES		${LANGULUS_FLOW_TEST_SOURCES}
-	LIBRARIES	LangulusFlow
+   SOURCES     TestFactory.cpp
+               TestFlow.cpp
+               TestResolvable.cpp
+               TestVerbs.cpp
+   LIBRARIES   LangulusFlow
 )

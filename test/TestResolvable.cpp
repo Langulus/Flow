@@ -8,24 +8,26 @@
 #include "Common.hpp"
 
 
-SCENARIO("Test resolvables", "[resolvable]") {
-	GIVEN("A resolvable instance") {
+SCENARIO("Test resolvables") {
+	GIVEN("A resolvable instance") {//TODO test with managed data
 		Thing2 resolvable;
 		auto concreteptr = static_cast<void*>(&resolvable);
-		auto abstractptr = static_cast<void*>(static_cast<Resolvable*>(&resolvable));
+		auto abstractptr = static_cast<void*>(static_cast<Downcastable*>(&resolvable));
 
 		WHEN("Wrapped inside a block as Resolvable pointer") {
-         Many pack = static_cast<Resolvable*>(&resolvable);
+         Many pack = static_cast<Downcastable*>(&resolvable);
 
 			REQUIRE(concreteptr == abstractptr);
 			REQUIRE(pack.IsSparse());
-			REQUIRE(pack.IsExact<Resolvable*>());
-			REQUIRE(pack.GetResolved().IsExact<Many, Thing2>());
-			REQUIRE(pack.GetResolved().Get<Thing2>().mMember == 777);
-			REQUIRE(pack.GetResolved().Get<Thing>().mMember == 666);
-			REQUIRE(pack.GetResolved().As<Resolvable>().CastsTo<Thing>());
-			REQUIRE(pack.GetResolved().As<Resolvable>().CastsTo<Thing2>());
-			REQUIRE(pack.GetResolved().Get<Thing2*>() == &resolvable);
+			REQUIRE(pack.IsExact<Downcastable*>());
+			REQUIRE(pack.GetResolved().type.IsExact(MetaDataOf<Thing2>()));
+			REQUIRE(pack.GetResolved().As<Thing2>() == &resolvable);
+			REQUIRE(pack.GetResolved().As<Thing>() == &resolvable);
+			REQUIRE(pack.GetResolved().As<Thing2>()->mMember == 777);
+			REQUIRE(pack.GetResolved().As<Thing>()->mMember == 666);
+			REQUIRE(pack.GetResolved().As<Downcastable>()->CastsTo(MetaDataOf<Thing>()));
+			REQUIRE(pack.GetResolved().As<Downcastable>()->CastsTo(MetaDataOf<Thing2>()));
+			//REQUIRE(pack.GetResolved().GetMember()->CastsTo(MetaDataOf<Thing2>()));//TODO
 		}
 
 		WHEN("Wrapped inside a block as an intermediate abstract type") {
@@ -34,12 +36,13 @@ SCENARIO("Test resolvables", "[resolvable]") {
 			REQUIRE(concreteptr == abstractptr);
 			REQUIRE(pack.IsSparse());
 			REQUIRE(pack.IsExact<Thing*>());
-			REQUIRE(pack.GetResolved().IsExact<Many, Thing2>());
-			REQUIRE(pack.GetResolved().Get<Thing2>().mMember == 777);
-			REQUIRE(pack.GetResolved().As<Thing>().mMember == 666);
-			REQUIRE(pack.GetResolved().As<Resolvable>().CastsTo<Thing>());
-			REQUIRE(pack.GetResolved().As<Resolvable>().CastsTo<Thing2>());
-			REQUIRE(pack.GetResolved().Get<Thing2*>() == &resolvable);
+			REQUIRE(pack.GetResolved().type.IsExact(MetaDataOf<Thing2>()));
+			REQUIRE(pack.GetResolved().As<Thing2>() == &resolvable);
+			REQUIRE(pack.GetResolved().As<Thing>() == &resolvable);
+			REQUIRE(pack.GetResolved().As<Thing2>()->mMember == 777);
+			REQUIRE(pack.GetResolved().As<Thing>()->mMember == 666);
+			REQUIRE(pack.GetResolved().As<Downcastable>()->CastsTo(MetaDataOf<Thing>()));
+			REQUIRE(pack.GetResolved().As<Downcastable>()->CastsTo(MetaDataOf<Thing2>()));
 		}
 	}
 }

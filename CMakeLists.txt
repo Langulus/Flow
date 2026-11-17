@@ -44,5 +44,5 @@ target_compile_definitions(LangulusFlow
 
 if(LANGULUS_OPTION_TESTING)
    enable_testing()
-   #add_subdirectory(test)
+   add_subdirectory(test)
 endif()

@@ -5,22 +5,19 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-
-/// INTENTIONALLY NOT GUARDED                                                 
-/// Include this file once in each cpp file, after all other headers          
-#include <Langulus/Flow/Downcastable.hpp>
+#pragma once
+#include <Langulus/Testing/CommonTypes.hpp>
+#include <Langulus/Downcastable.hpp>
 #include <Langulus/Factory.hpp>
 #include <Langulus/Producible.hpp>
-#include <Langulus/Testing.hpp>
 
 using namespace Flow;
 
 
 /// A mockup of Langulus::Thing, for testing purposes                         
 struct Thing : Downcastable, Referenced {
-   using CTTI_Abstract = No;
-   using CTTI_Producer = Thing;
-   LANGULUS_BASES(Resolvable);
+   using CTTI_Producer  = Thing;
+   using CTTI_Bases     = Types<Downcastable, Referenced>;
 
    Thing() : Downcastable {this} {}
 
@@ -34,47 +31,52 @@ struct Thing : Downcastable, Referenced {
    virtual void Update() {}
 
    int mMember = 666;
+
+   using CTTI_Members = Members<&Thing::mMember>;
 };
 
 /// A mockup of more concrete Langulus::Thing, for testing purposes           
 struct Thing2 : Thing {
-   LANGULUS_BASES(Thing);
+   using CTTI_Bases = Types<Thing>;
+
    Thing2() : Thing {this} {}
 
    void Update() final {}
 
    int mMember = 777;
+
+   using CTTI_Members = Members<&Thing2::mMember>;
 };
 
 /// A mockup of a universe component, for testing purposes                    
 struct Universe : Downcastable {
-   using CTTI_Abstract = No;
    using CTTI_Producer = Thing;
-   LANGULUS_BASES(Resolvable);
+   using CTTI_Bases = Downcastable;
+   
    Universe() : Downcastable {this} {}
 };
 
 /// A mockup of a window component, for testing purposes                      
 struct Window : Downcastable {
-   using CTTI_Abstract = No;
    using CTTI_Producer = Thing;
-   LANGULUS_BASES(Resolvable);
+   using CTTI_Bases = Downcastable;
+
    Window() : Downcastable {this} {}
 };
 
 /// A mockup of a user component, for testing purposes                        
 struct User : Downcastable {
-   using CTTI_Abstract = No;
    using CTTI_Producer = Thing;
-   LANGULUS_BASES(Resolvable);
+   using CTTI_Bases = Downcastable;
+
    User() : Downcastable {this} {}
 };
 
 /// A mockup of a session component, for testing purposes                     
 struct Session : Downcastable {
-   using CTTI_Abstract = No;
    using CTTI_Producer = Thing;
-   LANGULUS_BASES(Resolvable);
+   using CTTI_Bases = Downcastable;
+
    Session() : Downcastable {this} {}
 };
 
@@ -86,22 +88,11 @@ struct Session : Downcastable {
    Fraction() : Downcastable(MetaOf<Fraction>()) {}
 };*/
 
-struct Producible;
-
-/// A mockup of a producer                                                    
-struct Producer : Referenced {
-   TFactory<Producible>       factory1;
-   TFactoryUnique<Producible> factory2;
-
-   void Teardown() {
-      factory1.Teardown();
-      factory2.Teardown();
-   }
-};
+struct Producer;
 
 /// A mockup of a producible                                                  
 struct Producible : Referenced, ProducedFrom<Producer> {
-   Producible(Producer const* producer, Many const& desc = {})
+   Producible(Producer const* producer, Neat const& desc = {})
       : ProducedFrom {producer, desc} {}
 
    ~Producible() {
@@ -117,35 +108,85 @@ struct Producible : Referenced, ProducedFrom<Producer> {
    }
 };
 
+struct DeepProducer;
 struct ShallowProducer;
-
-/// A producer of a producer                                                  
-struct DeepProducer : Referenced {
-   TFactory<ShallowProducer> factory;
-
-   void Teardown() {
-      factory.Teardown();
-   }
-};
-
-struct TheProducible;
-
-/// A mockup of a producible                                                  
-struct ShallowProducer : Referenced, ProducedFrom<DeepProducer> {
-   TFactory<TheProducible> factory;
-
-   ShallowProducer(DeepProducer const* producer, Many const& desc = {})
-      : ProducedFrom {producer, desc} {}
-
-   void Teardown() {
-      factory.Teardown();
-   }
-};
 
 /// A mockup of a producible                                                  
 struct TheProducible : Referenced, ProducedFrom<ShallowProducer> {
    //TODO should ProducedFrom inherit virtual Referenced directly?,
    // and so no need for ProducedFrom::Teardown method at all????
-   TheProducible(ShallowProducer const* producer, Many const& desc = {})
+   TheProducible(ShallowProducer const* producer, Neat const& desc = {})
       : ProducedFrom {producer, desc} {}
 };
+
+/// A mockup of a producer                                                    
+struct Producer : Referenced {
+   TFactory<Producible>       factory1;
+   TFactoryUnique<Producible> factory2;
+
+   Producer() = default;
+
+   // This constructor is required, because factories are not movable   
+   // by default. We have to change all producers of all producibles    
+   // in order for it to be a valid move. After the move, producibles   
+   // should never change memory addresses, just be updated with new    
+   // producer.                                                         
+   Producer(Abandon<Producer>&& other) {
+      factory1.TransferFrom(this, LglsMov(other->factory1));
+      factory2.TransferFrom(this, LglsMov(other->factory2));
+   }
+
+   /*Producer(Abandon<Producer>&& other)
+      : factory1 {Abandon {other->factory1}}
+      , factory2 {Abandon {other->factory2}} {}*/
+
+   void Teardown() {
+      factory1.Teardown();
+      factory2.Teardown();
+   }
+};
+
+/// A mockup of a producible                                                  
+struct ShallowProducer : Referenced, ProducedFrom<DeepProducer> {
+   TFactory<TheProducible> factory;
+
+   ShallowProducer() = default;
+
+   // This constructor is required, because factories are not movable   
+   // by default. We have to change all producers of all producibles    
+   // in order for it to be a valid move. After the move, producibles   
+   // should never change memory addresses, just be updated with new    
+   // producer.                                                         
+   ShallowProducer(Abandon<ShallowProducer>&& other) {
+      factory.TransferFrom(this, LglsMov(other->factory));
+   }
+
+   ShallowProducer(DeepProducer const* producer, Neat const& desc = {})
+      : ProducedFrom {producer, desc} {}
+
+   void Teardown() {
+      factory.Teardown();
+   }
+};
+
+/// A producer of a producer                                                  
+struct DeepProducer : Referenced {
+   TFactory<ShallowProducer> factory;
+
+   DeepProducer() = default;
+
+   // This constructor is required, because factories are not movable   
+   // by default. We have to change all producers of all producibles    
+   // in order for it to be a valid move. After the move, producibles   
+   // should never change memory addresses, just be updated with new    
+   // producer.                                                         
+   DeepProducer(Abandon<DeepProducer>&& other) {
+      factory.TransferFrom(this, LglsMov(other->factory));
+   }
+
+   void Teardown() {
+      factory.Teardown();
+   }
+};
+
+

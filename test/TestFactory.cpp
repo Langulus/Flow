@@ -52,8 +52,11 @@ SCENARIO("Test factories on the stack") {
          REQUIRE(out2.GetCount() == 1);
          REQUIRE(out2.IsExact<Producible*>());
 
+         // creator.mOutput now contains the new element                
+         REQUIRE(out1.As<Producible*>()->GetReferences() == 3);
+
          // Kept: twice in TFactory (THive + mIndexedByDescriptor)		
-         //       once in out1														
+         //       once in out2														
          //       once in creator.mOutput											
          REQUIRE(out2.As<Producible*>()->GetReferences() == 4);
          REQUIRE(out1.As<Producible*>() != out2.As<Producible*>());
@@ -81,7 +84,7 @@ SCENARIO("Test factories on the stack") {
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);
          REQUIRE(factory.GetHashmap()[hash][1] == &factory.GetFrames()[0].GetRaw()[1]);*/
 
-         const_cast<Producible&>(prototype).Reference(-1);
+         //const_cast<Producible&>(prototype).Reference(-1);
       }
    }
 
@@ -113,7 +116,12 @@ SCENARIO("Test factories on the stack") {
          REQUIRE(creator.IsDone());
          REQUIRE(out1.GetCount() == 1);
          REQUIRE(out1.IsExact<Producible*>());
-         REQUIRE(out1.As<Producible*>()->GetReferences() == 4);
+
+         // Kept: twice in TFactory (THive + mIndexedByDescriptor)		
+         //       once in out1														
+         //       once in out2														
+         //       once in creator.mOutput											
+         REQUIRE(out1.As<Producible*>()->GetReferences() == 5);
          REQUIRE(out1.IsSparse());
          REQUIRE(out1 == out2);
 
@@ -128,7 +136,7 @@ SCENARIO("Test factories on the stack") {
          REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);*/
 
-         const_cast<Producible&>(prototype).Reference(-1);
+         //const_cast<Producible&>(prototype).Reference(-1);
       }
       
       WHEN("Two elements produced via descriptors, with parent on the heap") {
@@ -143,13 +151,22 @@ SCENARIO("Test factories on the stack") {
 
          factory.Create(&producer, creator);
          auto out1 = creator.GetOutput();
-         REQUIRE(out1.As<Producible*>()->GetReferences() == 3);
+
+         // Kept: twice in TFactory (THive + mIndexedByDescriptor)		
+         //       once in out1														
+         //       once in creator.mOutput											
+         REQUIRE(out1.As<Producible*>()->GetReferences() == 4);
 
          creator.Clear();
 
          factory.Create(&producer, creator);
          auto out2 = creator.GetOutput();
-         REQUIRE(out2.As<Producible*>()->GetReferences() == 4);
+
+         // Kept: twice in TFactory (THive + mIndexedByDescriptor)		
+         //       once in out1														
+         //       once in out2														
+         //       once in creator.mOutput											
+         REQUIRE(out2.As<Producible*>()->GetReferences() == 5);
 
          //TODO Missing stuff shouldn't participate in hashing
          //const auto hash = descriptor.GetDescriptor().GetHash();
@@ -159,7 +176,6 @@ SCENARIO("Test factories on the stack") {
          REQUIRE(creator.IsDone());
          REQUIRE(out1.GetCount() == 1);
          REQUIRE(out1.IsExact<Producible*>());
-         REQUIRE(out1.As<Producible*>()->GetReferences() == 4);
          REQUIRE(out1.IsSparse());
          REQUIRE(out1 == out2);
 
@@ -174,7 +190,7 @@ SCENARIO("Test factories on the stack") {
          REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);*/
 
-         const_cast<Producible&>(prototype).Reference(-1);
+         //const_cast<Producible&>(prototype).Reference(-1);
       }
 
       WHEN("Two elements produced via descriptors, with parent on the stack") {
@@ -186,22 +202,32 @@ SCENARIO("Test factories on the stack") {
 
          factory.Create(&producer, creator);
          auto out1 = creator.GetOutput();
-         REQUIRE(out1.As<Producible*>()->GetReferences() == 3);
+
+         // Kept: twice in TFactory (THive + mIndexedByDescriptor)		
+         //       once in out1														
+         //       once in creator.mOutput											
+         REQUIRE(out1.As<Producible*>()->GetReferences() == 4);
 
          creator.Clear();
 
          factory.Create(&producer, creator);
          auto out2 = creator.GetOutput();
-         REQUIRE(out2.As<Producible*>()->GetReferences() == 4);
+
+         // Kept: twice in TFactory (THive + mIndexedByDescriptor)		
+         //       once in out1														
+         //       once in out2														
+         //       once in creator.mOutput											
+         REQUIRE(out2.As<Producible*>()->GetReferences() == 5);
 
          //TODO Missing stuff shouldn't participate in hashing
          //const auto hash = descriptor.GetDescriptor().GetHash();
 
-         REQUIRE(producer.GetReferences() == 1);
+         // Kept: once on creation at start of test                     
+         //       once inside Tags::Parent inside descriptor            
+         REQUIRE(producer.GetReferences() == 2);
          REQUIRE(creator.IsDone());
          REQUIRE(out1.GetCount() == 1);
          REQUIRE(out1.IsExact<Producible*>());
-         REQUIRE(out1.As<Producible*>()->GetReferences() == 4);
          REQUIRE(out1.IsSparse());
          REQUIRE(out1 == out2);
 
@@ -216,7 +242,7 @@ SCENARIO("Test factories on the stack") {
          REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);*/
 
-         const_cast<Producible&>(prototype).Reference(-1);
+         //const_cast<Producible&>(prototype).Reference(-1);
       }
    }
 
@@ -252,8 +278,11 @@ SCENARIO("Test factories on the heap") {
          REQUIRE(creator.IsDone());
          REQUIRE(out1.GetCount() == 1);
          REQUIRE(out1.IsExact<Producible*>());
-         // Kept once in TFactory, once in out1, once in creator.mOutput
-         REQUIRE(out1.As<Producible*>()->GetReferences() == 3);
+
+         // Kept: twice in TFactory (THive + mIndexedByDescriptor)		
+         //       once in out1														
+         //       once in creator.mOutput											
+         REQUIRE(out1.As<Producible*>()->GetReferences() == 4);
          REQUIRE(out1.IsSparse());
 
          creator.Clear();
@@ -263,8 +292,14 @@ SCENARIO("Test factories on the heap") {
          auto out2 = creator.GetOutput();
          REQUIRE(out2.GetCount() == 1);
          REQUIRE(out2.IsExact<Producible*>());
-         // Kept once in TFactory, once in out1, once in creator.mOutput
-         REQUIRE(out2.As<Producible*>()->GetReferences() == 3);
+
+         // creator.mOutput new contains the new element                
+         REQUIRE(out1.As<Producible*>()->GetReferences() == 3);
+
+         // Kept: twice in TFactory (THive + mIndexedByDescriptor)		
+         //       once in out2														
+         //       once in creator.mOutput											
+         REQUIRE(out2.As<Producible*>()->GetReferences() == 4);
          REQUIRE(out2.IsSparse());
 
          /*REQUIRE(factory.GetReusable() == factory.GetFrames()[0].GetRaw() + 2);
@@ -290,7 +325,7 @@ SCENARIO("Test factories on the heap") {
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);
          REQUIRE(factory.GetHashmap()[hash][1] == &factory.GetFrames()[0].GetRaw()[1]);*/
 
-         const_cast<Producible&>(prototype).Reference(-1);
+         //const_cast<Producible&>(prototype).Reference(-1);
       }
 
       factory.Teardown();
@@ -324,7 +359,12 @@ SCENARIO("Test factories on the heap") {
          REQUIRE(creator.IsDone());
          REQUIRE(out1.GetCount() == 1);
          REQUIRE(out1.IsExact<Producible*>());
-         REQUIRE(out1.As<Producible*>()->GetReferences() == 4);
+
+         // Kept: twice in TFactory (THive + mIndexedByDescriptor)		
+         //       once in out1														
+         //       once in out2														
+         //       once in creator.mOutput											
+         REQUIRE(out1.As<Producible*>()->GetReferences() == 5);
          REQUIRE(out1.IsSparse());
          REQUIRE(out1 == out2);
 
@@ -339,7 +379,7 @@ SCENARIO("Test factories on the heap") {
          REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);*/
 
-         const_cast<Producible&>(prototype).Reference(-1);
+         //const_cast<Producible&>(prototype).Reference(-1);
       }
       
       WHEN("Two elements produced via descriptors, with parent on the heap (inducing a circular dependency)") {
@@ -351,22 +391,32 @@ SCENARIO("Test factories on the heap") {
 
          factory.Create(&producer, creator);
          auto out1 = creator.GetOutput();
-         REQUIRE(out1.As<Producible*>()->GetReferences() == 3);
+
+         // Kept: twice in TFactory (THive + mIndexedByDescriptor)		
+         //       once in out1														
+         //       once in creator.mOutput											
+         REQUIRE(out1.As<Producible*>()->GetReferences() == 4);
 
          creator.Clear();
 
          factory.Create(&producer, creator);
          auto out2 = creator.GetOutput();
-         REQUIRE(out2.As<Producible*>()->GetReferences() == 4);
+
+         // Kept: twice in TFactory (THive + mIndexedByDescriptor)		
+         //       once in out1														
+         //       once in out2														
+         //       once in creator.mOutput											
+         REQUIRE(out2.As<Producible*>()->GetReferences() == 5);
 
          //TODO Missing stuff shouldn't participate in hashing
          //const auto hash = descriptor.GetDescriptor().GetHash();
 
-         REQUIRE(producer.GetReferences() == 4);
+         // Kept: once on creation at start of test                     
+         //       once inside Tags::Parent inside descriptor            
+         REQUIRE(producer.GetReferences() == 2);
          REQUIRE(creator.IsDone());
          REQUIRE(out1.GetCount() == 1);
          REQUIRE(out1.IsExact<Producible*>());
-         REQUIRE(out1.As<Producible*>()->GetReferences() == 4);
          REQUIRE(out1.IsSparse());
          REQUIRE(out1 == out2);
 
@@ -381,7 +431,7 @@ SCENARIO("Test factories on the heap") {
          REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);*/
 
-         const_cast<Producible&>(prototype).Reference(-1);
+         //const_cast<Producible&>(prototype).Reference(-1);
       }
 
       WHEN("Two elements produced via descriptors, with parent on the stack") {
@@ -394,22 +444,30 @@ SCENARIO("Test factories on the heap") {
 
          factory.Create(&producer, creator);
          auto out1 = creator.GetOutput();
-         REQUIRE(out1.As<Producible*>()->GetReferences() == 3);
+
+         // Kept: twice in TFactory (THive + mIndexedByDescriptor)		
+         //       once in out1														
+         //       once in creator.mOutput											
+         REQUIRE(out1.As<Producible*>()->GetReferences() == 4);
 
          creator.Clear();
 
          factory.Create(&producer, creator);
          auto out2 = creator.GetOutput();
-         REQUIRE(out2.As<Producible*>()->GetReferences() == 4);
+
+         // Kept: twice in TFactory (THive + mIndexedByDescriptor)		
+         //       once in out1														
+         //       once in out2														
+         //       once in creator.mOutput											
+         REQUIRE(out2.As<Producible*>()->GetReferences() == 5);
 
          //TODO Missing stuff shouldn't participate in hashing
          //const auto hash = descriptor.GetDescriptor().GetHash();
 
-         REQUIRE(context.GetReferences() == 1);
+         REQUIRE(context.GetReferences() == 2);
          REQUIRE(creator.IsDone());
          REQUIRE(out1.GetCount() == 1);
          REQUIRE(out1.IsExact<Producible*>());
-         REQUIRE(out1.As<Producible*>()->GetReferences() == 4);
          REQUIRE(out1.IsSparse());
          REQUIRE(out1 == out2);
 
@@ -424,7 +482,7 @@ SCENARIO("Test factories on the heap") {
          REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);*/
 
-         const_cast<Producible&>(prototype).Reference(-1);
+         //const_cast<Producible&>(prototype).Reference(-1);
       }
 
       factory.Teardown();
@@ -438,7 +496,7 @@ SCENARIO("Test factories on the heap") {
 
 SCENARIO("Nested factories and circular referencing") {
    static MemoryState memoryState;
-
+{
    TMany<DeepProducer> wrappedProducer;
    wrappedProducer.InsertDefault();
    auto& deepProducer = wrappedProducer[0];
@@ -446,7 +504,7 @@ SCENARIO("Nested factories and circular referencing") {
    GIVEN("A factory") {
       Verbs::Create creator1 {
          Recipe::For<ShallowProducer>(
-            Tags::Parent(&deepProducer), "test"
+            Tags::Parent(&deepProducer), Text {"test"}
          )
       };
 
@@ -461,7 +519,7 @@ SCENARIO("Nested factories and circular referencing") {
       auto& shallowProducer = creator1.GetOutput().As<ShallowProducer>();
       Verbs::Create creator2 {
          Recipe::For<TheProducible>(
-            Tags::Parent(&shallowProducer), "test"
+            Tags::Parent(&shallowProducer), Text {"test"}
          )
       };
 
@@ -482,6 +540,7 @@ SCENARIO("Nested factories and circular referencing") {
    }
 
    wrappedProducer.Reset();
+}
 
    REQUIRE(memoryState.Assert());
    REQUIRE_FALSE(Allocator::CollectGarbage());

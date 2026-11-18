@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include <Langulus/Logger.hpp>
 #include <Langulus/Testing/CommonTypes.hpp>
 #include <Langulus/Downcastable.hpp>
 #include <Langulus/Factory.hpp>

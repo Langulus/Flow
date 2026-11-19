@@ -268,7 +268,7 @@ namespace Langulus::Annies
          if (this->template IsVerb<Verbs::Do>())
             return Langulus::InvokeAbility(mContext, reinterpret_cast<Verbs::Do&>(*this));
          else {
-            Verbs::Do temporary(*this);
+            Verbs::Do temporary(Piecewise, *this);
             bool result = Langulus::InvokeAbility(mContext, temporary);
             mOutput = Abandon(temporary.GetOutput());
             return result;
@@ -291,7 +291,7 @@ namespace Langulus::Annies
          if (this->template IsVerb<Verbs::Do>())
             return Langulus::InvokeAbilityUnary<A>(reinterpret_cast<Verbs::Do&>(*this));
          else {
-            Verbs::Do temporary(*this);
+            Verbs::Do temporary(Piecewise, *this);
             bool result = Langulus::InvokeAbilityUnary<A>(temporary);
             mOutput = Abandon(temporary.GetOutput());
             return result;

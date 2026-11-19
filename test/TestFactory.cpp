@@ -84,7 +84,7 @@ SCENARIO("Test factories on the stack") {
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);
          REQUIRE(factory.GetHashmap()[hash][1] == &factory.GetFrames()[0].GetRaw()[1]);*/
 
-         //const_cast<Producible&>(prototype).Reference(-1);
+         const_cast<Producible&>(prototype).Reference(-1);
       }
    }
 
@@ -136,7 +136,7 @@ SCENARIO("Test factories on the stack") {
          REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);*/
 
-         //const_cast<Producible&>(prototype).Reference(-1);
+         const_cast<Producible&>(prototype).Reference(-1);
       }
       
       WHEN("Two elements produced via descriptors, with parent on the heap") {
@@ -190,7 +190,7 @@ SCENARIO("Test factories on the stack") {
          REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);*/
 
-         //const_cast<Producible&>(prototype).Reference(-1);
+         const_cast<Producible&>(prototype).Reference(-1);
       }
 
       WHEN("Two elements produced via descriptors, with parent on the stack") {
@@ -242,7 +242,7 @@ SCENARIO("Test factories on the stack") {
          REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);*/
 
-         //const_cast<Producible&>(prototype).Reference(-1);
+         const_cast<Producible&>(prototype).Reference(-1);
       }
    }
 
@@ -325,7 +325,7 @@ SCENARIO("Test factories on the heap") {
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);
          REQUIRE(factory.GetHashmap()[hash][1] == &factory.GetFrames()[0].GetRaw()[1]);*/
 
-         //const_cast<Producible&>(prototype).Reference(-1);
+         const_cast<Producible&>(prototype).Reference(-1);
       }
 
       factory.Teardown();
@@ -379,7 +379,7 @@ SCENARIO("Test factories on the heap") {
          REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);*/
 
-         //const_cast<Producible&>(prototype).Reference(-1);
+         const_cast<Producible&>(prototype).Reference(-1);
       }
       
       WHEN("Two elements produced via descriptors, with parent on the heap (inducing a circular dependency)") {
@@ -431,7 +431,7 @@ SCENARIO("Test factories on the heap") {
          REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);*/
 
-         //const_cast<Producible&>(prototype).Reference(-1);
+         const_cast<Producible&>(prototype).Reference(-1);
       }
 
       WHEN("Two elements produced via descriptors, with parent on the stack") {
@@ -482,7 +482,7 @@ SCENARIO("Test factories on the heap") {
          REQUIRE(factory.GetHashmap()[hash].GetCount() == 1);
          REQUIRE(factory.GetHashmap()[hash][0] == &factory.GetFrames()[0].GetRaw()[0]);*/
 
-         //const_cast<Producible&>(prototype).Reference(-1);
+         const_cast<Producible&>(prototype).Reference(-1);
       }
 
       factory.Teardown();
@@ -496,7 +496,7 @@ SCENARIO("Test factories on the heap") {
 
 SCENARIO("Nested factories and circular referencing") {
    static MemoryState memoryState;
-{
+
    TMany<DeepProducer> wrappedProducer;
    wrappedProducer.InsertDefault();
    auto& deepProducer = wrappedProducer[0];
@@ -504,7 +504,7 @@ SCENARIO("Nested factories and circular referencing") {
    GIVEN("A factory") {
       Verbs::Create creator1 {
          Recipe::For<ShallowProducer>(
-            Tags::Parent(&deepProducer), Text {"test"}
+            Tags::Parent(&deepProducer)/*, Text {"test"}*/
          )
       };
 
@@ -519,7 +519,7 @@ SCENARIO("Nested factories and circular referencing") {
       auto& shallowProducer = creator1.GetOutput().As<ShallowProducer>();
       Verbs::Create creator2 {
          Recipe::For<TheProducible>(
-            Tags::Parent(&shallowProducer), Text {"test"}
+            Tags::Parent(&shallowProducer)/*, Text {"test"}*/
          )
       };
 
@@ -535,13 +535,12 @@ SCENARIO("Nested factories and circular referencing") {
       Ref<DeepProducer> justSomeExternalRef1 = &deepProducer;
       Ref<ShallowProducer> justSomeExternalRef2 = &shallowProducer;
 
-      //deepProducer.Teardown();
-      //shallowProducer.Teardown();
+      deepProducer.Teardown();
+      shallowProducer.Teardown();
    }
 
    wrappedProducer.Reset();
-}
 
    REQUIRE(memoryState.Assert());
-   REQUIRE_FALSE(Allocator::CollectGarbage());
+   REQUIRE_FALSE(Allocator::CollectGarbage(true));
 }

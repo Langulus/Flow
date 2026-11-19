@@ -5,9 +5,11 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
+#include <Langulus/Logger.hpp>
 #include <Langulus/Temporal.hpp>
 #include <Langulus/Any.hpp>
-#include <Langulus/Bytes.hpp>
+#include <Langulus/SerializeText.hpp>
+#include <Langulus/SerializeBytes.hpp>
 
 #include <Langulus/Verbs/Do.hpp>
 #include <Langulus/Verbs/Select.hpp>
@@ -37,29 +39,29 @@ using namespace Langulus;
 using namespace Langulus::Flow;
 
 
-#define LglsVerboseEnabled 0
+#define LglsVerboseEnabled 1
 #include <Langulus/Logger/ToggleVerbose.hpp>
 
 #define LglsVerboseFlow(...) \
    LglsVerbose(Flow, "Flow::Code: ", Logger::PushCyan, __VA_ARGS__ \
       , Logger::Pop, " at ", progress, ": " \
-      , Logger::NewLine, "+-[", Logger::PushGreen, Logger::Underline \
+      , Logger::NewLine, "{", Logger::PushGreen, Logger::Underline \
       , input. LeftOf(progress).Replace('\n', "\\n"), Logger::PopAndPushWhite \
-      , input.RightOf(progress).Replace('\n', "\\n"), Logger::Pop, ']')
+      , input.RightOf(progress).Replace('\n', "\\n"), Logger::Pop, '}')
 
 #define LglsVerboseFlowScoped(...) \
    LglsVerboseScoped(Flow, "Flow::Code: ", Logger::PushCyan, __VA_ARGS__ \
       , Logger::Pop, " at ", progress, ": " \
-      , Logger::NewLine, "+-[", Logger::PushGreen, Logger::Underline \
+      , Logger::NewLine, "{", Logger::PushGreen, Logger::Underline \
       , input. LeftOf(progress).Replace('\n', "\\n"), Logger::PopAndPushWhite \
-      , input.RightOf(progress).Replace('\n', "\\n"), Logger::Pop, ']')
+      , input.RightOf(progress).Replace('\n', "\\n"), Logger::Pop, '}')
 
 #define LglsFlowError(...) \
    LglsError("Flow::Code: ", Logger::PushDarkYellow, __VA_ARGS__ \
       , Logger::Pop, " at ", progress, ": " \
-      , Logger::NewLine, "+-[", Logger::PushDarkYellow, Logger::Underline \
+      , Logger::NewLine, "{", Logger::PushDarkYellow, Logger::Underline \
       , input. LeftOf(progress).Replace('\n', "\\n"), Logger::Pop \
-      , input.RightOf(progress).Replace('\n', "\\n"), ']');
+      , input.RightOf(progress).Replace('\n', "\\n"), '}');
 
 
 namespace
@@ -97,6 +99,7 @@ namespace
       case Serial::Operator::Precedence      : return Serial::Precedence      .Token;
       case Serial::Operator::And             : return Serial::And             .Token;
       case Serial::Operator::AndUnordered    : return Serial::AndUnordered    .Token;
+      case Serial::Operator::Namespace       : return Serial::Namespace       .Token;
       case Serial::Operator::Pair            : return Serial::Pair            .Token;
       case Serial::Operator::Or              : return Serial::Or              .Token;
       default: return "";
@@ -146,12 +149,12 @@ namespace
 
    /// Check if the Code container ends with a letter or underscore           
    ///   @return true if the last symbol is a letter/underscore               
-   bool EndsWithLetter(Code const& code) noexcept {
+   /*bool EndsWithLetter(Code const& code) noexcept {
       if (code.IsEmpty())
          return false;
 
-      return IsAlphabetical(code[-1]);
-   }
+      return IsAlphabetical(code[Index::Last]);
+   }*/
 
    /// Check if the Code container begins with a number                       
    ///   @return true if the first symbol is a number                         
@@ -168,27 +171,31 @@ namespace
       if (code.IsEmpty())
          return false;
 
-      return IsNumerical(code[-1]);
+      return IsNumerical(code[Index::Last]);
    }*/
 
    /// Check if the code container begins with a Serial::Operator             
    ///   @return true if the operator matches                                 
    bool StartsWithOperator(Code const& code, Serial::Operator op) noexcept {
-      const Code token = GetOperatorToken(op);
-      if (code.GetCount() < token.GetCount())
+      const Code token = RTTI::IsolateOperator(GetOperatorToken(op));
+      const size_t size = token.GetCount();
+      if (not size or code.GetCount() < size)
          return false;
 
-      const Code remainder = code.RightOf(token.GetCount());
-      const bool endsWithLetter = EndsWithLetter(token);
-      return token.GetCount() > 0
-         and (code.GetCount() == token.GetCount()
-            or (endsWithLetter and (
-               not     StartsWithLetter(remainder)
-               and not StartsWithDigit(remainder)))
-            or not endsWithLetter)
-         and code.MatchesExt(token, [](char c1, char c2) noexcept {
-            return ::std::tolower(c1) == ::std::tolower(c2);
-         }) == token.GetCount();
+      const size_t matches = code.MatchesExt(token, [](char c1, char c2) noexcept {//TODO make this work without wrapping everything in heap-based containers
+         return ::std::tolower(c1) == ::std::tolower(c2);
+      });
+      if (matches != size)
+         return false;
+
+      // In order for the match to be valid, it must transition from    
+      // operator -> non-operator, or non-operator -> operator          
+      const Code remainder = code.RightOf(size);
+      if (not remainder)
+         return true;      // Counts as transition as well              
+
+      return (IsOperator(token[Index::Last]) and not IsOperator(remainder[Index::First]))
+      or (not IsOperator(token[Index::Last]) and     StartsWithSkippable(remainder));
    }
 
 
@@ -262,33 +269,33 @@ using namespace Langulus::Flow;
 ///   @return the parsed flow                                                 
 Many Code::Parse(bool optimize) const {
    // Make sure that all default tags are registered before parsing   
-   /*(void)MetaOf<Tags::Logger>();
-   (void)MetaOf<Tags::Count>();
-   (void)MetaOf<Tags::Name>();
-   (void)MetaOf<Tags::Path>();
-   (void)MetaOf<Tags::Data>();
-   (void)MetaOf<Tags::Index>();
-   (void)MetaOf<Tags::Context>();
-   (void)MetaOf<Tags::Tag>();
-   (void)MetaOf<Tags::State>();
-   (void)MetaOf<Tags::Child>();
-   (void)MetaOf<Tags::Parent>();
-   (void)MetaOf<Tags::Clipboard>();
-   (void)MetaOf<Tags::Color>();
-   (void)MetaOf<Tags::Min>();
-   (void)MetaOf<Tags::Max>();
-   (void)MetaOf<Tags::Input>();
-   (void)MetaOf<Tags::Output>();
-   (void)MetaOf<Tags::Mass>();
-   (void)MetaOf<Tags::Rate>();
-   (void)MetaOf<Tags::Time>();
-   (void)MetaOf<Tags::Priority>();
+   (void)MetaTagOf<Tags::Logger>();
+   (void)MetaTagOf<Tags::Count>();
+   (void)MetaTagOf<Tags::Name>();
+   (void)MetaTagOf<Tags::Path>();
+   (void)MetaTagOf<Tags::Data>();
+   (void)MetaTagOf<Tags::Index>();
+   (void)MetaTagOf<Tags::Context>();
+   (void)MetaTagOf<Tags::Tag>();
+   (void)MetaTagOf<Tags::State>();
+   (void)MetaTagOf<Tags::Child>();
+   (void)MetaTagOf<Tags::Parent>();
+   (void)MetaTagOf<Tags::Clipboard>();
+   (void)MetaTagOf<Tags::Color>();
+   (void)MetaTagOf<Tags::Smallest>();
+   (void)MetaTagOf<Tags::Largest>();
+   (void)MetaTagOf<Tags::Input>();
+   (void)MetaTagOf<Tags::Output>();
+   (void)MetaTagOf<Tags::Mass>();
+   (void)MetaTagOf<Tags::Rate>();
+   (void)MetaTagOf<Tags::Time>();
+   (void)MetaTagOf<Tags::Precedence>();
 
    // Make sure that all default types are registered before parsing 
-   (void)MetaOf<Index>();
-   (void)MetaOf<Temporal>();
-   (void)MetaOf<Time>();
-   (void)MetaOf<Code>();*/
+   (void)MetaDataOf<Index::At>();
+   (void)MetaDataOf<Temporal>();
+   (void)MetaDataOf<Time>();
+   (void)MetaDataOf<Code>();
 
    // Make sure that all default constants are registered            
    /*(void)MetaOf<Constants::Yes>();
@@ -299,29 +306,27 @@ Many Code::Parse(bool optimize) const {
    (void)MetaOf<Constants::Nothing>();*/
 
    // Make sure that all default verbs are registered before parsing 
-   /*(void)MetaOf<Verbs::Do>();
-   (void)MetaOf<Verbs::Select>();
-   (void)MetaOf<Verbs::Associate>();
-   (void)MetaOf<Verbs::Create>();
-   (void)MetaOf<Verbs::Catenate>();
-   (void)MetaOf<Verbs::Conjunct>();
-   (void)MetaOf<Verbs::Interpret>();
-   (void)MetaOf<Verbs::Compare>();
-   (void)MetaOf<Verbs::Equal>();
-   (void)MetaOf<Verbs::Lower>();
-   (void)MetaOf<Verbs::LowerOrEqual>();
-   (void)MetaOf<Verbs::Greater>();
-   (void)MetaOf<Verbs::GreaterOrEqual>();*/
+   (void)MetaVerbOf<Verbs::Do>();
+   (void)MetaVerbOf<Verbs::Select>();
+   (void)MetaVerbOf<Verbs::Associate>();
+   (void)MetaVerbOf<Verbs::Create>();
+   (void)MetaVerbOf<Verbs::Catenate>();
+   (void)MetaVerbOf<Verbs::Conjunct>();
+   (void)MetaVerbOf<Verbs::Interpret>();
+   (void)MetaVerbOf<Verbs::Compare>();
+   (void)MetaVerbOf<Verbs::Equal>();
+   (void)MetaVerbOf<Verbs::Lower>();
+   //(void)MetaVerbOf<Verbs::LowerOrEqual>();
+   (void)MetaVerbOf<Verbs::Greater>();
+   //(void)MetaVerbOf<Verbs::GreaterOrEqual>();
 
    // Parse                                                             
    Many output;
    const auto parsed = UnknownParser::Parse(*this, output, 0, optimize);
    if (parsed != GetCount()) {
       Logger::Warning("Some characters were left out at the end, while parsing code:");
-      Logger::Warning("+-- ", 
-         Logger::Green, LeftOf (parsed), 
-         Logger::Red,   RightOf(parsed)
-      );
+      Logger::Warning('{', Logger::Green, LeftOf (parsed), 
+                           Logger::Red,   RightOf(parsed), '}');
    }
    return output;
 }
@@ -450,7 +455,7 @@ size_t SkippedParser::Parse(Code const& input) {
       else if (relevant.StartsWith(GetOperatorToken(Serial::Operator::OpenLineComment))) {
          // Skip an entire line comment                                 
          const auto end_marker = GetOperatorToken(Serial::Operator::CloseLineComment);
-         while (progress < input.GetCount() - end_marker.size()
+         while (progress < input.GetCount() /*- end_marker.size()*/
          and not input.RightOf(progress).StartsWith(end_marker))
             ++progress;
          continue;
@@ -512,12 +517,32 @@ Token KeywordParser::Isolate(Code const& input) noexcept {
 size_t KeywordParser::Parse(Code const& input, Many& lhs, bool allowCharge) {
    // Isolate the keyword                                               
    size_t progress = 0;
-   const auto keyword = Isolate(input);
+   Token keyword = Isolate(input);
    if (keyword.empty())
-      LglsFlowError("No keyword parsed");
+      LglsFlowError("No keyword parsed (shouldn't be reachable)");
 
    progress += keyword.size();
-   LglsVerboseFlowScoped("Keyword isolated: ", keyword);
+
+   {
+      auto relevant = input.RightOf(progress);
+      while (OperatorParser::Peek(relevant) == Serial::Operator::Namespace) {
+         // Namespace encountered immediately after the keyword, so     
+         // concatenate them as many times as needed!                   
+         LglsVerboseFlow("Namespace encountered, coalescing keywords...");
+         const size_t namespace_operator_size = GetOperatorToken(Serial::Operator::Namespace).size();
+         progress += namespace_operator_size;
+         relevant = input.RightOf(progress);
+         const Token next_keyword = Isolate(relevant);
+         keyword = Token {
+            keyword.data(),
+            keyword.size() + namespace_operator_size + next_keyword.size()
+         };
+         progress += next_keyword.size();
+         relevant = input.RightOf(progress);
+      }
+   }
+
+   LglsVerboseFlowScoped("Keyword isolated: `", keyword, '`');
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    // If this is reached, then exactly one match in symbols.            
@@ -531,6 +556,7 @@ size_t KeywordParser::Parse(Code const& input, Many& lhs, bool allowCharge) {
    const RTTI::CMeta cmeta = meta;
 
    if (dmeta) {
+      LglsVerboseFlow("Keyword recognized as data type");
       if (allowCharge) {
          const auto relevant = input.RightOf(progress);
          if (ChargeParser::Peek(relevant) != Serial::Operator::Noop) {
@@ -538,19 +564,24 @@ size_t KeywordParser::Parse(Code const& input, Many& lhs, bool allowCharge) {
             Charge charge;
             progress += ChargeParser::Parse(relevant, charge);
             lhs << Recipe {dmeta, Many {}, charge};
+            LglsVerboseFlow("Keyword memoized as Recipe");
          }
          else lhs << dmeta;
       }
       else lhs << dmeta;
    }
 
-   if (tmeta)
+   if (tmeta) {
+      LglsVerboseFlow("Keyword recognized as tag");
       lhs << tmeta;
+   }
 
-   if (cmeta)
+   if (cmeta) {
+      LglsVerboseFlow("Keyword recognized as constant");
       lhs.Compose(Any::FromConstant(cmeta));
+   }
 
-   LglsVerboseFlow("Keyword parsed: `", keyword, "` as ", lhs, " (of type ", lhs.GetToken(), ")");
+   LglsVerboseFlow("Keyword parsed: `", keyword, "` as ", lhs, " (of type ", lhs.GetName(), ")");
    return progress;
 #else
    (void)lhs;
@@ -569,7 +600,7 @@ size_t KeywordParser::Parse(Code const& input, Many& lhs, bool allowCharge) {
       size_t const progress, Code const& input, Token const& keyword
    ) -> RTTI::Inner::Definition const* {
       try { return RTTI::Registry::DisambiguateMeta(keyword); }
-      catch (...) { LglsFlowError("Unknown keyword: ", keyword); }
+      catch (...) { LglsFlowError("Unknown keyword: `", keyword, '`'); }
       return nullptr;
    }
 #endif
@@ -617,7 +648,7 @@ size_t NumberParser::Parse(Code const& input, Many& lhs) {
 ///   @param input the code to peek into                                      
 ///   @return true if input begins with an operators                          
 auto OperatorParser::PeekBuiltin(Code const& input) noexcept -> Serial::Operator {
-   for (int i = 0; i < int(Serial::Operator::Last); ++i) {
+   for (int i = int(Serial::Operator::OpenScope); i < int(Serial::Operator::Last); ++i) {
       if (i != int(Serial::Operator::Mass) and i != int(Serial::Operator::Rate)
       and i != int(Serial::Operator::Time) and i != int(Serial::Operator::Precedence)
       and StartsWithOperator(input, Serial::Operator(i)))
@@ -695,7 +726,7 @@ size_t OperatorParser::Parse(
       // Skip the operator, we already know it                          
       const auto token = GetOperatorToken(op);
       progress += token.size();
-      LglsVerboseFlowScoped("Parsing built-in operator: [", token, ']');
+      LglsVerboseFlowScoped("Parsing built-in operator: ", RTTI::IsolateOperator(token));
       const Code relevant = input.RightOf(progress);
 
       // Handle built-in operators first                                
@@ -732,13 +763,13 @@ size_t OperatorParser::Parse(
          const auto found = RTTI::VMeta(RTTI::Registry::GetMetaVerbByToken(word));
 
          if (found.GetPrecedence() and priority >= found.GetPrecedence()) {
-            LglsVerboseFlow(Logger::Yellow, "Delaying reflected operator [", found, 
-                                    "] due to a prioritized operation");
+            LglsVerboseFlow(Logger::Yellow, "Delaying reflected operator ", found, 
+                                    " due to a prioritized operation");
             return 0;
          }
 
          progress += word.size();
-         LglsVerboseFlowScoped("Parsing reflected verb: [", word, "] (", found, ")");
+         LglsVerboseFlowScoped("Parsing reflected verb: `", word, "` (a.k.a. ", found, ")");
          auto operation = Verb::From(found);
          if (CompareOperators(word, found.GetNegativeName())
          or  CompareOperators(word, found.GetNegativeOperator()))

@@ -100,7 +100,7 @@ struct Producible : Referenced, ProducedFrom<Producer> {
       Logger::Special("Destroying Producible");
    }
 
-   bool operator == (const Producible& rhs) const {
+   bool operator == (Producible const& rhs) const {
       return mDescriptor == rhs.mDescriptor;
    }
 
@@ -167,6 +167,7 @@ struct ShallowProducer : Referenced, ProducedFrom<DeepProducer> {
 
    void Teardown() {
       factory.Teardown();
+      ProducedFrom<DeepProducer>::Teardown();
    }
 };
 

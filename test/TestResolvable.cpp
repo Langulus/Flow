@@ -9,6 +9,8 @@
 
 
 SCENARIO("Test resolvables") {
+   static MemoryState memoryState;
+
 	GIVEN("A resolvable instance") {//TODO test with managed data
 		Thing2 resolvable;
 		auto concreteptr = static_cast<void*>(&resolvable);
@@ -45,4 +47,7 @@ SCENARIO("Test resolvables") {
 			REQUIRE(pack.GetResolved().As<Downcastable>()->CastsTo(MetaDataOf<Thing2>()));
 		}
 	}
+	
+   REQUIRE(memoryState.Assert());
+   REQUIRE_FALSE(Allocator::CollectGarbage());
 }

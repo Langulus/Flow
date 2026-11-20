@@ -104,13 +104,29 @@ struct Producible : Referenced, ProducedFrom<Producer> {
       return mDescriptor == rhs.mDescriptor;
    }
 
-   operator Text () const {
+   /*operator Text () const {
       return "Producible";
-   }
+   }*/
 };
+
+LANGULUS_MORPHISM_CUSTOM(Producible, {
+   (void) from;
+   return "Producible";
+}, Annies::Text);
+
 
 struct DeepProducer;
 struct ShallowProducer;
+
+LANGULUS_MORPHISM_CUSTOM(DeepProducer, {
+   (void) from;
+   return "DeepProducer";
+}, Annies::Text);
+
+LANGULUS_MORPHISM_CUSTOM(ShallowProducer, {
+   (void) from;
+   return "ShallowProducer";
+}, Annies::Text);
 
 /// A mockup of a producible                                                  
 struct TheProducible : Referenced, ProducedFrom<ShallowProducer> {
@@ -119,6 +135,11 @@ struct TheProducible : Referenced, ProducedFrom<ShallowProducer> {
    TheProducible(ShallowProducer const* producer, Neat const& desc = {})
       : ProducedFrom {producer, desc} {}
 };
+
+LANGULUS_MORPHISM_CUSTOM(TheProducible, {
+   (void) from;
+   return "TheProducible";
+}, Annies::Text);
 
 /// A mockup of a producer                                                    
 struct Producer : Referenced {

@@ -26,11 +26,11 @@ SCENARIO("Parsing scripts with corner cases") {
 
    GIVEN("The script with line comments") {
       const auto code = "//some comment\n`plural` associate index::many //same line comment with no new line"_code;
-      Many const required = Verbs::Associate {Index::Many}.In("plural");
+      Many const required = Verbs::Associate {Index::Many}.In("plural"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
-         DumpResults(code, parsed, required);
+         //DumpResults(code, parsed, required);
          REQUIRE(parsed == required);
       }
    }

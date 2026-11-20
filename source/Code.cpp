@@ -1141,14 +1141,18 @@ size_t OperatorParser::ParseReflected(
    progress += UnknownParser::Parse(
       relevant, parsed_arguments, op.GetVerb().GetPrecedence(), optimize
    );
+
+   // Populate the verb with the collected context & arguments          
+   op.In(Move(lhs));
    op.SetArgument(Abandon(parsed_arguments));
 
    if (optimize and not op.GetCharge().IsFlowDependent()) {
+      //TODO sparse contexts/arguments should be considered impure and therefore flow-dependent
       // Try executing operator at compile-time                         
-      LglsVerboseFlowScoped("Attempting compile-time execution... ");
+      LglsVerboseFlowScoped("Attempting compile-time execution of {", op, '}');
 
       // Next-execute the argument first                                
-      bool unusedSkipper = false;
+      /*bool unusedSkipper = false;
       Many unusedContext;
       Many argument;
       const Many flow = op.GetRHS();
@@ -1170,29 +1174,28 @@ size_t OperatorParser::ParseReflected(
             IF_SAFE(op.GetOutput().Reset());
          }
       }
-      else {
-         // Argument didn't execute, but we could still try to          
-         // pre-compute the op. Like for example when conjuncting       
-         // two containers.                                             
-         Many opSrcBackup = Move(op.GetLHS());
+      else {*/
+               // Argument didn't execute, but we could still try to          
+               // pre-compute the op. Like for example when conjuncting       
+               // two containers.                                             
+         //Many opSrcBackup = Move(op.GetLHS());
 
-         if (op.In(lhs).Run()) {
+         if (op.Run()) {
             // The verb was executed at compile-time, so directly       
             // substitute LHS with the verb's output                    
-            LglsVerboseFlow("Verb was executed at compile time: ", op.GetOutput());
             lhs = Move(op.GetOutput());
+            LglsVerboseFlow("Verb was executed at compile time, resulting in {", lhs, '}');
             return progress;
          }
-         else {
+         /*else {
             op.In(Abandon(opSrcBackup));
             IF_SAFE(op.GetOutput().Reset());
-         }
-      }
+         }*/
+      //}
    }
 
    // Either compile-time execution is impossible, or we don't          
    // want it, so directly substitute LHS with the verb                 
-   op.In(Move(lhs));
    lhs = Move(op);
    return progress;
 }
@@ -1249,7 +1252,7 @@ size_t ChargeParser::Parse(Code const& input, Charge& charge) {
       const auto token = GetOperatorToken(op);
       progress += token.size();
       relevant = input.RightOf(progress);
-      LglsVerboseFlow("Parsing charge operator: [", token, ']');
+      LglsVerboseFlow("Parsing charge operator: ", token);
 
       // Skip any spacing and consume '-' operators here                
       bool reverse = false;

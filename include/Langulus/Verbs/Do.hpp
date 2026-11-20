@@ -106,7 +106,7 @@ namespace Langulus::CTTI
             for (auto handle : lhs) {
                //TODO magic bools here. maybe carry state with verbs and use it as arguments here?
                bool unusedSkipVerbs = false;
-               if (Flow::Execute(flow, handle, output, false, unusedSkipVerbs, false))
+               if (Flow::Execute(flow, Many {Absorb, handle}, output, false, unusedSkipVerbs, false))
                   ++successCount;
             }
             return successCount > 0;
@@ -188,7 +188,7 @@ namespace Langulus::CTTI
             for (auto handle : lhs) {
                //TODO magic bools here. maybe carry state with verbs and use it as arguments here?
                bool unusedSkipVerbs = false;
-               if (Flow::Execute({}, handle, output, false, unusedSkipVerbs, false))//TODO dedicated unary here?
+               if (Flow::Execute({}, Many {Absorb, handle}, output, false, unusedSkipVerbs, false))//TODO dedicated unary here?
                   ++successCount;
             }
             return successCount > 0;
@@ -268,7 +268,9 @@ namespace Langulus::Annies
          if (this->template IsVerb<Verbs::Do>())
             return Langulus::InvokeAbility(mContext, reinterpret_cast<Verbs::Do&>(*this));
          else {
+            Logger::Verbose("Before dispastcher: ", *this);
             Verbs::Do temporary(Piecewise, *this);
+            Logger::Verbose("After dispastcher: ", temporary);
             bool result = Langulus::InvokeAbility(mContext, temporary);
             mOutput = Abandon(temporary.GetOutput());
             return result;

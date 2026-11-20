@@ -23,7 +23,10 @@
 #include <Langulus/Annies/Functional/Insert.hpp>
 #include <Langulus/Annies/Functional/Deepen.hpp>
 
-#if 0
+#define LglsVerboseEnabled 1
+#include <Langulus/Logger/ToggleVerbose.hpp>
+
+/*#if 0
    #define VERBOSE(...)      Logger::Verbose(__VA_ARGS__)
    #define VERBOSE_TAB(...)  const auto tab = Logger::VerboseTab(__VA_ARGS__)
 #else
@@ -31,7 +34,7 @@
    #define VERBOSE_TAB(...)  LANGULUS(NOOP)
 #endif
 
-#define FLOW_ERRORS(...)  Logger::Error(__VA_ARGS__)
+#define FLOW_ERRORS(...)  Logger::Error(__VA_ARGS__)*/
 
 using namespace Langulus;
 
@@ -52,7 +55,7 @@ bool ExecuteAND(
             if (silent)
                throw Exception("Deep AND failure");
             else
-               LglsError("Deep AND failure: "/*, flow*/);
+               LglsError("Deep AND failure: ", flow);
          }
 
          output.Compose(Abandon(local));
@@ -67,7 +70,7 @@ bool ExecuteAND(
                if (silent)
                   throw Exception("Missing point failure");
                else
-                  LglsError("Missing point failure: "/*, flow*/);
+                  LglsError("Missing point failure: ", flow);
             }
 
             output.Compose(Abandon(local));
@@ -85,21 +88,21 @@ bool ExecuteAND(
                if (silent)
                   throw Exception("Tag AND failure");
                else
-                  LglsError("Tag AND failure: "/*, flow*/);
+                  LglsError("Tag AND failure: ", flow);
             }
 
             output.Compose(Tag::From(tag, Abandon(local)));
          },
          [&](Recipe const& recipe) {
             // Nest if recipes, but retain each recipe                  
-            VERBOSE("Executing recipe: ", recipe);
+            LglsVerbose(Verbose, "Executing recipe: ", recipe);
 
             Many local;
             if (not Flow::Execute(recipe.GetDescriptor(), environment, local, integrate, skipVerbs, silent)) {
                if (silent)
                   throw Exception("Recipe AND failure");
                else
-                  LglsError("Recipe AND failure: "/*, flow*/);
+                  LglsError("Recipe AND failure: ", flow);
             }
 
             auto solved = Recipe::From(recipe, Abandon(local));
@@ -125,10 +128,10 @@ bool ExecuteAND(
             // verbs from it. Some of them might get reinserted, if  
             // missing, but generally they will be substituted with  
             // the corresponding results                             
-            VERBOSE("Executing neat: ", neat);
+            LglsVerbose(Verbose, "Executing neat: ", neat);
             /*Neat local = neat;
             local.template RemoveData<Verb>();
-            VERBOSE("Executing neat (verbs stripped): ", local);
+            LglsVerbose(Verbose, "Executing neat (verbs stripped): ", local);
 
             local.ForEach(
                [&](Verb const& constVerb) {
@@ -182,7 +185,7 @@ bool ExecuteAND(
                   output.Compose(verb);
                   return Loop::Continue;
                }
-               else FLOW_ERRORS("Trying to execute a missing verb: ", verb);
+               else Logger::Error("Trying to execute a missing verb: ", verb);
             }
 
             // Execute the verb                                      
@@ -208,7 +211,7 @@ bool ExecuteAND(
       output.Compose(flow);
    }
 
-   VERBOSE(Logger::Green, "AND scope done: "/*, flow*/);
+   LglsVerbose(Verbose, Logger::Green, "AND scope done: ", flow);
    return true;
 }
 
@@ -319,7 +322,7 @@ bool ExecuteOR(
                   output.Compose(verb);
                   return Loop::Continue;
                }
-               else FLOW_ERRORS("Trying to execute a missing verb: ", verb);
+               else Logger::Error("Trying to execute a missing verb: ", verb);
             }
 
             if (not Flow::ExecuteVerb(environment, verb, silent))
@@ -341,8 +344,10 @@ bool ExecuteOR(
       ++executed;
    }
 
-   if (executed) VERBOSE(Logger::Green, "OR scope done: ",   flow);
-   else          VERBOSE(Logger::Red,   "OR scope failed: ", flow);
+   if (executed)
+      LglsVerbose(Verbose, Logger::Green, "OR scope done: ",   flow);
+   else
+      LglsVerbose(Verbose, Logger::Red,   "OR scope failed: ", flow);
    return executed;
 }
 }
@@ -376,15 +381,16 @@ bool Flow::Execute(
          // and never executed.                                         
          if (integrate) {
             results.Compose(flow);
-            VERBOSE(Logger::Green, "AND scope forwarded: {", flow, "}");
+            LglsVerbose(Verbose, Logger::Green, "AND scope forwarded: {", flow, "}");
          }
       }
       else {
          // Dense flows will be integrated and/or executed              
+         LglsVerboseSection(Verbose, "Executing scope");
          if (integrate)
-            VERBOSE_TAB("Executing scope (integrating): [", flow, ']');
+            LglsVerboseAppend(" (integrating): {", flow, '}');
          else
-            VERBOSE_TAB("Executing scope: [", flow, ']');
+            LglsVerboseAppend(": {", flow, '}');
          
          try {
             if (flow.IsOr())
@@ -416,7 +422,7 @@ bool Flow::IntegrateVerb(Many const& environment, Verb& verb, const bool silent)
       bool unusedSkipVerbs = false;
       if (not Flow::Execute(verb.GetLHS(), environment, localSource, true, unusedSkipVerbs, silent)) {
          if (not silent)
-            FLOW_ERRORS("Error at source of: ", verb);
+            Logger::Error("Error at source of: ", verb);
          return false;
       }
    }
@@ -431,7 +437,7 @@ bool Flow::IntegrateVerb(Many const& environment, Verb& verb, const bool silent)
    bool unusedSkipVerbs = false;
    if (not Flow::Execute(flow, localSource, localArgument, true, unusedSkipVerbs, silent)) {
       if (not silent)
-         FLOW_ERRORS("Error at argument of: ", verb);
+         Logger::Error("Error at argument of: ", verb);
       return false;
    }
 
@@ -449,12 +455,12 @@ bool Flow::IntegrateVerb(Many const& environment, Verb& verb, const bool silent)
 ///      executing at compile-time, for example                               
 ///   @return true of no errors occured                                       
 bool Flow::ExecuteVerb(Many const& environment, Verb& verb, const bool silent) {
-   // Integration (and execution of subverbs if any)                    
+   // Integration (and execution of subverbs if any).                   
    // Source and argument will be executed locally if scripts, and      
-   // substituted with their results in the verb                        
+   // substituted with their results in the verb.                       
    if (not Flow::IntegrateVerb(environment, verb, silent)) {
       if (not silent) {
-         FLOW_ERRORS("Error integrating verb: ", verb, " (", verb.GetVerb(), ')');
+         Logger::Error("Error integrating verb: ", verb, " (a.k.a. ", verb.GetVerb().GetPositiveName(), ')');
       }
       return false;
    }
@@ -463,28 +469,45 @@ bool Flow::ExecuteVerb(Many const& environment, Verb& verb, const bool silent) {
       // A Do verb is done at this point, because the subverbs          
       // inside (if any) should be done in the integration phase. This  
       // also acts as regression protection. All we need to make sure   
-      // is that the integrated argument or source are propagated to    
+      // is that the integrated argument (or source) are propagated to  
       // the verb's output.                                             
       if (not verb.GetOutput()) {
-         if (verb)   verb << verb.GetRHS();//Move(verb.GetRHS());
-         else        verb << verb.GetLHS();  //Move(verb.GetLHS());
+         if (verb)   verb << verb.GetRHS();
+         else        verb << verb.GetLHS();
       }
 
       return true;
    }
 
-   VERBOSE_TAB("Executing verb: ", Logger::Cyan, verb, " (", verb.GetVerb(), ')');
+   LglsVerboseSection(Verbose, "Executing verb: ", Logger::Cyan, verb,
+      " (a.k.a. ", verb.GetVerb().GetPositiveName(), ')');
 
-   // Dispatch the verb to the context, executing it                    
-   // Any results should be inside verb.mOutput afterwards              
-   //TODO here was a context copy of verb, probably in case of destructive verbs. i don't like excessive copies, figure it out eventually
-   if (verb.Run()) {
+   // Dispatch the verb to the context, executing it.                   
+   // Any results should end up inside verb.mOutput afterwards.         
+   auto& abilities = verb.GetLHS().GetType().GetVerbs();
+   auto found_verb = abilities.find(verb.GetVerb().GetDefinition());
+   if (found_verb != abilities.end() and found_verb->second.binary) {
+      if (not found_verb->second.binary(verb.GetLHS().GetRawVoid(), verb)) {
+         if (not silent) {
+            Logger::Error("Error executing verb: ", verb, 
+               " (a.k.a. ", verb.GetVerb().GetPositiveName(), ')');
+         }
+         return false;
+      }
+   }
+   else {
       if (not silent) {
-         FLOW_ERRORS("Error executing verb: ", verb, " (", verb.GetVerb(), ')');
+         Logger::Error("No ability to ", Logger::PushYellow, 
+            verb.GetVerb().GetPositiveName(), Logger::Pop,
+            " found for ", Logger::PushYellow, verb.GetLHS().GetType()
+         );
       }
       return false;
    }
 
-   VERBOSE("Executed: ", Logger::Green, verb, " (", verb.GetVerb(), ')');
+   //TODO unary
+
+   LglsVerbose(Verbose, "Executed: ", Logger::Green, verb,
+      " (a.k.a. ", verb.GetVerb().GetPositiveName(), ')');
    return true;
 }

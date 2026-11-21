@@ -30,14 +30,14 @@ SCENARIO("Parsing scripts with corner cases") {
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
-         //DumpResults(code, parsed, required);
+         DumpResults(code, parsed, required);
          REQUIRE(parsed == required);
       }
    }
    
    GIVEN("The script with /**/ comments") {
       const auto code = "/*some comment*/`plural` /*inbetween*/ associate index::many /*bad comment at the end"_code;
-      Many const required = Verbs::Associate {Index::Many}.In("plural");
+      Many const required = Verbs::Associate {Index::Many}.In("plural"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -48,7 +48,7 @@ SCENARIO("Parsing scripts with corner cases") {
    
    GIVEN("The script: `plural` associate index::many") {
       const auto code = "`plural` associate index::many"_code;
-      Many const required = Verbs::Associate {Index::Many}.In("plural");
+      Many const required = Verbs::Associate {Index::Many}.In("plural"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -59,7 +59,7 @@ SCENARIO("Parsing scripts with corner cases") {
 
    GIVEN("The script: `plural` associate(index::many)") {
       const auto code = "`plural` associate(index::many)"_code;
-      Many const required = Verbs::Associate {Index::Many}.In("plural");
+      Many const required = Verbs::Associate {Index::Many}.In("plural"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -70,7 +70,7 @@ SCENARIO("Parsing scripts with corner cases") {
 
    GIVEN("The script: (`plural`) associate (index::many)") {
       const auto code = "(`plural`) associate (index::many)"_code;
-      Many const required = Verbs::Associate {Index::Many}.In("plural");
+      Many const required = Verbs::Associate {Index::Many}.In("plural"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -81,7 +81,7 @@ SCENARIO("Parsing scripts with corner cases") {
 
    GIVEN("The script: (`plural`) associate (index::many)") {
       const auto code = "(`plural`) associate index::many"_code;
-      Many const required = Verbs::Associate {Index::Many}.In("plural");
+      Many const required = Verbs::Associate {Index::Many}.In("plural"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -92,7 +92,7 @@ SCENARIO("Parsing scripts with corner cases") {
 
    GIVEN("The script: `plural` = index::many") {
       const auto code = "`plural` = index::many"_code;
-      Many const required = Verbs::Associate {Index::Many}.In("plural");
+      Many const required = Verbs::Associate {Index::Many}.In("plural"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -103,7 +103,7 @@ SCENARIO("Parsing scripts with corner cases") {
 
    GIVEN("The script: `plural` = (index::many)") {
       const auto code = "`plural` = (index::many)"_code;
-      Many const required = Verbs::Associate {Index::Many}.In("plural");
+      Many const required = Verbs::Associate {Index::Many}.In("plural"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -114,7 +114,7 @@ SCENARIO("Parsing scripts with corner cases") {
 
    GIVEN("The script: (`plural`) = (index::many)") {
       const auto code = "(`plural`) = (index::many)"_code;
-      Many const required = Verbs::Associate {Index::Many}.In("plural");
+      Many const required = Verbs::Associate {Index::Many}.In("plural"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -125,7 +125,7 @@ SCENARIO("Parsing scripts with corner cases") {
 
    GIVEN("The script: (`plural`) = index::many") {
       const auto code = "(`plural`) = index::many"_code;
-      Many const required = Verbs::Associate {Index::Many}.In("plural");
+      Many const required = Verbs::Associate {Index::Many}.In("plural"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -134,10 +134,9 @@ SCENARIO("Parsing scripts with corner cases") {
       }
    }
 
-   GIVEN("The script: `thing` associate { Entity(past?, future?) }") {
-      const auto code = "`thing` associate { Entity(past?, future?) }"_code;
-      Many const required = Verbs::Associate {" Entity(past?, future?) "_code}
-         .In("thing");
+   GIVEN("The script: `thing` associate { Thing(past?, future?) }") {
+      const auto code = "`thing` associate { Thing(past?, future?) }"_code;
+      Many const required = Verbs::Associate {" Thing(past?, future?) "_code}.In("thing"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -148,7 +147,7 @@ SCENARIO("Parsing scripts with corner cases") {
 
    GIVEN("The script: `things` associate(\"thing\", `plural`)") {
       const auto code = "`things` associate(\"thing\", `plural`)"_code;
-      Many const required = Verbs::Associate {"thing", "plural"}.In("things");
+      Many const required = Verbs::Associate {"thing", "plural"}.In("things"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -159,7 +158,7 @@ SCENARIO("Parsing scripts with corner cases") {
 
    GIVEN("The script: `things` = (\"thing\", `plural`)") {
       const auto code = "`things` = (\"thing\", `plural`)"_code;
-      Many const required = Verbs::Associate {"thing", "plural"}.In("things");
+      Many const required = Verbs::Associate {"thing", "plural"}.In("things"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -173,7 +172,7 @@ SCENARIO("Parsing scripts with corner cases") {
       Many argument {
          "number? >< number??"_code, 
          Index::Single, 
-         "and"
+         "and"_txt
       };
       argument.EnableOr();
       Many const required = Verbs::Associate {argument}.In(',');
@@ -188,8 +187,7 @@ SCENARIO("Parsing scripts with corner cases") {
    GIVEN("The script: Create!-1(Verb(?, ??))") {
       const Code code = "Create!-1(Verb(?, ??))";
       TMany<Many> package {Many::Past(), Many::Future()};
-      Many const required = Verbs::Create {Many {Verb {package}}}
-         .SetPrecedence(-1);
+      Many const required = Verbs::Create {Many {Verb {package}}}.SetPrecedence(-1);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();
@@ -216,7 +214,7 @@ SCENARIO("Parsing scripts with corner cases") {
    GIVEN("The script: `is` = (? = ??)") {
       const Code code = "`is` = (? = ??)";
       Many const package = Verbs::Associate {Many::Future()}.In(Many::Past());
-      Many const required = Verbs::Associate {package}.In("is");
+      Many const required = Verbs::Associate {package}.In("is"_txt);
 
       WHEN("Parsed") {
          const auto parsed = code.Parse();

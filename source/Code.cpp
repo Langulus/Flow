@@ -194,8 +194,8 @@ namespace
       if (not remainder)
          return true;      // Counts as transition as well              
 
-      return (IsOperator(token[Index::Last]) and not IsOperator(remainder[Index::First]))
-      or (not IsOperator(token[Index::Last]) and     StartsWithSkippable(remainder));
+      return (IsOperator(token[Index::Last]) /*and not IsOperator(remainder[Index::First])*/)
+      or (not IsOperator(token[Index::Last]) and     (StartsWithSkippable(remainder) or IsOperator(remainder[Index::First])));
    }
 
 
@@ -1179,13 +1179,16 @@ size_t OperatorParser::ParseReflected(
                // pre-compute the op. Like for example when conjuncting       
                // two containers.                                             
          //Many opSrcBackup = Move(op.GetLHS());
-
-         if (op.Run()) {
-            // The verb was executed at compile-time, so directly       
-            // substitute LHS with the verb's output                    
-            lhs = Move(op.GetOutput());
-            LglsVerboseFlow("Verb was executed at compile time, resulting in {", lhs, '}');
-            return progress;
+         try {
+            if (op.Run()) {
+               // The verb was executed at compile-time, so directly       
+               // substitute LHS with the verb's output                    
+               lhs = Move(op.GetOutput());
+               LglsVerboseFlow("Verb was executed at compile-time, resulting in {", lhs, '}');
+               return progress;
+            }
+         } catch(...) {
+            LglsVerbose(Error, "Verb can't be run at compile-time");
          }
          /*else {
             op.In(Abandon(opSrcBackup));

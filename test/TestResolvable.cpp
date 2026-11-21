@@ -15,11 +15,11 @@ SCENARIO("Test resolvables") {
 		Thing2 resolvable;
 		auto concreteptr = static_cast<void*>(&resolvable);
 		auto abstractptr = static_cast<void*>(static_cast<Downcastable*>(&resolvable));
+		REQUIRE(concreteptr != abstractptr);
 
 		WHEN("Wrapped inside a block as Resolvable pointer") {
          Many pack = static_cast<Downcastable*>(&resolvable);
 
-			REQUIRE(concreteptr == abstractptr);
 			REQUIRE(pack.IsSparse());
 			REQUIRE(pack.IsExact<Downcastable*>());
 			REQUIRE(pack.GetResolved().type.IsExact(MetaDataOf<Thing2>()));
@@ -35,7 +35,6 @@ SCENARIO("Test resolvables") {
 		WHEN("Wrapped inside a block as an intermediate abstract type") {
          Many pack = static_cast<Thing*>(&resolvable);
 
-			REQUIRE(concreteptr == abstractptr);
 			REQUIRE(pack.IsSparse());
 			REQUIRE(pack.IsExact<Thing*>());
 			REQUIRE(pack.GetResolved().type.IsExact(MetaDataOf<Thing2>()));

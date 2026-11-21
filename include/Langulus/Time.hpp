@@ -18,8 +18,7 @@ namespace Langulus
 
 
    ///                                                                        
-   ///   A time point                                                         
-   ///                                                                        
+   /// MARK: Time point                                                       
    struct TimePoint : StdClock::time_point {
       using CTTI_POD  = Yup;
       using CTTI_Time = Yup;
@@ -43,8 +42,7 @@ namespace Langulus
 
 
    ///                                                                        
-   ///   A time duration (difference between two time points)                 
-   ///                                                                        
+   /// MARK: Duration (difference between two time points)                    
    struct Time : StdClock::duration {
       using CTTI_POD  = Yup;
       using CTTI_Time = Yup;
@@ -95,8 +93,7 @@ namespace Langulus
 
 
    ///                                                                        
-   ///   A steady clock used to acquire TimePoint(s)                          
-   ///                                                                        
+   /// MARK: Steady clock used to acquire TimePoint(s)                        
    struct SteadyClock : private StdClock {
       static TimePoint Now() noexcept {
          return steady_clock::now();
